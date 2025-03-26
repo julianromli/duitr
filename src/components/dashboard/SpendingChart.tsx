@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart as BarChartIcon, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTransactions } from '@/hooks/useTransactions';
 import DashboardCard from './DashboardCard';
-import { ChartIcon } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
 const SpendingChart: React.FC = () => {
   const { monthlyData } = useTransactions();
@@ -36,7 +36,7 @@ const SpendingChart: React.FC = () => {
   return (
     <DashboardCard 
       title="Monthly Overview" 
-      icon={<ChartIcon className="w-4 h-4" />}
+      icon={<BarChart3 className="w-4 h-4" />}
     >
       <div className="mt-2 h-64">
         <ResponsiveContainer width="100%" height="100%">
