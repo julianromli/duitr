@@ -1,6 +1,14 @@
 
 import React from 'react';
-import { BarChart as BarChartIcon, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 import { useTransactions } from '@/hooks/useTransactions';
 import DashboardCard from './DashboardCard';
 import { BarChart3 } from 'lucide-react';
