@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { formatIDR } from '@/utils/currency';
 
 // Define the types for our financial data
 type Transaction = {
@@ -41,8 +41,14 @@ interface FinanceContextType {
   transactions: Transaction[];
   budgets: Budget[];
   wallets: Wallet[];
+  currency: string;
+  currencySymbol: string;
+  updateCurrency: () => void;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
+  deleteTransaction: (id: string) => void;
   addBudget: (budget: Omit<Budget, 'id'>) => void;
+  updateBudget: (budget: Budget) => void;
+  deleteBudget: (id: string) => void;
   addWallet: (wallet: Omit<Wallet, 'id'>) => void;
   updateWallet: (wallet: Wallet) => void;
   deleteWallet: (id: string) => void;
@@ -50,6 +56,7 @@ interface FinanceContextType {
   totalBalance: number;
   monthlyIncome: number;
   monthlyExpense: number;
+  formatCurrency: (amount: number) => string;
 }
 
 // Create the context
@@ -193,6 +200,57 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     return savedWallets ? JSON.parse(savedWallets) : sampleWallets;
   });
 
+  // Always use IDR
+  const [currency] = useState('IDR');
+  const [currencySymbol] = useState('Rp');
+
+  // Format currency function - now uses our formatIDR utility
+  const formatCurrency = (amount: number) => {
+    return formatIDR(amount);
+  };
+
+  // We don't need to load currency from settings anymore
+  // but we'll keep the effect to load other settings if needed
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        // Force the currency to IDR in settings if it's not already
+        if (parsedSettings.currency !== 'IDR') {
+          parsedSettings.currency = 'IDR';
+          localStorage.setItem('settings', JSON.stringify(parsedSettings));
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+  }, []);
+
+  // Listen for settings changes, but always keep currency as IDR
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'settings') {
+        try {
+          const newSettings = JSON.parse(e.newValue || '{}');
+          // Force the currency to IDR if it's changed
+          if (newSettings.currency !== 'IDR') {
+            newSettings.currency = 'IDR';
+            localStorage.setItem('settings', JSON.stringify(newSettings));
+          }
+        } catch (error) {
+          console.error('Error handling storage changes:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // Save to localStorage when data changes
   useEffect(() => {
     localStorage.setItem('finance_transactions', JSON.stringify(transactions));
@@ -242,30 +300,54 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
+  // Delete transaction
+  const deleteTransaction = (id: string) => {
+    // Find the transaction to get its details before deleting it
+    const transactionToDelete = transactions.find(t => t.id === id);
+    
+    if (!transactionToDelete) return; // Transaction not found
+    
+    // Remove the transaction
+    setTransactions(transactions.filter(t => t.id !== id));
+    
+    // Update wallet balance to revert the transaction
+    setWallets(wallets.map(wallet => {
+      if (wallet.id === transactionToDelete.walletId) {
+        return {
+          ...wallet,
+          balance: transactionToDelete.type === 'income' 
+            ? wallet.balance - transactionToDelete.amount // Subtract the income
+            : wallet.balance + transactionToDelete.amount // Add back the expense
+        };
+      }
+      return wallet;
+    }));
+  };
+
   // Add new transfer
   const addTransfer = (transfer: Transfer) => {
     // Create two transactions for the transfer
     const transferId = Math.random().toString(36).substring(2, 9);
     
     // 1. Outgoing transaction (from source wallet)
-    const outgoingTransaction: Transaction = {
-      id: `${transferId}-out`,
+    const outgoingTransaction = {
+      id: `transfer-out-${transferId}`,
       amount: transfer.amount + transfer.fee,
       category: 'Transfer',
-      description: `Transfer to ${wallets.find(w => w.id === transfer.toWalletId)?.name || 'another account'}: ${transfer.description}`,
+      description: `Transfer to ${wallets.find(w => w.id === transfer.toWalletId)?.name} - ${transfer.description}`,
       date: transfer.date,
-      type: 'expense',
+      type: 'expense' as const,
       walletId: transfer.fromWalletId,
     };
     
     // 2. Incoming transaction (to destination wallet)
-    const incomingTransaction: Transaction = {
-      id: `${transferId}-in`,
+    const incomingTransaction = {
+      id: `transfer-in-${transferId}`,
       amount: transfer.amount,
       category: 'Transfer',
-      description: `Transfer from ${wallets.find(w => w.id === transfer.fromWalletId)?.name || 'another account'}: ${transfer.description}`,
+      description: `Transfer from ${wallets.find(w => w.id === transfer.fromWalletId)?.name} - ${transfer.description}`,
       date: transfer.date,
-      type: 'income',
+      type: 'income' as const,
       walletId: transfer.toWalletId,
     };
     
@@ -299,6 +381,18 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setBudgets([...budgets, newBudget]);
   };
 
+  // Update existing budget
+  const updateBudget = (updatedBudget: Budget) => {
+    setBudgets(budgets.map(budget => 
+      budget.id === updatedBudget.id ? updatedBudget : budget
+    ));
+  };
+
+  // Delete budget
+  const deleteBudget = (id: string) => {
+    setBudgets(budgets.filter(budget => budget.id !== id));
+  };
+
   // Add new wallet
   const addWallet = (wallet: Omit<Wallet, 'id'>) => {
     const newWallet = {
@@ -329,21 +423,33 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setWallets(wallets.filter(wallet => wallet.id !== id));
   };
 
+  // Update function now only exists for compatibility but doesn't change the currency
+  const updateCurrency = () => {
+    // Currency is always IDR, no need to update
+  };
+
   return (
     <FinanceContext.Provider
       value={{
         transactions,
         budgets,
         wallets,
+        currency,
+        currencySymbol,
+        updateCurrency,
         addTransaction,
+        deleteTransaction,
         addBudget,
+        updateBudget,
+        deleteBudget,
         addWallet,
         updateWallet,
         deleteWallet,
         addTransfer,
         totalBalance,
         monthlyIncome,
-        monthlyExpense
+        monthlyExpense,
+        formatCurrency
       }}
     >
       {children}

@@ -1,22 +1,14 @@
-
 import React from 'react';
 import { PieChart, LineChart, BarChart3 } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useBudgets } from '@/hooks/useBudgets';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFinance } from '@/context/FinanceContext';
 
 const BudgetProgress: React.FC = () => {
   const { budgets, totalBudgeted, totalSpent, remainingBudget, overallProgress } = useBudgets();
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const { formatCurrency } = useFinance();
   
   // Prepare data for pie chart
   const pieData = budgets.map((budget) => ({

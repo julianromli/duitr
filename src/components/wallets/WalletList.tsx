@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Wallet, CreditCard, DollarSign, ArrowUpRight, ArrowDownRight, Edit, Trash } from 'lucide-react';
 import { useWallets } from '@/hooks/useWallets';
@@ -26,7 +25,7 @@ import {
 
 const WalletList: React.FC = () => {
   const { wallets, walletStats } = useWallets();
-  const { updateWallet, deleteWallet } = useFinance();
+  const { updateWallet, deleteWallet, formatCurrency } = useFinance();
   const { toast } = useToast();
   const [editWallet, setEditWallet] = useState<any>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -46,14 +45,6 @@ const WalletList: React.FC = () => {
     { value: '#9775FA', label: 'Purple' },
     { value: '#FD7E14', label: 'Orange' },
   ];
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
   
   const getWalletIcon = (type: string) => {
     switch (type) {

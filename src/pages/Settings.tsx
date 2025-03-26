@@ -1,5 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '@/components/layout/Header';
 import { 
   Tabs, 
@@ -12,187 +13,158 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Sun, Moon, Globe } from 'lucide-react';
+import { Sun, Moon, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useFinance } from '@/context/FinanceContext';
+import LanguageSwitcher from '@/components/settings/LanguageSwitcher';
+import { formatIDR } from '@/utils/currency';
 
-// Translation data
-const translations = {
-  en: {
-    settings: 'Settings',
-    appearance: 'Appearance',
-    theme: 'Theme',
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System',
-    language: 'Language',
-    english: 'English',
-    indonesian: 'Indonesian',
-    currency: 'Currency',
-    save: 'Save Changes',
-    saveSuccess: 'Settings updated successfully',
-    selectCurrency: 'Select currency',
-    account: 'Account',
-    profile: 'Profile',
-    security: 'Security',
-    notifications: 'Notifications',
-  },
-  id: {
-    settings: 'Pengaturan',
-    appearance: 'Tampilan',
-    theme: 'Tema',
-    light: 'Terang',
-    dark: 'Gelap',
-    system: 'Sistem',
-    language: 'Bahasa',
-    english: 'Inggris',
-    indonesian: 'Indonesia',
-    currency: 'Mata Uang',
-    save: 'Simpan Perubahan',
-    saveSuccess: 'Pengaturan berhasil diperbarui',
-    selectCurrency: 'Pilih mata uang',
-    account: 'Akun',
-    profile: 'Profil',
-    security: 'Keamanan',
-    notifications: 'Notifikasi',
-  }
-};
-
-// Currency data
+// Currency data - Only keep IDR
 const currencies = [
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
   { code: 'IDR', name: 'Indonesian Rupiah', symbol: 'Rp' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
 ];
 
 const Settings: React.FC = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-  const [language, setLanguage] = useState<'en' | 'id'>('en');
-  const [currency, setCurrency] = useState('USD');
-  const t = translations[language];
+  const { updateCurrency } = useFinance();
+  const location = useLocation();
+  
+  // Check if we need to open a specific tab from URL query params
+  const urlParams = new URLSearchParams(location.search);
+  const tabFromUrl = urlParams.get('tab');
+  const defaultTab = tabFromUrl || 'appearance';
+  
+  const [initialSettings, setInitialSettings] = useState({
+    theme: 'light' as 'light' | 'dark' | 'system',
+    currency: 'IDR'
+  });
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(initialSettings.theme);
 
-  // Apply theme effect
+  // Load saved settings
   useEffect(() => {
+    const savedSettings = localStorage.getItem('settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        const loadedSettings = {
+          theme: parsedSettings.theme || 'light',
+          currency: 'IDR', // Always set to IDR
+        };
+        setInitialSettings(loadedSettings);
+        setTheme(loadedSettings.theme);
+        
+        // Force update currency to IDR
+        updateCurrency();
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    }
+  }, [updateCurrency]);
+
+  // Apply theme effect only after user saves changes
+  const applyTheme = (themeToApply: 'light' | 'dark' | 'system') => {
     const root = window.document.documentElement;
     
-    if (theme === 'system') {
+    if (themeToApply === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       root.classList.remove('light', 'dark');
       root.classList.add(systemTheme);
     } else {
       root.classList.remove('light', 'dark');
-      root.classList.add(theme);
+      root.classList.add(themeToApply);
     }
-  }, [theme]);
+  };
 
   const handleSave = () => {
-    // In a real app, save to backend or localStorage
-    localStorage.setItem('settings', JSON.stringify({ theme, language, currency }));
+    // Save to localStorage
+    const settings = { 
+      theme, 
+      currency: 'IDR', // Always save as IDR
+    };
+    
+    localStorage.setItem('settings', JSON.stringify(settings));
+    
+    // Dispatch an event to notify other components
+    const event = new StorageEvent('storage', {
+      key: 'settings',
+      newValue: JSON.stringify(settings)
+    });
+    window.dispatchEvent(event);
+    
+    // Apply theme only after user saves
+    applyTheme(theme);
+    
+    // Update initial settings
+    setInitialSettings({
+      theme,
+      currency: 'IDR',
+    });
     
     toast({
-      title: t.saveSuccess,
+      title: t('buttons.save'),
       duration: 3000,
     });
   };
 
   return (
-    <div className="flex flex-col h-full animate-in">
+    <div className="flex flex-col h-full">
       <Header />
-      <div className="flex-1 p-6 pb-24 md:pb-6 space-y-6 overflow-auto fade-mask">
+      <div className="flex-1 p-6 pb-24 md:pb-6 space-y-6 overflow-y-auto max-h-[calc(100vh-4rem)]">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">{t.settings}</h2>
+          <h2 className="text-xl font-semibold">{t('settings.title')}</h2>
         </div>
         
-        <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="appearance">{t.appearance}</TabsTrigger>
-            <TabsTrigger value="account">{t.account}</TabsTrigger>
-            <TabsTrigger value="security">{t.security}</TabsTrigger>
-            <TabsTrigger value="notifications">{t.notifications}</TabsTrigger>
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-6">
+            <TabsTrigger value="appearance" className="flex items-center justify-center">
+              <Sun className="h-5 w-5" />
+              <span className="ml-2 hidden sm:block">{t('settings.appearance')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="account" className="flex items-center justify-center">
+              <User className="h-5 w-5" />
+              <span className="ml-2 hidden sm:block">{t('settings.account')}</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
-                <CardTitle>{t.appearance}</CardTitle>
+                <CardTitle>{t('settings.appearance')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label>{t.theme}</Label>
+                  <Label>{t('settings.theme')}</Label>
                   <RadioGroup 
                     value={theme} 
                     onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
                     className="flex flex-col sm:flex-row gap-4"
                   >
                     <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="light" id="light" />
-                      <Label htmlFor="light" className="flex items-center gap-2">
+                      <RadioGroupItem value="light" id="light" className="rounded-full" />
+                      <Label htmlFor="light" className="flex items-center gap-2 cursor-pointer">
                         <Sun className="h-4 w-4" />
-                        {t.light}
+                        {t('settings.light')}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="dark" id="dark" />
-                      <Label htmlFor="dark" className="flex items-center gap-2">
+                      <RadioGroupItem value="dark" id="dark" className="rounded-full" />
+                      <Label htmlFor="dark" className="flex items-center gap-2 cursor-pointer">
                         <Moon className="h-4 w-4" />
-                        {t.dark}
+                        {t('settings.dark')}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="system" id="system" />
-                      <Label htmlFor="system">{t.system}</Label>
+                      <RadioGroupItem value="system" id="system" className="rounded-full" />
+                      <Label htmlFor="system" className="cursor-pointer">{t('settings.system')}</Label>
                     </div>
                   </RadioGroup>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>{t.language}</Label>
-                  <RadioGroup 
-                    value={language} 
-                    onValueChange={(value) => setLanguage(value as 'en' | 'id')}
-                    className="flex flex-col sm:flex-row gap-4"
-                  >
-                    <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="en" id="english" />
-                      <Label htmlFor="english" className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        {t.english}
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="id" id="indonesian" />
-                      <Label htmlFor="indonesian" className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        {t.indonesian}
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>{t.currency}</Label>
-                  <Select 
-                    value={currency} 
-                    onValueChange={setCurrency}
-                  >
-                    <SelectTrigger className="w-full sm:w-72">
-                      <SelectValue placeholder={t.selectCurrency} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {currencies.map(curr => (
-                        <SelectItem key={curr.code} value={curr.code}>
-                          {curr.symbol} - {curr.name} ({curr.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <LanguageSwitcher />
                 
                 <Button className="w-full sm:w-auto" onClick={handleSave}>
-                  {t.save}
+                  {t('buttons.save')}
                 </Button>
               </CardContent>
             </Card>
@@ -201,35 +173,34 @@ const Settings: React.FC = () => {
           <TabsContent value="account">
             <Card>
               <CardHeader>
-                <CardTitle>{t.profile}</CardTitle>
+                <CardTitle>{t('settings.profile')}</CardTitle>
               </CardHeader>
-              <CardContent>
-                {/* Profile settings would go here */}
-                <p className="text-muted-foreground">Profile settings will be implemented in future updates.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t.security}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Security settings would go here */}
-                <p className="text-muted-foreground">Security settings will be implemented in future updates.</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t.notifications}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Notification settings would go here */}
-                <p className="text-muted-foreground">Notification settings will be implemented in future updates.</p>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>{t('settings.currency')}</Label>
+                  <Select 
+                    value="IDR" 
+                    disabled={true}
+                  >
+                    <SelectTrigger className="w-full sm:w-72">
+                      <SelectValue>
+                        Rp - Indonesian Rupiah (IDR)
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="IDR">
+                        Rp - Indonesian Rupiah (IDR)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t('settings.currencyLocked')}
+                  </p>
+                </div>
+                
+                <Button className="w-full sm:w-auto" onClick={handleSave}>
+                  {t('buttons.save')}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,9 +1,21 @@
-
 import React, { useState } from 'react';
-import { Calendar, Filter, Search, ShoppingCart, Coffee, Home, CreditCard, ReceiptText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Calendar, Filter, Search, ShoppingCart, Coffee, Home, CreditCard, ReceiptText, Trash2 } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Transaction } from "@/types/finance";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   Groceries: <ShoppingCart className="w-4 h-4" />,
@@ -15,9 +27,13 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 const TransactionList: React.FC = () => {
-  const { transactions } = useFinance();
+  const { t } = useTranslation();
+  const { transactions, formatCurrency, deleteTransaction } = useFinance();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   
   // Filter and sort transactions
   const filteredTransactions = transactions
@@ -44,13 +60,22 @@ const TransactionList: React.FC = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
+
+  const handleDeleteClick = (id: string) => {
+    setTransactionToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (transactionToDelete) {
+      deleteTransaction(transactionToDelete);
+      toast({
+        title: t('common.success'),
+        description: t('transactions.delete_success'),
+      });
+      setTransactionToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   return (
@@ -59,7 +84,7 @@ const TransactionList: React.FC = () => {
         <div className="relative w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search transactions..."
+            placeholder={t('transactions.title')}
             className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -71,7 +96,7 @@ const TransactionList: React.FC = () => {
             size="sm"
             onClick={() => setTypeFilter('all')}
           >
-            All
+            {t('transactions.all')}
           </Button>
           <Button
             variant={typeFilter === 'income' ? 'default' : 'outline'}
@@ -79,7 +104,7 @@ const TransactionList: React.FC = () => {
             className={typeFilter === 'income' ? 'bg-finance-income hover:bg-finance-income/90' : ''}
             onClick={() => setTypeFilter('income')}
           >
-            Income
+            {t('transactions.income')}
           </Button>
           <Button
             variant={typeFilter === 'expense' ? 'default' : 'outline'}
@@ -87,7 +112,7 @@ const TransactionList: React.FC = () => {
             className={typeFilter === 'expense' ? 'bg-finance-expense hover:bg-finance-expense/90' : ''}
             onClick={() => setTypeFilter('expense')}
           >
-            Expenses
+            {t('transactions.expense')}
           </Button>
           <Button variant="outline" size="icon" className="h-9 w-9">
             <Filter className="h-4 w-4" />
@@ -99,7 +124,7 @@ const TransactionList: React.FC = () => {
         {filteredTransactions.length > 0 ? (
           <ul className="divide-y">
             {filteredTransactions.map((transaction) => (
-              <li key={transaction.id} className="p-4 hover:bg-muted/30 transition-colors duration-200">
+              <li key={transaction.id} className="p-4 hover:bg-muted/30 transition-colors duration-200 group">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -112,16 +137,25 @@ const TransactionList: React.FC = () => {
                       <p className="text-sm text-muted-foreground">{transaction.description}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-medium ${
-                      transaction.type === 'income' ? 'text-finance-income' : 'text-finance-expense'
-                    }`}>
-                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                    </p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(transaction.date)}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className={`font-medium ${
+                        transaction.type === 'income' ? 'text-finance-income' : 'text-finance-expense'
+                      }`}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Calendar className="w-3 h-3" />
+                        <span>{formatDate(transaction.date)}</span>
+                      </div>
                     </div>
+                    <button 
+                      onClick={() => handleDeleteClick(transaction.id)}
+                      className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                      title={t('transactions.delete')}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </li>
@@ -129,10 +163,28 @@ const TransactionList: React.FC = () => {
           </ul>
         ) : (
           <div className="p-8 text-center">
-            <p className="text-muted-foreground">No transactions found</p>
+            <p className="text-muted-foreground">{t('transactions.no_transactions')}</p>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('transactions.delete')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('transactions.delete_confirmation')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('buttons.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground">
+              {t('buttons.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

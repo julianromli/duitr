@@ -1,0 +1,198 @@
+{
+  "common": {
+    "app_name": "Finance",
+    "currency": "USD",
+    "success": "Success",
+    "error": "Error",
+    "info": "Information",
+    "warning": "Warning",
+    "loading": "Loading...",
+    "save": "Save Changes"
+  },
+  "pages": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "budgets": "Budgets",
+    "wallets": "Wallets",
+    "settings": "Settings"
+  },
+  "navbar": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "budgets": "Budgets",
+    "wallets": "Wallets",
+    "settings": "Settings",
+    "logout": "Log Out"
+  },
+  "dashboard": {
+    "title": "Financial Overview",
+    "export": "Export",
+    "balance_summary": "Balance Summary",
+    "total_balance": "Total Balance",
+    "monthly_income": "Monthly Income",
+    "monthly_expense": "Monthly Expense",
+    "spending_chart": "Monthly Spending by Category",
+    "recent_transactions": "Recent Transactions",
+    "wallet_breakdown": "Wallet Breakdown",
+    "income_vs_expense": "Income vs Expense",
+    "spending": "Spending by Category",
+    "budget_status": "Budget Status"
+  },
+  "wallets": {
+    "title": "Accounts & Wallets",
+    "add_account": "Add Account",
+    "balance": "Balance: {{amount}}",
+    "create": "Create Wallet",
+    "edit": "Edit Wallet",
+    "delete": "Delete Wallet",
+    "name": "Wallet Name",
+    "type": "Wallet Type",
+    "color": "Wallet Color",
+    "types": {
+      "cash": "Cash",
+      "bank": "Bank Account",
+      "credit": "Credit Card",
+      "investment": "Investment"
+    },
+    "delete_confirmation": "Are you sure you want to delete this wallet? This action cannot be undone.",
+    "no_wallets": "You don't have any wallets yet."
+  },
+  "transactions": {
+    "title": "Transactions History",
+    "add_transaction": "Add Transaction",
+    "no_transactions": "No transactions found",
+    "date": "Date",
+    "category": "Category",
+    "amount": "Amount",
+    "description": "Description",
+    "wallet": "Wallet",
+    "income": "Income",
+    "expense": "Expense",
+    "all": "All transactions are shown in Indonesian Rupiah (IDR)",
+    "delete": "Delete",
+    "delete_confirmation": "Are you sure you want to delete this transaction? This action cannot be undone.",
+    "delete_success": "Transaction deleted successfully",
+    "search": "Search transactions...",
+    "history": "Transactions History"
+  },
+  "budgets": {
+    "title": "Budget Management",
+    "create_budget": "Create Budget",
+    "create_new_budget": "Create New Budget",
+    "budget_categories": "Budget Categories",
+    "budget_progress": "Budget Progress",
+    "remaining": "Remaining: {{amount}}",
+    "over_by": "Over by: {{amount}}",
+    "used": "{{percentage}}% used",
+    "select_category": "Select a category",
+    "enter_amount": "Enter amount",
+    "select_period": "Select a period",
+    "period": "Period",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "categories": {
+      "groceries": "Groceries",
+      "dining": "Dining",
+      "transportation": "Transportation",
+      "entertainment": "Entertainment",
+      "utilities": "Utilities",
+      "housing": "Housing",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "shopping": "Shopping",
+      "personal_care": "Personal Care",
+      "travel": "Travel",
+      "gifts": "Gifts",
+      "other": "Other"
+    },
+    "errors": {
+      "select_category": "Please select a category",
+      "valid_amount": "Please enter a valid amount"
+    },
+    "success": {
+      "created": "Budget created successfully"
+    },
+    "subtitle": "Budget Management",
+    "create": "Create Budget",
+    "edit": "Edit Budget",
+    "delete": "Delete Budget",
+    "current": "Current Spending",
+    "periods": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "spending": "Spending by Category",
+    "no_budgets": "You don't have any budgets yet."
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "language": "Language",
+    "theme": "Theme",
+    "english": "English",
+    "indonesian": "Indonesian",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "appearance": "Appearance",
+    "currency": "Currency",
+    "profile": "Profile",
+    "currencyLocked": "All transactions are shown in Indonesian Rupiah (IDR)",
+    "export_data": "Export Data",
+    "import_data": "Import Data",
+    "delete_account": "Delete Account",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "languages": {
+      "en": "English",
+      "id": "Indonesian"
+    }
+  },
+  "export": {
+    "title": "Export Financial Data",
+    "description": "Choose what data you want to export and the date range",
+    "date_range": "Date Range",
+    "all_time": "All Time",
+    "last_30_days": "Last 30 Days",
+    "last_90_days": "Last 90 Days",
+    "this_year": "This Year",
+    "custom_range": "Custom Range",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "pick_date": "Pick a date",
+    "data_to_include": "Data to Include",
+    "transaction_history": "Transaction history",
+    "summary_statistics": "Summary statistics",
+    "budget_progress": "Budget progress",
+    "wallet_balances": "Wallet balances",
+    "cancel": "Cancel",
+    "export": "Export",
+    "successful": "Export Successful",
+    "successful_description": "Your financial data has been exported to Excel",
+    "failed": "Export Failed",
+    "failed_description": "An error occurred while exporting your data",
+    "include_transactions": "Include Transactions",
+    "include_summary": "Include Summary",
+    "include_budgets": "Include Budgets",
+    "include_wallets": "Include Wallets",
+    "format": "Export Format",
+    "formats": {
+      "csv": "CSV",
+      "pdf": "PDF",
+      "excel": "Excel"
+    }
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "create": "Create"
+  }
+} 

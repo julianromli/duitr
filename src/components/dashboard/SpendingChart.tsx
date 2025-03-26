@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   BarChart, 
@@ -12,18 +11,11 @@ import {
 import { useTransactions } from '@/hooks/useTransactions';
 import DashboardCard from './DashboardCard';
 import { BarChart3 } from 'lucide-react';
+import { useFinance } from '@/context/FinanceContext';
 
 const SpendingChart: React.FC = () => {
   const { monthlyData } = useTransactions();
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const { formatCurrency } = useFinance();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -43,37 +35,28 @@ const SpendingChart: React.FC = () => {
 
   return (
     <DashboardCard 
-      title="Monthly Overview" 
+      title="Monthly Spending by Category" 
       icon={<BarChart3 className="w-4 h-4" />}
     >
-      <div className="mt-2 h-64">
+      <div className="h-[250px] mt-4">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={monthlyData}
-            margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+          <BarChart 
+            data={monthlyData} 
+            margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
           >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" />
             <YAxis 
-              axisLine={false} 
-              tickLine={false} 
               tickFormatter={formatCurrency}
-              width={60}
+              width={80}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar 
-              dataKey="income" 
-              name="Income" 
-              fill="hsl(var(--finance-income))" 
-              radius={[4, 4, 0, 0]} 
-              barSize={12}
-            />
-            <Bar 
-              dataKey="expense" 
-              name="Expense" 
-              fill="hsl(var(--finance-expense))" 
-              radius={[4, 4, 0, 0]} 
-              barSize={12}
+              dataKey="value" 
+              fill="var(--color-primary)" 
+              radius={[4, 4, 0, 0]}
+              barSize={30}
+              className="animated-bar"
             />
           </BarChart>
         </ResponsiveContainer>

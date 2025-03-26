@@ -1,20 +1,11 @@
-
 import React from 'react';
 import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import DashboardCard from './DashboardCard';
 
 const BalanceSummary: React.FC = () => {
-  const { totalBalance, monthlyIncome, monthlyExpense } = useFinance();
+  const { totalBalance, monthlyIncome, monthlyExpense, formatCurrency } = useFinance();
   
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <DashboardCard 

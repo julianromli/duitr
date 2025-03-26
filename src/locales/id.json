@@ -1,0 +1,203 @@
+{
+  "common": {
+    "app_name": "Keuangan",
+    "currency": "IDR",
+    "success": "Berhasil",
+    "error": "Kesalahan",
+    "info": "Informasi",
+    "warning": "Peringatan",
+    "loading": "Memuat...",
+    "save": "Simpan Perubahan"
+  },
+  "pages": {
+    "dashboard": "Dasbor",
+    "transactions": "Transaksi",
+    "budgets": "Anggaran",
+    "wallets": "Dompet",
+    "settings": "Pengaturan"
+  },
+  "navbar": {
+    "dashboard": "Dasbor",
+    "transactions": "Transaksi",
+    "budgets": "Anggaran",
+    "wallets": "Dompet",
+    "settings": "Pengaturan",
+    "logout": "Keluar"
+  },
+  "dashboard": {
+    "title": "Ikhtisar Keuangan",
+    "export": "Ekspor",
+    "balance_summary": "Ringkasan Saldo",
+    "total_balance": "Total Saldo",
+    "monthly_income": "Pendapatan Bulanan",
+    "monthly_expense": "Pengeluaran Bulanan",
+    "wallet_breakdown": "Rincian Dompet",
+    "recent_transactions": "Transaksi Terbaru",
+    "income_vs_expense": "Pendapatan vs Pengeluaran",
+    "spending": "Pengeluaran per Kategori",
+    "budget_status": "Status Anggaran",
+    "spending_chart": "Pengeluaran Bulanan berdasarkan Kategori"
+  },
+  "wallets": {
+    "title": "Akun & Dompet",
+    "add_account": "Tambah Akun",
+    "balance": "Saldo: {{amount}}",
+    "create": "Buat Dompet",
+    "edit": "Edit Dompet",
+    "delete": "Hapus Dompet",
+    "name": "Nama Dompet",
+    "type": "Jenis Dompet",
+    "color": "Warna Dompet",
+    "types": {
+      "cash": "Tunai",
+      "bank": "Rekening Bank",
+      "credit": "Kartu Kredit",
+      "investment": "Investasi"
+    },
+    "delete_confirmation": "Apakah Anda yakin ingin menghapus dompet ini? Tindakan ini tidak dapat dibatalkan.",
+    "no_wallets": "Anda belum memiliki dompet."
+  },
+  "transactions": {
+    "title": "Lihat Semua Transaksi",
+    "add_transaction": "Tambah Transaksi",
+    "create": "Tambah Transaksi",
+    "edit": "Edit Transaksi",
+    "delete": "Hapus Transaksi",
+    "amount": "Jumlah",
+    "description": "Deskripsi",
+    "category": "Kategori",
+    "date": "Tanggal",
+    "type": "Jenis Transaksi",
+    "wallet": "Dompet",
+    "income": "Pendapatan",
+    "expense": "Pengeluaran",
+    "no_transactions": "Tidak ada transaksi ditemukan",
+    "all": "Semua transaksi ditampilkan dalam Rupiah Indonesia (IDR)",
+    "delete_confirmation": "Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.",
+    "delete_success": "Transaksi berhasil dihapus",
+    "search": "Cari transaksi...",
+    "history": "Riwayat Transaksi"
+  },
+  "budgets": {
+    "title": "Anggaran",
+    "subtitle": "Manajemen Anggaran",
+    "create_budget": "Buat Anggaran",
+    "create_new_budget": "Buat Anggaran Baru",
+    "create": "Buat Anggaran",
+    "edit": "Edit Anggaran",
+    "delete": "Hapus Anggaran",
+    "budget_categories": "Kategori Anggaran",
+    "budget_progress": "Progress Anggaran",
+    "remaining": "Sisa",
+    "over_by": "Kelebihan: {{amount}}",
+    "used": "{{percentage}}% digunakan",
+    "select_category": "Pilih kategori",
+    "enter_amount": "Masukkan jumlah",
+    "select_period": "Pilih periode",
+    "period": "Periode",
+    "current": "Pengeluaran Saat Ini",
+    "amount": "Jumlah",
+    "category": "Kategori",
+    "periods": {
+      "weekly": "Mingguan",
+      "monthly": "Bulanan",
+      "yearly": "Tahunan"
+    },
+    "weekly": "Mingguan",
+    "monthly": "Bulanan",
+    "yearly": "Tahunan",
+    "categories": {
+      "groceries": "Belanjaan",
+      "dining": "Makan di Luar",
+      "transportation": "Transportasi",
+      "entertainment": "Hiburan",
+      "utilities": "Tagihan Utilitas",
+      "housing": "Perumahan",
+      "healthcare": "Kesehatan",
+      "education": "Pendidikan",
+      "shopping": "Belanja",
+      "personal_care": "Perawatan Pribadi",
+      "travel": "Perjalanan",
+      "gifts": "Hadiah",
+      "other": "Lainnya"
+    },
+    "errors": {
+      "select_category": "Silakan pilih kategori",
+      "valid_amount": "Silakan masukkan jumlah yang valid"
+    },
+    "success": {
+      "created": "Anggaran berhasil dibuat"
+    },
+    "spending": "Pengeluaran per Kategori",
+    "no_budgets": "Anda belum memiliki anggaran."
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "account": "Akun",
+    "language": "Bahasa",
+    "theme": "Tema",
+    "english": "Inggris",
+    "indonesian": "Indonesia",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem",
+    "appearance": "Tampilan",
+    "currency": "Mata Uang",
+    "profile": "Profil",
+    "currencyLocked": "Semua transaksi ditampilkan dalam Rupiah Indonesia (IDR)",
+    "export_data": "Ekspor Data",
+    "import_data": "Impor Data",
+    "delete_account": "Hapus Akun",
+    "themes": {
+      "light": "Terang",
+      "dark": "Gelap",
+      "system": "Sistem"
+    },
+    "languages": {
+      "en": "Bahasa Inggris",
+      "id": "Bahasa Indonesia"
+    }
+  },
+  "export": {
+    "title": "Ekspor Data Keuangan",
+    "description": "Pilih data yang ingin diekspor dan rentang tanggal",
+    "date_range": "Rentang Tanggal",
+    "all_time": "Semua Waktu",
+    "last_30_days": "30 Hari Terakhir",
+    "last_90_days": "90 Hari Terakhir",
+    "this_year": "Tahun Ini",
+    "custom_range": "Rentang Kustom",
+    "start_date": "Tanggal Mulai",
+    "end_date": "Tanggal Akhir",
+    "pick_date": "Pilih tanggal",
+    "data_to_include": "Data yang Disertakan",
+    "transaction_history": "Riwayat transaksi",
+    "summary_statistics": "Statistik ringkasan",
+    "budget_progress": "Progress anggaran",
+    "wallet_balances": "Saldo dompet",
+    "cancel": "Batal",
+    "export": "Ekspor",
+    "successful": "Ekspor Berhasil",
+    "successful_description": "Data keuangan Anda telah diekspor ke Excel",
+    "failed": "Ekspor Gagal",
+    "failed_description": "Terjadi kesalahan saat mengekspor data Anda",
+    "include_transactions": "Sertakan Transaksi",
+    "include_summary": "Sertakan Ringkasan",
+    "include_budgets": "Sertakan Anggaran",
+    "include_wallets": "Sertakan Dompet",
+    "format": "Format Ekspor",
+    "formats": {
+      "csv": "CSV",
+      "pdf": "PDF",
+      "excel": "Excel"
+    }
+  },
+  "buttons": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "add": "Tambah",
+    "create": "Buat"
+  }
+} 
