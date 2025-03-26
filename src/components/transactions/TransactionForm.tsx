@@ -137,7 +137,7 @@ const TransactionForm: React.FC = () => {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <PlusCircle className="w-4 h-4" />
-          Add Transaction
+          Add
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

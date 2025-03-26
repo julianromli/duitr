@@ -12,8 +12,8 @@ import Transactions from "@/pages/Transactions";
 import Budgets from "@/pages/Budgets";
 import Wallets from "@/pages/Wallets";
 import Settings from "@/pages/Settings";
+import Statistics from "@/pages/Statistics";
 import NotFound from "@/pages/NotFound";
-import GestureHandler from "@/components/layout/GestureHandler";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -88,20 +88,19 @@ const App = () => {
         <I18nextProvider i18n={i18n}>
           <FinanceProvider>
             <BrowserRouter>
-              <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-background">
+              <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                <main className="pb-20"> {/* Add padding bottom for navbar */}
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/transactions" element={<Transactions />} />
+                    <Route path="/budgets" element={<Budgets />} />
+                    <Route path="/statistics" element={<Statistics />} />
+                    <Route path="/wallets" element={<Wallets />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
                 <Navbar />
-                <GestureHandler>
-                  <main className="flex-1 md:ml-56 md:mr-8 lg:mx-auto lg:max-w-5xl relative">
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/transactions" element={<Transactions />} />
-                      <Route path="/budgets" element={<Budgets />} />
-                      <Route path="/wallets" element={<Wallets />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </main>
-                </GestureHandler>
               </div>
             </BrowserRouter>
             <Toaster />
