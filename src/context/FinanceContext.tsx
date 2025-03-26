@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 // Define the types for our financial data
 type Transaction = {
@@ -28,6 +28,15 @@ type Wallet = {
   color: string;
 };
 
+type Transfer = {
+  amount: number;
+  description: string;
+  date: string;
+  fromWalletId: string;
+  toWalletId: string;
+  fee: number;
+};
+
 interface FinanceContextType {
   transactions: Transaction[];
   budgets: Budget[];
@@ -35,6 +44,9 @@ interface FinanceContextType {
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   addBudget: (budget: Omit<Budget, 'id'>) => void;
   addWallet: (wallet: Omit<Wallet, 'id'>) => void;
+  updateWallet: (wallet: Wallet) => void;
+  deleteWallet: (id: string) => void;
+  addTransfer: (transfer: Transfer) => void;
   totalBalance: number;
   monthlyIncome: number;
   monthlyExpense: number;
@@ -165,9 +177,28 @@ const sampleWallets: Wallet[] = [
 
 // Provider component
 export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>(sampleTransactions);
-  const [budgets, setBudgets] = useState<Budget[]>(sampleBudgets);
-  const [wallets, setWallets] = useState<Wallet[]>(sampleWallets);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    // Try to load from localStorage first
+    const savedTransactions = localStorage.getItem('finance_transactions');
+    return savedTransactions ? JSON.parse(savedTransactions) : sampleTransactions;
+  });
+  
+  const [budgets, setBudgets] = useState<Budget[]>(() => {
+    const savedBudgets = localStorage.getItem('finance_budgets');
+    return savedBudgets ? JSON.parse(savedBudgets) : sampleBudgets;
+  });
+  
+  const [wallets, setWallets] = useState<Wallet[]>(() => {
+    const savedWallets = localStorage.getItem('finance_wallets');
+    return savedWallets ? JSON.parse(savedWallets) : sampleWallets;
+  });
+
+  // Save to localStorage when data changes
+  useEffect(() => {
+    localStorage.setItem('finance_transactions', JSON.stringify(transactions));
+    localStorage.setItem('finance_budgets', JSON.stringify(budgets));
+    localStorage.setItem('finance_wallets', JSON.stringify(wallets));
+  }, [transactions, budgets, wallets]);
 
   // Calculate totals
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
@@ -211,6 +242,54 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
+  // Add new transfer
+  const addTransfer = (transfer: Transfer) => {
+    // Create two transactions for the transfer
+    const transferId = Math.random().toString(36).substring(2, 9);
+    
+    // 1. Outgoing transaction (from source wallet)
+    const outgoingTransaction: Transaction = {
+      id: `${transferId}-out`,
+      amount: transfer.amount + transfer.fee,
+      category: 'Transfer',
+      description: `Transfer to ${wallets.find(w => w.id === transfer.toWalletId)?.name || 'another account'}: ${transfer.description}`,
+      date: transfer.date,
+      type: 'expense',
+      walletId: transfer.fromWalletId,
+    };
+    
+    // 2. Incoming transaction (to destination wallet)
+    const incomingTransaction: Transaction = {
+      id: `${transferId}-in`,
+      amount: transfer.amount,
+      category: 'Transfer',
+      description: `Transfer from ${wallets.find(w => w.id === transfer.fromWalletId)?.name || 'another account'}: ${transfer.description}`,
+      date: transfer.date,
+      type: 'income',
+      walletId: transfer.toWalletId,
+    };
+    
+    // Add both transactions
+    setTransactions([incomingTransaction, outgoingTransaction, ...transactions]);
+    
+    // Update wallet balances
+    setWallets(wallets.map(wallet => {
+      if (wallet.id === transfer.fromWalletId) {
+        return {
+          ...wallet,
+          balance: wallet.balance - (transfer.amount + transfer.fee)
+        };
+      }
+      if (wallet.id === transfer.toWalletId) {
+        return {
+          ...wallet,
+          balance: wallet.balance + transfer.amount
+        };
+      }
+      return wallet;
+    }));
+  };
+
   // Add new budget
   const addBudget = (budget: Omit<Budget, 'id'>) => {
     const newBudget = {
@@ -229,6 +308,27 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     setWallets([...wallets, newWallet]);
   };
 
+  // Update existing wallet
+  const updateWallet = (updatedWallet: Wallet) => {
+    setWallets(wallets.map(wallet => 
+      wallet.id === updatedWallet.id ? updatedWallet : wallet
+    ));
+  };
+
+  // Delete wallet
+  const deleteWallet = (id: string) => {
+    // Check if there are transactions associated with this wallet
+    const hasTransactions = transactions.some(t => t.walletId === id);
+    
+    if (hasTransactions) {
+      // In a real app, you might want to show a confirmation dialog
+      // For now, we'll just delete the wallet and its transactions
+      setTransactions(transactions.filter(t => t.walletId !== id));
+    }
+    
+    setWallets(wallets.filter(wallet => wallet.id !== id));
+  };
+
   return (
     <FinanceContext.Provider
       value={{
@@ -238,6 +338,9 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         addTransaction,
         addBudget,
         addWallet,
+        updateWallet,
+        deleteWallet,
+        addTransfer,
         totalBalance,
         monthlyIncome,
         monthlyExpense

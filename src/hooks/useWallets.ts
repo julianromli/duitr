@@ -48,6 +48,6 @@ export const useWallets = () => {
 
   return {
     wallets,
-    ...walletStats
+    walletStats
   };
 };

@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -44,13 +44,13 @@
   }
   
   .dark {
-    --background: 222 84% 4.9%;
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
     
-    --card: 222 84% 4.9%;
+    --card: 222 47% 13%;
     --card-foreground: 210 40% 98%;
     
-    --popover: 222 84% 4.9%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
     
     --primary: 225 70% 60%;
@@ -65,11 +65,11 @@
     --accent: 243 75% 59%;
     --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 22.5%;
+    --input: 217.2 32.6% 22.5%;
     --ring: 225 70% 60%;
 
     --finance-income: 142 76% 60%;
@@ -181,4 +181,27 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Swipe transition animations */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity 300ms, transform 300ms;
 }
