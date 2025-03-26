@@ -2,11 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { FinanceProvider } from "@/context/FinanceContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import Navbar from "@/components/layout/Navbar";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Dashboard from "@/pages/Dashboard";
 import Transactions from "@/pages/Transactions";
 import Budgets from "@/pages/Budgets";
@@ -14,6 +16,10 @@ import Wallets from "@/pages/Wallets";
 import Settings from "@/pages/Settings";
 import Statistics from "@/pages/Statistics";
 import NotFound from "@/pages/NotFound";
+import Login from "@/pages/auth/Login";
+import SignUp from "@/pages/auth/SignUp";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import AuthCallback from "@/pages/auth/AuthCallback";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -86,26 +92,109 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nextProvider i18n={i18n}>
-          <FinanceProvider>
-            <BrowserRouter>
-              <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                <main className="pb-20"> {/* Add padding bottom for navbar */}
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/transactions" element={<Transactions />} />
-                    <Route path="/budgets" element={<Budgets />} />
-                    <Route path="/statistics" element={<Statistics />} />
-                    <Route path="/wallets" element={<Wallets />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Navbar />
-              </div>
-            </BrowserRouter>
-            <Toaster />
-            <Sonner />
-          </FinanceProvider>
+          <AuthProvider>
+            <FinanceProvider>
+              <BrowserRouter>
+                <Routes>
+                  {/* Auth Routes */}
+                  <Route path="/auth/login" element={<Login />} />
+                  <Route path="/auth/signup" element={<SignUp />} />
+                  <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  
+                  {/* Protected App Routes */}
+                  <Route 
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                          <main className="pb-20">
+                            <Dashboard />
+                          </main>
+                          <Navbar />
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  <Route 
+                    path="/transactions"
+                    element={
+                      <ProtectedRoute>
+                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                          <main className="pb-20">
+                            <Transactions />
+                          </main>
+                          <Navbar />
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  <Route 
+                    path="/budgets"
+                    element={
+                      <ProtectedRoute>
+                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                          <main className="pb-20">
+                            <Budgets />
+                          </main>
+                          <Navbar />
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  <Route 
+                    path="/statistics"
+                    element={
+                      <ProtectedRoute>
+                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                          <main className="pb-20">
+                            <Statistics />
+                          </main>
+                          <Navbar />
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  <Route 
+                    path="/wallets"
+                    element={
+                      <ProtectedRoute>
+                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                          <main className="pb-20">
+                            <Wallets />
+                          </main>
+                          <Navbar />
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  <Route 
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
+                          <main className="pb-20">
+                            <Settings />
+                          </main>
+                          <Navbar />
+                        </div>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* Fallback */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+                <Sonner />
+              </BrowserRouter>
+            </FinanceProvider>
+          </AuthProvider>
         </I18nextProvider>
       </TooltipProvider>
     </QueryClientProvider>
