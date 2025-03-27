@@ -38,7 +38,7 @@ const Wallets: React.FC = () => {
   const walletTypes = [
     { value: 'bank', label: 'Bank Account', icon: Landmark },
     { value: 'cash', label: 'Cash', icon: Wallet },
-    { value: 'credit', label: 'Credit Card', icon: CreditCard },
+    { value: 'e-wallet', label: 'E-Wallet', icon: CreditCard },
     { value: 'investment', label: 'Investment', icon: TrendingUp },
   ];
 
@@ -73,7 +73,7 @@ const Wallets: React.FC = () => {
     addWallet({
       name: formData.name,
       balance: parseFloat(formData.balance),
-      type: formData.type as 'cash' | 'bank' | 'credit' | 'investment',
+      type: formData.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
       color: formData.color,
     });
     

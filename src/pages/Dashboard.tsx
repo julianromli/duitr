@@ -192,17 +192,17 @@ const Dashboard: React.FC = () => {
             {/* Card Header with Profile */}
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-[#0D0D0D]">
+                <Avatar className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#0D0D0D]">
                   {profileImage ? (
-                    <AvatarImage src={profileImage} alt={username} />
+                    <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-[#242425] text-[#C6FE1E]">
+                    <AvatarFallback className="bg-[#242425] text-[#C6FE1E] flex items-center justify-center">
                       {username ? username.substring(0, 2).toUpperCase() : 'U'}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div>
-                  <p className="text-[#0D0D0D] text-sm font-medium">Hello {username}!</p>
+                  <p className="text-[#0D0D0D] text-sm font-bold">Hello {username}!</p>
                   <p className="text-[#242425] text-xs">Welcome Back</p>
                 </div>
               </div>

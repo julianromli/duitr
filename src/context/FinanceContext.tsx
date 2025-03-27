@@ -29,7 +29,7 @@ type Wallet = {
   id: string;
   name: string;
   balance: number;
-  type: 'cash' | 'bank' | 'credit' | 'investment';
+  type: 'cash' | 'bank' | 'e-wallet' | 'investment';
   color: string;
   userId?: string;
 };
@@ -182,9 +182,9 @@ const sampleWallets: Wallet[] = [
   },
   {
     id: '4',
-    name: 'Credit Card',
+    name: 'E-Wallet',
     balance: -450.80,
-    type: 'credit',
+    type: 'e-wallet',
     color: '#FA5252',
   },
 ];
@@ -240,22 +240,22 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
             
           if (createWalletsError) throw createWalletsError;
           
-          // Transform DB format to app format
+          // Transform DB format to app format and handle 'credit' to 'e-wallet' type conversion
           setWallets(newWallets.map(w => ({
             id: w.id,
             name: w.name,
             balance: w.balance,
-            type: w.type as 'cash' | 'bank' | 'credit' | 'investment',
+            type: w.type === 'credit' ? 'e-wallet' as const : w.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
             color: w.color,
             userId: w.user_id
           })));
         } else {
-          // Transform DB format to app format
+          // Transform DB format to app format and handle 'credit' to 'e-wallet' type conversion
           setWallets(walletsData.map(w => ({
             id: w.id,
             name: w.name,
             balance: w.balance,
-            type: w.type as 'cash' | 'bank' | 'credit' | 'investment',
+            type: w.type === 'credit' ? 'e-wallet' as const : w.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
             color: w.color,
             userId: w.user_id
           })));
@@ -767,56 +767,66 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Add new wallet
   const addWallet = async (wallet: Omit<Wallet, 'id' | 'userId'>) => {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication required',
-        description: 'You must be logged in to add wallets',
-      });
-      return;
-    }
-    
     try {
-      // Prepare data for Supabase
+      if (!user) throw new Error('User not authenticated');
+      
+      // Generate a temporary ID for optimistic update
+      const tempId = Math.random().toString(36).substring(2, 9);
+      
+      // Optimistic update
       const newWallet = {
-        name: wallet.name,
-        balance: wallet.balance,
-        type: wallet.type,
-        color: wallet.color,
-        user_id: user.id
+        id: tempId,
+        ...wallet,
+        userId: user.id,
       };
       
-      // Insert wallet to Supabase
+      setWallets(prev => [...prev, newWallet]);
+      
+      // Create record in Supabase
       const { data, error } = await supabase
         .from('wallets')
-        .insert(newWallet)
-        .select()
-        .single();
-        
-      if (error) throw error;
+        .insert({
+          name: wallet.name,
+          balance: wallet.balance,
+          type: wallet.type,
+          color: wallet.color,
+          user_id: user.id,
+        })
+        .select();
       
-      // Format for application state
-      const formattedWallet = {
-        id: data.id,
-        name: data.name,
-        balance: data.balance,
-        type: data.type as 'cash' | 'bank' | 'credit' | 'investment',
-        color: data.color,
-        userId: data.user_id
-      };
+      if (error) {
+        // Revert optimistic update
+        setWallets(prev => prev.filter(w => w.id !== tempId));
+        throw error;
+      }
       
-      // Update local state
-      setWallets([...wallets, formattedWallet]);
+      if (!data || data.length === 0) {
+        throw new Error('No data returned from insert operation');
+      }
+      
+      // Update the temporary wallet with the real DB ID
+      setWallets(prev => 
+        prev.map(w => 
+          w.id === tempId ? {
+            id: data[0].id,
+            name: data[0].name,
+            balance: data[0].balance,
+            type: data[0].type === 'credit' ? 'e-wallet' as const : data[0].type as 'cash' | 'bank' | 'e-wallet' | 'investment',
+            color: data[0].color,
+            userId: data[0].user_id
+          } : w
+        )
+      );
       
       toast({
         title: 'Wallet added',
-        description: 'Your wallet has been successfully added',
+        description: `${wallet.name} has been added to your accounts`,
       });
     } catch (error: any) {
-      console.error('Error adding wallet:', error);
+      // Handle error
       toast({
         variant: 'destructive',
-        title: 'Failed to add wallet',
+        title: 'Error adding wallet',
         description: error.message || 'An unexpected error occurred',
       });
     }
@@ -824,39 +834,43 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Update existing wallet
   const updateWallet = async (updatedWallet: Wallet) => {
-    if (!user) return;
-    
     try {
-      // Prepare data for Supabase
-      const walletData = {
-        name: updatedWallet.name,
-        balance: updatedWallet.balance,
-        type: updatedWallet.type,
-        color: updatedWallet.color
-      };
+      // Optimistic update
+      setWallets(prev => prev.map(wallet => 
+        wallet.id === updatedWallet.id ? updatedWallet : wallet)
+      );
       
-      // Update in Supabase
+      // Update record in Supabase
       const { error } = await supabase
         .from('wallets')
-        .update(walletData)
+        .update({
+          name: updatedWallet.name,
+          balance: updatedWallet.balance,
+          type: updatedWallet.type,
+          color: updatedWallet.color,
+        })
         .eq('id', updatedWallet.id);
-        
-      if (error) throw error;
       
-      // Update local state
-      setWallets(wallets.map(wallet => 
-        wallet.id === updatedWallet.id ? updatedWallet : wallet
-      ));
+      if (error) {
+        // Revert optimistic update if error
+        setWallets(prev => {
+          // Get the original wallet before the update
+          const originalWallet = wallets.find(w => w.id === updatedWallet.id);
+          return prev.map(wallet => 
+            wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
+          );
+        });
+        throw error;
+      }
       
       toast({
         title: 'Wallet updated',
-        description: 'Your wallet has been successfully updated',
+        description: `${updatedWallet.name} has been updated`,
       });
     } catch (error: any) {
-      console.error('Error updating wallet:', error);
       toast({
         variant: 'destructive',
-        title: 'Failed to update wallet',
+        title: 'Error updating wallet',
         description: error.message || 'An unexpected error occurred',
       });
     }

@@ -106,11 +106,11 @@ const Header: React.FC = () => {
     <header className="px-6 py-4 flex items-center justify-between border-b animate-fade-in">
       <div className="flex items-center gap-3">
         {user && (
-          <Avatar className="h-8 w-8 border border-gray-200">
+          <Avatar className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
             {profileImage ? (
-              <AvatarImage src={profileImage} alt={username} />
+              <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
             ) : (
-              <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF]">
+              <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF] flex items-center justify-center">
                 {username ? username.substring(0, 2).toUpperCase() : 'U'}
               </AvatarFallback>
             )}

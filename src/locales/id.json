@@ -51,7 +51,7 @@
     "types": {
       "cash": "Tunai",
       "bank": "Rekening Bank",
-      "credit": "Kartu Kredit",
+      "credit": "E-Wallet",
       "investment": "Investasi"
     },
     "delete_confirmation": "Apakah Anda yakin ingin menghapus dompet ini? Tindakan ini tidak dapat dibatalkan.",
