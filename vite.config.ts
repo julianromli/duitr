@@ -28,6 +28,8 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -58,11 +60,23 @@ export default defineConfig(({ mode }) => ({
             }
           },
           {
+            // Cache static assets
+            urlPattern: /\.(?:js|css|html|png|jpg|jpeg|svg|gif)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-assets',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
+          {
             // Match same-origin requests
             urlPattern: ({ url }) => {
               // This will be transpiled correctly in the service worker
               // @ts-ignore - 'self' is available in service worker scope
-              const isSameOrigin = url.origin === location.origin;
+              const isSameOrigin = url.origin === self.location.origin;
               return isSameOrigin;
             },
             handler: 'NetworkFirst',

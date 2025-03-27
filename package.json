@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:pwa": "vite build && npm run pwa:icons && npm run pwa:verify",
+    "build:pwa": "vite build && npm run pwa:icons && npm run pwa:verify && npm run copy-pwa",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "pwa:icons": "node generate-pwa-icons.mjs",
-    "pwa:verify": "node verify-pwa.mjs"
+    "pwa:verify": "node verify-pwa.mjs",
+    "copy-pwa": "node public/copy-to-dist.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
