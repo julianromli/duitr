@@ -24,7 +24,9 @@ export const testDirectSignup = async (email: string, password: string) => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: import.meta.env.MODE === 'production'
+          ? 'https://duitr.my.id/auth/callback'
+          : `${window.location.origin}/auth/callback`,
         data: {
           name: email.split('@')[0], // Use part of email as name
         }
@@ -43,7 +45,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    site: import.meta.env.MODE === 'production' 
+      ? 'https://duitr.my.id'
+      : window.location.origin
   }
 });
 
@@ -54,7 +60,9 @@ export const signUpWithEmail = async (email: string, password: string) => {
     email,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      emailRedirectTo: import.meta.env.MODE === 'production'
+        ? 'https://duitr.my.id/auth/callback'
+        : `${window.location.origin}/auth/callback`,
       data: {
         name: email.split('@')[0], // Use part of email as name
       }
