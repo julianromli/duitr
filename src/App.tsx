@@ -16,17 +16,21 @@ import Wallets from "@/pages/Wallets";
 import Settings from "@/pages/Settings";
 import Statistics from "@/pages/Statistics";
 import NotFound from "@/pages/NotFound";
+import Offline from "@/pages/Offline";
 import Login from "@/pages/auth/Login";
 import SignUp from "@/pages/auth/SignUp";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import AuthCallback from "@/pages/auth/AuthCallback";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TestDatePicker } from "@/components/ui/test-date-picker";
+import { InstallAppBanner } from "@/components/shared/InstallAppBanner";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
   // Apply dark theme for the whole app
   useEffect(() => {
     // Always use dark theme
@@ -45,6 +49,25 @@ const App = () => {
     }
   }, []);
 
+  // Online status monitor
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // If offline, show the offline page
+  if (!isOnline) {
+    return <Offline />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -59,6 +82,9 @@ const App = () => {
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  
+                  {/* Offline page */}
+                  <Route path="/offline" element={<Offline />} />
                   
                   {/* Test Route */}
                   <Route path="/test-datepicker" element={<TestDatePicker />} />
@@ -151,6 +177,7 @@ const App = () => {
                   {/* Fallback */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <InstallAppBanner />
                 <Toaster />
                 <Sonner />
               </BrowserRouter>
