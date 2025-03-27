@@ -1,25 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Header from '@/components/layout/Header';
 import { 
   Tabs, 
   TabsContent, 
   TabsList, 
   TabsTrigger 
 } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sun, Moon, User, LogOut, Camera } from 'lucide-react';
+import { 
+  Sun, 
+  Moon, 
+  User, 
+  LogOut, 
+  Camera, 
+  ChevronLeft, 
+  Settings as SettingsIcon, 
+  Languages,
+  Bell,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFinance } from '@/context/FinanceContext';
 import LanguageSwitcher from '@/components/settings/LanguageSwitcher';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
+import { motion } from 'framer-motion';
 
 // Currency data - Only keep IDR
 const currencies = [
@@ -249,40 +259,31 @@ const Settings: React.FC = () => {
       // Clear any cached images
       if ('caches' in window) {
         try {
-          // Try to clear cache for this image
-          const cacheKeys = await window.caches.keys();
-          for (const cacheKey of cacheKeys) {
-            const cache = await window.caches.open(cacheKey);
-            await cache.delete(imageUrl);
-          }
-        } catch (cacheError) {
-          console.log('Cache clearing failed, but not critical', cacheError);
+          caches.open('avatars').then(cache => {
+            cache.delete(data.publicUrl).then(() => {
+              console.log('Cleared cached avatar image');
+            });
+          });
+        } catch (e) {
+          console.log('Could not clear cache, but this is not critical', e);
         }
       }
       
-      // Show success message
-      toast({
-        title: 'Profile photo updated',
-        description: 'Your profile photo has been updated successfully',
-      });
-      
-      // Force reload the image in the header and other places by dispatching an event
+      // Trigger event to update avatar in other components
       window.dispatchEvent(new Event('profileImageUpdated'));
       
+      toast({
+        title: 'Profile image updated',
+      });
     } catch (error: any) {
-      console.error('Error uploading image:', error);
       toast({
         variant: 'destructive',
         title: 'Upload failed',
-        description: `Failed to upload profile image: ${error.message || 'Unknown error'}`,
+        description: error.message || 'Failed to upload profile image',
       });
+      console.error('Upload error:', error);
     } finally {
       setIsUploadingImage(false);
-      
-      // Reset file input so the same file can be selected again if needed
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
   
@@ -293,13 +294,11 @@ const Settings: React.FC = () => {
   const handleProfileSave = async () => {
     if (!user) return;
     
+    setIsSaving(true);
     try {
-      setIsSaving(true);
-      
-      // Update user metadata
       const { error } = await supabase.auth.updateUser({
         data: {
-          name: userProfile.username
+          name: userProfile.username,
         }
       });
       
@@ -307,14 +306,12 @@ const Settings: React.FC = () => {
       
       toast({
         title: 'Profile updated',
-        description: 'Your profile has been updated successfully',
       });
-    } catch (error) {
-      console.error('Error updating profile:', error);
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Update failed',
-        description: 'Failed to update profile. Please try again.',
+        description: error.message || 'Failed to update profile',
       });
     } finally {
       setIsSaving(false);
@@ -326,169 +323,157 @@ const Settings: React.FC = () => {
       await signOut();
       navigate('/auth/login');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Error logging out:', error);
       toast({
         variant: 'destructive',
-        title: 'Sign out failed',
-        description: 'Failed to sign out. Please try again.',
+        title: 'Logout failed',
+        description: 'An error occurred while logging out',
       });
     }
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <Header />
-      <div className="flex-1 p-6 pb-24 md:pb-6 space-y-6 overflow-y-auto max-h-[calc(100vh-4rem)]">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">{t('settings.title')}</h2>
-        </div>
+    <motion.div 
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <div className="p-6">
+        {/* Header with back button */}
+        <motion.div 
+          className="flex items-center justify-between mb-6"
+          variants={itemVariants}
+        >
+          <div className="flex items-center">
+            <button onClick={() => navigate('/')} className="mr-3">
+              <ChevronLeft size={24} className="text-white" />
+            </button>
+            <h1 className="text-xl font-bold">Profile</h1>
+          </div>
+        </motion.div>
         
-        <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid grid-cols-2 mb-6">
-            <TabsTrigger value="appearance" className="flex items-center justify-center">
-              <Sun className="h-5 w-5" />
-              <span className="ml-2 hidden sm:block">{t('settings.appearance')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="account" className="flex items-center justify-center">
-              <User className="h-5 w-5" />
-              <span className="ml-2 hidden sm:block">{t('settings.account')}</span>
+        {/* Profile Header */}
+        <motion.div 
+          className="flex flex-col items-center justify-center mb-8"
+          variants={itemVariants}
+        >
+          <div className="relative mb-4">
+            <Avatar className="h-24 w-24 border-2 border-[#C6FE1E]">
+              {profileImage ? (
+                <AvatarImage src={profileImage} alt={userProfile.username} className="object-cover" />
+              ) : (
+                <AvatarFallback className="bg-[#242425] text-[#C6FE1E] text-2xl">
+                  {userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : 'U'}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <motion.button 
+              className="absolute bottom-0 right-0 bg-[#C6FE1E] text-[#0D0D0D] p-2 rounded-full"
+              onClick={triggerFileInput}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              disabled={isUploadingImage}
+            >
+              <Camera size={16} />
+            </motion.button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              className="hidden"
+              accept="image/*"
+            />
+          </div>
+          
+          <h2 className="text-xl font-bold">{userProfile.username}</h2>
+          <p className="text-[#868686]">{userProfile.email}</p>
+        </motion.div>
+        
+        {/* Profile Tabs */}
+        <Tabs defaultValue="account" className="w-full">
+          <TabsList className="grid grid-cols-1 mb-6 bg-[#242425] p-1 rounded-xl">
+            <TabsTrigger 
+              value="account" 
+              className="data-[state=active]:bg-[#C6FE1E] data-[state=active]:text-[#0D0D0D] rounded-lg"
+            >
+              Account
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="appearance">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('settings.appearance')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>{t('settings.theme')}</Label>
-                  <RadioGroup 
-                    value={theme} 
-                    onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
-                    className="flex flex-col sm:flex-row gap-4"
-                  >
-                    <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="light" id="light" className="rounded-full" />
-                      <Label htmlFor="light" className="flex items-center gap-2 cursor-pointer">
-                        <Sun className="h-4 w-4" />
-                        {t('settings.light')}
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="dark" id="dark" className="rounded-full" />
-                      <Label htmlFor="dark" className="flex items-center gap-2 cursor-pointer">
-                        <Moon className="h-4 w-4" />
-                        {t('settings.dark')}
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 border p-3 rounded-md hover:bg-secondary/50">
-                      <RadioGroupItem value="system" id="system" className="rounded-full" />
-                      <Label htmlFor="system" className="cursor-pointer">{t('settings.system')}</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <LanguageSwitcher />
-                
-                <Button className="w-full sm:w-auto" onClick={handleSaveAppearance}>
-                  {t('buttons.save')}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="account">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Profile Image Section */}
-                <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="relative">
-                    <Avatar className="w-24 h-24 border-4 border-[#7B61FF] border-dashed rounded-full">
-                      {profileImage ? (
-                        <AvatarImage src={profileImage} alt="Profile" />
-                      ) : (
-                        <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF] text-xl">
-                          {userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : 'U'}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <Button
-                      type="button"
-                      onClick={triggerFileInput}
-                      size="icon"
-                      variant="secondary"
-                      className="absolute bottom-0 right-0 rounded-full h-8 w-8 bg-[#7B61FF] hover:bg-[#6247D9] text-white"
-                      disabled={isUploadingImage}
-                    >
-                      {isUploadingImage ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent border-white" />
-                      ) : (
-                        <Camera className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      disabled={isUploadingImage}
-                    />
-                  </div>
-                  <p className="text-sm text-center font-medium uppercase">
-                    {userProfile.username}
-                  </p>
-                </div>
-                
-                {/* Profile Form */}
-                <div className="space-y-4">
+          <TabsContent value="account" className="mt-0">
+            <motion.div
+              variants={itemVariants}
+              className="space-y-6"
+            >
+              {/* Profile Info */}
+              <Card className="bg-[#242425] border-none shadow-none text-white">
+                <CardContent className="p-5 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Your Email Account</Label>
-                    <Input
-                      id="email"
-                      value={userProfile.email}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="username" className="text-[#868686]">Username</Label>
                     <Input
                       id="username"
                       value={userProfile.username}
                       onChange={(e) => setUserProfile({...userProfile, username: e.target.value})}
-                      placeholder="Enter your username"
+                      className="bg-[#1A1A1A] border-none text-white"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-[#868686]">Email</Label>
+                    <Input
+                      id="email"
+                      value={userProfile.email}
+                      readOnly
+                      className="bg-[#1A1A1A] border-none text-white opacity-70"
                     />
                   </div>
                   
                   <Button 
-                    className="w-full bg-[#7B61FF] hover:bg-[#6247D9] text-white mt-4" 
                     onClick={handleProfileSave}
                     disabled={isSaving}
+                    className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00]"
                   >
-                    {isSaving ? 'Saving...' : 'Save Change'}
+                    {isSaving ? 'Saving...' : 'Save Profile'}
                   </Button>
                   
+                  {/* Logout Button - Moved from Settings tab */}
                   <Button 
-                    className="w-full bg-red-500 hover:bg-red-600 text-white mt-2" 
-                    onClick={handleLogout}
-                    type="button"
+                    onClick={handleLogout} 
+                    variant="outline" 
+                    className="w-full bg-transparent border border-red-500 text-red-500 hover:bg-red-500/10 mt-4"
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
+                    <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

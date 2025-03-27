@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { FaGoogle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { ChevronLeft } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -102,83 +103,93 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF3AA] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+      {/* Header with back button */}
       <motion.div 
-        className="max-w-md w-full bg-[#E6DDFF] rounded-3xl overflow-hidden shadow-lg"
+        className="p-6 flex items-start"
+        variants={itemVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <button 
+          onClick={() => navigate(-1)} 
+          className="p-1 text-white rounded-full"
+        >
+          <ChevronLeft size={24} />
+        </button>
+      </motion.div>
+      
+      <motion.div 
+        className="flex-1 flex flex-col p-6 pt-0"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        {/* Unicorn Illustration */}
+        {/* Logo and Title */}
         <motion.div 
-          className="p-8 flex flex-col items-center"
+          className="mb-12 flex flex-col items-center"
           variants={itemVariants}
         >
-          <div className="relative w-44 h-44 mb-4">
-            {/* Unicorn head and body */}
-            <div className="absolute w-40 h-44 bg-[#FFC0CB] rounded-t-[120px] rounded-bl-[80px] rounded-br-[30px] transform rotate-6">
-              {/* Ears */}
-              <div className="absolute top-5 right-4 w-6 h-10 bg-[#FFC0CB] rounded-full transform rotate-[-20deg]"></div>
-              
-              {/* Horn */}
-              <div className="absolute top-0 left-1/2 w-3 h-10 bg-white transform -translate-x-1/2 -translate-y-4 rotate-[-10deg]">
-                {/* Horn stripes */}
-                <div className="absolute top-1 w-full h-0.5 bg-black transform rotate-[-70deg]"></div>
-                <div className="absolute top-3 w-full h-0.5 bg-black transform rotate-[-70deg]"></div>
-                <div className="absolute top-5 w-full h-0.5 bg-black transform rotate-[-70deg]"></div>
-              </div>
-              
-              {/* Eye */}
-              <div className="absolute top-16 right-10 w-4 h-2 bg-black rounded-full"></div>
-              
-              {/* Eyelid closed (smile) */}
-              <div className="absolute top-16 right-12 w-6 h-3 border-b-2 border-black rounded-b-full"></div>
-              
-              {/* Mane */}
-              <div className="absolute top-10 left-6 w-10 h-12 bg-black rounded-full"></div>
-              <div className="absolute top-14 left-4 w-8 h-8 bg-black rounded-full"></div>
-              <div className="absolute top-18 left-2 w-6 h-6 bg-black rounded-full"></div>
-              
-              {/* Spots */}
-              <div className="absolute bottom-10 left-1/2 w-8 h-8 bg-black rounded-full"></div>
-              <div className="absolute bottom-20 left-1/3 w-6 h-6 bg-black rounded-full"></div>
-              <div className="absolute bottom-14 left-2/3 w-4 h-4 bg-black rounded-full"></div>
-              
-              {/* Mouth */}
-              <div className="absolute top-24 right-10 w-8 h-1 bg-black"></div>
-              
-              {/* White spot */}
-              <div className="absolute top-20 right-6 w-6 h-6 bg-white rounded-full"></div>
-            </div>
+          <div className="w-16 h-16 bg-[#C6FE1E] rounded-full flex items-center justify-center mb-4">
+            <svg viewBox="0 0 24 24" fill="none" className="w-10 h-10" stroke="#0D0D0D" strokeWidth="2">
+              <path d="M3 6.5V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V6.5M3 6.5H21M3 6.5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V6.5M12 11C12 9.89543 12.8954 9 14 9H17C18.1046 9 19 9.89543 19 11V14C19 15.1046 18.1046 16 17 16H14C12.8954 16 12 15.1046 12 14V11Z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold mt-4 mb-8">Login</h1>
+          <h1 className="text-3xl font-bold text-white">Log in to URFinance</h1>
         </motion.div>
         
+        {/* Social Login Buttons */}
+        <motion.div 
+          className="space-y-3 mb-8"
+          variants={itemVariants}
+        >
+          <Button 
+            variant="outline" 
+            className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
+            onClick={handleGoogleSignIn}
+          >
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+              <FaGoogle className="h-4 w-4 text-black" />
+            </div>
+            <span className="font-medium">Continue with Google</span>
+          </Button>
+        </motion.div>
+        
+        {/* Divider */}
+        <motion.div 
+          className="relative mb-8" 
+          variants={itemVariants}
+        >
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#292929]"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-4 bg-[#0D0D0D] text-[#868686]">or</span>
+          </div>
+        </motion.div>
+        
+        {/* Email Login Form */}
         <motion.form 
           onSubmit={handleEmailSignIn}
-          className="bg-white p-8 rounded-t-3xl -mt-4"
+          className="space-y-6"
           variants={itemVariants}
         >
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div>
+              <Label htmlFor="email" className="text-white mb-2 block">Email or username</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Email"
+                placeholder="Email or username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
               />
             </div>
             
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link to="/auth/forgot-password" className="text-sm text-[#7B61FF] hover:underline">
-                  Forgot Password?
-                </Link>
-              </div>
+            <div>
+              <Label htmlFor="password" className="text-white mb-2 block">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -186,45 +197,43 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
               />
             </div>
             
-            <Button 
-              type="submit" 
-              className="w-full bg-[#292D32] hover:bg-[#3E3E3E] text-white" 
-              disabled={isSubmitting}
-            >
-              Login
-            </Button>
-            
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
+            <div className="pt-4">
+              <Button 
+                type="submit" 
+                className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full" 
+                disabled={isSubmitting}
+              >
+                Log In
+              </Button>
             </div>
             
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-2"
-              disabled={isSubmitting}
-            >
-              <FaGoogle className="h-4 w-4" />
-              <span>Google</span>
-            </Button>
-            
-            <p className="text-sm text-center mt-6">
-              You don't have an account?{' '}
-              <Link to="/auth/signup" className="text-[#7B61FF] hover:underline font-medium">
-                Sign Up
+            <div className="text-center pt-2">
+              <Link to="/auth/forgot-password" className="text-white hover:underline text-sm font-medium">
+                Forgot your password?
               </Link>
-            </p>
+            </div>
           </div>
         </motion.form>
+        
+        {/* Sign Up Link */}
+        <motion.div 
+          className="mt-auto pt-8 border-t border-[#292929] text-center"
+          variants={itemVariants}
+        >
+          <p className="text-[#868686]">
+            Don't have an account?
+          </p>
+          <Link 
+            to="/auth/signup" 
+            className="block w-full border border-[#868686] text-white py-3 px-6 rounded-full mt-4 font-medium hover:border-white"
+          >
+            Sign up for URFinance
+          </Link>
+        </motion.div>
       </motion.div>
     </div>
   );

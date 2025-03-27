@@ -36,100 +36,112 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     lg: 'w-12 h-12'
   };
   
-  const iconClasses = `${iconSizes[size]} rounded-xl flex items-center justify-center`;
+  const iconClasses = `${iconSizes[size]} rounded-full flex items-center justify-center`;
 
   // Define icon mapping
   const getIconDetails = () => {
     // Get icon and color based on category
     if (categoryLower.includes('salary')) {
       return {
-        icon: <Briefcase className="w-4 h-4 text-white" />,
-        bgColor: 'bg-blue-500',
+        icon: <Briefcase className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'S'
       };
     } else if (categoryLower.includes('freelance')) {
       return {
-        icon: <Briefcase className="w-4 h-4 text-white" />,
-        bgColor: 'bg-purple-500',
+        icon: <Briefcase className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'F'
       };
     } else if (categoryLower.includes('youtube') || categoryLower.includes('subscription')) {
       return {
-        icon: <Film className="w-4 h-4 text-white" />,
-        bgColor: 'bg-red-500',
+        icon: <Film className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: '▶️'
       };
     } else if (categoryLower.includes('ovo')) {
       return {
-        icon: <Smartphone className="w-4 h-4 text-white" />,
-        bgColor: 'bg-purple-600',
+        icon: <Smartphone className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'O'
       };
     } else if (categoryLower.includes('google')) {
       return {
-        icon: <Smartphone className="w-4 h-4 text-white" />,
-        bgColor: 'bg-blue-400',
+        icon: <Smartphone className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: '▶️'
       };
     } else if (categoryLower.includes('stripe')) {
       return {
-        icon: <DollarSign className="w-4 h-4 text-white" />,
-        bgColor: 'bg-indigo-500',
+        icon: <DollarSign className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'S'
       };
     } else if (categoryLower.includes('groceries')) {
       return {
-        icon: <ShoppingCart className="w-4 h-4 text-white" />,
-        bgColor: 'bg-green-500',
+        icon: <ShoppingCart className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'G'
       };
-    } else if (categoryLower.includes('dining')) {
+    } else if (categoryLower.includes('dining') || categoryLower.includes('food')) {
       return {
-        icon: <Coffee className="w-4 h-4 text-white" />,
-        bgColor: 'bg-yellow-600',
+        icon: <Coffee className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'D'
       };
     } else if (categoryLower.includes('rent')) {
       return {
-        icon: <HomeIcon className="w-4 h-4 text-white" />,
-        bgColor: 'bg-blue-600',
+        icon: <HomeIcon className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'R'
       };
     } else if (categoryLower.includes('utilities')) {
       return {
-        icon: <Zap className="w-4 h-4 text-white" />,
-        bgColor: 'bg-yellow-500',
+        icon: <Zap className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'U'
       };
     } else if (categoryLower.includes('side business')) {
       return {
-        icon: <Briefcase className="w-4 h-4 text-white" />,
-        bgColor: 'bg-emerald-600',
+        icon: <Briefcase className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'B'
       };
     } else if (categoryLower.includes('passive')) {
       return {
-        icon: <Wifi className="w-4 h-4 text-white" />,
-        bgColor: 'bg-pink-500',
+        icon: <Wifi className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'P'
       };
     } else if (categoryLower.includes('monthly')) {
       return {
-        icon: <DollarSign className="w-4 h-4 text-white" />,
-        bgColor: 'bg-blue-500',
+        icon: <DollarSign className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'M'
       };
     } else if (categoryLower.includes('e-book') || categoryLower.includes('book')) {
       return {
-        icon: <BookOpen className="w-4 h-4 text-white" />,
-        bgColor: 'bg-green-600',
+        icon: <BookOpen className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: 'B'
+      };
+    } else if (categoryLower.includes('transfer')) {
+      return {
+        icon: <DollarSign className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#1364FF]',
+        label: 'T'
+      };
+    } else if (categoryLower.includes('app') || categoryLower.includes('store')) {
+      return {
+        icon: <Smartphone className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
+        label: 'A'
       };
     } else {
       // Default
       return {
-        icon: <CreditCard className="w-4 h-4 text-white" />,
-        bgColor: 'bg-gray-500',
+        icon: <CreditCard className="w-4 h-4 text-[#0D0D0D]" />,
+        bgColor: 'bg-[#C6FE1E]',
         label: '$'
       };
     }

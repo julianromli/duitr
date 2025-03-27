@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { X } from 'lucide-react';
 
 interface TransferFormProps {
   open: boolean;
@@ -18,11 +19,11 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   
   const [formData, setFormData] = useState({
     amount: '',
-    description: 'Transfer',
+    description: '',
     date: new Date().toISOString().split('T')[0],
     fromWalletId: '',
     toWalletId: '',
-    fee: '0.5', // Default admin fee
+    fee: '0',
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +47,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     if (formData.fromWalletId === formData.toWalletId) {
       toast({
         title: 'Error',
-        description: 'Origin and destination accounts cannot be the same',
+        description: 'Source and destination accounts cannot be the same',
         variant: 'destructive',
       });
       return;
@@ -65,17 +66,17 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     // Reset form
     setFormData({
       amount: '',
-      description: 'Transfer',
+      description: '',
       date: new Date().toISOString().split('T')[0],
       fromWalletId: '',
       toWalletId: '',
-      fee: '0.5',
+      fee: '0',
     });
     
     // Show success message
     toast({
       title: 'Success',
-      description: 'Transfer completed successfully',
+      description: 'Transfer added successfully',
     });
     
     // Close dialog
@@ -84,27 +85,27 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Transfer Money</DialogTitle>
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+        <DialogHeader className="flex flex-row justify-between items-center">
+          <DialogTitle className="text-xl font-bold">Add Transfer</DialogTitle>
+          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
+            <X size={16} />
+          </DialogClose>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="fromWalletId">From Account</Label>
+            <Label htmlFor="fromWalletId" className="text-[#868686]">From Account</Label>
             <Select
               value={formData.fromWalletId}
               onValueChange={(value) => setFormData({ ...formData, fromWalletId: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-[#242425] border-0 text-white">
                 <SelectValue placeholder="Select source account" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#242425] border-0 text-white">
                 {wallets.map((wallet) => (
-                  <SelectItem 
-                    key={wallet.id} 
-                    value={wallet.id}
-                    disabled={wallet.id === formData.toWalletId}
-                  >
+                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
                     {wallet.name}
                   </SelectItem>
                 ))}
@@ -113,20 +114,21 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="toWalletId">To Account</Label>
+            <Label htmlFor="toWalletId" className="text-[#868686]">To Account</Label>
             <Select
               value={formData.toWalletId}
               onValueChange={(value) => setFormData({ ...formData, toWalletId: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-[#242425] border-0 text-white">
                 <SelectValue placeholder="Select destination account" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#242425] border-0 text-white">
                 {wallets.map((wallet) => (
                   <SelectItem 
                     key={wallet.id} 
                     value={wallet.id}
                     disabled={wallet.id === formData.fromWalletId}
+                    className="hover:bg-[#333] focus:bg-[#333]"
                   >
                     {wallet.name}
                   </SelectItem>
@@ -136,7 +138,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount">Transfer Amount</Label>
+            <Label htmlFor="amount" className="text-[#868686]">Amount</Label>
             <Input
               id="amount"
               name="amount"
@@ -146,35 +148,38 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               value={formData.amount}
               onChange={handleChange}
               required
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="fee">Admin Fee</Label>
+            <Label htmlFor="fee" className="text-[#868686]">Fee (if any)</Label>
             <Input
               id="fee"
               name="fee"
               type="number"
               step="0.01"
-              placeholder="0.50"
+              placeholder="0.00"
               value={formData.fee}
               onChange={handleChange}
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="description" className="text-[#868686]">Description (optional)</Label>
             <Input
               id="description"
               name="description"
               placeholder="Enter description"
               value={formData.description}
               onChange={handleChange}
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date" className="text-[#868686]">Date</Label>
             <Input
               id="date"
               name="date"
@@ -182,11 +187,12 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               value={formData.date}
               onChange={handleChange}
               required
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
-          <Button type="submit" className="w-full">
-            Complete Transfer
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+            Add Transfer
           </Button>
         </form>
       </DialogContent>

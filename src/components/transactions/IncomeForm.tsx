@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { X } from 'lucide-react';
 
 interface IncomeFormProps {
   open: boolean;
@@ -77,20 +78,24 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     'Investment',
     'Gift',
     'Refund',
+    'Business',
     'Bonus',
-    'Commission',
-    'Royalties'
+    'Other'
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Income</DialogTitle>
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+        <DialogHeader className="flex flex-row justify-between items-center">
+          <DialogTitle className="text-xl font-bold">Add Income</DialogTitle>
+          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
+            <X size={16} />
+          </DialogClose>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount" className="text-[#868686]">Amount</Label>
             <Input
               id="amount"
               name="amount"
@@ -100,21 +105,22 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               value={formData.amount}
               onChange={handleChange}
               required
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category" className="text-[#868686]">Category</Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-[#242425] border-0 text-white">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#242425] border-0 text-white">
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category} value={category} className="hover:bg-[#333] focus:bg-[#333]">
                     {category}
                   </SelectItem>
                 ))}
@@ -123,17 +129,17 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="walletId">Account</Label>
+            <Label htmlFor="walletId" className="text-[#868686]">Account</Label>
             <Select
               value={formData.walletId}
               onValueChange={(value) => setFormData({ ...formData, walletId: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-[#242425] border-0 text-white">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#242425] border-0 text-white">
                 {wallets.map((wallet) => (
-                  <SelectItem key={wallet.id} value={wallet.id}>
+                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
                     {wallet.name}
                   </SelectItem>
                 ))}
@@ -142,7 +148,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-[#868686]">Description</Label>
             <Input
               id="description"
               name="description"
@@ -150,11 +156,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               value={formData.description}
               onChange={handleChange}
               required
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date" className="text-[#868686]">Date</Label>
             <Input
               id="date"
               name="date"
@@ -162,10 +169,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               value={formData.date}
               onChange={handleChange}
               required
+              className="bg-[#242425] border-0 text-white"
             />
           </div>
           
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
             Add Income
           </Button>
         </form>

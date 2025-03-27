@@ -1,42 +1,56 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Home, Receipt, PieChart, Wallet, Settings, User, CreditCard } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Home, BarChart3, CreditCard, User, FileText } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { t } = useTranslation();
-  
-  const navItems = [
-    { name: t('navbar.dashboard'), path: '/', icon: Home },
-    { name: t('navbar.transactions'), path: '/transactions', icon: Receipt },
-    { name: t('navbar.statistics'), path: '/statistics', icon: PieChart },
-    { name: t('navbar.card'), path: '/wallets', icon: CreditCard },
-    { name: t('navbar.profile'), path: '/settings', icon: User },
-  ];
+  const { pathname } = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === '/' && pathname === '/') return true;
+    if (path !== '/' && pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-20 animate-fade-in">
-      <div className="flex justify-around items-center p-2 max-w-md mx-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.path}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-col items-center py-2 px-6 rounded-md transition-colors duration-200",
-                isActive
-                  ? "text-[#7B61FF]"
-                  : "text-gray-400"
-              )
-            }
-            title={item.name}
-          >
-            <item.icon className="h-6 w-6" />
-          </NavLink>
-        ))}
-      </div>
-    </nav>
+    <motion.div 
+      className="fixed bottom-0 left-0 right-0 z-50 p-4 w-full max-w-md mx-auto"
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    >
+      <nav className="bg-[#1A1A1A]/80 backdrop-blur-md p-3 rounded-full flex justify-between items-center shadow-lg border border-[#242425]">
+        <Link to="/">
+          <div className={`p-2 rounded-full ${isActive('/') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
+            <Home size={24} />
+          </div>
+        </Link>
+        
+        <Link to="/transactions">
+          <div className={`p-2 rounded-full ${isActive('/transactions') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
+            <FileText size={24} />
+          </div>
+        </Link>
+        
+        <Link to="/wallets">
+          <div className={`p-2 rounded-full ${isActive('/wallets') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
+            <CreditCard size={24} />
+          </div>
+        </Link>
+        
+        <Link to="/statistics">
+          <div className={`p-2 rounded-full ${isActive('/statistics') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
+            <BarChart3 size={24} />
+          </div>
+        </Link>
+
+        <Link to="/profile">
+          <div className={`p-2 rounded-full ${isActive('/profile') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
+            <User size={24} />
+          </div>
+        </Link>
+      </nav>
+    </motion.div>
   );
 };
 

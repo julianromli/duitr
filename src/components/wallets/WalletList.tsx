@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Wallet, CreditCard, DollarSign, ArrowUpRight, ArrowDownRight, Edit, Trash } from 'lucide-react';
+import { Wallet, CreditCard, Landmark, TrendingUp, ArrowUpRight, ArrowDownRight, Edit, Trash, MoreVertical } from 'lucide-react';
 import { useWallets } from '@/hooks/useWallets';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,8 +18,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { motion } from 'framer-motion';
 
 const WalletList: React.FC = () => {
   const { wallets, walletStats } = useWallets();
@@ -31,15 +32,15 @@ const WalletList: React.FC = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   
   const walletTypes = [
-    { value: 'bank', label: 'Bank Account' },
-    { value: 'cash', label: 'Cash' },
-    { value: 'credit', label: 'Credit Card' },
-    { value: 'investment', label: 'Investment' },
+    { value: 'bank', label: 'Bank Account', icon: Landmark },
+    { value: 'cash', label: 'Cash', icon: Wallet },
+    { value: 'credit', label: 'Credit Card', icon: CreditCard },
+    { value: 'investment', label: 'Investment', icon: TrendingUp },
   ];
 
   const colors = [
-    { value: '#4263EB', label: 'Blue' },
-    { value: '#0CA678', label: 'Green' },
+    { value: '#1364FF', label: 'Blue' },
+    { value: '#C6FE1E', label: 'Green' },
     { value: '#F59F00', label: 'Yellow' },
     { value: '#FA5252', label: 'Red' },
     { value: '#9775FA', label: 'Purple' },
@@ -49,13 +50,13 @@ const WalletList: React.FC = () => {
   const getWalletIcon = (type: string) => {
     switch (type) {
       case 'bank':
-        return <DollarSign className="w-5 h-5" />;
+        return <Landmark className="w-5 h-5" />;
       case 'credit':
         return <CreditCard className="w-5 h-5" />;
       case 'cash':
-        return <DollarSign className="w-5 h-5" />;
+        return <Wallet className="w-5 h-5" />;
       case 'investment':
-        return <ArrowUpRight className="w-5 h-5" />;
+        return <TrendingUp className="w-5 h-5" />;
       default:
         return <Wallet className="w-5 h-5" />;
     }
@@ -110,75 +111,103 @@ const WalletList: React.FC = () => {
       description: "Account deleted successfully",
     });
   };
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="bg-card rounded-xl p-4 shadow-sm border">
-        <div className="flex items-center gap-3 mb-4">
-          <Wallet className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">Total Balance</h2>
-        </div>
-        <p className="text-3xl font-bold">{formatCurrency(walletStats.totalBalance)}</p>
-        <p className="text-sm text-muted-foreground mt-1">Across all accounts</p>
-      </div>
+    <motion.div 
+      className="space-y-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Total Balance Card */}
+      <motion.div 
+        className="bg-[#1364FF] rounded-xl p-5 text-white"
+        variants={itemVariants}
+      >
+        <p className="text-sm opacity-80 mb-1">Total Balance</p>
+        <h3 className="text-2xl font-bold">{formatCurrency(walletStats.totalBalance)}</h3>
+        <p className="text-xs mt-2 opacity-70">Across all accounts</p>
+      </motion.div>
       
-      <div className="grid grid-cols-1 gap-4">
+      {/* Wallets */}
+      <div className="space-y-3">
         {wallets.map((wallet) => (
-          <Card key={wallet.id} className="overflow-hidden">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
+          <motion.div 
+            key={wallet.id} 
+            className="bg-[#242425] rounded-xl overflow-hidden"
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-3">
                   <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center" 
-                    style={{ backgroundColor: `${wallet.color}20`, color: wallet.color }}
+                    style={{ backgroundColor: wallet.color }}
                   >
                     {getWalletIcon(wallet.type)}
                   </div>
-                  <CardTitle className="text-base">{wallet.name}</CardTitle>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm px-2 py-1 rounded-full bg-muted">
-                    {wallet.type.charAt(0).toUpperCase() + wallet.type.slice(1)}
+                  <div>
+                    <p className="font-medium text-white">{wallet.name}</p>
+                    <p className="text-xs text-[#868686] capitalize">{wallet.type}</p>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditWallet(wallet)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteWallet(wallet.id)}
-                        className="text-destructive"
-                      >
-                        <Trash className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="focus:outline-none">
+                    <MoreVertical size={18} className="text-[#868686]" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-[#1A1A1A] border-none text-white">
+                    <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-[#333]" />
+                    <DropdownMenuItem 
+                      className="focus:bg-[#333] cursor-pointer"
+                      onClick={() => handleEditWallet(wallet)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="text-red-400 focus:bg-[#333] focus:text-red-400 cursor-pointer"
+                      onClick={() => handleDeleteWallet(wallet.id)}
+                    >
+                      <Trash className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="pt-2">
-                <p 
-                  className={cn(
-                    "text-2xl font-bold",
-                    wallet.balance < 0 ? "text-finance-expense" : ""
-                  )}
-                >
+              
+              <div>
+                <p className="text-2xl font-bold text-white">
                   {formatCurrency(wallet.balance)}
                 </p>
                 
-                <div className="flex mt-4 gap-6">
+                <div className="flex mt-3 gap-6">
                   <div className="space-y-0.5">
-                    <div className="flex items-center text-xs text-finance-income">
+                    <div className="flex items-center text-xs text-[#C6FE1E]">
                       <ArrowUpRight className="w-3 h-3 mr-1" /> Income
                     </div>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium text-white">
                       {formatCurrency(
                         walletStats.walletTransactions
                           .find(w => w.id === wallet.id)?.income || 0
@@ -187,10 +216,10 @@ const WalletList: React.FC = () => {
                   </div>
                   
                   <div className="space-y-0.5">
-                    <div className="flex items-center text-xs text-finance-expense">
+                    <div className="flex items-center text-xs text-red-400">
                       <ArrowDownRight className="w-3 h-3 mr-1" /> Expenses
                     </div>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium text-white">
                       {formatCurrency(
                         walletStats.walletTransactions
                           .find(w => w.id === wallet.id)?.expense || 0
@@ -199,21 +228,35 @@ const WalletList: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         ))}
+        
+        {/* Empty State */}
+        {wallets.length === 0 && (
+          <motion.div 
+            className="bg-[#242425] rounded-xl p-6 text-center"
+            variants={itemVariants}
+          >
+            <div className="mx-auto w-12 h-12 mb-3 bg-[#333] rounded-full flex items-center justify-center">
+              <Wallet size={24} className="text-[#868686]" />
+            </div>
+            <p className="text-[#868686]">No accounts yet</p>
+            <p className="text-xs text-[#868686] mt-1">Use the + button to add your first account</p>
+          </motion.div>
+        )}
       </div>
 
       {/* Edit Wallet Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
           <DialogHeader>
-            <DialogTitle>Edit Account</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-white">Edit Account</DialogTitle>
           </DialogHeader>
           {editWallet && (
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Account Name</Label>
+                <Label htmlFor="name" className="text-[#868686]">Account Name</Label>
                 <Input
                   id="name"
                   name="name"
@@ -221,11 +264,12 @@ const WalletList: React.FC = () => {
                   value={editWallet.name}
                   onChange={handleEditChange}
                   required
+                  className="bg-[#242425] border-none text-white"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="balance">Balance</Label>
+                <Label htmlFor="balance" className="text-[#868686]">Balance</Label>
                 <Input
                   id="balance"
                   name="balance"
@@ -235,22 +279,26 @@ const WalletList: React.FC = () => {
                   value={editWallet.balance}
                   onChange={handleEditChange}
                   required
+                  className="bg-[#242425] border-none text-white"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="type">Account Type</Label>
+                <Label htmlFor="type" className="text-[#868686]">Account Type</Label>
                 <Select 
                   value={editWallet.type} 
                   onValueChange={(value) => setEditWallet({ ...editWallet, type: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-[#242425] border-none text-white">
                     <SelectValue placeholder="Select account type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#242425] border-none text-white">
                     {walletTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                      <SelectItem key={type.value} value={type.value} className="flex items-center">
+                        <div className="flex items-center gap-2">
+                          <type.icon size={16} className="text-[#868686]" />
+                          <span>{type.label}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -258,12 +306,12 @@ const WalletList: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="color">Account Color</Label>
+                <Label htmlFor="color" className="text-[#868686]">Account Color</Label>
                 <Select 
                   value={editWallet.color} 
                   onValueChange={(value) => setEditWallet({ ...editWallet, color: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-[#242425] border-none text-white">
                     <SelectValue placeholder="Select color">
                       <div className="flex items-center gap-2">
                         <div 
@@ -276,7 +324,7 @@ const WalletList: React.FC = () => {
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#242425] border-none text-white">
                     {colors.map((color) => (
                       <SelectItem key={color.value} value={color.value}>
                         <div className="flex items-center gap-2">
@@ -292,12 +340,17 @@ const WalletList: React.FC = () => {
                 </Select>
               </div>
               
-              <Button type="submit" className="w-full">Update Account</Button>
+              <Button 
+                type="submit" 
+                className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium"
+              >
+                Save Changes
+              </Button>
             </form>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 };
 

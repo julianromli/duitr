@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, ArrowUp, ArrowDown, DollarSign, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Bell, ArrowUp, ArrowDown, Plus, ArrowLeftRight, Eye, EyeOff, Home, Clock, PieChart, User, Wallet } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { useNavigate } from 'react-router-dom';
 import TransactionDetail from '@/components/transactions/TransactionDetail';
@@ -12,10 +12,12 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { totalBalance, transactions, formatCurrency } = useFinance();
+  const { totalBalance, transactions, formatCurrency, monthlyExpense, monthlyIncome } = useFinance();
   const navigate = useNavigate();
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -45,6 +47,10 @@ const Dashboard: React.FC = () => {
     navigate('/statistics');
   };
   
+  const navigateToTransactions = () => {
+    navigate('/transactions');
+  };
+  
   const toggleBalanceVisibility = () => {
     setIsBalanceHidden(!isBalanceHidden);
   };
@@ -52,7 +58,7 @@ const Dashboard: React.FC = () => {
   // Display masked balance when hidden
   const displayBalance = () => {
     if (isBalanceHidden) {
-      return "Rp ******";
+      return "Rp ***";
     }
     return formatCurrency(totalBalance);
   };
@@ -61,6 +67,9 @@ const Dashboard: React.FC = () => {
   const openExpenseForm = () => setIsExpenseFormOpen(true);
   const openIncomeForm = () => setIsIncomeFormOpen(true);
   const openTransferForm = () => setIsTransferFormOpen(true);
+
+  // Add Money Dialog
+  const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
 
   // Sample user data
   const userData = {
@@ -169,153 +178,157 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <motion.div 
-        className="max-w-md mx-auto bg-gray-50 min-h-screen pb-24"
+        className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <div className="bg-[#2D1B69] p-6 rounded-b-[30px]">
-          {/* Header */}
-          <motion.div 
-            className="flex justify-between items-center mb-6"
-            variants={itemVariants}
-          >
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 border border-gray-200">
-                {profileImage ? (
-                  <AvatarImage src={profileImage} alt={username} />
-                ) : (
-                  <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF]">
-                    {username ? username.substring(0, 2).toUpperCase() : 'U'}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <div>
-                <p className="text-white text-lg font-semibold">Hello {username || 'User'}!</p>
-                <p className="text-gray-300 text-sm">Welcome back</p>
-              </div>
-            </div>
-            <div className="relative">
-              <Bell className="text-white" size={24} />
-              {userData.notifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                  {userData.notifications}
-                </span>
-              )}
-            </div>
-          </motion.div>
-
+        <div className="p-6 relative">
           {/* Balance Card */}
           <motion.div 
-            className="bg-white rounded-2xl p-6 mb-4"
+            className="bg-[#C6FE1E] rounded-3xl p-5 mb-6"
             variants={itemVariants}
           >
-            <div className="flex justify-between items-center mb-2">
-              <p className="text-gray-500 text-sm">YOUR BALANCE</p>
-              <motion.button 
+            {/* Card Header with Profile */}
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 border border-[#0D0D0D]">
+                  {profileImage ? (
+                    <AvatarImage src={profileImage} alt={username} />
+                  ) : (
+                    <AvatarFallback className="bg-[#242425] text-[#C6FE1E]">
+                      {username ? username.substring(0, 2).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div>
+                  <p className="text-[#0D0D0D] text-sm font-medium">Hello {username}!</p>
+                  <p className="text-[#242425] text-xs">Welcome Back</p>
+                </div>
+              </div>
+              <div>
+                <Bell className="text-[#0D0D0D]" size={20} />
+              </div>
+            </div>
+            
+            {/* Your Balance Text */}
+            <div className="mb-1">
+              <p className="text-[#242425] text-sm">Your Balance</p>
+            </div>
+            
+            {/* Balance Amount with Hide Button */}
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-4xl font-bold text-[#0D0D0D]">{displayBalance()}</h2>
+              <button 
+                className="text-[#0D0D0D] hover:opacity-75 transition-opacity"
                 onClick={toggleBalanceVisibility}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="text-gray-400 hover:text-gray-600"
               >
-                {isBalanceHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-              </motion.button>
+                {isBalanceHidden ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
             </div>
-            <h2 className="text-3xl font-bold mb-6">{displayBalance()}</h2>
-            <div className="flex justify-between">
-              <motion.button 
-                className="flex flex-col items-center gap-1"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={openExpenseForm}
-              >
-                <div className="w-12 h-12 rounded-full bg-[#7B61FF] flex items-center justify-center">
-                  <ArrowDown className="text-white" size={20} />
-                </div>
-                <span className="text-sm">Expense</span>
-              </motion.button>
-              <motion.button 
-                className="flex flex-col items-center gap-1"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={openIncomeForm}
-              >
-                <div className="w-12 h-12 rounded-full bg-[#7B61FF] flex items-center justify-center">
-                  <ArrowUp className="text-white" size={20} />
-                </div>
-                <span className="text-sm">Income</span>
-              </motion.button>
-              <motion.button 
-                className="flex flex-col items-center gap-1"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={openTransferForm}
-              >
-                <div className="w-12 h-12 rounded-full bg-[#7B61FF] flex items-center justify-center">
-                  <DollarSign className="text-white" size={20} />
-                </div>
-                <span className="text-sm">Transfer</span>
-              </motion.button>
-            </div>
+            
+            {/* Card Number Info - Only shown when balance is hidden */}
+            {isBalanceHidden && (
+              <div className="mb-3">
+            
+              </div>
+            )}
           </motion.div>
 
-          {/* Financial Insight Banner */}
+          {/* Action Buttons - Moved outside the card */}
           <motion.div 
-            className="bg-[#F5F1FF] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#EFE9FF] transition-colors"
-            onClick={navigateToStatistics}
+            className="flex justify-between gap-4 mb-6"
             variants={itemVariants}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#7B61FF] flex items-center justify-center">
-                <DollarSign className="text-white" size={24} />
-              </div>
-              <p className="text-sm">
-                Let's check your Financial<br />
-                Insight for the month of {new Date().toLocaleString('default', { month: 'long' })}!
-              </p>
+            <motion.button 
+              className="w-1/2 bg-[#242425] text-white py-3 px-5 rounded-full flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={openTransferForm}
+            >
+              <ArrowLeftRight className="text-white" size={18} />
+              <span className="font-medium">Transfer</span>
+            </motion.button>
+            
+            <Dialog open={isAddMoneyOpen} onOpenChange={setIsAddMoneyOpen}>
+              <DialogTrigger asChild>
+                <motion.button 
+                  className="w-1/2 bg-[#1364FF] text-white py-3 px-5 rounded-full flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Plus className="text-white" size={18} />
+                  <span className="font-medium">Add money</span>
+                </motion.button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1A1A1A] border-none text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">Add Transaction</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-1 gap-4 pt-4">
+                  <Button 
+                    onClick={() => {
+                      setIsAddMoneyOpen(false);
+                      openExpenseForm();
+                    }}
+                    className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] py-6 rounded-xl flex items-center justify-center gap-3"
+                  >
+                    <ArrowDown size={20} />
+                    <span className="font-medium">Add Expense</span>
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setIsAddMoneyOpen(false);
+                      openIncomeForm();
+                    }}
+                    className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] py-6 rounded-xl flex items-center justify-center gap-3"
+                  >
+                    <ArrowUp size={20} />
+                    <span className="font-medium">Add Income</span>
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </motion.div>
+
+          {/* Transactions Section */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-semibold">Transactions</h3>
+              <button 
+                className="text-[#C6FE1E] text-sm"
+                onClick={navigateToTransactions}
+              >
+                View All
+              </button>
             </div>
-            <ArrowRight className="text-[#7B61FF]" size={20} />
+            
+            <div className="space-y-3 text-white">
+              {recentTransactions.map((transaction) => (
+                <motion.div
+                  key={transaction.id}
+                  className="flex items-center justify-between bg-[#242425] p-4 rounded-xl cursor-pointer"
+                  onClick={() => handleTransactionClick(transaction.id)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
+                      <CategoryIcon category={transaction.category} />
+                    </div>
+                    <div>
+                      <p className="font-medium">{transaction.category}</p>
+                      <p className="text-xs text-[#868686]">{transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                    </div>
+                  </div>
+                  <p className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : 'text-white'}`}>
+                    {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </div>
-
-        {/* Recent Transactions */}
-        <motion.div 
-          className="p-6"
-          variants={itemVariants}
-        >
-          <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
-          <div className="space-y-4">
-            {recentTransactions.map((transaction, index) => (
-              <motion.div 
-                key={transaction.id} 
-                className="flex items-center justify-between cursor-pointer hover:bg-gray-100 p-3 rounded-lg transition shadow-sm"
-                onClick={() => handleTransactionClick(transaction.id)}
-                variants={itemVariants}
-                whileHover={{ scale: 1.02, backgroundColor: "#f5f5f5" }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="flex items-center gap-3">
-                  <CategoryIcon category={transaction.category} />
-                  <div>
-                    <p className="font-medium">{transaction.category}</p>
-                    <p className="text-sm text-gray-500">{transaction.description}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className={`font-medium ${transaction.type === 'income' ? 'text-green-500' : ''}`}>
-                    {transaction.type === 'income' ? '+' : ''}{formatCurrency(transaction.amount)}
-                  </p>
-                  <p className="text-sm text-gray-500">{formatDate(transaction.date)}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
 
         {/* Transaction Detail Dialog */}
         <TransactionDetail 

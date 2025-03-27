@@ -119,7 +119,7 @@ export default {
 				pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
+				sans: ['Space Grotesk', 'sans-serif'],
 			},
 			backdropBlur: {
 				xs: '2px',

@@ -3,16 +3,18 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { FaGoogle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { supabase, testDirectSignup } from '@/lib/supabase'; // Import fungsi test
+import { ChevronLeft } from 'lucide-react';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
@@ -21,29 +23,20 @@ const SignUp = () => {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !username) {
       toast({
         variant: 'destructive',
         title: 'Invalid input',
-        description: 'Please fill in all required fields',
+        description: 'Please fill in all fields',
       });
       return;
     }
     
-    if (password !== confirmPassword) {
+    if (!agreedToTerms) {
       toast({
         variant: 'destructive',
-        title: 'Password mismatch',
-        description: 'Passwords do not match',
-      });
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast({
-        variant: 'destructive',
-        title: 'Password too short',
-        description: 'Password must be at least 6 characters long',
+        title: 'Terms Agreement Required',
+        description: 'You must agree to the Terms and Conditions to sign up',
       });
       return;
     }
@@ -51,43 +44,22 @@ const SignUp = () => {
     setIsSubmitting(true);
     
     try {
-      // Try with direct Supabase call first
-      const directResult = await testDirectSignup(email, password);
-      console.log("Direct signup test result:", directResult);
+      const result = await signUp(email, password);
       
-      // Then try with the normal Supabase client
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
-      console.log("Signup response:", { data, error }); // Detailed logging
-      
-      if (error) {
-        console.error("Signup error details:", error);
+      if (result.success) {
         toast({
-          variant: 'destructive',
-          title: 'Sign up failed',
-          description: `Error: ${error.message}. Code: ${error.status || 'unknown'}`,
+          title: 'Account created',
+          description: 'Your account has been created successfully.',
         });
-        return;
-      }
-      
-      if (data?.user) {
-        toast({
-          title: 'Account created!',
-          description: 'Please check your email for verification link',
-        });
-        navigate('/auth/login');
+        navigate('/');
       } else {
         toast({
           variant: 'destructive',
           title: 'Sign up failed',
-          description: 'No user data returned, but no error either. Please try again.',
+          description: result.message,
         });
       }
     } catch (error: any) {
-      console.error("Exception during signup:", error);
       toast({
         variant: 'destructive',
         title: 'Sign up error',
@@ -122,27 +94,6 @@ const SignUp = () => {
     }
   };
 
-  // Fungsi debug untuk cek session
-  const debugCheckSession = async () => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      console.log("Current session check:", { data, error });
-      
-      // Tampilkan info URL dan key dari environment variable
-      console.log("Supabase config check:", { 
-        envUrl: import.meta.env.VITE_SUPABASE_URL || 'not set',
-        keyPrefix: (import.meta.env.VITE_SUPABASE_ANON_KEY || 'not set').substring(0, 10) + '...'
-      });
-      
-      toast({
-        title: 'Debug info',
-        description: `Check console for session data`,
-      });
-    } catch (e) {
-      console.error("Error checking session:", e);
-    }
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -164,78 +115,105 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF3AA] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+      {/* Header with back button */}
       <motion.div 
-        className="max-w-md w-full bg-[#E6DDFF] rounded-3xl overflow-hidden shadow-lg"
+        className="p-6 flex items-start"
+        variants={itemVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <button 
+          onClick={() => navigate(-1)} 
+          className="p-1 text-white rounded-full"
+        >
+          <ChevronLeft size={24} />
+        </button>
+      </motion.div>
+      
+      <motion.div 
+        className="flex-1 flex flex-col p-6 pt-0"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        {/* Unicorn Illustration */}
+        {/* Logo and Title */}
         <motion.div 
-          className="p-8 flex flex-col items-center"
+          className="mb-12 flex flex-col items-center"
           variants={itemVariants}
         >
-          <div className="relative w-44 h-44 mb-4">
-            {/* Unicorn head and body */}
-            <div className="absolute w-40 h-44 bg-[#FFC0CB] rounded-t-[120px] rounded-bl-[80px] rounded-br-[30px] transform rotate-6">
-              {/* Ears */}
-              <div className="absolute top-5 right-4 w-6 h-10 bg-[#FFC0CB] rounded-full transform rotate-[-20deg]"></div>
-              
-              {/* Horn */}
-              <div className="absolute top-0 left-1/2 w-3 h-10 bg-white transform -translate-x-1/2 -translate-y-4 rotate-[-10deg]">
-                {/* Horn stripes */}
-                <div className="absolute top-1 w-full h-0.5 bg-black transform rotate-[-70deg]"></div>
-                <div className="absolute top-3 w-full h-0.5 bg-black transform rotate-[-70deg]"></div>
-                <div className="absolute top-5 w-full h-0.5 bg-black transform rotate-[-70deg]"></div>
-              </div>
-              
-              {/* Eye */}
-              <div className="absolute top-16 right-10 w-4 h-2 bg-black rounded-full"></div>
-              
-              {/* Eyelid closed (smile) */}
-              <div className="absolute top-16 right-12 w-6 h-3 border-b-2 border-black rounded-b-full"></div>
-              
-              {/* Mane */}
-              <div className="absolute top-10 left-6 w-10 h-12 bg-black rounded-full"></div>
-              <div className="absolute top-14 left-4 w-8 h-8 bg-black rounded-full"></div>
-              <div className="absolute top-18 left-2 w-6 h-6 bg-black rounded-full"></div>
-              
-              {/* Spots */}
-              <div className="absolute bottom-10 left-1/2 w-8 h-8 bg-black rounded-full"></div>
-              <div className="absolute bottom-20 left-1/3 w-6 h-6 bg-black rounded-full"></div>
-              <div className="absolute bottom-14 left-2/3 w-4 h-4 bg-black rounded-full"></div>
-              
-              {/* Mouth */}
-              <div className="absolute top-24 right-10 w-8 h-1 bg-black"></div>
-              
-              {/* White spot */}
-              <div className="absolute top-20 right-6 w-6 h-6 bg-white rounded-full"></div>
-            </div>
+          <div className="w-16 h-16 bg-[#C6FE1E] rounded-full flex items-center justify-center mb-4">
+            <svg viewBox="0 0 24 24" fill="none" className="w-10 h-10" stroke="#0D0D0D" strokeWidth="2">
+              <path d="M3 6.5V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V6.5M3 6.5H21M3 6.5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V6.5M12 11C12 9.89543 12.8954 9 14 9H17C18.1046 9 19 9.89543 19 11V14C19 15.1046 18.1046 16 17 16H14C12.8954 16 12 15.1046 12 14V11Z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold mt-4 mb-8">Sign Up</h1>
+          <h1 className="text-3xl font-bold text-white">Sign up for free</h1>
         </motion.div>
         
+        {/* Social Login Buttons */}
+        <motion.div 
+          className="space-y-3 mb-8"
+          variants={itemVariants}
+        >
+          <Button 
+            variant="outline" 
+            className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
+            onClick={handleGoogleSignUp}
+          >
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+              <FaGoogle className="h-4 w-4 text-black" />
+            </div>
+            <span className="font-medium">Sign up with Google</span>
+          </Button>
+        </motion.div>
+        
+        {/* Divider */}
+        <motion.div 
+          className="relative mb-8" 
+          variants={itemVariants}
+        >
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#292929]"></div>
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-4 bg-[#0D0D0D] text-[#868686]">or</span>
+          </div>
+        </motion.div>
+        
+        {/* Email Sign Up Form */}
         <motion.form 
           onSubmit={handleEmailSignUp}
-          className="bg-white p-8 rounded-t-3xl -mt-4"
+          className="space-y-6"
           variants={itemVariants}
         >
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div>
+              <Label htmlFor="email" className="text-white mb-2 block">What's your email?</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Your email address"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div>
+              <Label htmlFor="username" className="text-white mb-2 block">Create a username</Label>
+              <Input
+                id="username"
+                placeholder="Create a username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="password" className="text-white mb-2 block">Create a password</Label>
               <Input
                 id="password"
                 type="password"
@@ -243,68 +221,54 @@ const SignUp = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-              />
-              <p className="text-xs text-gray-500">Must be at least 6 characters long</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
+                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
               />
             </div>
             
-            <Button 
-              type="submit" 
-              className="w-full bg-[#292D32] hover:bg-[#3E3E3E] text-white" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Signing up...' : 'Sign Up'}
-            </Button>
-            
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
+            <div className="flex items-start space-x-2 pt-2">
+              <Checkbox 
+                id="terms" 
+                checked={agreedToTerms}
+                onCheckedChange={(checked) => {
+                  setAgreedToTerms(checked as boolean);
+                }}
+                className="bg-[#292929] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
+              />
+              <label
+                htmlFor="terms"
+                className="text-[#868686] text-sm leading-relaxed cursor-pointer"
+              >
+                I agree to the <Link to="/terms" className="text-white hover:underline">Terms and Conditions</Link> and <Link to="/privacy" className="text-white hover:underline">Privacy Policy</Link>.
+              </label>
             </div>
             
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleGoogleSignUp}
-              className="w-full flex items-center justify-center gap-2"
-              disabled={isSubmitting}
-            >
-              <FaGoogle className="h-4 w-4" />
-              <span>Google</span>
-            </Button>
-            
-            <p className="text-sm text-center mt-6">
-              Already have an account?{' '}
-              <Link to="/auth/login" className="text-[#7B61FF] hover:underline font-medium">
-                Login
-              </Link>
-            </p>
-            
-            {/* Add debug button */}
-            <Button 
-              type="button"
-              variant="ghost"
-              onClick={debugCheckSession}
-              className="w-full text-xs text-gray-400 mt-4"
-            >
-              Check Connection Status
-            </Button>
+            <div className="pt-4">
+              <Button 
+                type="submit" 
+                className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full" 
+                disabled={isSubmitting}
+              >
+                Sign Up
+              </Button>
+            </div>
           </div>
         </motion.form>
+        
+        {/* Login Link */}
+        <motion.div 
+          className="mt-auto pt-8 border-t border-[#292929] text-center"
+          variants={itemVariants}
+        >
+          <p className="text-[#868686]">
+            Already have an account?
+          </p>
+          <Link 
+            to="/auth/login" 
+            className="block w-full border border-[#868686] text-white py-3 px-6 rounded-full mt-4 font-medium hover:border-white"
+          >
+            Log in
+          </Link>
+        </motion.div>
       </motion.div>
     </div>
   );
