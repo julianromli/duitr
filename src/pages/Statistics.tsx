@@ -104,8 +104,8 @@ const Statistics: React.FC = () => {
     };
   });
   
-  // Colors for pie chart - matching the reference image
-  const COLORS = ['#2D1B69', '#F8BCED', '#7B61FF', '#C8B6FF'];
+  // Colors for pie chart - using our color palette
+  const COLORS = ['#C6FE1E', '#1364FF', '#868686', '#242425'];
   
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -161,40 +161,40 @@ const Statistics: React.FC = () => {
 
   return (
     <motion.div 
-      className="max-w-md mx-auto bg-white min-h-screen pb-24"
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      {/* Header */}
-      <motion.div 
-        className="border-b"
-        variants={itemVariants}
-      >
-        <div className="flex items-center p-4 justify-between">
+      <div className="p-6 pt-12">
+        {/* Header */}
+        <motion.div 
+          className="mb-6 flex items-center justify-between"
+          variants={itemVariants}
+        >
           <div className="flex items-center">
-            <Link to="/" className="mr-4">
+            <Link to="/" className="mr-4 text-white">
               <ChevronLeft size={24} />
             </Link>
-            <h1 className="text-lg font-semibold">Statistic</h1>
+            <h1 className="text-xl font-bold">Statistics</h1>
           </div>
           <div className="relative">
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="flex items-center gap-2 rounded-md text-sm font-normal"
+                  className="flex items-center gap-2 rounded-full text-sm font-normal bg-[#242425] border-0 text-white hover:bg-[#333]"
                 >
                   {getDateRangeLabel()}
                   <ChevronDown size={16} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4" align="end">
+              <PopoverContent className="w-auto p-4 bg-[#242425] border-0 text-white" align="end">
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       variant={dateRange === '7days' ? 'default' : 'outline'} 
-                      className={dateRange === '7days' ? 'bg-[#7B61FF]' : ''}
+                      className={dateRange === '7days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
                       onClick={() => {
                         setDateRange('7days');
                         setIsCalendarOpen(false);
@@ -204,7 +204,7 @@ const Statistics: React.FC = () => {
                     </Button>
                     <Button 
                       variant={dateRange === '30days' ? 'default' : 'outline'} 
-                      className={dateRange === '30days' ? 'bg-[#7B61FF]' : ''}
+                      className={dateRange === '30days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
                       onClick={() => {
                         setDateRange('30days');
                         setIsCalendarOpen(false);
@@ -214,7 +214,7 @@ const Statistics: React.FC = () => {
                     </Button>
                     <Button 
                       variant={dateRange === 'month' ? 'default' : 'outline'} 
-                      className={dateRange === 'month' ? 'bg-[#7B61FF]' : ''}
+                      className={dateRange === 'month' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
                       onClick={() => {
                         setDateRange('month');
                         setIsCalendarOpen(false);
@@ -224,7 +224,7 @@ const Statistics: React.FC = () => {
                     </Button>
                     <Button 
                       variant={dateRange === 'custom' ? 'default' : 'outline'} 
-                      className={dateRange === 'custom' ? 'bg-[#7B61FF]' : ''}
+                      className={dateRange === 'custom' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
                       onClick={() => {
                         setDateRange('custom');
                         if (!customStartDate || !customEndDate) {
@@ -244,6 +244,7 @@ const Statistics: React.FC = () => {
                         <div>
                           <p className="text-sm mb-1">Start Date</p>
                           <Calendar
+                            className="bg-[#1A1A1A] rounded-lg text-white"
                             mode="single"
                             selected={customStartDate}
                             onSelect={setCustomStartDate}
@@ -254,6 +255,7 @@ const Statistics: React.FC = () => {
                         <div>
                           <p className="text-sm mb-1">End Date</p>
                           <Calendar
+                            className="bg-[#1A1A1A] rounded-lg text-white"
                             mode="single"
                             selected={customEndDate}
                             onSelect={setCustomEndDate}
@@ -263,7 +265,7 @@ const Statistics: React.FC = () => {
                         </div>
                       </div>
                       <Button 
-                        className="mt-2 bg-[#7B61FF]"
+                        className="mt-2 bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00]"
                         onClick={() => setIsCalendarOpen(false)}
                       >
                         Apply
@@ -274,132 +276,125 @@ const Statistics: React.FC = () => {
               </PopoverContent>
             </Popover>
           </div>
-        </div>
-      </motion.div>
-      
-      {/* Tabs */}
-      <motion.div 
-        className="border-b"
-        variants={itemVariants}
-      >
-        <div className="flex">
-          <motion.button
-            className={`flex-1 py-4 text-center ${activeTab === 'outcome' ? 'border-b-2 border-[#7B61FF] font-medium' : 'text-gray-500'}`}
-            onClick={() => handleTabChange('outcome')}
-            whileHover={{ backgroundColor: "#f9f9f9" }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Outcome
-          </motion.button>
-          <motion.button
-            className={`flex-1 py-4 text-center ${activeTab === 'income' ? 'border-b-2 border-[#7B61FF] font-medium' : 'text-gray-500'}`}
-            onClick={() => handleTabChange('income')}
-            whileHover={{ backgroundColor: "#f9f9f9" }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Income
-          </motion.button>
-        </div>
-      </motion.div>
-      
-      {/* Chart Section */}
-      <div className="px-6 py-8">
-        {filteredTransactions.length > 0 ? (
-          <>
-            <motion.div 
-              className="flex justify-center items-center mb-8"
-              variants={chartVariants}
-              key={`chart-${activeTab}`}
+        </motion.div>
+        
+        {/* Tabs */}
+        <motion.div 
+          className="mb-6"
+          variants={itemVariants}
+        >
+          <div className="flex bg-[#242425] rounded-full p-1">
+            <motion.button
+              className={`flex-1 py-2 text-center rounded-full ${activeTab === 'outcome' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              onClick={() => handleTabChange('outcome')}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="h-[220px] w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={90}
-                      paddingAngle={0}
-                      dataKey="value"
-                      strokeWidth={0}
-                      animationBegin={300}
-                      animationDuration={800}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}-${activeTab}`} 
-                          fill={COLORS[index % COLORS.length]} 
-                        />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                
-                {/* Center Text */}
-                <motion.div 
-                  className="absolute inset-0 flex flex-col items-center justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  key={`text-${activeTab}`}
-                >
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">TOTAL {activeTab === 'income' ? 'INCOME' : 'OUTCOME'}</p>
-                  <p className="text-xl font-bold mt-1">{formatCurrency(totalAmount)}</p>
-                </motion.div>
-              </div>
-            </motion.div>
-            
-            {/* Category Breakdown */}
-            <motion.div 
-              className="mt-8" 
-              variants={itemVariants}
-              key={`breakdown-${activeTab}`}
+              Outcome
+            </motion.button>
+            <motion.button
+              className={`flex-1 py-2 text-center rounded-full ${activeTab === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              onClick={() => handleTabChange('income')}
+              whileTap={{ scale: 0.98 }}
             >
-              <h3 className="text-base font-medium mb-4">{activeTab === 'income' ? 'Income' : 'Expense'} Breakdown</h3>
-              <div>
-                {chartData.map((category, index) => (
+              Income
+            </motion.button>
+          </div>
+        </motion.div>
+        
+        {/* Chart Section */}
+        <div className="py-6">
+          {filteredTransactions.length > 0 ? (
+            <>
+              <motion.div 
+                className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
+                variants={chartVariants}
+                key={`chart-${activeTab}`}
+              >
+                <div className="h-[220px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={90}
+                        paddingAngle={0}
+                        dataKey="value"
+                        strokeWidth={0}
+                        animationBegin={300}
+                        animationDuration={800}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}-${activeTab}`} 
+                            fill={COLORS[index % COLORS.length]} 
+                          />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Center Text */}
                   <motion.div 
-                    key={`${category.name}-${index}-${activeTab}`}
-                    className="flex justify-between items-center py-3 border-b last:border-b-0"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 + (index * 0.05) }}
-                    whileHover={{ 
-                      backgroundColor: `${COLORS[index % COLORS.length]}10`, 
-                      paddingLeft: 8, 
-                      paddingRight: 8,
-                      borderRadius: 8
-                    }}
+                    className="absolute inset-0 flex flex-col items-center justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    key={`text-${activeTab}`}
                   >
-                    <div>
-                      <span className="font-medium">{category.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium">{formatCurrency(category.value)}</span>
-                      <div className="px-2 py-1 rounded text-xs font-medium" style={{ 
-                        backgroundColor: `${COLORS[index % COLORS.length]}20`,
-                        color: COLORS[index % COLORS.length]
-                      }}>
-                        {category.percentage}%
-                      </div>
-                    </div>
+                    <p className="text-xs text-[#868686] uppercase tracking-wide">TOTAL {activeTab === 'income' ? 'INCOME' : 'OUTCOME'}</p>
+                    <p className="text-xl font-bold mt-1 text-white">{formatCurrency(totalAmount)}</p>
                   </motion.div>
-                ))}
-              </div>
+                </div>
+              </motion.div>
+              
+              {/* Category Breakdown */}
+              <motion.div 
+                className="mt-8" 
+                variants={itemVariants}
+                key={`breakdown-${activeTab}`}
+              >
+                <h3 className="text-lg font-bold mb-4">{activeTab === 'income' ? 'Income' : 'Expense'} Breakdown</h3>
+                <div className="space-y-3">
+                  {chartData.map((category, index) => (
+                    <motion.div 
+                      key={`${category.name}-${index}-${activeTab}`}
+                      className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + (index * 0.05) }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div>
+                        <span className="font-medium">{category.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium">{formatCurrency(category.value)}</span>
+                        <div className="px-2 py-1 rounded-full text-xs font-medium bg-[#0D0D0D]" style={{ 
+                          color: COLORS[index % COLORS.length]
+                        }}>
+                          {category.percentage}%
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            <motion.div 
+              className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              key="no-data"
+            >
+              <p className="text-[#868686]">No data available for the selected period</p>
             </motion.div>
-          </>
-        ) : (
-          <motion.div 
-            className="h-[250px] flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            key="no-data"
-          >
-            <p className="text-gray-500">No data available for the selected period</p>
-          </motion.div>
-        )}
+          )}
+        </div>
       </div>
     </motion.div>
   );

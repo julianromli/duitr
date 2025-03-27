@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FileSpreadsheet, Calendar, Check } from 'lucide-react';
+import { FileSpreadsheet, Calendar, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -30,6 +31,7 @@ import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { ExportOptions } from '@/types/finance';
 import { useToast } from '@/hooks/use-toast';
+import { X } from 'lucide-react';
 
 const ExportButton = () => {
   const { transactions } = useFinance();
@@ -112,33 +114,32 @@ const ExportButton = () => {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            Export
-          </Button>
+          <button className="p-2 bg-[#242425] rounded-full hover:bg-[#333]">
+            <Download size={20} className="text-[#C6FE1E]" />
+          </button>
         </DialogTrigger>
         
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Export Financial Data</DialogTitle>
-            <DialogDescription>
-              Choose what data you want to export and the date range
-            </DialogDescription>
+        <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+          <DialogHeader className="flex flex-row justify-between items-center">
+            <DialogTitle className="text-xl font-bold">Export Transactions</DialogTitle>
+            <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
+              <X size={16} />
+            </DialogClose>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>Date Range</Label>
+              <Label className="text-[#868686]">Date Range</Label>
               <Select value={dateRange} onValueChange={handleDateRangeChange}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-[#242425] border-0 text-white">
                   <SelectValue placeholder="Select date range" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="30days">Last 30 Days</SelectItem>
-                  <SelectItem value="90days">Last 90 Days</SelectItem>
-                  <SelectItem value="thisYear">This Year</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
+                <SelectContent className="bg-[#242425] border-0 text-white">
+                  <SelectItem value="all" className="hover:bg-[#333] focus:bg-[#333]">All Time</SelectItem>
+                  <SelectItem value="30days" className="hover:bg-[#333] focus:bg-[#333]">Last 30 Days</SelectItem>
+                  <SelectItem value="90days" className="hover:bg-[#333] focus:bg-[#333]">Last 90 Days</SelectItem>
+                  <SelectItem value="thisYear" className="hover:bg-[#333] focus:bg-[#333]">This Year</SelectItem>
+                  <SelectItem value="custom" className="hover:bg-[#333] focus:bg-[#333]">Custom Range</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -146,15 +147,15 @@ const ExportButton = () => {
             {dateRange === 'custom' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Start Date</Label>
+                  <Label className="text-[#868686]">Start Date</Label>
                   <Popover open={calendarOpen === 'start'} onOpenChange={(open) => open ? setCalendarOpen('start') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425] border-0 text-white hover:bg-[#333]">
                         <Calendar className="mr-2 h-4 w-4" />
                         {startDate ? format(startDate, 'PP') : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 bg-[#242425] border-0">
                       <CalendarComponent
                         mode="single"
                         selected={startDate}
@@ -163,21 +164,22 @@ const ExportButton = () => {
                           setCalendarOpen(null);
                         }}
                         initialFocus
+                        className="bg-[#242425] text-white"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label>End Date</Label>
+                  <Label className="text-[#868686]">End Date</Label>
                   <Popover open={calendarOpen === 'end'} onOpenChange={(open) => open ? setCalendarOpen('end') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425] border-0 text-white hover:bg-[#333]">
                         <Calendar className="mr-2 h-4 w-4" />
                         {endDate ? format(endDate, 'PP') : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 bg-[#242425] border-0">
                       <CalendarComponent
                         mode="single"
                         selected={endDate}
@@ -186,6 +188,7 @@ const ExportButton = () => {
                           setCalendarOpen(null);
                         }}
                         initialFocus
+                        className="bg-[#242425] text-white"
                       />
                     </PopoverContent>
                   </Popover>
@@ -194,15 +197,16 @@ const ExportButton = () => {
             )}
             
             <div className="grid gap-2">
-              <Label>Data to Include</Label>
+              <Label className="text-[#868686]">Data to Include</Label>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="transactions" 
                     checked={options.includeTransactions} 
                     onCheckedChange={(checked) => setOptions({...options, includeTransactions: !!checked})}
+                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
                   />
-                  <Label htmlFor="transactions" className="cursor-pointer">Transaction history</Label>
+                  <Label htmlFor="transactions" className="cursor-pointer text-white">Transaction history</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -210,8 +214,9 @@ const ExportButton = () => {
                     id="summary" 
                     checked={options.includeSummary} 
                     onCheckedChange={(checked) => setOptions({...options, includeSummary: !!checked})}
+                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
                   />
-                  <Label htmlFor="summary" className="cursor-pointer">Summary statistics</Label>
+                  <Label htmlFor="summary" className="cursor-pointer text-white">Summary statistics</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -219,8 +224,9 @@ const ExportButton = () => {
                     id="budgets" 
                     checked={options.includeBudgets} 
                     onCheckedChange={(checked) => setOptions({...options, includeBudgets: !!checked})}
+                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
                   />
-                  <Label htmlFor="budgets" className="cursor-pointer">Budget progress</Label>
+                  <Label htmlFor="budgets" className="cursor-pointer text-white">Budget progress</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -228,18 +234,25 @@ const ExportButton = () => {
                     id="wallets" 
                     checked={options.includeWallets} 
                     onCheckedChange={(checked) => setOptions({...options, includeWallets: !!checked})}
+                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
                   />
-                  <Label htmlFor="wallets" className="cursor-pointer">Wallet balances</Label>
+                  <Label htmlFor="wallets" className="cursor-pointer text-white">Wallet balances</Label>
                 </div>
               </div>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button 
+              onClick={() => setOpen(false)} 
+              className="bg-[#242425] text-white hover:bg-[#333] border-0"
+            >
               Cancel
             </Button>
-            <Button onClick={handleExport} className="gap-2">
+            <Button 
+              onClick={handleExport} 
+              className="bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 gap-2"
+            >
               <FileSpreadsheet className="h-4 w-4" />
               Export
             </Button>

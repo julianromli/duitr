@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Filter, Search, ShoppingCart, Coffee, Home, CreditCard, ReceiptText, Trash2 } from 'lucide-react';
+import { Calendar, Filter, Search, Trash2 } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -15,16 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Transaction } from "@/types/finance";
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  Groceries: <ShoppingCart className="w-4 h-4" />,
-  Dining: <Coffee className="w-4 h-4" />,
-  Rent: <Home className="w-4 h-4" />,
-  Utilities: <CreditCard className="w-4 h-4" />,
-  Salary: <ReceiptText className="w-4 h-4" />,
-  Freelance: <ReceiptText className="w-4 h-4" />,
-};
+import CategoryIcon from '@/components/shared/CategoryIcon';
+import { motion } from 'framer-motion';
 
 const TransactionList: React.FC = () => {
   const { t } = useTranslation();
@@ -61,7 +52,8 @@ const TransactionList: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     setTransactionToDelete(id);
     setIsDeleteDialogOpen(true);
   };
@@ -79,107 +71,102 @@ const TransactionList: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('transactions.title')}
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 self-end">
-          <Button
-            variant={typeFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('all')}
-          >
-            {t('transactions.all')}
-          </Button>
-          <Button
-            variant={typeFilter === 'income' ? 'default' : 'outline'}
-            size="sm"
-            className={typeFilter === 'income' ? 'bg-finance-income hover:bg-finance-income/90' : ''}
-            onClick={() => setTypeFilter('income')}
-          >
-            {t('transactions.income')}
-          </Button>
-          <Button
-            variant={typeFilter === 'expense' ? 'default' : 'outline'}
-            size="sm"
-            className={typeFilter === 'expense' ? 'bg-finance-expense hover:bg-finance-expense/90' : ''}
-            onClick={() => setTypeFilter('expense')}
-          >
-            {t('transactions.expense')}
-          </Button>
-          <Button variant="outline" size="icon" className="h-9 w-9">
-            <Filter className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div className="relative w-full mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#868686]" />
+        <Input
+          placeholder={t('transactions.search')}
+          className="pl-10 bg-[#242425] border-none h-12 rounded-xl text-white placeholder:text-[#868686]"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
       
-      <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+      <div className="flex gap-2 mb-6">
+        <button
+          className={`px-4 py-2 rounded-full ${typeFilter === 'all' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
+          onClick={() => setTypeFilter('all')}
+        >
+          {t('transactions.all')}
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full ${typeFilter === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
+          onClick={() => setTypeFilter('income')}
+        >
+          {t('transactions.income')}
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full ${typeFilter === 'expense' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
+          onClick={() => setTypeFilter('expense')}
+        >
+          {t('transactions.expense')}
+        </button>
+      </div>
+      
+      <div className="space-y-3 text-white">
         {filteredTransactions.length > 0 ? (
-          <ul className="divide-y">
-            {filteredTransactions.map((transaction) => (
-              <li key={transaction.id} className="p-4 hover:bg-muted/30 transition-colors duration-200 group">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      transaction.type === 'income' ? 'bg-finance-income/10 text-finance-income' : 'bg-finance-expense/10 text-finance-expense'
-                    }`}>
-                      {categoryIcons[transaction.category] || <ShoppingCart className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <p className="font-medium">{transaction.category}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.description}</p>
-                    </div>
+          <>
+            {filteredTransactions.map((transaction, index) => (
+              <motion.div
+                key={transaction.id}
+                className="flex items-center justify-between bg-[#242425] p-4 rounded-xl cursor-pointer"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
+                    <CategoryIcon category={transaction.category} />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className={`font-medium ${
-                        transaction.type === 'income' ? 'text-finance-income' : 'text-finance-expense'
-                      }`}>
-                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
-                      </p>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(transaction.date)}</span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => handleDeleteClick(transaction.id)}
-                      className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      title={t('transactions.delete')}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div>
+                    <p className="font-medium">{transaction.category}</p>
+                    <p className="text-xs text-[#868686]">{transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
                   </div>
                 </div>
-              </li>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : 'text-white'}`}>
+                      {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                    </p>
+                    <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
+                  </div>
+                  <button 
+                    onClick={(e) => handleDeleteClick(transaction.id, e)}
+                    className="text-[#868686] hover:text-red-500 transition-colors"
+                    title={t('transactions.delete')}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
             ))}
-          </ul>
+          </>
         ) : (
           <div className="p-8 text-center">
-            <p className="text-muted-foreground">{t('transactions.no_transactions')}</p>
+            <p className="text-[#868686]">{t('transactions.no_transactions')}</p>
           </div>
         )}
       </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#242425] text-white border-none">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('transactions.delete')}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-[#868686]">
               {t('transactions.delete_confirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('buttons.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogCancel className="bg-[#1a1a1a] text-white border-none hover:bg-[#333]">
+              {t('buttons.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete} 
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
               {t('buttons.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>

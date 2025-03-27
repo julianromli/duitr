@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import Header from '@/components/layout/Header';
+import { ChevronLeft, PlusCircle, CreditCard, Wallet, Landmark, TrendingUp } from 'lucide-react';
 import WalletList from '@/components/wallets/WalletList';
-import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,31 +11,40 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { useFinance } from '@/context/FinanceContext';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const Wallets: React.FC = () => {
   const { addWallet } = useFinance();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     balance: '',
     type: '',
-    color: '#4263EB',
+    color: '#1364FF',
   });
 
   const walletTypes = [
-    { value: 'bank', label: 'Bank Account' },
-    { value: 'cash', label: 'Cash' },
-    { value: 'credit', label: 'Credit Card' },
-    { value: 'investment', label: 'Investment' },
+    { value: 'bank', label: 'Bank Account', icon: Landmark },
+    { value: 'cash', label: 'Cash', icon: Wallet },
+    { value: 'credit', label: 'Credit Card', icon: CreditCard },
+    { value: 'investment', label: 'Investment', icon: TrendingUp },
   ];
 
   const colors = [
-    { value: '#4263EB', label: 'Blue' },
-    { value: '#0CA678', label: 'Green' },
+    { value: '#1364FF', label: 'Blue' },
+    { value: '#C6FE1E', label: 'Green' },
     { value: '#F59F00', label: 'Yellow' },
     { value: '#FA5252', label: 'Red' },
     { value: '#9775FA', label: 'Purple' },
@@ -74,7 +82,7 @@ const Wallets: React.FC = () => {
       name: '',
       balance: '',
       type: '',
-      color: '#4263EB',
+      color: '#1364FF',
     });
     
     // Show success message
@@ -87,26 +95,59 @@ const Wallets: React.FC = () => {
     setOpen(false);
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <Header />
-      <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 space-y-6 overflow-y-auto max-h-[calc(100vh-4rem)]">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Accounts & Wallets</h2>
+    <motion.div 
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <div className="p-6 pt-12">
+        {/* Header with back button */}
+        <motion.div 
+          className="flex items-center justify-between mb-6"
+          variants={itemVariants}
+        >
+          <div className="flex items-center">
+            <button onClick={() => navigate('/')} className="mr-4">
+              <ChevronLeft size={24} className="text-white" />
+            </button>
+            <h1 className="text-xl font-bold">Accounts & Wallets</h1>
+          </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
-                <PlusCircle className="w-4 h-4" />
-                Add Account
+              <Button className="bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] rounded-full h-10 w-10 p-0 flex items-center justify-center">
+                <PlusCircle size={20} />
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
               <DialogHeader>
-                <DialogTitle>Add Account</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-white">Add Account</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Account Name</Label>
+                  <Label htmlFor="name" className="text-[#868686]">Account Name</Label>
                   <Input
                     id="name"
                     name="name"
@@ -114,11 +155,12 @@ const Wallets: React.FC = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
+                    className="bg-[#242425] border-none text-white"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="balance">Starting Balance</Label>
+                  <Label htmlFor="balance" className="text-[#868686]">Starting Balance</Label>
                   <Input
                     id="balance"
                     name="balance"
@@ -128,22 +170,26 @@ const Wallets: React.FC = () => {
                     value={formData.balance}
                     onChange={handleChange}
                     required
+                    className="bg-[#242425] border-none text-white"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="type">Account Type</Label>
+                  <Label htmlFor="type" className="text-[#868686]">Account Type</Label>
                   <Select 
                     value={formData.type} 
                     onValueChange={(value) => setFormData({ ...formData, type: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-[#242425] border-none text-white">
                       <SelectValue placeholder="Select account type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#242425] border-none text-white">
                       {walletTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
+                        <SelectItem key={type.value} value={type.value} className="flex items-center">
+                          <div className="flex items-center gap-2">
+                            <type.icon size={16} className="text-[#868686]" />
+                            <span>{type.label}</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -151,12 +197,12 @@ const Wallets: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="color">Account Color</Label>
+                  <Label htmlFor="color" className="text-[#868686]">Account Color</Label>
                   <Select 
                     value={formData.color} 
                     onValueChange={(value) => setFormData({ ...formData, color: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-[#242425] border-none text-white">
                       <SelectValue placeholder="Select color">
                         <div className="flex items-center gap-2">
                           <div 
@@ -169,7 +215,7 @@ const Wallets: React.FC = () => {
                         </div>
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#242425] border-none text-white">
                       {colors.map((color) => (
                         <SelectItem key={color.value} value={color.value}>
                           <div className="flex items-center gap-2">
@@ -185,15 +231,20 @@ const Wallets: React.FC = () => {
                   </Select>
                 </div>
                 
-                <Button type="submit" className="w-full">Add Account</Button>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium rounded-xl"
+                >
+                  Add Account
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
-        </div>
+        </motion.div>
         
         <WalletList />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

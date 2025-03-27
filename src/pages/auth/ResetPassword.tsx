@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,21 +8,40 @@ import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 
-const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+const ResetPassword = () => {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email) {
+    if (!password || !confirmPassword) {
       toast({
         variant: 'destructive',
         title: 'Invalid input',
-        description: 'Please enter your email address',
+        description: 'Please fill in all fields',
+      });
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Passwords do not match',
+        description: 'Please make sure your passwords match',
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Password too short',
+        description: 'Password must be at least 6 characters long',
       });
       return;
     }
@@ -30,8 +49,8 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      const { error } = await supabase.auth.updateUser({
+        password,
       });
       
       if (error) {
@@ -41,10 +60,10 @@ const ForgotPassword = () => {
           description: error.message,
         });
       } else {
-        setIsEmailSent(true);
+        setIsSuccess(true);
         toast({
-          title: 'Email sent',
-          description: 'Check your inbox for the password reset link',
+          title: 'Password updated',
+          description: 'Your password has been successfully reset',
         });
       }
     } catch (error: any) {
@@ -114,7 +133,7 @@ const ForgotPassword = () => {
           <h1 className="text-3xl font-bold text-white">Reset Password</h1>
         </motion.div>
 
-        {isEmailSent ? (
+        {isSuccess ? (
           <motion.div 
             className="text-center space-y-6"
             variants={itemVariants}
@@ -129,13 +148,15 @@ const ForgotPassword = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </motion.div>
-            <h2 className="text-xl font-semibold text-white">Email Sent!</h2>
+            <h2 className="text-xl font-semibold text-white">Password Reset Complete!</h2>
             <p className="text-[#868686]">
-              We've sent a password reset link to <span className="font-semibold text-white">{email}</span>. 
-              Please check your inbox and follow the instructions to reset your password.
+              Your password has been successfully updated. You can now log in with your new password.
             </p>
-            <Button asChild className="mt-4 bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full w-full">
-              <Link to="/auth/login">Return to Login</Link>
+            <Button 
+              onClick={() => navigate('/auth/login')} 
+              className="mt-4 bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full w-full"
+            >
+              Go to Login
             </Button>
           </motion.div>
         ) : (
@@ -144,7 +165,7 @@ const ForgotPassword = () => {
               className="text-[#868686] mb-8 text-center"
               variants={itemVariants}
             >
-              Enter your email address and we'll send you a link to reset your password.
+              Please enter your new password to continue.
             </motion.p>
             
             <motion.form 
@@ -154,13 +175,26 @@ const ForgotPassword = () => {
             >
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="email" className="text-white mb-2 block">Email address</Label>
+                  <Label htmlFor="password" className="text-white mb-2 block">New Password</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="password"
+                    type="password"
+                    placeholder="Enter new password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-white mb-2 block">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
                   />
@@ -172,27 +206,11 @@ const ForgotPassword = () => {
                     className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full" 
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Reset Link'}
+                    {isSubmitting ? 'Updating...' : 'Reset Password'}
                   </Button>
                 </div>
               </div>
             </motion.form>
-            
-            {/* Sign In Link */}
-            <motion.div 
-              className="mt-auto pt-8 border-t border-[#292929] text-center"
-              variants={itemVariants}
-            >
-              <p className="text-[#868686]">
-                Remember your password?
-              </p>
-              <Link 
-                to="/auth/login" 
-                className="block w-full border border-[#868686] text-white py-3 px-6 rounded-full mt-4 font-medium hover:border-white"
-              >
-                Back to Login
-              </Link>
-            </motion.div>
           </>
         )}
       </motion.div>
@@ -200,4 +218,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword; 
+export default ResetPassword; 

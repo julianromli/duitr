@@ -19,73 +19,29 @@ import NotFound from "@/pages/NotFound";
 import Login from "@/pages/auth/Login";
 import SignUp from "@/pages/auth/SignUp";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
 import AuthCallback from "@/pages/auth/AuthCallback";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Load saved theme settings on app startup
+  // Apply dark theme for the whole app
   useEffect(() => {
-    const savedSettings = localStorage.getItem('settings');
+    // Always use dark theme
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add('dark');
     
-    // Apply default light theme if no settings exist
-    if (!savedSettings) {
-      document.documentElement.classList.add('light');
-      return;
+    // Update the meta theme color for browser UI
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', '#0D0D0D');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = '#0D0D0D';
+      document.head.appendChild(meta);
     }
-    
-    try {
-      const { theme } = JSON.parse(savedSettings);
-      
-      // Default to light theme if no theme is saved
-      if (!theme) {
-        document.documentElement.classList.add('light');
-        return;
-      }
-      
-      // Apply the saved theme
-      if (theme === 'light' || theme === 'dark') {
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(theme);
-      } else if (theme === 'system') {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(systemTheme);
-      }
-    } catch (error) {
-      // If there's an error parsing the settings, apply the default light theme
-      document.documentElement.classList.add('light');
-    }
-  }, []);
-
-  // Listen for settings changes from other parts of the app
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'settings' && e.newValue) {
-        try {
-          const { theme } = JSON.parse(e.newValue);
-          
-          if (theme === 'light' || theme === 'dark') {
-            document.documentElement.classList.remove('light', 'dark');
-            document.documentElement.classList.add(theme);
-          } else if (theme === 'system') {
-            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            document.documentElement.classList.remove('light', 'dark');
-            document.documentElement.classList.add(systemTheme);
-          }
-        } catch (error) {
-          console.error('Error handling settings change:', error);
-        }
-      }
-    };
-
-    // Handle both storage events and custom events
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, []);
 
   return (
@@ -100,6 +56,7 @@ const App = () => {
                   <Route path="/auth/login" element={<Login />} />
                   <Route path="/auth/signup" element={<SignUp />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   
                   {/* Protected App Routes */}
@@ -107,8 +64,8 @@ const App = () => {
                     path="/"
                     element={
                       <ProtectedRoute>
-                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                          <main className="pb-20">
+                        <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen overflow-hidden">
+                          <main className="pb-24">
                             <Dashboard />
                           </main>
                           <Navbar />
@@ -121,8 +78,8 @@ const App = () => {
                     path="/transactions"
                     element={
                       <ProtectedRoute>
-                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                          <main className="pb-20">
+                        <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen overflow-hidden">
+                          <main className="pb-24">
                             <Transactions />
                           </main>
                           <Navbar />
@@ -135,8 +92,8 @@ const App = () => {
                     path="/budgets"
                     element={
                       <ProtectedRoute>
-                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                          <main className="pb-20">
+                        <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen overflow-hidden">
+                          <main className="pb-24">
                             <Budgets />
                           </main>
                           <Navbar />
@@ -149,8 +106,8 @@ const App = () => {
                     path="/statistics"
                     element={
                       <ProtectedRoute>
-                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                          <main className="pb-20">
+                        <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen overflow-hidden">
+                          <main className="pb-24">
                             <Statistics />
                           </main>
                           <Navbar />
@@ -163,8 +120,8 @@ const App = () => {
                     path="/wallets"
                     element={
                       <ProtectedRoute>
-                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                          <main className="pb-20">
+                        <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen overflow-hidden">
+                          <main className="pb-24">
                             <Wallets />
                           </main>
                           <Navbar />
@@ -174,11 +131,11 @@ const App = () => {
                   />
                   
                   <Route 
-                    path="/settings"
+                    path="/profile"
                     element={
                       <ProtectedRoute>
-                        <div className="max-w-md mx-auto bg-gray-50 min-h-screen overflow-hidden">
-                          <main className="pb-20">
+                        <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen overflow-hidden">
+                          <main className="pb-24">
                             <Settings />
                           </main>
                           <Navbar />
