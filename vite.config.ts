@@ -7,8 +7,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    host: mode === 'development' ? '::' : 'duitr.my.id',
+    port: mode === 'development' ? 8080 : 443,
   },
   plugins: [
     react(),
