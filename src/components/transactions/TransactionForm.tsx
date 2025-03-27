@@ -9,17 +9,18 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const TransactionForm: React.FC = () => {
   const { wallets, addTransaction, addTransfer } = useFinance();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
     type: 'expense' as 'income' | 'expense' | 'transfer',
     walletId: '',
     destinationWalletId: '',
@@ -34,8 +35,17 @@ const TransactionForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select a date',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Common validation
-    if (!formData.amount || !formData.date) {
+    if (!formData.amount) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -43,6 +53,9 @@ const TransactionForm: React.FC = () => {
       });
       return;
     }
+    
+    // Format date to ISO string
+    const dateString = selectedDate.toISOString().split('T')[0];
     
     if (formData.type === 'transfer') {
       // Transfer validation
@@ -68,7 +81,7 @@ const TransactionForm: React.FC = () => {
       addTransfer({
         amount: parseFloat(formData.amount),
         description: formData.description || 'Transfer',
-        date: formData.date,
+        date: dateString,
         fromWalletId: formData.walletId,
         toWalletId: formData.destinationWalletId,
         fee: parseFloat(formData.fee) || 0,
@@ -89,8 +102,8 @@ const TransactionForm: React.FC = () => {
         amount: parseFloat(formData.amount),
         category: formData.category,
         description: formData.description,
-        date: formData.date,
-        type: formData.type === 'transfer' ? 'expense' : formData.type,
+        date: dateString,
+        type: formData.type,
         walletId: formData.walletId,
       });
     }
@@ -100,12 +113,12 @@ const TransactionForm: React.FC = () => {
       amount: '',
       category: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
       type: 'expense',
       walletId: '',
       destinationWalletId: '',
       fee: '0',
     });
+    setSelectedDate(new Date());
     
     // Show success message
     toast({
@@ -324,15 +337,10 @@ const TransactionForm: React.FC = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date" className="text-[#868686]">Date</Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="bg-[#242425] border-0 text-white"
+            <Label className="text-[#868686]">Date</Label>
+            <DatePicker 
+              date={selectedDate}
+              setDate={setSelectedDate}
             />
           </div>
           

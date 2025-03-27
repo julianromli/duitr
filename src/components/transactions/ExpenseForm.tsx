@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface ExpenseFormProps {
   open: boolean;
@@ -17,11 +18,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
   
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
     category: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
     walletId: '',
   });
   
@@ -33,8 +34,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select a date',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Validation
-    if (!formData.amount || !formData.category || !formData.description || !formData.date || !formData.walletId) {
+    if (!formData.amount || !formData.category || !formData.description || !formData.walletId) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -43,12 +53,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
+    // Format date to ISO string
+    const dateString = selectedDate.toISOString().split('T')[0];
+    
     // Add transaction
     addTransaction({
       amount: parseFloat(formData.amount),
       category: formData.category,
       description: formData.description,
-      date: formData.date,
+      date: dateString,
       type: 'expense',
       walletId: formData.walletId,
     });
@@ -58,9 +71,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       amount: '',
       category: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
       walletId: '',
     });
+    setSelectedDate(new Date());
     
     // Show success message
     toast({
@@ -162,15 +175,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date" className="text-[#868686]">Date</Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="bg-[#242425] border-0 text-white"
+            <Label className="text-[#868686]">Date</Label>
+            <DatePicker 
+              date={selectedDate}
+              setDate={setSelectedDate}
             />
           </div>
           
