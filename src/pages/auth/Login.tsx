@@ -135,7 +135,7 @@ const Login = () => {
               <path d="M3 6.5V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V6.5M3 6.5H21M3 6.5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V6.5M12 11C12 9.89543 12.8954 9 14 9H17C18.1046 9 19 9.89543 19 11V14C19 15.1046 18.1046 16 17 16H14C12.8954 16 12 15.1046 12 14V11Z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white">Log in to URFinance</h1>
+          <h1 className="text-3xl font-bold text-white">Log in to Duitr</h1>
         </motion.div>
         
         {/* Social Login Buttons */}
@@ -231,7 +231,7 @@ const Login = () => {
             to="/auth/signup" 
             className="block w-full border border-[#868686] text-white py-3 px-6 rounded-full mt-4 font-medium hover:border-white"
           >
-            Sign up for URFinance
+            Sign up for Duitr
           </Link>
         </motion.div>
       </motion.div>
