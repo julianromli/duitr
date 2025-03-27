@@ -91,11 +91,11 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshots/dashboard.png",
+      "src": "/screenshots/duitr_ss.png",
       "sizes": "1280x720",
       "type": "image/png",
       "platform": "wide",
-      "label": "Dashboard view of Duitr"
+      "label": "Dashboard view of Duitr - Track your finances easily"
     }
   ],
   "related_applications": [],
