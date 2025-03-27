@@ -57,7 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email, 
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: import.meta.env.MODE === 'production'
+            ? 'https://duitr.my.id/auth/callback'
+            : `${window.location.origin}/auth/callback`,
           data: {
             name: email.split('@')[0], // Use part of email as name
           }
