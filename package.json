@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:pwa": "vite build && npm run pwa:icons && npm run pwa:verify",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
