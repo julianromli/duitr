@@ -22,6 +22,7 @@ import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import AuthCallback from "@/pages/auth/AuthCallback";
 import { useEffect } from "react";
+import { TestDatePicker } from "@/components/ui/test-date-picker";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,9 @@ const App = () => {
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  
+                  {/* Test Route */}
+                  <Route path="/test-datepicker" element={<TestDatePicker />} />
                   
                   {/* Protected App Routes */}
                   <Route 

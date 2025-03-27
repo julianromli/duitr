@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TransferFormProps {
   open: boolean;
@@ -17,10 +18,10 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransfer } = useFinance();
   const { toast } = useToast();
   
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
     fromWalletId: '',
     toWalletId: '',
     fee: '0',
@@ -34,8 +35,17 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select a date',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Validation
-    if (!formData.amount || !formData.date || !formData.fromWalletId || !formData.toWalletId) {
+    if (!formData.amount || !formData.fromWalletId || !formData.toWalletId) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -53,11 +63,14 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
+    // Format date to ISO string
+    const dateString = selectedDate.toISOString().split('T')[0];
+    
     // Add transfer
     addTransfer({
       amount: parseFloat(formData.amount),
       description: formData.description || 'Transfer',
-      date: formData.date,
+      date: dateString,
       fromWalletId: formData.fromWalletId,
       toWalletId: formData.toWalletId,
       fee: parseFloat(formData.fee) || 0,
@@ -67,11 +80,11 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     setFormData({
       amount: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
       fromWalletId: '',
       toWalletId: '',
       fee: '0',
     });
+    setSelectedDate(new Date());
     
     // Show success message
     toast({
@@ -179,15 +192,10 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date" className="text-[#868686]">Date</Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="bg-[#242425] border-0 text-white"
+            <Label className="text-[#868686]">Date</Label>
+            <DatePicker 
+              date={selectedDate}
+              setDate={setSelectedDate}
             />
           </div>
           
