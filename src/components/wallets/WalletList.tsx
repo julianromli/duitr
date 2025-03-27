@@ -34,7 +34,7 @@ const WalletList: React.FC = () => {
   const walletTypes = [
     { value: 'bank', label: 'Bank Account', icon: Landmark },
     { value: 'cash', label: 'Cash', icon: Wallet },
-    { value: 'credit', label: 'Credit Card', icon: CreditCard },
+    { value: 'e-wallet', label: 'E-Wallet', icon: CreditCard },
     { value: 'investment', label: 'Investment', icon: TrendingUp },
   ];
 
@@ -51,7 +51,7 @@ const WalletList: React.FC = () => {
     switch (type) {
       case 'bank':
         return <Landmark className="w-5 h-5" />;
-      case 'credit':
+      case 'e-wallet':
         return <CreditCard className="w-5 h-5" />;
       case 'cash':
         return <Wallet className="w-5 h-5" />;

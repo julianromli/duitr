@@ -380,11 +380,11 @@ const Settings: React.FC = () => {
           variants={itemVariants}
         >
           <div className="relative mb-4">
-            <Avatar className="h-24 w-24 border-2 border-[#C6FE1E]">
+            <Avatar className="h-24 w-24 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#C6FE1E]">
               {profileImage ? (
-                <AvatarImage src={profileImage} alt={userProfile.username} className="object-cover" />
+                <AvatarImage src={profileImage} alt={userProfile.username} className="aspect-square object-cover w-full h-full" />
               ) : (
-                <AvatarFallback className="bg-[#242425] text-[#C6FE1E] text-2xl">
+                <AvatarFallback className="bg-[#242425] text-[#C6FE1E] text-2xl flex items-center justify-center">
                   {userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : 'U'}
                 </AvatarFallback>
               )}
