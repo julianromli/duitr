@@ -133,11 +133,10 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signInWithGoogle = async () => {
-  // Set more specific redirect URL with timestamp to prevent caching issues
-  const timestamp = Date.now();
+  // Set a clean redirect URL without any parameters that might cause issues
   const redirectTo = import.meta.env.MODE === 'production' 
-    ? `https://duitr.my.id/auth/callback?t=${timestamp}`
-    : `${window.location.origin}/auth/callback?t=${timestamp}`;
+    ? 'https://duitr.my.id/auth/callback'
+    : `${window.location.origin}/auth/callback`;
   
   // Log device info
   const deviceInfo = {
@@ -169,10 +168,11 @@ export const signInWithGoogle = async () => {
     } as Record<string, string>
   };
   
-  // Add iOS specific params if needed
+  // For iOS, we need special handling
   if (isIOS()) {
+    // Make sure these are set exactly as Supabase expects them
     options.queryParams.response_mode = 'query';
-    options.queryParams.session_mobile = 'true';
+    // Don't add extra parameters that might break the flow
   }
   
   // Initiate sign in

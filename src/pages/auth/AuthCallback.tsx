@@ -12,6 +12,28 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Check if we're currently on a 404 page
+  const is404Page = useRef(false);
+  
+  useEffect(() => {
+    // Check for 404 indicators in the page content
+    const is404 = document.title.includes('404') || 
+                 document.body.textContent?.includes('NOT_FOUND') ||
+                 window.location.href.includes('NOT_FOUND');
+    
+    is404Page.current = is404;
+    
+    if (is404) {
+      logAuthEvent('detected_404_page', { url: window.location.href });
+      // If we detect we're on a 404 page, try to recover by redirecting to the main callback URL
+      if (window.location.pathname !== '/auth/callback') {
+        window.location.href = import.meta.env.MODE === 'production'
+          ? 'https://duitr.my.id/auth/callback'
+          : `${window.location.origin}/auth/callback`;
+      }
+    }
+  }, []);
+  
   // Define the function as a ref to avoid dependency issues
   const handleAuthCallbackRef = useRef<() => Promise<void>>();
   
@@ -27,12 +49,47 @@ const AuthCallback = () => {
       isIOS: isIOS(),
       url: window.location.href,
       hasFragment: window.location.hash.length > 0,
-      hasQuery: window.location.search.length > 0
+      hasQuery: window.location.search.length > 0,
+      is404: is404Page.current
     };
     
     logAuthEvent('callback_started', deviceInfo);
     
     try {
+      // If we're on a 404 page or don't have an auth code, try to recover by checking for a session directly
+      if (is404Page.current || !window.location.search.includes('code=')) {
+        logAuthEvent('recovering_from_404_or_missing_code');
+        
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData?.session) {
+          logAuthEvent('session_found_despite_404', {
+            userId: sessionData.session.user.id
+          });
+          handleSuccessfulLogin(sessionData.session.user);
+          return;
+        }
+        
+        // If we're on iOS and can't find a session, try a fresh login
+        if (isIOS()) {
+          if (retryCount < 1) {
+            setRetryCount(1); // We've already tried once at this point
+            authProcessedRef.current = false;
+            setError('Login error. Attempting to recover...');
+            
+            setTimeout(() => {
+              // Try requesting a new session once more
+              handleAuthCallbackRef.current?.();
+            }, 2000);
+            return;
+          } else {
+            // If we've already retried, direct the user back to login
+            setError('Could not complete login. Please try signing in again.');
+            return;
+          }
+        }
+      }
+      
       // Extract auth code from URL if present
       const urlParams = new URLSearchParams(window.location.search);
       const authCode = urlParams.get('code');
@@ -42,18 +99,12 @@ const AuthCallback = () => {
         urlParams: Object.fromEntries(urlParams.entries())
       });
       
-      if (!authCode) {
-        logAuthEvent('no_auth_code_found', { search: window.location.search });
-        setError('No authorization code found in URL');
-        return;
-      }
-      
       // For iOS devices, try a slightly different approach
       if (isIOS()) {
         logAuthEvent('ios_specific_flow_started');
         
         try {
-          // First check if we have a session
+          // First check if we already have a session
           const { data: sessionData } = await supabase.auth.getSession();
           
           if (sessionData?.session) {
@@ -64,30 +115,42 @@ const AuthCallback = () => {
             return;
           }
           
-          // If no session, try to get code verifier from sessionStorage
-          const pkceVerifier = sessionStorage.getItem('supabase.auth.token.code_verifier');
-          logAuthEvent('ios_code_verifier', { hasVerifier: !!pkceVerifier });
-          
-          // Exchange auth code for session
-          const url = window.location.href;
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
-          logAuthEvent('ios_code_exchange_result', data, exchangeError);
-          
-          if (!exchangeError && data?.session) {
-            handleSuccessfulLogin(data.session.user);
-            return;
-          } else if (exchangeError) {
-            logAuthEvent('ios_exchange_error', { message: exchangeError.message });
-            throw exchangeError;
+          // If no session but we have an auth code, exchange it
+          if (authCode) {
+            // Exchange auth code for session with exact URL from the browser
+            const url = window.location.href;
+            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
+            logAuthEvent('ios_code_exchange_result', data, exchangeError);
+            
+            if (!exchangeError && data?.session) {
+              handleSuccessfulLogin(data.session.user);
+              return;
+            } else if (exchangeError) {
+              logAuthEvent('ios_exchange_error', { message: exchangeError.message });
+              throw exchangeError;
+            }
+          } else {
+            // No auth code and no session, this is a problem
+            throw new Error('No authorization code found in URL and no existing session');
           }
         } catch (iosExchangeError) {
           logAuthEvent('ios_exchange_exception', {}, iosExchangeError);
-          // Continue to normal flow if iOS-specific approach fails
+          
+          // For iOS, try the session check one more time as a last resort
+          try {
+            const { data: lastSessionCheck } = await supabase.auth.getSession();
+            if (lastSessionCheck?.session) {
+              handleSuccessfulLogin(lastSessionCheck.session.user);
+              return;
+            }
+          } catch (e) {
+            // Ignore and continue to the standard flow
+          }
         }
       }
 
-      // Standard flow - exchange code for session
-      try {
+      // Standard flow - exchange code for session if we have a code
+      if (authCode) {
         logAuthEvent('standard_code_exchange_attempt');
         
         // Try with the full URL
@@ -120,25 +183,34 @@ const AuthCallback = () => {
         } else {
           throw new Error('No session data returned after code exchange');
         }
-      } catch (standardExchangeError: any) {
-        logAuthEvent('standard_exchange_error', { message: standardExchangeError.message });
-        
-        // Final fallback - try signing in again
-        if (retryCount >= 2) {
-          setError('Authentication failed. Please try signing in again.');
+      } else {
+        // No auth code, try to see if we already have a session anyway
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session) {
+          logAuthEvent('session_found_without_code', {
+            userId: sessionData.session.user.id
+          });
+          handleSuccessfulLogin(sessionData.session.user);
+          return;
         } else {
-          // One more retry attempt
-          setRetryCount(prev => prev + 1);
-          authProcessedRef.current = false;
-          
-          setTimeout(() => {
-            handleAuthCallbackRef.current?.();
-          }, 2000);
+          throw new Error('No authorization code found in URL');
         }
       }
     } catch (err: any) {
       logAuthEvent('callback_exception', {}, err);
       setError(err.message || 'An unexpected error occurred');
+      
+      // If we got an error but might have a session, check once more
+      try {
+        const { data: finalSessionCheck } = await supabase.auth.getSession();
+        if (finalSessionCheck?.session) {
+          // Even though we had an error, we found a session, so proceed
+          handleSuccessfulLogin(finalSessionCheck.session.user);
+          return;
+        }
+      } catch (e) {
+        // Ignore this error, we've already set an error message
+      }
     } finally {
       setLoading(retryCount < 2);  // Only show loading if we're still retrying
     }
