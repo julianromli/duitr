@@ -25,11 +25,15 @@ import AuthCallback from "@/pages/auth/AuthCallback";
 import { useEffect, useState } from "react";
 import { TestDatePicker } from "@/components/ui/test-date-picker";
 import { InstallAppBanner } from "@/components/shared/InstallAppBanner";
+import { logAuthEvent } from '@/utils/auth-logger';
+import { supabase, getSession } from '@/lib/supabase';
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Apply dark theme for the whole app
   useEffect(() => {
@@ -60,6 +64,64 @@ const App = () => {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // When checking auth state
+  useEffect(() => {
+    const checkAuthState = async () => {
+      try {
+        setAuthLoading(true);
+        const { data, error } = await getSession();
+        
+        if (error) {
+          logAuthEvent('session_check_error', {}, error);
+          setUser(null);
+          return;
+        }
+        
+        if (data.session) {
+          logAuthEvent('existing_session_found', { 
+            userId: data.session.user.id,
+            expiresAt: data.session.expires_at
+          });
+          
+          setUser(data.session.user);
+          
+          // Check if user is in auth callback route path
+          const isInAuthCallback = window.location.pathname.includes('/auth/callback');
+          if (isInAuthCallback) {
+            logAuthEvent('redirecting_from_callback', { path: window.location.pathname });
+          }
+        } else {
+          logAuthEvent('no_session_found');
+          setUser(null);
+        }
+      } catch (err) {
+        logAuthEvent('session_check_exception', {}, err);
+        setUser(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    
+    checkAuthState();
+    
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        logAuthEvent('auth_state_change', { event, userId: session?.user?.id });
+        
+        if (session?.user) {
+          setUser(session.user);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
     };
   }, []);
 

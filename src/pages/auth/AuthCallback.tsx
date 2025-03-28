@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { logAuthEvent } from '@/utils/auth-logger';
 
 const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
@@ -11,30 +12,40 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      logAuthEvent('callback_started');
+      
       try {
-        // Get the URL hash and extract parameters
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        
-        if (!accessToken) {
-          setError('No access token found in the URL');
-          return;
-        }
-        
-        // Set session using the access token
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        });
+        // Check if we have a session in the URL
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        logAuthEvent('session_check', sessionData, sessionError);
         
         if (sessionError) {
           setError(sessionError.message);
           return;
         }
         
+        // If we don't have a session yet, try to exchange the auth code for a session
+        if (!sessionData?.session) {
+          logAuthEvent('no_session_attempting_code_exchange');
+          // This handles the PKCE flow where we get an auth code in the URL
+          const url = window.location.href;
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
+          logAuthEvent('code_exchange_result', data, exchangeError);
+          
+          if (exchangeError) {
+            setError(exchangeError.message);
+            return;
+          }
+          
+          if (!data.session) {
+            setError('No session established after code exchange');
+            return;
+          }
+        }
+        
         // Get user data to confirm successful login
         const { data, error: userError } = await supabase.auth.getUser();
+        logAuthEvent('user_fetch_result', data, userError);
         
         if (userError) {
           setError(userError.message);
@@ -42,6 +53,8 @@ const AuthCallback = () => {
         }
         
         if (data?.user) {
+          logAuthEvent('authentication_success', { userId: data.user.id });
+          
           toast({
             title: 'Success!',
             description: 'You have successfully signed in.',
@@ -55,6 +68,7 @@ const AuthCallback = () => {
           setError('Failed to retrieve user information');
         }
       } catch (err: any) {
+        logAuthEvent('callback_exception', {}, err);
         setError(err.message || 'An unexpected error occurred');
       } finally {
         setLoading(false);
