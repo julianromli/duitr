@@ -33,27 +33,52 @@ const AuthCallback = () => {
     logAuthEvent('callback_started', deviceInfo);
     
     try {
+      // Extract auth code from URL if present
+      const urlParams = new URLSearchParams(window.location.search);
+      const authCode = urlParams.get('code');
+      
+      logAuthEvent('auth_parameters', { 
+        hasAuthCode: !!authCode,
+        urlParams: Object.fromEntries(urlParams.entries())
+      });
+      
+      if (!authCode) {
+        logAuthEvent('no_auth_code_found', { search: window.location.search });
+        setError('No authorization code found in URL');
+        return;
+      }
+      
       // For iOS devices, try a slightly different approach
       if (isIOS()) {
         logAuthEvent('ios_specific_flow_started');
         
-        // First, try exchanging the code directly
         try {
-          const url = window.location.href;
-          logAuthEvent('ios_url_before_exchange', { url });
+          // First check if we have a session
+          const { data: sessionData } = await supabase.auth.getSession();
           
+          if (sessionData?.session) {
+            logAuthEvent('ios_existing_session_found', {
+              userId: sessionData.session.user.id
+            });
+            handleSuccessfulLogin(sessionData.session.user);
+            return;
+          }
+          
+          // If no session, try to get code verifier from sessionStorage
+          const pkceVerifier = sessionStorage.getItem('supabase.auth.token.code_verifier');
+          logAuthEvent('ios_code_verifier', { hasVerifier: !!pkceVerifier });
+          
+          // Exchange auth code for session
+          const url = window.location.href;
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
           logAuthEvent('ios_code_exchange_result', data, exchangeError);
           
           if (!exchangeError && data?.session) {
-            // Successfully got session, proceed with user data
-            const { data: userData, error: userError } = await supabase.auth.getUser();
-            logAuthEvent('ios_user_fetch_result', userData, userError);
-            
-            if (!userError && userData?.user) {
-              handleSuccessfulLogin(userData.user);
-              return;
-            }
+            handleSuccessfulLogin(data.session.user);
+            return;
+          } else if (exchangeError) {
+            logAuthEvent('ios_exchange_error', { message: exchangeError.message });
+            throw exchangeError;
           }
         } catch (iosExchangeError) {
           logAuthEvent('ios_exchange_exception', {}, iosExchangeError);
@@ -61,78 +86,61 @@ const AuthCallback = () => {
         }
       }
 
-      // Regular flow - first check if we already have a session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      logAuthEvent('session_check', sessionData, sessionError);
-      
-      if (sessionError) {
-        setError(sessionError.message);
-        return;
-      }
-      
-      // If we have a session, we're already logged in
-      if (sessionData?.session) {
-        logAuthEvent('existing_session_found', { 
-          userId: sessionData.session.user.id,
-          expiresAt: sessionData.session.expires_at
-        });
+      // Standard flow - exchange code for session
+      try {
+        logAuthEvent('standard_code_exchange_attempt');
         
-        // Get user data and proceed
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (!userError && userData?.user) {
-          handleSuccessfulLogin(userData.user);
-          return;
-        }
-      }
-      
-      // No session yet, try to exchange the auth code
-      logAuthEvent('no_session_attempting_code_exchange');
-      const url = window.location.href;
-      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
-      logAuthEvent('code_exchange_result', data, exchangeError);
-      
-      if (exchangeError) {
-        if (retryCount < 2) {
-          // Sometimes the first attempt fails, especially on iOS, so retry
-          logAuthEvent('retrying_code_exchange', { retryCount: retryCount + 1 });
+        // Try with the full URL
+        const url = window.location.href;
+        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
+        
+        if (exchangeError) {
+          logAuthEvent('code_exchange_error', { message: exchangeError.message });
+          
+          // If we've tried too many times, give up
+          if (retryCount >= 2) {
+            throw exchangeError;
+          }
+          
+          // Otherwise retry
           setRetryCount(prev => prev + 1);
           authProcessedRef.current = false;
           
           // Slight delay before retry
           setTimeout(() => {
             handleAuthCallbackRef.current?.();
-          }, 1000);
+          }, 1500);
           return;
         }
         
-        setError(exchangeError.message);
-        return;
-      }
-      
-      if (!data.session) {
-        setError('No session established after code exchange');
-        return;
-      }
-      
-      // Get user data to confirm successful login
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      logAuthEvent('user_fetch_result', userData, userError);
-      
-      if (userError) {
-        setError(userError.message);
-        return;
-      }
-      
-      if (userData?.user) {
-        handleSuccessfulLogin(userData.user);
-      } else {
-        setError('Failed to retrieve user information');
+        if (data?.session) {
+          logAuthEvent('successful_session_exchange', { userId: data.session.user.id });
+          handleSuccessfulLogin(data.session.user);
+          return;
+        } else {
+          throw new Error('No session data returned after code exchange');
+        }
+      } catch (standardExchangeError: any) {
+        logAuthEvent('standard_exchange_error', { message: standardExchangeError.message });
+        
+        // Final fallback - try signing in again
+        if (retryCount >= 2) {
+          setError('Authentication failed. Please try signing in again.');
+        } else {
+          // One more retry attempt
+          setRetryCount(prev => prev + 1);
+          authProcessedRef.current = false;
+          
+          setTimeout(() => {
+            handleAuthCallbackRef.current?.();
+          }, 2000);
+        }
       }
     } catch (err: any) {
       logAuthEvent('callback_exception', {}, err);
       setError(err.message || 'An unexpected error occurred');
     } finally {
-      setLoading(false);
+      setLoading(retryCount < 2);  // Only show loading if we're still retrying
     }
   };
 
@@ -183,6 +191,19 @@ const AuthCallback = () => {
     }, 500);
   };
 
+  const handleLoginRedirect = () => {
+    // Clear any stored PKCE data before redirecting
+    try {
+      sessionStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token.code_verifier');
+      localStorage.removeItem('supabase.auth.token');
+    } catch (e) {
+      // Ignore errors
+    }
+    
+    navigate('/auth/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
@@ -209,7 +230,7 @@ const AuthCallback = () => {
                 Try Again
               </button>
               <button 
-                onClick={() => navigate('/auth/login')}
+                onClick={handleLoginRedirect}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#7B61FF] hover:bg-[#6A4FD1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#7B61FF]"
               >
                 Back to Login
