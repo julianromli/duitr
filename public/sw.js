@@ -71,9 +71,24 @@ const isValidResponse = (response) => {
   return response && response.status === 200 && response.type === 'basic';
 };
 
+// Helper function to check if a request is authentication related
+const isAuthRequest = (url) => {
+  return url.pathname.includes('/auth/') || 
+         url.search.includes('code=') || 
+         url.search.includes('access_token=') ||
+         url.hash.includes('access_token=');
+};
+
 // Fetch event - serve from cache or network
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
+  
+  // Skip handling authentication-related requests
+  if (isAuthRequest(requestUrl)) {
+    console.log('[Service Worker] Skipping service worker for auth request:', requestUrl.pathname);
+    // Let the browser handle these directly
+    return;
+  }
   
   // For same-origin navigation requests, use network-first strategy
   if (isNavigationRequest(event.request) && requestUrl.origin === self.location.origin) {

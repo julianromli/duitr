@@ -18,10 +18,25 @@ if ('serviceWorker' in navigator) {
               
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('New service worker installed, page will reload to activate it');
-                  // Optional: Display notification to user about new version
-                  if (window.confirm('New version available! Reload to update?')) {
-                    window.location.reload();
+                  console.log('New service worker installed');
+                  
+                  // Don't show update notification if we detect we're on iOS
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                  
+                  // Don't show update notification immediately after login
+                  const justLoggedIn = window.location.pathname.includes('/auth/callback') || 
+                                      sessionStorage.getItem('just_authenticated') === 'true';
+                  
+                  if (!isIOS && !justLoggedIn) {
+                    // Only show notification on non-iOS devices and not right after login
+                    if (window.confirm('New version available! Reload to update?')) {
+                      window.location.reload();
+                    }
+                  } else if (isIOS) {
+                    // On iOS, silently update without prompting
+                    console.log('iOS device detected, silently updating service worker');
+                    // Mark this so we don't show the popup on the next page navigation
+                    sessionStorage.setItem('sw_updated', 'true');
                   }
                 }
               });
