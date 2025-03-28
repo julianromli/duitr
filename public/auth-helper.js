@@ -67,7 +67,7 @@ function processAuthCallback() {
   const params = new URLSearchParams(url.search);
   const hashParams = new URLSearchParams(url.hash.substring(1));
   
-  // Look for auth tokens in various places
+  // Look for auth code or tokens
   const accessToken = params.get('access_token') || hashParams.get('access_token');
   const refreshToken = params.get('refresh_token') || hashParams.get('refresh_token');
   const expiresAt = params.get('expires_at') || hashParams.get('expires_at');
@@ -81,6 +81,28 @@ function processAuthCallback() {
     search: url.search,
     hash: url.hash
   });
+  
+  // Save any code we found to help with the exchange
+  if (authCode) {
+    try {
+      sessionStorage.setItem('supabase_auth_code', authCode);
+      console.log('[Auth Helper] Auth code stored');
+      
+      // Check for state
+      const state = params.get('state');
+      if (state) {
+        sessionStorage.setItem('supabase_auth_state', state);
+        console.log('[Auth Helper] Auth state stored');
+      }
+      
+      // Signal the main app
+      window.dispatchEvent(new CustomEvent('auth_code_detected', {
+        detail: { code: authCode, state }
+      }));
+    } catch (e) {
+      console.error('[Auth Helper] Error storing auth code:', e);
+    }
+  }
   
   // Store any token data we found
   if (accessToken) {
@@ -97,11 +119,34 @@ function processAuthCallback() {
     
     console.log('[Auth Helper] Stored tokens and dispatched event');
   }
-  
-  // Store auth code if present
-  if (authCode) {
-    storeAuthData('supabase.auth.code', { code: authCode });
-    console.log('[Auth Helper] Stored auth code');
+}
+
+// When in an iframe, try to communicate with parent
+function setupIframeCommunication() {
+  if (window !== window.parent) {
+    console.log('[Auth Helper] Running in iframe, setting up communication');
+    
+    // Listen for messages from parent
+    window.addEventListener('message', function(event) {
+      const data = event.data;
+      
+      if (data && data.type === 'AUTH_GET_CODE') {
+        const authCode = new URLSearchParams(window.location.search).get('code');
+        
+        if (authCode) {
+          // Send code back to parent
+          window.parent.postMessage({
+            type: 'AUTH_CODE',
+            code: authCode,
+            url: window.location.href
+          }, '*');
+          console.log('[Auth Helper] Sent auth code to parent');
+        }
+      }
+    });
+    
+    // Notify parent we're ready
+    window.parent.postMessage({ type: 'AUTH_HELPER_READY' }, '*');
   }
 }
 
@@ -112,6 +157,7 @@ window.addEventListener('load', function() {
   // Check if we're on an auth callback page
   if (window.location.pathname.includes('/auth/callback')) {
     processAuthCallback();
+    setupIframeCommunication();
   }
 });
 

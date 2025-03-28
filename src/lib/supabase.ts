@@ -133,9 +133,11 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signInWithGoogle = async () => {
+  // Set more specific redirect URL with timestamp to prevent caching issues
+  const timestamp = Date.now();
   const redirectTo = import.meta.env.MODE === 'production' 
-    ? 'https://duitr.my.id/auth/callback'
-    : `${window.location.origin}/auth/callback`;
+    ? `https://duitr.my.id/auth/callback?t=${timestamp}`
+    : `${window.location.origin}/auth/callback?t=${timestamp}`;
   
   // Log device info
   const deviceInfo = {
@@ -147,23 +149,45 @@ export const signInWithGoogle = async () => {
   
   logAuthEvent('google_sign_in_initiated', deviceInfo);
   
+  // Clear any existing auth data
+  try {
+    sessionStorage.removeItem('supabase.auth.token');
+    sessionStorage.removeItem('supabase.auth.token.code_verifier');
+    localStorage.removeItem('supabase.auth.token');
+  } catch (e) {
+    // Ignore errors
+  }
+  
+  // Configure sign in options
+  const options = {
+    redirectTo,
+    queryParams: {
+      // Request refresh token
+      access_type: 'offline',
+      // Force consent screen
+      prompt: 'consent',
+    } as Record<string, string>
+  };
+  
+  // Add iOS specific params if needed
+  if (isIOS()) {
+    options.queryParams.response_mode = 'query';
+    options.queryParams.session_mobile = 'true';
+  }
+  
+  // Initiate sign in
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo,
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-        // Add specific params for iOS devices
-        ...(isIOS() && { 
-          response_mode: 'query',
-          session_mobile: 'true'
-        })
-      },
-    },
+    options
   });
   
-  logAuthEvent('google_sign_in_response', data, error);
+  // Log the result
+  logAuthEvent('google_sign_in_response', { 
+    url: data?.url,
+    provider: data?.provider,
+    hasError: !!error
+  }, error);
+  
   return { data, error };
 };
 
