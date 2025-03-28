@@ -69,126 +69,6 @@ interface FinanceContextType {
 // Create the context
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-// Sample data for development (used as fallback or for new users)
-const sampleTransactions: Transaction[] = [
-  {
-    id: '1',
-    amount: 2500,
-    category: 'Salary',
-    description: 'Monthly salary',
-    date: '2023-06-01',
-    type: 'income',
-    walletId: '1',
-  },
-  {
-    id: '2',
-    amount: 45.99,
-    category: 'Groceries',
-    description: 'Weekly shopping',
-    date: '2023-06-04',
-    type: 'expense',
-    walletId: '1',
-  },
-  {
-    id: '3',
-    amount: 120,
-    category: 'Dining',
-    description: 'Dinner with friends',
-    date: '2023-06-08',
-    type: 'expense',
-    walletId: '1',
-  },
-  {
-    id: '4',
-    amount: 500,
-    category: 'Freelance',
-    description: 'Design project',
-    date: '2023-06-15',
-    type: 'income',
-    walletId: '2',
-  },
-  {
-    id: '5',
-    amount: 89.99,
-    category: 'Utilities',
-    description: 'Electricity bill',
-    date: '2023-06-10',
-    type: 'expense',
-    walletId: '1',
-  },
-  {
-    id: '6',
-    amount: 350,
-    category: 'Rent',
-    description: 'Monthly rent',
-    date: '2023-06-01',
-    type: 'expense',
-    walletId: '1',
-  },
-];
-
-const sampleBudgets: Budget[] = [
-  {
-    id: '1',
-    category: 'Groceries',
-    amount: 400,
-    spent: 245.50,
-    period: 'monthly',
-  },
-  {
-    id: '2',
-    category: 'Dining',
-    amount: 300,
-    spent: 220,
-    period: 'monthly',
-  },
-  {
-    id: '3',
-    category: 'Entertainment',
-    amount: 200,
-    spent: 85.99,
-    period: 'monthly',
-  },
-  {
-    id: '4',
-    category: 'Transportation',
-    amount: 150,
-    spent: 78.50,
-    period: 'monthly',
-  },
-];
-
-const sampleWallets: Wallet[] = [
-  {
-    id: '1',
-    name: 'Main Account',
-    balance: 3450.20,
-    type: 'bank',
-    color: '#4263EB',
-  },
-  {
-    id: '2',
-    name: 'Savings',
-    balance: 8750.65,
-    type: 'bank',
-    color: '#0CA678',
-  },
-  {
-    id: '3',
-    name: 'Cash',
-    balance: 250.0,
-    type: 'cash',
-    color: '#F59F00',
-  },
-  {
-    id: '4',
-    name: 'E-Wallet',
-    balance: -450.80,
-    type: 'e-wallet',
-    color: '#FA5252',
-  },
-];
-
 // Provider component
 export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -222,44 +102,16 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           
         if (walletsError) throw walletsError;
         
-        // If user has no wallets, create default ones
-        if (walletsData.length === 0) {
-          // Insert default wallets
-          const defaultWallets = sampleWallets.map(wallet => ({
-            name: wallet.name,
-            balance: wallet.balance,
-            type: wallet.type,
-            color: wallet.color,
-            user_id: user.id
-          }));
-          
-          const { data: newWallets, error: createWalletsError } = await supabase
-            .from('wallets')
-            .insert(defaultWallets)
-            .select();
-            
-          if (createWalletsError) throw createWalletsError;
-          
-          // Transform DB format to app format and handle 'credit' to 'e-wallet' type conversion
-          setWallets(newWallets.map(w => ({
-            id: w.id,
-            name: w.name,
-            balance: w.balance,
-            type: w.type === 'credit' ? 'e-wallet' as const : w.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
-            color: w.color,
-            userId: w.user_id
-          })));
-        } else {
-          // Transform DB format to app format and handle 'credit' to 'e-wallet' type conversion
-          setWallets(walletsData.map(w => ({
-            id: w.id,
-            name: w.name,
-            balance: w.balance,
-            type: w.type === 'credit' ? 'e-wallet' as const : w.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
-            color: w.color,
-            userId: w.user_id
-          })));
-        }
+        // No default wallets for new users
+        // Transform DB format to app format and handle 'credit' to 'e-wallet' type conversion
+        setWallets(walletsData.map(w => ({
+          id: w.id,
+          name: w.name,
+          balance: w.balance,
+          type: w.type === 'credit' ? 'e-wallet' as const : w.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
+          color: w.color,
+          userId: w.user_id
+        })));
         
         // Fetch transactions
         const { data: transactionsData, error: transactionsError } = await supabase
@@ -289,44 +141,16 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           
         if (budgetsError) throw budgetsError;
         
-        // If user has no budgets, create default ones
-        if (budgetsData.length === 0) {
-          // Insert default budgets
-          const defaultBudgets = sampleBudgets.map(budget => ({
-            category: budget.category,
-            amount: budget.amount,
-            spent: budget.spent,
-            period: budget.period,
-            user_id: user.id
-          }));
-          
-          const { data: newBudgets, error: createBudgetsError } = await supabase
-            .from('budgets')
-            .insert(defaultBudgets)
-            .select();
-            
-          if (createBudgetsError) throw createBudgetsError;
-          
-          // Transform DB format to app format
-          setBudgets(newBudgets.map(b => ({
-            id: b.id,
-            category: b.category,
-            amount: b.amount,
-            spent: b.spent,
-            period: b.period as 'monthly' | 'weekly' | 'yearly',
-            userId: b.user_id
-          })));
-        } else {
-          // Transform DB format to app format
-          setBudgets(budgetsData.map(b => ({
-            id: b.id,
-            category: b.category,
-            amount: b.amount,
-            spent: b.spent,
-            period: b.period as 'monthly' | 'weekly' | 'yearly',
-            userId: b.user_id
-          })));
-        }
+        // No default budgets for new users
+        // Transform DB format to app format
+        setBudgets(budgetsData.map(b => ({
+          id: b.id,
+          category: b.category,
+          amount: b.amount,
+          spent: b.spent,
+          period: b.period as 'monthly' | 'weekly' | 'yearly',
+          userId: b.user_id
+        })));
       } catch (error: any) {
         console.error('Error loading user data:', error);
         toast({
