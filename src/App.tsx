@@ -143,7 +143,16 @@ const App = () => {
                   <Route path="/auth/signup" element={<SignUp />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
+                  
+                  {/* Auth callback routes - handle all possible formats */}
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/callback/:code" element={<AuthCallback />} />
+                  <Route path="/auth/callback/*" element={<AuthCallback />} />
+                  
+                  {/* Handle 404 in auth flow by redirecting to the auth callback page */}
+                  <Route path="/r5sms-*" element={<Navigate to="/auth/callback" replace />} />
+                  <Route path="/sin1:*" element={<Navigate to="/auth/callback" replace />} />
+                  <Route path="*NOT_FOUND*" element={<Navigate to="/auth/callback" replace />} />
                   
                   {/* Offline page */}
                   <Route path="/offline" element={<Offline />} />

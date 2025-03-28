@@ -58,9 +58,84 @@ function getAuthData(key) {
   return data;
 }
 
+// Check if we're on a 404 error page
+function is404Page() {
+  return document.title.includes('404') || 
+         document.documentElement.innerHTML.includes('NOT_FOUND') ||
+         window.location.href.includes('NOT_FOUND');
+}
+
+// Recover from 404 page by redirecting to the correct auth callback
+function recoverFrom404() {
+  console.log('[Auth Helper] Detected 404 page, attempting recovery');
+  
+  // Store the fact that we detected a 404
+  try {
+    sessionStorage.setItem('auth_recovery_from_404', 'true');
+    
+    // Get the original auth code if present
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    
+    if (code) {
+      sessionStorage.setItem('auth_recovery_code', code);
+      if (state) {
+        sessionStorage.setItem('auth_recovery_state', state);
+      }
+    }
+  } catch (e) {
+    // Ignore storage errors
+  }
+  
+  // Redirect to the correct callback URL
+  const callbackUrl = window.location.hostname.includes('duitr.my.id')
+    ? 'https://duitr.my.id/auth/callback'
+    : `${window.location.origin}/auth/callback`;
+    
+  // Add the code from the current URL if available
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    window.location.href = `${callbackUrl}?code=${encodeURIComponent(code)}`;
+  } else {
+    window.location.href = callbackUrl;
+  }
+}
+
 // Process auth callback parameters from URL
 function processAuthCallback() {
   console.log('[Auth Helper] Processing auth callback');
+  
+  // Check if we're on a 404 error page
+  if (is404Page()) {
+    recoverFrom404();
+    return;
+  }
+  
+  // Check if this is a recovery from a previous 404
+  let isRecovery = false;
+  try {
+    isRecovery = sessionStorage.getItem('auth_recovery_from_404') === 'true';
+    if (isRecovery) {
+      console.log('[Auth Helper] This is a recovery from a previous 404');
+      // Use the stored code if we don't have one in the URL
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get('code')) {
+        const recoveryCode = sessionStorage.getItem('auth_recovery_code');
+        if (recoveryCode) {
+          console.log('[Auth Helper] Using recovery code from storage');
+          // Add code to URL without navigation 
+          if (!window.location.search.includes('code=')) {
+            const newUrl = `${window.location.pathname}?code=${encodeURIComponent(recoveryCode)}`;
+            window.history.replaceState({}, '', newUrl);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore storage errors
+  }
   
   // Check if URL contains auth parameters
   const url = new URL(window.location.href);
@@ -79,7 +154,8 @@ function processAuthCallback() {
     hasExpiresAt: !!expiresAt,
     hasAuthCode: !!authCode,
     search: url.search,
-    hash: url.hash
+    hash: url.hash,
+    isRecovery
   });
   
   // Save any code we found to help with the exchange
@@ -153,6 +229,12 @@ function setupIframeCommunication() {
 // Initialize helper when the page loads
 window.addEventListener('load', function() {
   console.log('[Auth Helper] Initialized');
+  
+  // Check if we're on a 404 page first - even if not a callback
+  if (is404Page() && window.location.search.includes('code=')) {
+    recoverFrom404();
+    return;
+  }
   
   // Check if we're on an auth callback page
   if (window.location.pathname.includes('/auth/callback')) {
