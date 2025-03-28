@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logAuthEvent } from '@/utils/auth-logger';
 
 // Use environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cxqluedeykgqmthzveiw.supabase.co';
@@ -81,14 +82,24 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signInWithGoogle = async () => {
+  const redirectTo = import.meta.env.MODE === 'production' 
+    ? 'https://duitr.my.id/auth/callback'
+    : `${window.location.origin}/auth/callback`;
+  
+  logAuthEvent('google_sign_in_initiated', { redirectTo });
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: import.meta.env.MODE === 'production' 
-        ? 'https://duitr.my.id/auth/callback'
-        : `${window.location.origin}/auth/callback`,
+      redirectTo,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
     },
   });
+  
+  logAuthEvent('google_sign_in_response', data, error);
   return { data, error };
 };
 
