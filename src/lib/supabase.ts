@@ -9,6 +9,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 console.log('Supabase URL:', supabaseUrl);
 console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10));
 
+// Detect iOS devices
+export const isIOS = () => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
 // Test direct API call method
 export const testDirectSignup = async (email: string, password: string) => {
   // Create a new client using hardcoded credentials (just for testing)
@@ -42,15 +48,60 @@ export const testDirectSignup = async (email: string, password: string) => {
   }
 };
 
+// Custom storage implementation to handle iOS Safari issues
+const customStorage = {
+  getItem: (key: string): Promise<string | null> => {
+    try {
+      const value = localStorage.getItem(key);
+      logAuthEvent('storage_get', { key, success: true });
+      return Promise.resolve(value);
+    } catch (error: any) {
+      logAuthEvent('storage_get_error', { key }, error);
+      return Promise.resolve(null);
+    }
+  },
+  setItem: (key: string, value: string): Promise<void> => {
+    try {
+      localStorage.setItem(key, value);
+      logAuthEvent('storage_set', { key, success: true });
+      return Promise.resolve();
+    } catch (error: any) {
+      logAuthEvent('storage_set_error', { key }, error);
+      // Try using session storage as fallback for iOS
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (sessionError) {
+        // Ignore if session storage also fails
+      }
+      return Promise.resolve();
+    }
+  },
+  removeItem: (key: string): Promise<void> => {
+    try {
+      localStorage.removeItem(key);
+      logAuthEvent('storage_remove', { key, success: true });
+      return Promise.resolve();
+    } catch (error: any) {
+      logAuthEvent('storage_remove_error', { key }, error);
+      return Promise.resolve();
+    }
+  }
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    site: import.meta.env.MODE === 'production' 
-      ? 'https://duitr.my.id'
-      : window.location.origin
+    storage: customStorage,
+    storageKey: 'supabase_auth_token',
+    debug: isIOS(), // Enable debug mode on iOS devices
+  },
+  global: {
+    headers: {
+      'x-client-info': `duitr/${isIOS() ? 'ios' : 'web'}`
+    }
   }
 });
 
@@ -86,7 +137,15 @@ export const signInWithGoogle = async () => {
     ? 'https://duitr.my.id/auth/callback'
     : `${window.location.origin}/auth/callback`;
   
-  logAuthEvent('google_sign_in_initiated', { redirectTo });
+  // Log device info
+  const deviceInfo = {
+    redirectTo,
+    isIOS: isIOS(),
+    userAgent: navigator.userAgent,
+    platform: navigator.platform
+  };
+  
+  logAuthEvent('google_sign_in_initiated', deviceInfo);
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -95,6 +154,11 @@ export const signInWithGoogle = async () => {
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
+        // Add specific params for iOS devices
+        ...(isIOS() && { 
+          response_mode: 'query',
+          session_mobile: 'true'
+        })
       },
     },
   });
