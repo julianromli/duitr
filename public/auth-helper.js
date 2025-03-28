@@ -238,6 +238,20 @@ window.addEventListener('load', function() {
   
   // Check if we're on an auth callback page
   if (window.location.pathname.includes('/auth/callback')) {
+    // Mark that we're going through authentication to prevent update notifications
+    try {
+      sessionStorage.setItem('just_authenticated', 'true');
+      console.log('[Auth Helper] Marked user as just authenticated');
+      
+      // Set a timeout to clear this flag after 30 seconds
+      setTimeout(() => {
+        sessionStorage.removeItem('just_authenticated');
+        console.log('[Auth Helper] Cleared just authenticated flag');
+      }, 30000);
+    } catch (e) {
+      console.error('[Auth Helper] Error setting authentication flag:', e);
+    }
+    
     processAuthCallback();
     setupIframeCommunication();
   }
@@ -252,4 +266,4 @@ window.addEventListener('auth_token_required', function() {
     }));
     console.log('[Auth Helper] Provided stored token');
   }
-}); 
+});
