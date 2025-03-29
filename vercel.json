@@ -24,12 +24,5 @@
     { "source": "/r5sms-(.*)", "destination": "/index.html" },
     { "source": "/sin1:(.*)", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "headers": { "cache-control": "s-maxage=0" },
-      "dest": "/index.html"
-    }
   ]
 }
