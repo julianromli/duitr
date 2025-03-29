@@ -24,18 +24,21 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <!-- Add version info so browsers don't cache old files -->
-    <meta name="app-version" content="1.0.2" />
+    <meta name="app-version" content="1.0.4" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
     
-    <!-- Apple Touch Icons -->
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" type="image/x-icon" />
+    
+    <!-- Apple Touch Icons - Menggunakan duitr-logo.svg -->
     <link rel="apple-touch-icon" href="/pwa-icons/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/pwa-icons/icon-152x152.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/pwa-icons/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/pwa-icons/icon-152x152.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/pwa-icons/icon-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/pwa-icons/icon-512x512.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-
+    
     <!-- Open Graph Tags -->
     <meta property="og:title" content="Duitr - Your Personal Finance Manager" />
     <meta property="og:description" content="Manage your finances, track expenses, and reach your financial goals." />
@@ -156,6 +159,16 @@
         opacity: 0.9;
       }
       
+      /* Clases para la integración de logotipos en toda la aplicación */
+      .duitr-logo {
+        display: inline-block;
+      }
+      
+      .duitr-logo svg {
+        max-width: 100%;
+        max-height: 100%;
+      }
+      
       @keyframes pulse {
         0% {
           transform: scale(0.95);
@@ -187,10 +200,8 @@
     <div id="splash-screen">
       <div id="splash-logo-container">
         <!-- Inline SVG logo -->
-        <div id="splash-logo">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80">
-            <text x="50" y="68" text-anchor="middle" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:60px;" fill="#000000">D</text>
-          </svg>
+        <div id="splash-logo" class="duitr-logo">
+          <!-- Este div se llenará con el SVG del logotipo principal -->
         </div>
       </div>
       <div id="splash-spinner"></div>
@@ -198,6 +209,47 @@
     </div>
     
     <div id="root"></div>
+    
+    <!-- Logo Management Script - must be loaded before other scripts to ensure logo is available -->
+    <script>
+      // Load the logo SVG and inject it where needed
+      (function() {
+        // Function to load SVG
+        function loadLogo() {
+          return fetch('/duitr-logo.svg')
+            .then(response => response.text())
+            .catch(error => {
+              console.error('Error loading logo SVG:', error);
+              // Fallback to inline SVG if fetch fails
+              return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+                <rect width="100" height="100" rx="28" fill="#C6FE1E" />
+                <text x="50" y="68" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-weight="700" font-size="60" fill="#000000">D</text>
+              </svg>`;
+            });
+        }
+        
+        // Replace all logo elements with the SVG
+        function injectLogos(svgString) {
+          const logoElements = document.querySelectorAll('.duitr-logo');
+          logoElements.forEach(el => {
+            el.innerHTML = svgString;
+          });
+        }
+        
+        // Expose logo utility to window for use by other scripts
+        window.duitrLogo = {
+          load: loadLogo,
+          inject: injectLogos
+        };
+        
+        // Auto-inject logos on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function() {
+          loadLogo().then(svgString => {
+            injectLogos(svgString);
+          });
+        });
+      })();
+    </script>
     
     <!-- iOS Auth Helper - load before main app -->
     <script src="/auth-helper.js"></script>
