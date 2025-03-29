@@ -131,7 +131,7 @@ Duitr juga memiliki alat untuk menyesuaikan favicon dengan mudah:
 3. Pratinjau perubahan dalam berbagai ukuran dan tampilan browser
 4. Unduh atau perbarui favicon SVG
 
-Favicon Duitr menggunakan format SVG modern yang didukung oleh sebagian besar browser terbaru, dengan fallback ke favicon.ico untuk browser lama.
+Favicon Duitr menggunakan format SVG modern yang didukung oleh sebagian besar browser terbaru, dengan fallback ke favicon.ico untuk browser lama. oke
 
 ### Caching Logo
 
