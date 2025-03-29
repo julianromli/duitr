@@ -1,5 +1,5 @@
 // Cache version identifier - update this when the cache should be refreshed
-const CACHE_NAME = 'duitr-v7';
+const CACHE_NAME = 'duitr-v8';
 
 // URLs to cache initially
 const urlsToCache = [
@@ -8,10 +8,7 @@ const urlsToCache = [
   '/manifest.json',
   '/favicon.ico',
   '/favicon.svg',
-  '/favicon-customizer.html',
   '/duitr-logo.svg',
-  '/logo-generator.js',
-  '/logo-generator.html',
   '/pwa-register.js',
   '/duitr-offline.html',
   '/pwa-icons/icon-72x72.png',
@@ -26,6 +23,13 @@ const urlsToCache = [
   '/pwa-icons/apple-touch-icon.png'
 ];
 
+// Optional URLs to cache - these will not fail the installation if they're not available
+const optionalUrlsToCache = [
+  '/favicon-customizer.html',
+  '/logo-generator.js',
+  '/logo-generator.html'
+];
+
 // Install event - cache basic resources and create offline page
 self.addEventListener('install', event => {
   console.log('[Service Worker] Installing Service Worker...', event);
@@ -38,7 +42,28 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[Service Worker] Caching app shell and content');
-        return cache.addAll(urlsToCache);
+        
+        // Cache required files first
+        return cache.addAll(urlsToCache)
+          .then(() => {
+            // Then try to cache optional files, but don't fail if they're not available
+            return Promise.allSettled(
+              optionalUrlsToCache.map(url => 
+                fetch(url)
+                  .then(response => {
+                    if (response.ok) {
+                      return cache.put(url, response);
+                    }
+                    console.log(`[Service Worker] Optional file not available: ${url}`);
+                    return Promise.resolve();
+                  })
+                  .catch(err => {
+                    console.log(`[Service Worker] Optional file fetch failed: ${url}`, err);
+                    return Promise.resolve();
+                  })
+              )
+            );
+          });
       })
       .catch(err => {
         console.error('[Service Worker] Cache failure:', err);
