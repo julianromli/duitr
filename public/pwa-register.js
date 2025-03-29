@@ -3,6 +3,21 @@ if ('serviceWorker' in navigator) {
   // Initialize page unloading flag
   window.isPageUnloading = false;
   
+  // Better iOS detection - execute immediately, not just on load
+  const isIOS = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+      window.navigator.userAgent.includes('iPhone') ||
+      (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && 
+       navigator.maxTouchPoints > 0);
+  };
+  
+  // Set flag immediately if on iOS
+  if (isIOS()) {
+    console.log('iOS device detected early, will silently update service worker');
+    sessionStorage.setItem('is_ios_device', 'true');
+  }
+  
   // Track page unloading to prevent showing notifications during navigation
   window.addEventListener('beforeunload', () => {
     window.isPageUnloading = true;
@@ -10,15 +25,8 @@ if ('serviceWorker' in navigator) {
   
   window.addEventListener('load', () => {
     // More reliable iOS detection
-    const isIOS = () => {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-        window.navigator.userAgent.includes('iPhone');
-    };
-    
-    // Don't show update notifications on iOS at all - silently update instead
     if (isIOS()) {
-      console.log('iOS device detected, will silently update service worker');
+      console.log('iOS device detected on load, will silently update service worker');
       sessionStorage.setItem('is_ios_device', 'true');
     }
     
@@ -158,9 +166,18 @@ if ('serviceWorker' in navigator) {
                       }
                     }
                   } else if (isIOSDevice) {
-                    // On iOS, silently update without prompting
-                    console.log('iOS device detected, silently updating service worker');
-                    // We won't reload the page on iOS to avoid disrupting the user experience
+                    // On iOS, use a setTimeout to ensure app gets updated
+                    console.log('iOS device detected, scheduling background update');
+                    
+                    // On iOS, we'll use a delayed reload to avoid disrupting UX
+                    // This gives time for the service worker to activate properly
+                    setTimeout(() => {
+                      // Only reload if user hasn't interacted with the page
+                      if (!document.hasFocus() || confirm('Update tersedia. Reload sekarang?')) {
+                        console.log('Performing delayed iOS update reload');
+                        window.location.reload();
+                      }
+                    }, 10000); // 10 second delay for iOS reload
                   }
                 }
               });
@@ -175,6 +192,23 @@ if ('serviceWorker' in navigator) {
       };
       
       // First, try to unregister any existing service workers to avoid conflicts
+      // On public domain, force refresh all service workers
+      const isPublicDomain = window.location.hostname === 'duitr.my.id' || 
+                            window.location.hostname.endsWith('.duitr.my.id');
+                            
+      if (isPublicDomain) {
+        console.log('Running on public domain, forcing service worker refresh');
+        // Clear caches to ensure fresh files
+        if ('caches' in window) {
+          caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
+              console.log('Deleting cache:', cacheName);
+              caches.delete(cacheName);
+            });
+          });
+        }
+      }
+      
       navigator.serviceWorker.getRegistrations()
         .then(registrations => {
           const unregisterPromises = registrations.map(registration => {

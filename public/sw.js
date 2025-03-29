@@ -1,5 +1,5 @@
 // Cache version identifier - update this when the cache should be refreshed
-const CACHE_NAME = 'duitr-v3';
+const CACHE_NAME = 'duitr-v4';
 
 // URLs to cache initially
 const urlsToCache = [
