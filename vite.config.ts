@@ -5,10 +5,14 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode, command }) => ({
   server: {
-    host: mode === 'development' ? '::' : 'duitr.my.id',
-    port: mode === 'development' ? 8080 : 443,
+    host: mode === 'development' ? '::' : '0.0.0.0',
+    port: mode === 'development' ? 8080 : 4173,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173
   },
   plugins: [
     react(),
