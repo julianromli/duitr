@@ -1,5 +1,5 @@
 // Cache version identifier - update this when the cache should be refreshed
-const CACHE_NAME = 'duitr-v7';
+const CACHE_NAME = 'duitr-v5';
 
 // URLs to cache initially
 const urlsToCache = [
@@ -7,11 +7,6 @@ const urlsToCache = [
   '/index.html',
   '/manifest.json',
   '/favicon.ico',
-  '/favicon.svg',
-  '/favicon-customizer.html',
-  '/duitr-logo.svg',
-  '/logo-generator.js',
-  '/logo-generator.html',
   '/pwa-register.js',
   '/duitr-offline.html',
   '/pwa-icons/icon-72x72.png',

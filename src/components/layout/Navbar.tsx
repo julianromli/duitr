@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, CreditCard, User, FileText, Home } from 'lucide-react';
-import AppLogo from '@/components/shared/Logo';
+import { Home, BarChart3, CreditCard, User, FileText } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { pathname } = useLocation();
