@@ -9,6 +9,19 @@ if ('serviceWorker' in navigator) {
   });
   
   window.addEventListener('load', () => {
+    // More reliable iOS detection
+    const isIOS = () => {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+        window.navigator.userAgent.includes('iPhone');
+    };
+    
+    // Don't show update notifications on iOS at all - silently update instead
+    if (isIOS()) {
+      console.log('iOS device detected, will silently update service worker');
+      sessionStorage.setItem('is_ios_device', 'true');
+    }
+    
     // Check if we should clear the update notification flag
     // This happens when the app starts, to allow notifications for new updates in a new session
     // but prevents multiple notifications in the same session
@@ -36,9 +49,6 @@ if ('serviceWorker' in navigator) {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   console.log('New service worker installed');
                   
-                  // Don't show update notification if we detect we're on iOS
-                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                  
                   // Don't show update notification immediately after login
                   const justLoggedIn = window.location.pathname.includes('/auth/callback') || 
                                       sessionStorage.getItem('just_authenticated') === 'true';
@@ -46,7 +56,10 @@ if ('serviceWorker' in navigator) {
                   // Check if the update notification has already been shown in this session
                   const hasShownUpdateNotification = sessionStorage.getItem('update_notification_shown') === 'true';
                   
-                  if (!isIOS && !justLoggedIn && !hasShownUpdateNotification && !window.isPageUnloading) {
+                  // Check if this is an iOS device
+                  const isIOSDevice = sessionStorage.getItem('is_ios_device') === 'true';
+                  
+                  if (!isIOSDevice && !justLoggedIn && !hasShownUpdateNotification && !window.isPageUnloading) {
                     // Only show notification once per session
                     sessionStorage.setItem('update_notification_shown', 'true');
                     
@@ -144,11 +157,10 @@ if ('serviceWorker' in navigator) {
                         window.location.reload();
                       }
                     }
-                  } else if (isIOS) {
+                  } else if (isIOSDevice) {
                     // On iOS, silently update without prompting
                     console.log('iOS device detected, silently updating service worker');
-                    // Mark this so we don't show the popup on the next page navigation
-                    sessionStorage.setItem('sw_updated', 'true');
+                    // We won't reload the page on iOS to avoid disrupting the user experience
                   }
                 }
               });
