@@ -67,6 +67,7 @@ Simply open [Lovable](https://lovable.dev/projects/6305cbc4-c68a-4050-901f-8d993
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+<<<<<<< HEAD
 
 # Duitr - Your Personal Finance Manager
 
@@ -139,3 +140,5 @@ Logo dan favicon di-cache oleh service worker untuk penggunaan offline. Jika And
 
 1. Memperbarui versi cache di `public/sw.js`
 2. Mendeploykan semua aset logo yang baru
+=======
+>>>>>>> parent of 4f1d8ba (Update favicon feature)

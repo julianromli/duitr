@@ -135,7 +135,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signInWithGoogle = async () => {
   // Set a clean redirect URL without any parameters that might cause issues
   const redirectTo = import.meta.env.MODE === 'production' 
-    ? 'https://duitr.my.id/auth/callback'
+    ? 'https://www.duitr.my.id/auth/callback'
     : `${window.location.origin}/auth/callback`;
   
   // Log device info

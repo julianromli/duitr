@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider: 'google',
         options: {
           redirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
+            ? 'https://www.duitr.my.id/auth/callback'
             : `${window.location.origin}/auth/callback`,
         },
       });
