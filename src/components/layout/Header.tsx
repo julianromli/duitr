@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
+import AppLogo from '@/components/shared/Logo';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -105,21 +106,22 @@ const Header: React.FC = () => {
   return (
     <header className="px-6 py-4 flex items-center justify-between border-b animate-fade-in">
       <div className="flex items-center gap-3">
-        {user && (
-          <Avatar className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
-            {profileImage ? (
-              <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
-            ) : (
-              <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF] flex items-center justify-center">
-                {username ? username.substring(0, 2).toUpperCase() : 'U'}
-              </AvatarFallback>
-            )}
-          </Avatar>
-        )}
+        <AppLogo size={32} withText={false} className="mr-2" />
         <h1 className="text-2xl font-semibold tracking-tight md:block">
           {getPageTitle()}
         </h1>
       </div>
+      {user && (
+        <Avatar className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
+          {profileImage ? (
+            <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
+          ) : (
+            <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF] flex items-center justify-center">
+              {username ? username.substring(0, 2).toUpperCase() : 'U'}
+            </AvatarFallback>
+          )}
+        </Avatar>
+      )}
     </header>
   );
 };

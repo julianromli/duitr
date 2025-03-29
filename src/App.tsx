@@ -130,6 +130,18 @@ const App = () => {
     return <Offline />;
   }
 
+  // Show loading indicator while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin w-10 h-10 border-4 border-[#C6FE1E] border-t-transparent rounded-full"></div>
+          <p className="text-gray-300">Loading application...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

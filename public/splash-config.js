@@ -8,10 +8,10 @@
 // Configuration object for the splash screen
 window.splashConfig = {
   // Minimum time to display splash screen in milliseconds
-  minDisplayTime: 1500,
+  minDisplayTime: 800,
   
   // Maximum time to display splash screen before hiding it anyway
-  maxDisplayTime: 5000,
+  maxDisplayTime: 3000,
   
   // Path to the logo image (null uses the default)
   // Example: '/custom-logo.svg' or '/custom-logo.png'
