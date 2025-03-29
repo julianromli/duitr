@@ -13,7 +13,7 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/duitr-logo.svg",
+      "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
@@ -106,5 +106,6 @@
   ],
   "related_applications": [],
   "scope": "/",
-  "id": "duitr-finance-manager"
+  "id": "duitr-finance-manager",
+  "version": "1.0.5"
 } 
