@@ -24,7 +24,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <!-- Add version info so browsers don't cache old files -->
-    <meta name="app-version" content="1.0.1" />
+    <meta name="app-version" content="1.0.2" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
     
     <!-- Apple Touch Icons -->
@@ -186,9 +186,8 @@
     <!-- Splash Screen -->
     <div id="splash-screen">
       <div id="splash-logo-container">
-        <!-- This can be replaced with your SVG or image logo -->
+        <!-- Inline SVG logo -->
         <div id="splash-logo">
-          <!-- Inline SVG fallback if external file fails to load -->
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80">
             <text x="50" y="68" text-anchor="middle" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:60px;" fill="#000000">D</text>
           </svg>
@@ -200,70 +199,58 @@
     
     <div id="root"></div>
     
-    <!-- Load splash configuration before other scripts -->
-    <script>
-      // Cek apakah file splash-config.js ada di server
-      fetch('/splash-config.js')
-        .then(response => {
-          if (!response.ok) {
-            console.error('Splash config file not found, using default config');
-            // Set default config jika file tidak ada
-            window.splashConfig = {
-              minDisplayTime: 1500,
-              maxDisplayTime: 5000,
-              logoPath: null,
-              backgroundColor: '#0D0D0D',
-              logoBackgroundColor: '#C6FE1E',
-              textColor: '#FFFFFF',
-              appName: 'Duitr'
-            };
-          }
-        })
-        .catch(err => {
-          console.error('Error loading splash config:', err);
-          // Set default config jika terjadi error
-          window.splashConfig = {
-            minDisplayTime: 1500,
-            maxDisplayTime: 5000,
-            logoPath: null,
-            backgroundColor: '#0D0D0D',
-            logoBackgroundColor: '#C6FE1E',
-            textColor: '#FFFFFF',
-            appName: 'Duitr'
-          };
-        });
-    </script>
-    <script src="/splash-config.js"></script>
-    
     <!-- iOS Auth Helper - load before main app -->
     <script src="/auth-helper.js"></script>
     <script type="module" src="/src/main.tsx"></script>
     <script src="/pwa-register.js"></script>
     
-    <!-- Splash Screen Control Script -->
+    <!-- Inline Splash Screen Script -->
     <script>
+      // Record when splash screen started displaying
+      window.splashScreenShownTime = Date.now();
+      
+      // Config options for the splash screen
+      window.splashConfig = {
+        minDisplayTime: 1500,
+        maxDisplayTime: 5000,
+        backgroundColor: '#0D0D0D',
+        logoBackgroundColor: '#C6FE1E',
+        textColor: '#FFFFFF',
+        appName: 'Duitr'
+      };
+      
       document.addEventListener('DOMContentLoaded', function() {
         const splashScreen = document.getElementById('splash-screen');
-        const logoContainer = document.getElementById('splash-logo-container');
-        const logoElement = document.getElementById('splash-logo');
+        if (!splashScreen) return;
         
-        // Check if there's a custom logo path
-        if (window.splashConfig && window.splashConfig.logoPath) {
-          // Create image element for custom logo
-          const logoImg = document.createElement('img');
-          logoImg.src = window.splashConfig.logoPath;
-          logoImg.style.width = '80px';
-          logoImg.style.height = '80px';
-          logoImg.style.objectFit = 'contain';
+        // Apply custom styles if needed
+        const logoContainer = document.getElementById('splash-logo-container');
+        const appTitle = document.getElementById('splash-title');
+        
+        if (window.splashConfig.backgroundColor) {
+          splashScreen.style.backgroundColor = window.splashConfig.backgroundColor;
+        }
+        
+        if (logoContainer && window.splashConfig.logoBackgroundColor) {
+          logoContainer.style.backgroundColor = window.splashConfig.logoBackgroundColor;
+        }
+        
+        if (appTitle) {
+          if (window.splashConfig.textColor) {
+            appTitle.style.color = window.splashConfig.textColor;
+          }
           
-          // Replace placeholder with custom logo
-          logoElement.parentNode.replaceChild(logoImg, logoElement);
+          if (window.splashConfig.appName === null) {
+            appTitle.style.display = 'none';
+          } else if (window.splashConfig.appName) {
+            appTitle.textContent = window.splashConfig.appName;
+          }
         }
         
         // Record when splash screen started displaying
         const startTime = Date.now();
-        const minDisplayTime = window.splashConfig?.minDisplayTime || 1500;
-        const maxDisplayTime = window.splashConfig?.maxDisplayTime || 5000;
+        const minDisplayTime = window.splashConfig.minDisplayTime || 1500;
+        const maxDisplayTime = window.splashConfig.maxDisplayTime || 5000;
         
         // Function to hide splash screen
         const hideSplash = () => {
@@ -288,7 +275,8 @@
         
         // Hide splash when app is ready
         window.addEventListener('load', function() {
-          hideSplash();
+          // Delay to ensure the splash stays visible in case the page loads very quickly
+          setTimeout(hideSplash, 300);
         });
         
         // Set maximum display time

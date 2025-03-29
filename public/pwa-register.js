@@ -22,12 +22,53 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('beforeunload', () => {
     window.isPageUnloading = true;
   });
+
+  // Listen for service worker messages
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SERVICE_WORKER_ACTIVATED') {
+      console.log(`New service worker (${event.data.version}) has activated`);
+      
+      // Check if this is an iOS device
+      const isIOSDevice = sessionStorage.getItem('is_ios_device') === 'true';
+      
+      // Force reload if on public domain
+      const isPublicDomain = window.location.hostname === 'duitr.my.id' || 
+                             window.location.hostname.endsWith('.duitr.my.id');
+      
+      if (isPublicDomain && !isIOSDevice) {
+        // Force reload to ensure new version is used, but avoid disrupting current user session
+        const reloadTimer = setTimeout(() => {
+          if (!document.hasFocus()) {
+            console.log('Force reloading after service worker update on public domain');
+            window.location.reload();
+          }
+        }, 3000);
+        
+        // Cancel reload if user is actively using the app
+        window.addEventListener('focus', () => {
+          clearTimeout(reloadTimer);
+        }, { once: true });
+      }
+    }
+  });
   
   window.addEventListener('load', () => {
     // More reliable iOS detection
     if (isIOS()) {
       console.log('iOS device detected on load, will silently update service worker');
       sessionStorage.setItem('is_ios_device', 'true');
+    }
+    
+    // Clear the splash screen display first if it exists and has been shown long enough
+    const splashScreen = document.getElementById('splash-screen');
+    if (splashScreen && window.splashScreenShownTime && (Date.now() - window.splashScreenShownTime) > 1500) {
+      console.log('Removing splash screen before SW registration');
+      splashScreen.classList.add('loaded');
+      setTimeout(() => {
+        if (splashScreen.parentNode) {
+          splashScreen.parentNode.removeChild(splashScreen);
+        }
+      }, 500);
     }
     
     // Check if we should clear the update notification flag
@@ -41,6 +82,9 @@ if ('serviceWorker' in navigator) {
     // Delay service worker registration until after page load
     setTimeout(() => {
       const swUrl = '/sw.js';
+      
+      // Prevent caching of service worker by adding cache-busting query param
+      const swUrlNoCaching = `${swUrl}?_=${new Date().getTime()}`;
       
       // Function to register service worker with specific options
       const registerSW = (url, options = {}) => {
@@ -161,7 +205,7 @@ if ('serviceWorker' in navigator) {
                     } catch (error) {
                       console.error('Error showing update notification:', error);
                       // Fallback to basic confirm if custom dialog fails
-                      if (window.confirm('New version available! Reload to update?')) {
+                      if (window.confirm('Update tersedia. Reload sekarang?')) {
                         window.location.reload();
                       }
                     }
@@ -219,7 +263,9 @@ if ('serviceWorker' in navigator) {
         })
         .then(() => {
           console.log('Registering new service worker');
-          return registerSW(swUrl, { scope: '/' });
+          // Use no-cache URL on public domain
+          const urlToUse = isPublicDomain ? swUrlNoCaching : swUrl;
+          return registerSW(urlToUse, { scope: '/' });
         })
         .catch(firstError => {
           console.error('First registration attempt failed:', firstError);
@@ -227,14 +273,14 @@ if ('serviceWorker' in navigator) {
           // Try a different registration strategy if first attempt fails
           if (window.location.hostname !== 'localhost' && window.location.hostname !== 'duitr.my.id') {
             console.log('Trying alternative strategy for service worker registration');
-            return registerSW(swUrl, { 
+            return registerSW(swUrlNoCaching, { 
               scope: '/',
               updateViaCache: 'none'
             })
             .catch(secondError => {
               console.error('All ServiceWorker registration attempts failed:', secondError);
               // Last resort - try without scope
-              return registerSW(swUrl);
+              return registerSW(swUrlNoCaching);
             });
           }
         });
