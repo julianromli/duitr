@@ -23,6 +23,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <!-- Add version info so browsers don't cache old files -->
+    <meta name="app-version" content="1.0.1" />
     <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
     
     <!-- Apple Touch Icons -->
@@ -185,7 +187,12 @@
     <div id="splash-screen">
       <div id="splash-logo-container">
         <!-- This can be replaced with your SVG or image logo -->
-        <div id="splash-logo">D</div>
+        <div id="splash-logo">
+          <!-- Inline SVG fallback if external file fails to load -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80">
+            <text x="50" y="68" text-anchor="middle" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:60px;" fill="#000000">D</text>
+          </svg>
+        </div>
       </div>
       <div id="splash-spinner"></div>
       <h1 id="splash-title">Duitr</h1>
@@ -194,6 +201,38 @@
     <div id="root"></div>
     
     <!-- Load splash configuration before other scripts -->
+    <script>
+      // Cek apakah file splash-config.js ada di server
+      fetch('/splash-config.js')
+        .then(response => {
+          if (!response.ok) {
+            console.error('Splash config file not found, using default config');
+            // Set default config jika file tidak ada
+            window.splashConfig = {
+              minDisplayTime: 1500,
+              maxDisplayTime: 5000,
+              logoPath: null,
+              backgroundColor: '#0D0D0D',
+              logoBackgroundColor: '#C6FE1E',
+              textColor: '#FFFFFF',
+              appName: 'Duitr'
+            };
+          }
+        })
+        .catch(err => {
+          console.error('Error loading splash config:', err);
+          // Set default config jika terjadi error
+          window.splashConfig = {
+            minDisplayTime: 1500,
+            maxDisplayTime: 5000,
+            logoPath: null,
+            backgroundColor: '#0D0D0D',
+            logoBackgroundColor: '#C6FE1E',
+            textColor: '#FFFFFF',
+            appName: 'Duitr'
+          };
+        });
+    </script>
     <script src="/splash-config.js"></script>
     
     <!-- iOS Auth Helper - load before main app -->
