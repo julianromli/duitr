@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { FaGoogle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
+import AppLogo from '@/components/shared/Logo';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -142,9 +143,7 @@ const SignUp = () => {
           className="mb-12 flex flex-col items-center"
           variants={itemVariants}
         >
-          <div className="w-16 h-16 bg-[#C6FE1E] rounded-full flex items-center justify-center mb-4">
-            <img src="/splash-logo.svg" alt="Duitr Logo" className="w-10 h-10" />
-          </div>
+          <AppLogo size={64} className="mb-4" withText={false} />
           <h1 className="text-3xl font-bold text-white">Sign up for free</h1>
         </motion.div>
         
