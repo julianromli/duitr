@@ -19,21 +19,25 @@ export default defineConfig(({ mode, command }) => ({
     mode === 'development' &&
     componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'robots.txt', 'pwa-icons/*.png'],
-      manifest: false, // We'll use our own manifest
+      manifest: false,
       strategies: 'generateSW',
-      injectRegister: 'auto',
+      injectRegister: 'script',
       devOptions: {
         enabled: true,
         type: 'module',
+        navigateFallback: '/index.html',
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
-        skipWaiting: true,
+        skipWaiting: false,
         clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        sourcemap: true,
+        swDest: mode === 'production' ? 'dist/sw.js' : undefined,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -64,7 +68,6 @@ export default defineConfig(({ mode, command }) => ({
             }
           },
           {
-            // Cache static assets
             urlPattern: /\.(?:js|css|html|png|jpg|jpeg|svg|gif)$/,
             handler: 'StaleWhileRevalidate',
             options: {
@@ -76,13 +79,7 @@ export default defineConfig(({ mode, command }) => ({
             }
           },
           {
-            // Match same-origin requests
-            urlPattern: ({ url }) => {
-              // This will be transpiled correctly in the service worker
-              // @ts-ignore - 'self' is available in service worker scope
-              const isSameOrigin = url.origin === self.location.origin;
-              return isSameOrigin;
-            },
+            urlPattern: /^https?:\/\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'app-cache',
@@ -101,9 +98,7 @@ export default defineConfig(({ mode, command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Configure env variables prefix
   envPrefix: "VITE_",
-  // Ensure full environment loading
   define: {
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
     'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),

@@ -1,5 +1,5 @@
 // Cache version identifier - update this when the cache should be refreshed
-const CACHE_NAME = 'duitr-v7';
+const CACHE_NAME = 'duitr-v8';
 
 // URLs to cache initially
 const urlsToCache = [
@@ -30,9 +30,9 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   console.log('[Service Worker] Installing Service Worker...', event);
   
-  // Force activation by skipping waiting
-  self.skipWaiting()
-    .then(() => console.log('[Service Worker] skipWaiting succeeded'));
+  // Don't force activation - wait until current pages using old service worker are closed
+  // This prevents disrupting the user's active sessions
+  // self.skipWaiting().then(() => console.log('[Service Worker] skipWaiting succeeded'));
   
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -68,14 +68,15 @@ self.addEventListener('activate', event => {
       self.clients.claim().then(() => {
         console.log('[Service Worker] Claimed all clients');
         
-        // Optionally notify clients about the update
-        self.clients.matchAll().then(clients => {
-          clients.forEach(client => {
-            client.postMessage({
+        // Notify clients about the update
+        return self.clients.matchAll().then(clients => {
+          return Promise.all(clients.map(client => {
+            // Send update message to each client
+            return client.postMessage({
               type: 'SERVICE_WORKER_ACTIVATED',
               version: CACHE_NAME
             });
-          });
+          }));
         });
       })
     ])
@@ -248,10 +249,20 @@ self.addEventListener('fetch', event => {
           })
           .catch(error => {
             console.error('[Service Worker] Fetch error:', error);
-            return null;
+            throw error;
           });
           
+        // Return the cached response immediately if we have it,
+        // and update it in the background
         return cachedResponse || fetchPromise;
       })
   );
+});
+
+// Listen for message events from clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[Service Worker] Skip waiting message received');
+    self.skipWaiting();
+  }
 }); 

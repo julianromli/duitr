@@ -31,11 +31,32 @@ if ('serviceWorker' in navigator) {
       // Check if this is an iOS device
       const isIOSDevice = sessionStorage.getItem('is_ios_device') === 'true';
       
-      // Automatically reload for any device type
+      // Store the current page state to restore after reload
+      try {
+        const currentPath = window.location.pathname + window.location.search + window.location.hash;
+        sessionStorage.setItem('pwa_last_path', currentPath);
+        
+        // Save scroll position
+        const scrollPosition = {
+          x: window.scrollX,
+          y: window.scrollY
+        };
+        sessionStorage.setItem('pwa_scroll_position', JSON.stringify(scrollPosition));
+      } catch (err) {
+        console.error('Failed to save page state:', err);
+      }
+      
+      // Automatically reload for any device type - but only if not actively using
       const reloadTimer = setTimeout(() => {
         if (!document.hasFocus()) {
           console.log('Auto-reloading after service worker update');
+          // Add a flag to indicate this is a planned reload, not a crash
+          sessionStorage.setItem('pwa_planned_reload', 'true');
           window.location.reload();
+        } else {
+          // If user is active, delay the reload but show a notification
+          console.log('User is active, delaying auto-reload');
+          // Here you might want to show a non-intrusive notification about the update
         }
       }, 3000);
       
@@ -47,6 +68,26 @@ if ('serviceWorker' in navigator) {
   });
   
   window.addEventListener('load', () => {
+    // Check if this is a planned reload after an update
+    const isPlannedReload = sessionStorage.getItem('pwa_planned_reload') === 'true';
+    if (isPlannedReload) {
+      console.log('This is a planned reload after service worker update');
+      sessionStorage.removeItem('pwa_planned_reload');
+      
+      // Restore scroll position
+      try {
+        const savedScrollPosition = sessionStorage.getItem('pwa_scroll_position');
+        if (savedScrollPosition) {
+          const position = JSON.parse(savedScrollPosition);
+          setTimeout(() => {
+            window.scrollTo(position.x, position.y);
+          }, 100);
+        }
+      } catch (err) {
+        console.error('Failed to restore scroll position:', err);
+      }
+    }
+    
     // More reliable iOS detection
     if (isIOS()) {
       console.log('iOS device detected on load, will silently update service worker');
@@ -109,10 +150,28 @@ if ('serviceWorker' in navigator) {
                     // Mark that we've processed this update
                     sessionStorage.setItem('update_notification_shown', 'true');
                     
+                    // Store current state before reload
+                    try {
+                      const currentPath = window.location.pathname + window.location.search + window.location.hash;
+                      sessionStorage.setItem('pwa_last_path', currentPath);
+                      
+                      // Save scroll position
+                      const scrollPosition = {
+                        x: window.scrollX,
+                        y: window.scrollY
+                      };
+                      sessionStorage.setItem('pwa_scroll_position', JSON.stringify(scrollPosition));
+                    } catch (err) {
+                      console.error('Failed to save page state:', err);
+                    }
+                    
                     // Schedule a reload when the user is not actively using the app
                     const autoReloadDelay = isIOSDevice ? 10000 : 5000; // 10s for iOS, 5s for others
                     
                     console.log(`Scheduling auto-reload in ${autoReloadDelay/1000}s for new version`);
+                    
+                    // Add a flag to indicate this is a planned reload, not a crash
+                    sessionStorage.setItem('pwa_planned_reload', 'true');
                     
                     const reloadTimer = setTimeout(() => {
                       // Only reload if the user isn't actively using the app
@@ -122,7 +181,10 @@ if ('serviceWorker' in navigator) {
                       } else {
                         console.log('User is active, delaying auto-reload');
                         // Try again in 30 seconds if user is active
-                        setTimeout(() => window.location.reload(), 30000);
+                        setTimeout(() => {
+                          sessionStorage.setItem('pwa_planned_reload', 'true');
+                          window.location.reload();
+                        }, 30000);
                       }
                     }, autoReloadDelay);
                     
