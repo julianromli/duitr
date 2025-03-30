@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,15 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { signIn, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Client-side only rendering to prevent hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +109,52 @@ const Login = () => {
     }
   };
 
+  // Render static version for server-side rendering to prevent blank screen
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+        <div className="p-6 flex items-start">
+          <button className="p-1 text-white rounded-full">
+            <ChevronLeft size={24} />
+          </button>
+        </div>
+        
+        <div className="flex-1 flex flex-col p-6 pt-0">
+          <div className="mb-12 flex flex-col items-center">
+            <AppLogo size={64} className="mb-4" withText={false} />
+            <h1 className="text-3xl font-bold text-white">Log in to Duitr</h1>
+          </div>
+          
+          <div className="space-y-3 mb-8">
+            <Button 
+              variant="outline" 
+              className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
+              disabled={true}
+            >
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <FaGoogle className="h-4 w-4 text-black" />
+              </div>
+              <span className="font-medium">Continue with Google</span>
+            </Button>
+          </div>
+          
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#292929]"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-4 bg-[#0D0D0D] text-[#868686]">or</span>
+            </div>
+          </div>
+          
+          <form className="space-y-6">
+            {/* Form fields without animations */}
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
       {/* Header with back button */}
@@ -144,6 +196,7 @@ const Login = () => {
             variant="outline" 
             className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
             onClick={handleGoogleSignIn}
+            disabled={isSubmitting}
           >
             <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
               <FaGoogle className="h-4 w-4 text-black" />
