@@ -171,7 +171,7 @@ const Settings: React.FC = () => {
     });
     
     toast({
-      title: t('buttons.save'),
+      title: t('common.saved'),
       duration: 3000,
     });
   };
@@ -184,8 +184,8 @@ const Settings: React.FC = () => {
     if (file.size > 2 * 1024 * 1024) {
       toast({
         variant: 'destructive',
-        title: 'File too large',
-        description: 'Profile image must be less than 2MB',
+        title: t('settings.fileTooLarge'),
+        description: t('settings.profileImageSizeLimit'),
       });
       return;
     }
@@ -194,8 +194,8 @@ const Settings: React.FC = () => {
     if (!file.type.startsWith('image/')) {
       toast({
         variant: 'destructive',
-        title: 'Invalid file type',
-        description: 'Please upload an image file',
+        title: t('settings.invalidFileType'),
+        description: t('settings.pleaseUploadImage'),
       });
       return;
     }
@@ -273,13 +273,13 @@ const Settings: React.FC = () => {
       window.dispatchEvent(new Event('profileImageUpdated'));
       
       toast({
-        title: 'Profile image updated',
+        title: t('settings.profileImageUpdated'),
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Upload failed',
-        description: error.message || 'Failed to upload profile image',
+        title: t('settings.uploadFailed'),
+        description: error.message || t('settings.failedToUploadImage'),
       });
       console.error('Upload error:', error);
     } finally {
@@ -305,13 +305,13 @@ const Settings: React.FC = () => {
       if (error) throw error;
       
       toast({
-        title: 'Profile updated',
+        title: t('settings.profileUpdated'),
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Update failed',
-        description: error.message || 'Failed to update profile',
+        title: t('settings.updateFailed'),
+        description: error.message || t('settings.failedToUpdateProfile'),
       });
     } finally {
       setIsSaving(false);
@@ -326,8 +326,8 @@ const Settings: React.FC = () => {
       console.error('Error logging out:', error);
       toast({
         variant: 'destructive',
-        title: 'Logout failed',
-        description: 'An error occurred while logging out',
+        title: t('settings.logoutFailed'),
+        description: t('settings.errorLoggingOut'),
       });
     }
   };
@@ -370,7 +370,7 @@ const Settings: React.FC = () => {
             <button onClick={() => navigate('/')} className="mr-3">
               <ChevronLeft size={24} className="text-white" />
             </button>
-            <h1 className="text-xl font-bold">Profile</h1>
+            <h1 className="text-xl font-bold">{t('settings.profile')}</h1>
           </div>
         </motion.div>
         
@@ -418,7 +418,7 @@ const Settings: React.FC = () => {
               value="account" 
               className="data-[state=active]:bg-[#C6FE1E] data-[state=active]:text-[#0D0D0D] rounded-lg"
             >
-              Account
+              {t('settings.account')}
             </TabsTrigger>
           </TabsList>
           
@@ -431,7 +431,7 @@ const Settings: React.FC = () => {
               <Card className="bg-[#242425] border-none shadow-none text-white">
                 <CardContent className="p-5 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username" className="text-[#868686]">Username</Label>
+                    <Label htmlFor="username" className="text-[#868686]">{t('settings.username')}</Label>
                     <Input
                       id="username"
                       value={userProfile.username}
@@ -441,7 +441,7 @@ const Settings: React.FC = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-[#868686]">Email</Label>
+                    <Label htmlFor="email" className="text-[#868686]">{t('settings.email')}</Label>
                     <Input
                       id="email"
                       value={userProfile.email}
@@ -455,7 +455,7 @@ const Settings: React.FC = () => {
                     disabled={isSaving}
                     className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00]"
                   >
-                    {isSaving ? 'Saving...' : 'Save Profile'}
+                    {isSaving ? t('settings.saving') : t('settings.saveProfile')}
                   </Button>
                   
                   {/* Logout Button - Moved from Settings tab */}
@@ -465,7 +465,7 @@ const Settings: React.FC = () => {
                     className="w-full bg-transparent border border-red-500 text-red-500 hover:bg-red-500/10 mt-4"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    {t('settings.logout')}
                   </Button>
                 </CardContent>
               </Card>

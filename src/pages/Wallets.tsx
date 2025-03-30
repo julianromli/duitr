@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, PlusCircle, CreditCard, Wallet, Landmark, TrendingUp } from 'lucide-react';
 import WalletList from '@/components/wallets/WalletList';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const Wallets: React.FC = () => {
+  const { t } = useTranslation();
   const { addWallet } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -36,19 +38,19 @@ const Wallets: React.FC = () => {
   });
 
   const walletTypes = [
-    { value: 'bank', label: 'Bank Account', icon: Landmark },
-    { value: 'cash', label: 'Cash', icon: Wallet },
-    { value: 'e-wallet', label: 'E-Wallet', icon: CreditCard },
-    { value: 'investment', label: 'Investment', icon: TrendingUp },
+    { value: 'bank', label: t('wallets.bankAccount'), icon: Landmark },
+    { value: 'cash', label: t('wallets.cash'), icon: Wallet },
+    { value: 'e-wallet', label: t('wallets.eWallet'), icon: CreditCard },
+    { value: 'investment', label: t('wallets.investment'), icon: TrendingUp },
   ];
 
   const colors = [
-    { value: '#1364FF', label: 'Blue' },
-    { value: '#C6FE1E', label: 'Green' },
-    { value: '#F59F00', label: 'Yellow' },
-    { value: '#FA5252', label: 'Red' },
-    { value: '#9775FA', label: 'Purple' },
-    { value: '#FD7E14', label: 'Orange' },
+    { value: '#1364FF', label: t('colors.blue') },
+    { value: '#C6FE1E', label: t('colors.green') },
+    { value: '#F59F00', label: t('colors.yellow') },
+    { value: '#FA5252', label: t('colors.red') },
+    { value: '#9775FA', label: t('colors.purple') },
+    { value: '#FD7E14', label: t('colors.orange') },
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,8 +64,8 @@ const Wallets: React.FC = () => {
     // Validation
     if (!formData.name || !formData.balance || !formData.type) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t('common.error'),
+        description: t('wallets.fillAllFields'),
         variant: "destructive",
       });
       return;
@@ -87,8 +89,8 @@ const Wallets: React.FC = () => {
     
     // Show success message
     toast({
-      title: "Success",
-      description: "Account added successfully",
+      title: t('common.success'),
+      description: t('wallets.accountAdded'),
     });
     
     // Close dialog
@@ -133,7 +135,7 @@ const Wallets: React.FC = () => {
             <button onClick={() => navigate('/')} className="mr-4">
               <ChevronLeft size={24} className="text-white" />
             </button>
-            <h1 className="text-xl font-bold">Accounts & Wallets</h1>
+            <h1 className="text-xl font-bold">{t('wallets.title')}</h1>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -143,15 +145,15 @@ const Wallets: React.FC = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-white">Add Account</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-white">{t('wallets.addAccount')}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-[#868686]">Account Name</Label>
+                  <Label htmlFor="name" className="text-[#868686]">{t('wallets.accountName')}</Label>
                   <Input
                     id="name"
                     name="name"
-                    placeholder="e.g. Main Bank Account"
+                    placeholder={t('wallets.accountNamePlaceholder')}
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -160,7 +162,7 @@ const Wallets: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="balance" className="text-[#868686]">Starting Balance</Label>
+                  <Label htmlFor="balance" className="text-[#868686]">{t('wallets.startingBalance')}</Label>
                   <Input
                     id="balance"
                     name="balance"
@@ -175,13 +177,13 @@ const Wallets: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="type" className="text-[#868686]">Account Type</Label>
+                  <Label htmlFor="type" className="text-[#868686]">{t('wallets.accountType')}</Label>
                   <Select 
                     value={formData.type} 
                     onValueChange={(value) => setFormData({ ...formData, type: value })}
                   >
                     <SelectTrigger className="bg-[#242425] border-none text-white">
-                      <SelectValue placeholder="Select account type" />
+                      <SelectValue placeholder={t('wallets.selectAccountType')} />
                     </SelectTrigger>
                     <SelectContent className="bg-[#242425] border-none text-white">
                       {walletTypes.map((type) => (
@@ -197,20 +199,20 @@ const Wallets: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="color" className="text-[#868686]">Account Color</Label>
+                  <Label htmlFor="color" className="text-[#868686]">{t('wallets.accountColor')}</Label>
                   <Select 
                     value={formData.color} 
                     onValueChange={(value) => setFormData({ ...formData, color: value })}
                   >
                     <SelectTrigger className="bg-[#242425] border-none text-white">
-                      <SelectValue placeholder="Select color">
+                      <SelectValue placeholder={t('wallets.selectColor')}>
                         <div className="flex items-center gap-2">
                           <div 
                             className="w-4 h-4 rounded-full" 
                             style={{ backgroundColor: formData.color }} 
                           />
                           <span>
-                            {colors.find(c => c.value === formData.color)?.label || 'Select color'}
+                            {colors.find(c => c.value === formData.color)?.label || t('wallets.selectColor')}
                           </span>
                         </div>
                       </SelectValue>
@@ -235,7 +237,7 @@ const Wallets: React.FC = () => {
                   type="submit" 
                   className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium rounded-xl"
                 >
-                  Add Account
+                  {t('wallets.addAccount')}
                 </Button>
               </form>
             </DialogContent>

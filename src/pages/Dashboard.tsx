@@ -8,6 +8,7 @@ import ExpenseForm from '@/components/transactions/ExpenseForm';
 import IncomeForm from '@/components/transactions/IncomeForm';
 import TransferForm from '@/components/transactions/TransferForm';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import AppSettings from '@/components/shared/AppSettings';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -178,15 +179,17 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <motion.div 
-        className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24"
+        className="max-w-md mx-auto bg-background min-h-screen pb-24"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         <div className="p-6 relative">
+
+          
           {/* Balance Card */}
           <motion.div 
-            className="bg-[#C6FE1E] rounded-3xl p-5 mb-6"
+            className="bg-[#C6FE1E] rounded-3xl p-5 mb-6 mt-8 dark:bg-[#C6FE1E] light:bg-[#C6FE1E]"
             variants={itemVariants}
           >
             {/* Card Header with Profile */}
@@ -202,18 +205,18 @@ const Dashboard: React.FC = () => {
                   )}
                 </Avatar>
                 <div>
-                  <p className="text-[#0D0D0D] text-sm font-bold">Hello {username}!</p>
-                  <p className="text-[#242425] text-xs">Welcome Back</p>
+                  <p className="text-[#0D0D0D] text-sm font-bold">{t('hello')} {username}!</p>
+                  <p className="text-[#242425] text-xs">{t('welcomeBack')}</p>
                 </div>
-              </div>
-              <div>
-                <Bell className="text-[#0D0D0D]" size={20} />
+                {/* Settings in top-right corner */}
+                <div className="absolute right-10 z-10"><AppSettings/>
+                </div>
               </div>
             </div>
             
             {/* Your Balance Text */}
             <div className="mb-1">
-              <p className="text-[#242425] text-sm">Your Balance</p>
+              <p className="text-[#242425] text-sm">{t('yourBalance')}</p>
             </div>
             
             {/* Balance Amount with Hide Button */}
@@ -247,7 +250,7 @@ const Dashboard: React.FC = () => {
               onClick={openTransferForm}
             >
               <ArrowLeftRight className="text-white" size={18} />
-              <span className="font-medium">Transfer</span>
+              <span className="font-medium">{t('transactions.transfer')}</span>
             </motion.button>
             
             <Dialog open={isAddMoneyOpen} onOpenChange={setIsAddMoneyOpen}>
@@ -258,12 +261,12 @@ const Dashboard: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                 >
                   <Plus className="text-white" size={18} />
-                  <span className="font-medium">Add money</span>
+                  <span className="font-medium">{t('transactions.add_money')}</span>
                 </motion.button>
               </DialogTrigger>
               <DialogContent className="bg-[#1A1A1A] border-none text-white">
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-bold">Add Transaction</DialogTitle>
+                  <DialogTitle className="text-xl font-bold">{t('transactions.add_transaction')}</DialogTitle>
                 </DialogHeader>
                 <div className="grid grid-cols-1 gap-4 pt-4">
                   <Button 
@@ -274,7 +277,7 @@ const Dashboard: React.FC = () => {
                     className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] py-6 rounded-xl flex items-center justify-center gap-3"
                   >
                     <ArrowDown size={20} />
-                    <span className="font-medium">Add Expense</span>
+                    <span className="font-medium">{t('transactions.add_expense')}</span>
                   </Button>
                   <Button 
                     onClick={() => {
@@ -284,7 +287,7 @@ const Dashboard: React.FC = () => {
                     className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] py-6 rounded-xl flex items-center justify-center gap-3"
                   >
                     <ArrowUp size={20} />
-                    <span className="font-medium">Add Income</span>
+                    <span className="font-medium">{t('transactions.add_income')}</span>
                   </Button>
                 </div>
               </DialogContent>
@@ -294,12 +297,12 @@ const Dashboard: React.FC = () => {
           {/* Transactions Section */}
           <motion.div variants={itemVariants} className="mb-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white text-lg font-semibold">Transactions</h3>
+              <h3 className="text-white text-lg font-semibold">{t('transactions.title')}</h3>
               <button 
                 className="text-[#C6FE1E] text-sm"
                 onClick={navigateToTransactions}
               >
-                View All
+                {t('dashboard.view_all')}
               </button>
             </div>
             
@@ -318,7 +321,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-medium">{transaction.category}</p>
-                      <p className="text-xs text-[#868686]">{transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                      <p className="text-xs text-[#868686]">{t(`transactions.${transaction.type.toLowerCase()}`)}</p>
                     </div>
                   </div>
                   <p className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : 'text-white'}`}>

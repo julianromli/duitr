@@ -2,10 +2,11 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BarChart3, CreditCard, User, FileText, Home } from 'lucide-react';
-import AppLogo from '@/components/shared/Logo';
+import { useTranslation } from 'react-i18next';
 
 const Navbar: React.FC = () => {
   const { pathname } = useLocation();
+  const { t } = useTranslation();
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -21,31 +22,31 @@ const Navbar: React.FC = () => {
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <nav className="bg-[#1A1A1A]/80 backdrop-blur-md p-3 rounded-full flex justify-between items-center shadow-lg border border-[#242425]">
-        <Link to="/">
+        <Link to="/" aria-label={t('navbar.dashboard')}>
           <div className={`p-2 rounded-full ${isActive('/') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
             <Home size={24} />
           </div>
         </Link>
         
-        <Link to="/transactions">
+        <Link to="/transactions" aria-label={t('navbar.transactions')}>
           <div className={`p-2 rounded-full ${isActive('/transactions') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
             <FileText size={24} />
           </div>
         </Link>
         
-        <Link to="/wallets">
+        <Link to="/wallets" aria-label={t('navbar.wallets')}>
           <div className={`p-2 rounded-full ${isActive('/wallets') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
             <CreditCard size={24} />
           </div>
         </Link>
         
-        <Link to="/statistics">
+        <Link to="/statistics" aria-label={t('navbar.statistics')}>
           <div className={`p-2 rounded-full ${isActive('/statistics') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
             <BarChart3 size={24} />
           </div>
         </Link>
 
-        <Link to="/profile">
+        <Link to="/profile" aria-label={t('navbar.settings')}>
           <div className={`p-2 rounded-full ${isActive('/profile') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
             <User size={24} />
           </div>
