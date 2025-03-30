@@ -43,8 +43,9 @@
   },
   "wallets": {
     "title": "Akun & Dompet",
-    "add_account": "Tambah Akun",
+    "addAccount": "Tambah Akun",
     "balance": "Saldo: {{amount}}",
+    "balance_across_all_accounts": "Saldo di Semua Akun",
     "create": "Buat Dompet",
     "edit": "Edit Dompet",
     "delete": "Hapus Dompet",
@@ -77,6 +78,7 @@
   "transactions": {
     "title": "Transaksi",
     "add_transaction": "Tambah Transaksi",
+    "transaction_type": "Jenis Transaksi",
     "create": "Tambah Transaksi",
     "edit": "Edit Transaksi",
     "delete": "Hapus Transaksi",

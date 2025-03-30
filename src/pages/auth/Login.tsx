@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { FaGoogle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
-import AppLogo from '@/components/shared/Logo';
+import { LoginContent } from '@/components/auth/LoginContent';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -51,7 +47,7 @@ const Login = () => {
         toast({
           variant: 'destructive',
           title: 'Login failed',
-          description: result.message,
+          description: result.message || 'An unknown error occurred',
         });
       }
     } catch (error: any) {
@@ -66,18 +62,19 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    let googleSignInSuccess = false;
     try {
       setIsSubmitting(true);
       const result = await signInWithGoogle();
-      
-      if (!result.success) {
+      googleSignInSuccess = !!(result && result.success);
+
+      if (result && !result.success) {
         toast({
           variant: 'destructive',
           title: 'Login failed',
-          description: result.message,
+          description: result.message || 'An unknown error occurred during Google sign-in',
         });
       }
-      // If successful, user will be redirected to Google login page
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -85,7 +82,9 @@ const Login = () => {
         description: error.message || 'An unexpected error occurred',
       });
     } finally {
-      setIsSubmitting(false);
+      if (!googleSignInSuccess) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -109,181 +108,77 @@ const Login = () => {
     }
   };
 
-  // Render static version for server-side rendering to prevent blank screen
+  // Simplified static version for SSR
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <div className="p-6 flex items-start">
-          <button className="p-1 text-white rounded-full">
+          <span className="p-1 rounded-full opacity-50">
             <ChevronLeft size={24} />
-          </button>
+          </span>
         </div>
-        
-        <div className="flex-1 flex flex-col p-6 pt-0">
-          <div className="mb-12 flex flex-col items-center">
-            <AppLogo size={64} className="mb-4" withText={false} />
-            <h1 className="text-3xl font-bold text-white">Log in to Duitr</h1>
-          </div>
-          
-          <div className="space-y-3 mb-8">
-            <Button 
-              variant="outline" 
-              className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
-              disabled={true}
-            >
-              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                <FaGoogle className="h-4 w-4 text-black" />
+        <div className="flex-1 flex flex-col p-6 pt-0 items-center justify-center">
+           {/* Basic Loading Skeleton */}
+           <div className="w-full max-w-sm space-y-6 animate-pulse">
+              <div className="flex flex-col items-center space-y-4">
+                 <div className="w-16 h-16 rounded-full bg-muted"></div>
+                 <div className="h-8 w-48 bg-muted rounded"></div>
+                 <div className="h-4 w-64 bg-muted rounded"></div>
               </div>
-              <span className="font-medium">Continue with Google</span>
-            </Button>
-          </div>
-          
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#292929]"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-4 bg-[#0D0D0D] text-[#868686]">or</span>
-            </div>
-          </div>
-          
-          <form className="space-y-6">
-            {/* Form fields without animations */}
-          </form>
+              <div className="space-y-4">
+                 <div className="h-10 w-full bg-muted rounded-full"></div>
+                 <div className="h-4 w-20 bg-muted rounded"></div>
+                 <div className="h-10 w-full bg-muted rounded"></div>
+                 <div className="h-4 w-20 bg-muted rounded"></div>
+                 <div className="h-10 w-full bg-muted rounded"></div>
+                 <div className="h-10 w-full bg-muted rounded-full"></div>
+              </div>
+           </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
-      {/* Header with back button */}
-      <motion.div 
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <motion.div
         className="p-6 flex items-start"
         variants={itemVariants}
         initial="hidden"
         animate="visible"
       >
-        <button 
-          onClick={() => navigate(-1)} 
-          className="p-1 text-white rounded-full"
-        >
-          <ChevronLeft size={24} />
-        </button>
       </motion.div>
-      
-      <motion.div 
-        className="flex-1 flex flex-col p-6 pt-0"
+
+      <motion.div
+        className="flex-1 flex flex-col p-6 pt-0 items-center justify-center"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        {/* Logo and Title */}
-        <motion.div 
-          className="mb-12 flex flex-col items-center"
-          variants={itemVariants}
-        >
-          <AppLogo size={64} className="mb-4" withText={false} />
-          <h1 className="text-3xl font-bold text-white">Log in to Duitr</h1>
-        </motion.div>
-        
-        {/* Social Login Buttons */}
-        <motion.div 
-          className="space-y-3 mb-8"
-          variants={itemVariants}
-        >
-          <Button 
-            variant="outline" 
-            className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
-            onClick={handleGoogleSignIn}
-            disabled={isSubmitting}
+        <div className="w-full max-w-sm">
+          <motion.div
+            className="mb-10 flex flex-col items-center"
+            variants={itemVariants}
           >
-            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-              <FaGoogle className="h-4 w-4 text-black" />
-            </div>
-            <span className="font-medium">Continue with Google</span>
-          </Button>
-        </motion.div>
-        
-        {/* Divider */}
-        <motion.div 
-          className="relative mb-8" 
-          variants={itemVariants}
-        >
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#292929]"></div>
-          </div>
-          <div className="relative flex justify-center">
-            <span className="px-4 bg-[#0D0D0D] text-[#868686]">or</span>
-          </div>
-        </motion.div>
-        
-        {/* Email Login Form */}
-        <motion.form 
-          onSubmit={handleEmailSignIn}
-          className="space-y-6"
-          variants={itemVariants}
-        >
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-white mb-2 block">Email or username</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Email or username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password" className="text-white mb-2 block">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
-              />
-            </div>
-            
-            <div className="pt-4">
-              <Button 
-                type="submit" 
-                className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full" 
-                disabled={isSubmitting}
-              >
-                Log In
-              </Button>
-            </div>
-            
-            <div className="text-center pt-2">
-              <Link to="/auth/forgot-password" className="text-white hover:underline text-sm font-medium">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-        </motion.form>
-        
-        {/* Sign Up Link */}
-        <motion.div 
-          className="mt-auto pt-8 border-t border-[#292929] text-center"
-          variants={itemVariants}
-        >
-          <p className="text-[#868686]">
-            Don't have an account?
-          </p>
-          <Link 
-            to="/auth/signup" 
-            className="block w-full border border-[#868686] text-white py-3 px-6 rounded-full mt-4 font-medium hover:border-white"
-          >
-            Sign up for Duitr
-          </Link>
-        </motion.div>
+            <img src="/duitr-logo.svg" alt="Duitr Logo" className="h-16 w-16 mb-4" />
+            <h1 className="text-3xl font-semibold text-foreground">Log in to Duitr</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Welcome back! Please enter your details.
+            </p>
+          </motion.div>
+
+          <motion.div variants={itemVariants} className="w-full">
+            <LoginContent
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              isSubmitting={isSubmitting}
+              handleEmailSignIn={handleEmailSignIn}
+              handleGoogleSignIn={handleGoogleSignIn}
+            />
+          </motion.div>
+        </div>
       </motion.div>
     </div>
   );

@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const WalletList: React.FC = () => {
   const { wallets, walletStats } = useWallets();
@@ -30,12 +31,13 @@ const WalletList: React.FC = () => {
   const { toast } = useToast();
   const [editWallet, setEditWallet] = useState<any>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const { t } = useTranslation();
   
   const walletTypes = [
-    { value: 'bank', label: 'Bank Account', icon: Landmark },
-    { value: 'cash', label: 'Cash', icon: Wallet },
-    { value: 'e-wallet', label: 'E-Wallet', icon: CreditCard },
-    { value: 'investment', label: 'Investment', icon: TrendingUp },
+    { value: 'bank', label: t('wallets.types.bank'), icon: Landmark },
+    { value: 'cash', label: t('wallets.types.cash'), icon: Wallet },
+    { value: 'e-wallet', label: t('wallets.eWallet'), icon: CreditCard },
+    { value: 'investment', label: t('wallets.types.investment'), icon: TrendingUp },
   ];
 
   const colors = [
@@ -81,8 +83,8 @@ const WalletList: React.FC = () => {
     // Validation
     if (!editWallet.name || !editWallet.balance || !editWallet.type) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t('common.error'),
+        description: t('wallets.fillAllFields'),
         variant: "destructive",
       });
       return;
@@ -96,8 +98,8 @@ const WalletList: React.FC = () => {
     
     // Show success message
     toast({
-      title: "Success",
-      description: "Account updated successfully",
+      title: t('common.success'),
+      description: t('wallets.accountAdded'),
     });
     
     // Close dialog
@@ -107,8 +109,8 @@ const WalletList: React.FC = () => {
   const handleDeleteWallet = (id: string) => {
     deleteWallet(id);
     toast({
-      title: "Success",
-      description: "Account deleted successfully",
+      title: t('common.success'),
+      description: t('wallets.delete'),
     });
   };
   
@@ -144,9 +146,9 @@ const WalletList: React.FC = () => {
         className="bg-[#1364FF] rounded-xl p-5 text-white"
         variants={itemVariants}
       >
-        <p className="text-sm opacity-80 mb-1">Total Balance</p>
+        <p className="text-sm opacity-80 mb-1">{t('dashboard.total_balance')}</p>
         <h3 className="text-2xl font-bold">{formatCurrency(walletStats.totalBalance)}</h3>
-        <p className="text-xs mt-2 opacity-70">Across all accounts</p>
+        <p className="text-xs mt-2 opacity-70">{t('wallets.balance_across_all_accounts')}</p>
       </motion.div>
       
       {/* Wallets */}
@@ -179,19 +181,19 @@ const WalletList: React.FC = () => {
                     <MoreVertical size={18} className="text-[#868686]" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-[#1A1A1A] border-none text-white">
-                    <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t('common.options')}</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-[#333]" />
                     <DropdownMenuItem 
                       className="focus:bg-[#333] cursor-pointer"
                       onClick={() => handleEditWallet(wallet)}
                     >
-                      <Edit className="mr-2 h-4 w-4" /> Edit
+                      <Edit className="mr-2 h-4 w-4" /> {t('wallets.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="text-red-400 focus:bg-[#333] focus:text-red-400 cursor-pointer"
                       onClick={() => handleDeleteWallet(wallet.id)}
                     >
-                      <Trash className="mr-2 h-4 w-4" /> Delete
+                      <Trash className="mr-2 h-4 w-4" /> {t('wallets.delete')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -205,7 +207,7 @@ const WalletList: React.FC = () => {
                 <div className="flex mt-3 gap-6">
                   <div className="space-y-0.5">
                     <div className="flex items-center text-xs text-[#C6FE1E]">
-                      <ArrowUpRight className="w-3 h-3 mr-1" /> Income
+                      <ArrowUpRight className="w-3 h-3 mr-1" /> {t('transactions.income')}
                     </div>
                     <p className="text-sm font-medium text-white">
                       {formatCurrency(
@@ -217,7 +219,7 @@ const WalletList: React.FC = () => {
                   
                   <div className="space-y-0.5">
                     <div className="flex items-center text-xs text-red-400">
-                      <ArrowDownRight className="w-3 h-3 mr-1" /> Expenses
+                      <ArrowDownRight className="w-3 h-3 mr-1" /> {t('transactions.expense')}
                     </div>
                     <p className="text-sm font-medium text-white">
                       {formatCurrency(
@@ -241,8 +243,8 @@ const WalletList: React.FC = () => {
             <div className="mx-auto w-12 h-12 mb-3 bg-[#333] rounded-full flex items-center justify-center">
               <Wallet size={24} className="text-[#868686]" />
             </div>
-            <p className="text-[#868686]">No accounts yet</p>
-            <p className="text-xs text-[#868686] mt-1">Use the + button to add your first account</p>
+            <p className="text-[#868686]">{t('wallets.no_wallets')}</p>
+            <p className="text-xs text-[#868686] mt-1">{t('wallets.use_plus_button')}</p>
           </motion.div>
         )}
       </div>
@@ -251,16 +253,16 @@ const WalletList: React.FC = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white">Edit Account</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-white">{t('wallets.edit')}</DialogTitle>
           </DialogHeader>
           {editWallet && (
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-[#868686]">Account Name</Label>
+                <Label htmlFor="name" className="text-[#868686]">{t('wallets.accountName')}</Label>
                 <Input
                   id="name"
                   name="name"
-                  placeholder="e.g. Main Bank Account"
+                  placeholder={t('wallets.accountNamePlaceholder')}
                   value={editWallet.name}
                   onChange={handleEditChange}
                   required
@@ -269,7 +271,7 @@ const WalletList: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="balance" className="text-[#868686]">Balance</Label>
+                <Label htmlFor="balance" className="text-[#868686]">{t('wallets.balance')}</Label>
                 <Input
                   id="balance"
                   name="balance"
@@ -284,13 +286,13 @@ const WalletList: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="type" className="text-[#868686]">Account Type</Label>
+                <Label htmlFor="type" className="text-[#868686]">{t('wallets.accountType')}</Label>
                 <Select 
                   value={editWallet.type} 
                   onValueChange={(value) => setEditWallet({ ...editWallet, type: value })}
                 >
                   <SelectTrigger className="bg-[#242425] border-none text-white">
-                    <SelectValue placeholder="Select account type" />
+                    <SelectValue placeholder={t('wallets.selectAccountType')} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#242425] border-none text-white">
                     {walletTypes.map((type) => (
@@ -306,20 +308,20 @@ const WalletList: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="color" className="text-[#868686]">Account Color</Label>
+                <Label htmlFor="color" className="text-[#868686]">{t('wallets.accountColor')}</Label>
                 <Select 
                   value={editWallet.color} 
                   onValueChange={(value) => setEditWallet({ ...editWallet, color: value })}
                 >
                   <SelectTrigger className="bg-[#242425] border-none text-white">
-                    <SelectValue placeholder="Select color">
+                    <SelectValue placeholder={t('wallets.selectColor')}>
                       <div className="flex items-center gap-2">
                         <div 
                           className="w-4 h-4 rounded-full" 
                           style={{ backgroundColor: editWallet.color }} 
                         />
                         <span>
-                          {colors.find(c => c.value === editWallet.color)?.label || 'Select color'}
+                          {colors.find(c => c.value === editWallet.color)?.label || t('wallets.selectColor')}
                         </span>
                       </div>
                     </SelectValue>
@@ -344,7 +346,7 @@ const WalletList: React.FC = () => {
                 type="submit" 
                 className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium"
               >
-                Save Changes
+                {t('common.save')}
               </Button>
             </form>
           )}

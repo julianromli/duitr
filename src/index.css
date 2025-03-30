@@ -17,33 +17,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 84% 4.9%;
+    /* Updated for requested light mode: green, white, black, dark grey */
+    --background: 0 0% 100%; /* White background */
+    --foreground: 0 0% 0%; /* Black text */
     
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 4.9%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 0 0% 0%; /* Black */
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 4.9%;
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 0 0% 0%; /* Black */
     
-    --primary: 225 70% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 84 98% 56%; /* Green #C6FE1E */
+    --primary-foreground: 0 0% 0%; /* Black text on green */
     
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47.4% 11.2%;
+    --secondary: 0 0% 96%; /* Lighter Grey */
+    --secondary-foreground: 0 0% 20%; /* Dark Grey */
     
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96%; /* Light Grey */
+    --muted-foreground: 0 0% 40%; /* Dark Grey for muted text */
     
-    --accent: 243 75% 59%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 84 98% 56%; /* Green */
+    --accent-foreground: 0 0% 0%; /* Black */
     
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%; /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
     
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 225 70% 60%;
+    --border: 0 0% 90%; /* Light Grey */
+    --input: 0 0% 90%; /* Light Grey */
+    --ring: 84 98% 56%; /* Green */
     
     --radius: 1rem;
 
@@ -54,33 +55,34 @@
   }
   
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Updated for requested dark mode: black, green, white, light grey */
+    --background: 0 0% 5%; /* Black background #0D0D0D */
+    --foreground: 0 0% 100%; /* White text */
     
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 10%; /* Slightly lighter black */
+    --card-foreground: 0 0% 100%; /* White */
     
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 5%; /* Black */
+    --popover-foreground: 0 0% 100%; /* White */
     
-    --primary: 225 70% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 84 98% 56%; /* Green #C6FE1E */
+    --primary-foreground: 0 0% 5%; /* Black text on green buttons */
     
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 15%; /* Dark Grey */
+    --secondary-foreground: 0 0% 100%; /* White */
     
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 15%; /* Dark Grey */
+    --muted-foreground: 0 0% 70%; /* Light Grey for muted text */
     
-    --accent: 243 75% 59%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 84 98% 56%; /* Green */
+    --accent-foreground: 0 0% 0%; /* Black */
     
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%; /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
     
-    --border: 217.2 32.6% 22.5%;
-    --input: 217.2 32.6% 22.5%;
-    --ring: 225 70% 60%;
+    --border: 0 0% 20%; /* Dark Grey for borders */
+    --input: 0 0% 20%; /* Dark Grey for inputs */
+    --ring: 84 98% 56%; /* Green */
 
     --finance-income: 142 76% 60%;
     --finance-expense: 0 84% 60%;

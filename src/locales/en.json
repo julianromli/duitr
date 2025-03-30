@@ -43,8 +43,9 @@
   },
   "wallets": {
     "title": "Accounts & Wallets",
-    "add_account": "Add Account",
+    "addAccount": "Add Account",
     "balance": "Balance: {{amount}}",
+    "balance_across_all_accounts": "Balance across all accounts",
     "create": "Create Wallet",
     "edit": "Edit Wallet",
     "delete": "Delete Wallet",
@@ -77,6 +78,7 @@
   "transactions": {
     "title": "Transactions",
     "add_transaction": "Add Transaction",
+    "transaction_type": "Transaction Type",
     "no_transactions": "No transactions found",
     "date": "Date",
     "category": "Category",
