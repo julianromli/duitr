@@ -7,7 +7,9 @@
     "info": "Informasi",
     "warning": "Peringatan",
     "loading": "Memuat...",
-    "save": "Simpan Perubahan"
+    "save": "Simpan Perubahan",
+    "saved": "Tersimpan",
+    "apply": "Terapkan"
   },
   "pages": {
     "dashboard": "Dasbor",
@@ -36,7 +38,8 @@
     "income_vs_expense": "Pendapatan vs Pengeluaran",
     "spending": "Pengeluaran per Kategori",
     "budget_status": "Status Anggaran",
-    "spending_chart": "Pengeluaran Bulanan berdasarkan Kategori"
+    "spending_chart": "Pengeluaran Bulanan berdasarkan Kategori",
+    "view_all": "Lihat Semua"
   },
   "wallets": {
     "title": "Akun & Dompet",
@@ -48,6 +51,7 @@
     "name": "Nama Dompet",
     "type": "Jenis Dompet",
     "color": "Warna Dompet",
+    "select_wallet": "Pilih dompet",
     "types": {
       "cash": "Tunai",
       "bank": "Rekening Bank",
@@ -55,10 +59,23 @@
       "investment": "Investasi"
     },
     "delete_confirmation": "Apakah Anda yakin ingin menghapus dompet ini? Tindakan ini tidak dapat dibatalkan.",
-    "no_wallets": "Anda belum memiliki dompet."
+    "no_wallets": "Anda belum memiliki dompet.",
+    "accountName": "Nama Akun",
+    "accountNamePlaceholder": "mis. Rekening Bank Utama",
+    "startingBalance": "Saldo Awal",
+    "accountType": "Jenis Akun",
+    "selectAccountType": "Pilih jenis akun",
+    "accountColor": "Warna Akun",
+    "selectColor": "Pilih warna",
+    "bankAccount": "Rekening Bank",
+    "cash": "Tunai",
+    "eWallet": "E-Wallet",
+    "investment": "Investasi",
+    "fillAllFields": "Silakan isi semua kolom yang diperlukan",
+    "accountAdded": "Akun berhasil ditambahkan"
   },
   "transactions": {
-    "title": "Lihat Semua Transaksi",
+    "title": "Transaksi",
     "add_transaction": "Tambah Transaksi",
     "create": "Tambah Transaksi",
     "edit": "Edit Transaksi",
@@ -69,14 +86,33 @@
     "date": "Tanggal",
     "type": "Jenis Transaksi",
     "wallet": "Dompet",
-    "income": "Income",
-    "expense": "Expense",
+    "income": "Pemasukan",
+    "expense": "Pengeluaran",
+    "transfer": "Transfer",
+    "from_account": "Dari Akun",
+    "to_account": "Ke Akun",
+    "select_source": "Pilih akun sumber",
+    "select_destination": "Pilih akun tujuan",
+    "fee": "Biaya (jika ada)",
+    "add_expense": "Tambah Pengeluaran",
+    "add_income": "Tambah Pemasukan",
+    "add_money": "Tambah",
+    "enter_description": "Masukkan deskripsi",
+    "errors": {
+      "select_date": "Silakan pilih tanggal",
+      "fill_all_fields": "Silakan isi semua kolom yang diperlukan",
+      "same_wallet": "Akun sumber dan tujuan tidak boleh sama"
+    },
+    "expense_added": "Pengeluaran berhasil ditambahkan",
+    "income_added": "Pemasukan berhasil ditambahkan",
+    "transfer_completed": "Transfer berhasil diselesaikan",
     "no_transactions": "Tidak ada transaksi ditemukan",
     "all": "Semua",
     "delete_confirmation": "Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.",
     "delete_success": "Transaksi berhasil dihapus",
     "search": "Cari transaksi...",
-    "history": "Riwayat Transaksi"
+    "history": "Riwayat Transaksi",
+    "view_all": "Lihat Semua"
   },
   "budgets": {
     "title": "Anggaran",
@@ -144,7 +180,7 @@
     "appearance": "Tampilan",
     "currency": "Mata Uang",
     "profile": "Profil",
-    "currencyLocked": "Semua",
+    "currencyLocked": "Semua transaksi ditampilkan dalam Rupiah Indonesia (IDR)",
     "export_data": "Ekspor Data",
     "import_data": "Impor Data",
     "delete_account": "Hapus Akun",
@@ -156,7 +192,24 @@
     "languages": {
       "en": "Bahasa Inggris",
       "id": "Bahasa Indonesia"
-    }
+    },
+    "fileTooLarge": "File terlalu besar",
+    "profileImageSizeLimit": "Gambar profil harus kurang dari 2MB",
+    "invalidFileType": "Jenis file tidak valid",
+    "pleaseUploadImage": "Silakan unggah file gambar",
+    "profileImageUpdated": "Gambar profil diperbarui",
+    "uploadFailed": "Gagal mengunggah",
+    "failedToUploadImage": "Gagal mengunggah gambar profil",
+    "profileUpdated": "Profil diperbarui",
+    "updateFailed": "Pembaruan gagal",
+    "failedToUpdateProfile": "Gagal memperbarui profil",
+    "logoutFailed": "Gagal keluar",
+    "errorLoggingOut": "Terjadi kesalahan saat keluar",
+    "username": "Nama Pengguna",
+    "email": "Email",
+    "saving": "Menyimpan...",
+    "saveProfile": "Simpan Profil",
+    "logout": "Keluar"
   },
   "export": {
     "title": "Ekspor Data Keuangan",
@@ -192,6 +245,21 @@
       "excel": "Excel"
     }
   },
+  "statistics": {
+    "title": "Statistik",
+    "last7Days": "7 Hari Terakhir",
+    "last30Days": "30 Hari Terakhir",
+    "thisMonth": "Bulan Ini",
+    "customRange": "Rentang Kustom",
+    "startDate": "Tanggal Mulai",
+    "endDate": "Tanggal Akhir",
+    "income": "Pemasukan",
+    "expense": "Pengeluaran",
+    "total": "TOTAL",
+    "incomeBreakdown": "Rincian Pemasukan",
+    "expenseBreakdown": "Rincian Pengeluaran",
+    "noData": "Tidak ada data untuk periode yang dipilih"
+  },
   "buttons": {
     "save": "Simpan",
     "cancel": "Batal",
@@ -199,5 +267,43 @@
     "edit": "Edit",
     "add": "Tambah",
     "create": "Buat"
+  },
+  "hello": "Halo",
+  "welcomeBack": "Selamat Datang Kembali",
+  "yourBalance": "Saldo Anda",
+  "theme": {
+    "light": "Mode Terang",
+    "dark": "Mode Gelap",
+    "switchToLight": "Beralih ke Mode Terang",
+    "switchToDark": "Beralih ke Mode Gelap"
+  },
+  "language": {
+    "en": "Bahasa Inggris",
+    "id": "Bahasa Indonesia",
+    "switchToEn": "Beralih ke Bahasa Inggris",
+    "switchToId": "Beralih ke Bahasa Indonesia"
+  },
+  "income": {
+    "title": "Pemasukan",
+    "add_income": "Tambah Pemasukan",
+    "select_category": "Pilih kategori pemasukan",
+    "categories": {
+      "salary": "Gaji",
+      "business": "Bisnis",
+      "investment": "Investasi",
+      "gift": "Hadiah",
+      "other": "Lainnya",
+      "freelance": "Pekerja Lepas",
+      "refund": "Pengembalian Dana",
+      "bonus": "Bonus"
+    }
+  },
+  "colors": {
+    "blue": "Biru",
+    "green": "Hijau",
+    "yellow": "Kuning",
+    "red": "Merah",
+    "purple": "Ungu",
+    "orange": "Oranye"
   }
 } 

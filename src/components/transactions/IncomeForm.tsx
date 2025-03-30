@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useTranslation } from 'react-i18next';
 
 interface IncomeFormProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface IncomeFormProps {
 const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
@@ -36,8 +38,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     
     if (!selectedDate) {
       toast({
-        title: 'Error',
-        description: 'Please select a date',
+        title: t('common.error'),
+        description: t('transactions.errors.select_date'),
         variant: 'destructive',
       });
       return;
@@ -46,8 +48,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     // Validation
     if (!formData.amount || !formData.category || !formData.description || !formData.walletId) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
+        title: t('common.error'),
+        description: t('transactions.errors.fill_all_fields'),
         variant: 'destructive',
       });
       return;
@@ -77,8 +79,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     
     // Show success message
     toast({
-      title: 'Success',
-      description: 'Income added successfully',
+      title: t('common.success'),
+      description: t('transactions.income_added'),
     });
     
     // Close dialog
@@ -86,21 +88,18 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   };
   
   const categories = [
-    'Salary',
-    'Freelance',
-    'Investment',
-    'Gift',
-    'Refund',
-    'Business',
-    'Bonus',
-    'Other'
+    t('income.categories.salary'),
+    t('income.categories.business'),
+    t('income.categories.investment'),
+    t('income.categories.gift'),
+    t('income.categories.other')
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1A1A1A] border-0 text-white">
         <DialogHeader className="flex flex-row justify-between items-center">
-          <DialogTitle className="text-xl font-bold">Add Income</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{t('transactions.add_income')}</DialogTitle>
           <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
             <X size={16} />
           </DialogClose>
@@ -108,7 +107,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-[#868686]">Amount</Label>
+            <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
             <Input
               id="amount"
               name="amount"
@@ -123,13 +122,13 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-[#868686]">Category</Label>
+            <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t('income.select_category')} />
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border-0 text-white">
                 {categories.map((category) => (
@@ -142,13 +141,13 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="walletId" className="text-[#868686]">Account</Label>
+            <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.wallet')}</Label>
             <Select
               value={formData.walletId}
               onValueChange={(value) => setFormData({ ...formData, walletId: value })}
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder="Select account" />
+                <SelectValue placeholder={t('wallets.select_wallet')} />
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border-0 text-white">
                 {wallets.map((wallet) => (
@@ -161,11 +160,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">Description</Label>
+            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
             <Input
               id="description"
               name="description"
-              placeholder="Enter description"
+              placeholder={t('transactions.enter_description')}
               value={formData.description}
               onChange={handleChange}
               required
@@ -174,7 +173,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[#868686]">Date</Label>
+            <Label className="text-[#868686]">{t('transactions.date')}</Label>
             <DatePicker 
               date={selectedDate}
               setDate={setSelectedDate}
@@ -182,7 +181,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
-            Add Income
+            {t('transactions.add_income')}
           </Button>
         </form>
       </DialogContent>

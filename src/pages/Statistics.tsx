@@ -114,16 +114,16 @@ const Statistics: React.FC = () => {
   const getDateRangeLabel = () => {
     switch (dateRange) {
       case '7days':
-        return 'Last 7 Days';
+        return t('statistics.last7Days');
       case '30days':
-        return 'Last 30 Days';
+        return t('statistics.last30Days');
       case 'month':
         return currentMonthYear;
       case 'custom':
         if (customStartDate && customEndDate) {
           return `${format(customStartDate, 'MMM d')} - ${format(customEndDate, 'MMM d, yyyy')}`;
         }
-        return 'Custom Range';
+        return t('statistics.customRange');
       default:
         return currentMonthYear;
     }
@@ -176,7 +176,7 @@ const Statistics: React.FC = () => {
             <Link to="/" className="mr-4 text-white">
               <ChevronLeft size={24} />
             </Link>
-            <h1 className="text-xl font-bold">Statistics</h1>
+            <h1 className="text-xl font-bold">{t('statistics.title')}</h1>
           </div>
           <div className="relative">
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -200,7 +200,7 @@ const Statistics: React.FC = () => {
                         setIsCalendarOpen(false);
                       }}
                     >
-                      Last 7 Days
+                      {t('statistics.last7Days')}
                     </Button>
                     <Button 
                       variant={dateRange === '30days' ? 'default' : 'outline'} 
@@ -210,7 +210,7 @@ const Statistics: React.FC = () => {
                         setIsCalendarOpen(false);
                       }}
                     >
-                      Last 30 Days
+                      {t('statistics.last30Days')}
                     </Button>
                     <Button 
                       variant={dateRange === 'month' ? 'default' : 'outline'} 
@@ -220,7 +220,7 @@ const Statistics: React.FC = () => {
                         setIsCalendarOpen(false);
                       }}
                     >
-                      This Month
+                      {t('statistics.thisMonth')}
                     </Button>
                     <Button 
                       variant={dateRange === 'custom' ? 'default' : 'outline'} 
@@ -234,7 +234,7 @@ const Statistics: React.FC = () => {
                         }
                       }}
                     >
-                      Custom Range
+                      {t('statistics.customRange')}
                     </Button>
                   </div>
                   
@@ -242,7 +242,7 @@ const Statistics: React.FC = () => {
                     <div className="flex flex-col gap-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <p className="text-sm mb-1">Start Date</p>
+                          <p className="text-sm mb-1">{t('statistics.startDate')}</p>
                           <Calendar
                             className="bg-[#1A1A1A] rounded-lg text-white"
                             mode="single"
@@ -253,7 +253,7 @@ const Statistics: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <p className="text-sm mb-1">End Date</p>
+                          <p className="text-sm mb-1">{t('statistics.endDate')}</p>
                           <Calendar
                             className="bg-[#1A1A1A] rounded-lg text-white"
                             mode="single"
@@ -268,7 +268,7 @@ const Statistics: React.FC = () => {
                         className="mt-2 bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00]"
                         onClick={() => setIsCalendarOpen(false)}
                       >
-                        Apply
+                        {t('common.apply')}
                       </Button>
                     </div>
                   )}
@@ -289,14 +289,14 @@ const Statistics: React.FC = () => {
               onClick={() => handleTabChange('outcome')}
               whileTap={{ scale: 0.98 }}
             >
-              Outcome
+              {t('statistics.expense')}
             </motion.button>
             <motion.button
               className={`flex-1 py-2 text-center rounded-full ${activeTab === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
               onClick={() => handleTabChange('income')}
               whileTap={{ scale: 0.98 }}
             >
-              Income
+              {t('statistics.income')}
             </motion.button>
           </div>
         </motion.div>
@@ -343,7 +343,9 @@ const Statistics: React.FC = () => {
                     transition={{ delay: 0.5 }}
                     key={`text-${activeTab}`}
                   >
-                    <p className="text-xs text-[#868686] uppercase tracking-wide">TOTAL {activeTab === 'income' ? 'INCOME' : 'OUTCOME'}</p>
+                    <p className="text-xs text-[#868686] uppercase tracking-wide">
+                      {t('statistics.total')} {activeTab === 'income' ? t('statistics.income').toUpperCase() : t('statistics.expense').toUpperCase()}
+                    </p>
                     <p className="text-xl font-bold mt-1 text-white">{formatCurrency(totalAmount)}</p>
                   </motion.div>
                 </div>
@@ -355,7 +357,9 @@ const Statistics: React.FC = () => {
                 variants={itemVariants}
                 key={`breakdown-${activeTab}`}
               >
-                <h3 className="text-lg font-bold mb-4">{activeTab === 'income' ? 'Income' : 'Expense'} Breakdown</h3>
+                <h3 className="text-lg font-bold mb-4">
+                  {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
+                </h3>
                 <div className="space-y-3">
                   {chartData.map((category, index) => (
                     <motion.div 
@@ -391,7 +395,7 @@ const Statistics: React.FC = () => {
               transition={{ delay: 0.3 }}
               key="no-data"
             >
-              <p className="text-[#868686]">No data available for the selected period</p>
+              <p className="text-[#868686]">{t('statistics.noData')}</p>
             </motion.div>
           )}
         </div>

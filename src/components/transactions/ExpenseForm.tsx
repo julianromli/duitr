@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useTranslation } from 'react-i18next';
 
 interface ExpenseFormProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface ExpenseFormProps {
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
@@ -36,8 +38,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     
     if (!selectedDate) {
       toast({
-        title: 'Error',
-        description: 'Please select a date',
+        title: t('common.error'),
+        description: t('transactions.errors.select_date'),
         variant: 'destructive',
       });
       return;
@@ -46,8 +48,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     // Validation
     if (!formData.amount || !formData.category || !formData.description || !formData.walletId) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
+        title: t('common.error'),
+        description: t('transactions.errors.fill_all_fields'),
         variant: 'destructive',
       });
       return;
@@ -77,8 +79,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     
     // Show success message
     toast({
-      title: 'Success',
-      description: 'Expense added successfully',
+      title: t('common.success'),
+      description: t('transactions.expense_added'),
     });
     
     // Close dialog
@@ -86,14 +88,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   };
   
   const categories = [
-    'Groceries',
-    'Dining',
-    'Transportation',
-    'Utilities',
-    'Rent',
-    'Entertainment',
-    'Shopping',
-    'Healthcare',
+    t('budgets.categories.groceries'),
+    t('budgets.categories.dining'),
+    t('budgets.categories.transportation'),
+    t('budgets.categories.utilities'),
+    t('budgets.categories.housing'),
+    t('budgets.categories.entertainment'),
+    t('budgets.categories.shopping'),
+    t('budgets.categories.healthcare'),
     'OVO'
   ];
 
@@ -101,7 +103,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1A1A1A] border-0 text-white">
         <DialogHeader className="flex flex-row justify-between items-center">
-          <DialogTitle className="text-xl font-bold">Add Expense</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{t('transactions.add_expense')}</DialogTitle>
           <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
             <X size={16} />
           </DialogClose>
@@ -109,7 +111,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-[#868686]">Amount</Label>
+            <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
             <Input
               id="amount"
               name="amount"
@@ -124,13 +126,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-[#868686]">Category</Label>
+            <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
             <Select
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t('budgets.select_category')} />
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border-0 text-white">
                 {categories.map((category) => (
@@ -143,13 +145,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="walletId" className="text-[#868686]">Account</Label>
+            <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.wallet')}</Label>
             <Select
               value={formData.walletId}
               onValueChange={(value) => setFormData({ ...formData, walletId: value })}
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder="Select account" />
+                <SelectValue placeholder={t('wallets.select_wallet')} />
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border-0 text-white">
                 {wallets.map((wallet) => (
@@ -162,11 +164,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">Description</Label>
+            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
             <Input
               id="description"
               name="description"
-              placeholder="Enter description"
+              placeholder={t('transactions.enter_description')}
               value={formData.description}
               onChange={handleChange}
               required
@@ -175,15 +177,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[#868686]">Date</Label>
-            <DatePicker 
-              date={selectedDate}
-              setDate={setSelectedDate}
-            />
+            <Label className="text-[#868686]">{t('transactions.date')}</Label>
+            <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+              <DatePicker 
+                date={selectedDate}
+                setDate={setSelectedDate}
+              />
+            </div>
           </div>
           
           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
-            Add Expense
+            {t('transactions.add_expense')}
           </Button>
         </form>
       </DialogContent>

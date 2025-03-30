@@ -109,6 +109,71 @@
   }
 }
 
+/* Light mode specific overrides */
+.light .bg-\[\#0D0D0D\] {
+  background-color: #FFFFFF;
+}
+
+.light .text-white {
+  color: #222222;
+}
+
+.light .bg-\[\#1A1A1A\] {
+  background-color: #F3F4F6;
+}
+
+.light .bg-\[\#1A1A1A\]\/80 {
+  background-color: rgba(243, 244, 246, 0.9);
+}
+
+.light .bg-\[\#242425\] {
+  background-color: #E5E7EB;
+}
+
+.light .bg-\[\#242425\]\/70 {
+  background-color: rgba(229, 231, 235, 0.8);
+}
+
+.light .border-\[\#242425\] {
+  border-color: #D1D5DB;
+}
+
+.light .text-\[\#868686\] {
+  color: #555555;
+}
+
+/* Fix green text on light backgrounds */
+.light .text-\[\#C6FE1E\] {
+  color: #222222;
+}
+
+.light .bg-white .text-\[\#C6FE1E\], 
+.light .bg-gray-100 .text-\[\#C6FE1E\], 
+.light .bg-gray-200 .text-\[\#C6FE1E\] {
+  color: #222222;
+}
+
+/* Additional fixes for dark text on light background */
+.light .bg-\[\#242425\].text-white input,
+.light .bg-\[\#242425\].text-white button,
+.light .bg-\[\#242425\].text-white {
+  color: #222222;
+}
+
+.light .bg-background {
+  background-color: #F8F9FA;
+}
+
+/* Ensure proper contrast for transaction list in light mode */
+.light .space-y-3.text-white {
+  color: #222222;
+}
+
+.light .bg-\[\#242425\].p-4.rounded-xl {
+  background-color: #E5E7EB;
+  color: #222222;
+}
+
 @layer components {
   .glass-card {
     @apply bg-white/70 dark:bg-black/50 backdrop-blur-lg border border-white/20 dark:border-white/10;
