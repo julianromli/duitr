@@ -156,7 +156,7 @@ function SignupContent({
         {/* Link to Login */}
          <p className="text-center text-sm text-muted-foreground">
            Already have an account?{' '}
-            <Link to="/auth/login" className="text-primary underline hover:no-underline">
+            <Link to="/login" className="text-primary underline hover:no-underline">
               Log in
             </Link>
          </p>

@@ -104,8 +104,8 @@ const Statistics: React.FC = () => {
     };
   });
   
-  // Colors for pie chart - using our color palette
-  const COLORS = ['#C6FE1E', '#1364FF', '#868686', '#242425'];
+  // Colors for pie chart - using a varied yet harmonious color palette
+  const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'];
   
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -376,8 +376,8 @@ const Statistics: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-medium">{formatCurrency(category.value)}</span>
-                        <div className="px-2 py-1 rounded-full text-xs font-medium bg-[#0D0D0D]" style={{ 
-                          color: COLORS[index % COLORS.length]
+                        <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
+                          backgroundColor: COLORS[index % COLORS.length]
                         }}>
                           {category.percentage}%
                         </div>

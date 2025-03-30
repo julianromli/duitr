@@ -35,7 +35,7 @@ const ForgotPassword = () => {
     
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       
       if (error) {
@@ -120,6 +120,13 @@ const ForgotPassword = () => {
         initial="hidden"
         animate="visible"
       >
+        <button
+          onClick={() => navigate('/login')}
+          className="p-1 rounded-full text-foreground hover:bg-accent"
+          aria-label="Go back to login"
+        >
+          <ChevronLeft size={24} />
+        </button>
       </motion.div>
 
       <motion.div

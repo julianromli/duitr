@@ -49,7 +49,7 @@ describe('ForgotPasswordContent', () => {
     const loginLink = screen.getByRole('link', { name: /back to login/i });
     
     // Assert that the link points to the correct route
-    expect(loginLink).toHaveAttribute('to', '/auth/login');
+    expect(loginLink).toHaveAttribute('to', '/login');
   });
 
   it('renders success message when email is sent', () => {
