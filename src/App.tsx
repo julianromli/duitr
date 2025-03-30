@@ -135,20 +135,20 @@ const App = () => {
                 <BrowserRouter>
                   <Routes>
                     {/* Auth Routes */}
-                    <Route path="/auth/login" element={<Login />} />
-                    <Route path="/auth/signup" element={<SignUp />} />
-                    <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/auth/reset-password" element={<ResetPassword />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
+                    <Route path="/forgotpassword" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     
                     {/* Auth callback routes - handle all possible formats */}
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/auth/callback/:code" element={<AuthCallback />} />
-                    <Route path="/auth/callback/*" element={<AuthCallback />} />
+                    <Route path="/callback" element={<AuthCallback />} />
+                    <Route path="/callback/:code" element={<AuthCallback />} />
+                    <Route path="/callback/*" element={<AuthCallback />} />
                     
                     {/* Handle 404 in auth flow by redirecting to the auth callback page */}
-                    <Route path="/r5sms-*" element={<Navigate to="/auth/callback" replace />} />
-                    <Route path="/sin1:*" element={<Navigate to="/auth/callback" replace />} />
-                    <Route path="*NOT_FOUND*" element={<Navigate to="/auth/callback" replace />} />
+                    <Route path="/r5sms-*" element={<Navigate to="/callback" replace />} />
+                    <Route path="/sin1:*" element={<Navigate to="/callback" replace />} />
+                    <Route path="*NOT_FOUND*" element={<Navigate to="/callback" replace />} />
                     
                     {/* Offline page */}
                     <Route path="/offline" element={<Offline />} />

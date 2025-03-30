@@ -44,7 +44,7 @@ function ForgotPasswordContent({
             Please check your inbox and follow the instructions to reset your password.
           </p>
           <Button asChild className="mt-4 w-full">
-            <Link to="/auth/login">Return to Login</Link>
+            <Link to="/login">Return to Login</Link>
           </Button>
         </div>
       ) : (
@@ -81,7 +81,7 @@ function ForgotPasswordContent({
           {/* Link to Login */}
           <p className="text-center text-sm text-muted-foreground mt-6">
             Remember your password?{' '}
-            <Link to="/auth/login" className="text-primary underline hover:no-underline">
+            <Link to="/login" className="text-primary underline hover:no-underline">
               Back to Login
             </Link>
           </p>

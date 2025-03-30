@@ -51,6 +51,6 @@ describe('LoginForm', () => {
     const signUpLink = screen.getByRole('link', { name: /sign up/i });
     
     // Assert that the href points to the correct route
-    expect(signUpLink).toHaveAttribute('href', '/auth/signup');
+    expect(signUpLink).toHaveAttribute('href', '/signup');
   });
 }); 

@@ -104,7 +104,7 @@ function LoginContent({
             </Label>
           </div>
            {/* Use theme primary color for link */}
-          <a href="/auth/forgot-password" className="text-sm text-primary underline hover:no-underline">
+          <a href="/forgotpassword" className="text-sm text-primary underline hover:no-underline">
             Forgot password?
           </a>
         </div>
@@ -121,7 +121,7 @@ function LoginContent({
         {/* Link to Sign Up */}
          <p className="text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <a href="/auth/signup" className="text-primary underline hover:no-underline">
+            <a href="/signup" className="text-primary underline hover:no-underline">
               Sign up
             </a>
          </p>

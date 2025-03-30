@@ -23,8 +23,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/auth/callback/(.*)", "destination": "/index.html" },
-    { "source": "/auth/(.*)", "destination": "/index.html" },
+    { "source": "/callback/(.*)", "destination": "/index.html" },
     { "source": "/r5sms-(.*)", "destination": "/index.html" },
     { "source": "/sin1\\:(.*)", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }

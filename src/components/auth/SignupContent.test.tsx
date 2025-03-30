@@ -55,7 +55,7 @@ describe('SignupContent', () => {
     const loginLink = screen.getByRole('link', { name: /log in/i });
     
     // Assert that the link points to the correct route
-    expect(loginLink).toHaveAttribute('to', '/auth/login');
+    expect(loginLink).toHaveAttribute('to', '/login');
   });
 
   it('renders terms checkbox', () => {
