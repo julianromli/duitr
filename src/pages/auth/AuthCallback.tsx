@@ -8,14 +8,33 @@ const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
   const authProcessedRef = useRef(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   
   // Check if we're currently on a 404 page
   const is404Page = useRef(false);
+
+  // Client-side only rendering to prevent hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+    
+    // Set a timeout to force navigate to login if we're stuck for too long
+    const timeoutId = setTimeout(() => {
+      if (loading && !error) {
+        console.error('Auth callback timeout - forcing navigation to login');
+        navigate('/auth/login');
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
   
   useEffect(() => {
+    // Only run this effect on the client
+    if (!isMounted) return;
+
     // Check for 404 indicators in the page content
     const is404 = document.title.includes('404') || 
                  document.body.textContent?.includes('NOT_FOUND') ||
@@ -32,218 +51,124 @@ const AuthCallback = () => {
           : `${window.location.origin}/auth/callback`;
       }
     }
-  }, []);
+  }, [isMounted]);
   
   // Define the function as a ref to avoid dependency issues
   const handleAuthCallbackRef = useRef<() => Promise<void>>();
   
-  // Implement the auth callback logic
   handleAuthCallbackRef.current = async () => {
+    // Don't process auth more than once
     if (authProcessedRef.current) return;
     authProcessedRef.current = true;
-    
-    // Log detailed device information for debugging
-    const deviceInfo = {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      isIOS: isIOS(),
-      url: window.location.href,
-      hasFragment: window.location.hash.length > 0,
-      hasQuery: window.location.search.length > 0,
-      is404: is404Page.current
-    };
-    
-    logAuthEvent('callback_started', deviceInfo);
-    
-    try {
-      // If we're on a 404 page or don't have an auth code, try to recover by checking for a session directly
-      if (is404Page.current || !window.location.search.includes('code=')) {
-        logAuthEvent('recovering_from_404_or_missing_code');
-        
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData?.session) {
-          logAuthEvent('session_found_despite_404', {
-            userId: sessionData.session.user.id
-          });
-          handleSuccessfulLogin(sessionData.session.user);
-          return;
-        }
-        
-        // If we're on iOS and can't find a session, try a fresh login
-        if (isIOS()) {
-          if (retryCount < 1) {
-            setRetryCount(1); // We've already tried once at this point
-            authProcessedRef.current = false;
-            setError('Login error. Attempting to recover...');
-            
-            setTimeout(() => {
-              // Try requesting a new session once more
-              handleAuthCallbackRef.current?.();
-            }, 2000);
-            return;
-          } else {
-            // If we've already retried, direct the user back to login
-            setError('Could not complete login. Please try signing in again.');
-            return;
-          }
-        }
-      }
-      
-      // Extract auth code from URL if present
-      const urlParams = new URLSearchParams(window.location.search);
-      const authCode = urlParams.get('code');
-      
-      logAuthEvent('auth_parameters', { 
-        hasAuthCode: !!authCode,
-        urlParams: Object.fromEntries(urlParams.entries())
-      });
-      
-      // For iOS devices, try a slightly different approach
-      if (isIOS()) {
-        logAuthEvent('ios_specific_flow_started');
-        
-        try {
-          // First check if we already have a session
-          const { data: sessionData } = await supabase.auth.getSession();
-          
-          if (sessionData?.session) {
-            logAuthEvent('ios_existing_session_found', {
-              userId: sessionData.session.user.id
-            });
-            handleSuccessfulLogin(sessionData.session.user);
-            return;
-          }
-          
-          // If no session but we have an auth code, exchange it
-          if (authCode) {
-            // Exchange auth code for session with exact URL from the browser
-            const url = window.location.href;
-            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
-            logAuthEvent('ios_code_exchange_result', data, exchangeError);
-            
-            if (!exchangeError && data?.session) {
-              handleSuccessfulLogin(data.session.user);
-              return;
-            } else if (exchangeError) {
-              logAuthEvent('ios_exchange_error', { message: exchangeError.message });
-              throw exchangeError;
-            }
-          } else {
-            // No auth code and no session, this is a problem
-            throw new Error('No authorization code found in URL and no existing session');
-          }
-        } catch (iosExchangeError) {
-          logAuthEvent('ios_exchange_exception', {}, iosExchangeError);
-          
-          // For iOS, try the session check one more time as a last resort
-          try {
-            const { data: lastSessionCheck } = await supabase.auth.getSession();
-            if (lastSessionCheck?.session) {
-              handleSuccessfulLogin(lastSessionCheck.session.user);
-              return;
-            }
-          } catch (e) {
-            // Ignore and continue to the standard flow
-          }
-        }
-      }
 
-      // Standard flow - exchange code for session if we have a code
-      if (authCode) {
-        logAuthEvent('standard_code_exchange_attempt');
-        
-        // Try with the full URL
-        const url = window.location.href;
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(url);
-        
-        if (exchangeError) {
-          logAuthEvent('code_exchange_error', { message: exchangeError.message });
-          
-          // If we've tried too many times, give up
-          if (retryCount >= 2) {
-            throw exchangeError;
-          }
-          
-          // Otherwise retry
-          setRetryCount(prev => prev + 1);
-          authProcessedRef.current = false;
-          
-          // Slight delay before retry
-          setTimeout(() => {
-            handleAuthCallbackRef.current?.();
-          }, 1500);
-          return;
-        }
-        
-        if (data?.session) {
-          logAuthEvent('successful_session_exchange', { userId: data.session.user.id });
-          handleSuccessfulLogin(data.session.user);
-          return;
-        } else {
-          throw new Error('No session data returned after code exchange');
-        }
+    try {
+      logAuthEvent('auth_callback_started');
+      
+      // Handle auth callback
+      const { data, error: authError } = await supabase.auth.getSession();
+      
+      if (authError) {
+        logAuthEvent('auth_callback_error', { error: authError.message });
+        throw authError;
+      }
+      
+      if (data?.session) {
+        // Success! We have a session
+        handleSuccessfulLogin(data.session.user);
       } else {
-        // No auth code, try to see if we already have a session anyway
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData?.session) {
-          logAuthEvent('session_found_without_code', {
-            userId: sessionData.session.user.id
-          });
-          handleSuccessfulLogin(sessionData.session.user);
-          return;
+        // If we don't have the URL code parameter or session, check the URL hash
+        // This happens with iOS redirects sometimes
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          logAuthEvent('processing_fragment_redirect');
+          
+          try {
+            // Try to exchange the access token for a session
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            
+            if (accessToken) {
+              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: hashParams.get('refresh_token') || '',
+              });
+              
+              if (sessionError) throw sessionError;
+              
+              if (sessionData?.session?.user) {
+                handleSuccessfulLogin(sessionData.session.user);
+                return;
+              }
+            }
+          } catch (hashError) {
+            console.error('Error processing hash redirect:', hashError);
+            logAuthEvent('hash_redirect_error', { error: String(hashError) });
+          }
+        }
+        
+        // If still no session, try to parse URL params which may have the auth code
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        
+        if (code) {
+          logAuthEvent('processing_code_redirect', { code_length: code.length });
+          
+          // Exchange the code for a session
+          try {
+            const { data: sessionData, error: exchangeError } = 
+              await supabase.auth.exchangeCodeForSession(code);
+              
+            if (exchangeError) throw exchangeError;
+            
+            if (sessionData?.session?.user) {
+              handleSuccessfulLogin(sessionData.session.user);
+              return;
+            }
+          } catch (exchangeError: any) {
+            console.error('Error exchanging code for session:', exchangeError);
+            logAuthEvent('exchange_code_error', { error: exchangeError.message });
+            
+            if (retryCount < 2) {
+              // Try one more time after a delay
+              setRetryCount(prevCount => prevCount + 1);
+              authProcessedRef.current = false;
+              setTimeout(() => {
+                handleAuthCallbackRef.current?.();
+              }, 1000);
+              return;
+            }
+            
+            throw new Error(`Failed to exchange auth code: ${exchangeError.message}`);
+          }
         } else {
-          throw new Error('No authorization code found in URL');
+          // No code parameter found
+          logAuthEvent('no_code_parameter');
+          throw new Error('No authentication code found in URL');
         }
       }
     } catch (err: any) {
-      logAuthEvent('callback_exception', {}, err);
-      setError(err.message || 'An unexpected error occurred');
-      
-      // If we got an error but might have a session, check once more
-      try {
-        const { data: finalSessionCheck } = await supabase.auth.getSession();
-        if (finalSessionCheck?.session) {
-          // Even though we had an error, we found a session, so proceed
-          handleSuccessfulLogin(finalSessionCheck.session.user);
-          return;
-        }
-      } catch (e) {
-        // Ignore this error, we've already set an error message
-      }
-    } finally {
-      setLoading(retryCount < 2);  // Only show loading if we're still retrying
+      console.error('Authentication error:', err);
+      setError(err?.message || 'An unexpected authentication error occurred');
+      setLoading(false);
     }
   };
-
-  // Listen for events from the auth helper
+  
   useEffect(() => {
-    const handleTokensStored = (event: any) => {
-      logAuthEvent('tokens_stored_by_helper', event.detail);
-      if (!authProcessedRef.current) {
-        handleAuthCallbackRef.current?.();
-      }
-    };
-
-    window.addEventListener('auth_tokens_stored', handleTokensStored);
+    // Only run the authentication logic on the client side
+    if (!isMounted) return;
     
-    return () => {
-      window.removeEventListener('auth_tokens_stored', handleTokensStored);
-    };
-  }, []);
-
-  useEffect(() => {
     // Start the auth process
     handleAuthCallbackRef.current?.();
-  }, [navigate, toast, retryCount]);
+    
+    // Return a cleanup function
+    return () => {
+      authProcessedRef.current = true;
+    };
+  }, [isMounted]);
     
   const handleSuccessfulLogin = (user: any) => {
     logAuthEvent('authentication_success', { userId: user.id });
     
-    toast({
-      title: 'Success!',
-      description: 'You have successfully signed in.',
-    });
+    // Don't show toast notification as we're disabling all toasts
     
     // Redirect to the dashboard
     setTimeout(() => {
@@ -275,6 +200,20 @@ const AuthCallback = () => {
     
     navigate('/auth/login');
   };
+
+  // If not mounted or waiting for client-side JS, show a simplified loading screen
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="space-y-4">
+            <div className="animate-spin w-12 h-12 border-4 border-[#7B61FF] border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-lg font-medium text-gray-700">Initializing...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -314,8 +253,8 @@ const AuthCallback = () => {
             <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <h2 className="text-xl font-semibold text-gray-800">Successfully Authenticated</h2>
-            <p className="text-gray-600">Redirecting you to the dashboard...</p>
+            <h2 className="text-xl font-semibold">Authentication Successful</h2>
+            <p className="text-gray-600">You are now signed in. Redirecting...</p>
           </div>
         )}
       </div>

@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <motion.div 
-        className="max-w-md mx-auto bg-background min-h-screen pb-24"
+        className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
         initial="hidden"
         animate="visible"
         variants={containerVariants}

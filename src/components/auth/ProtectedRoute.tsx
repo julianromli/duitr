@@ -10,17 +10,6 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication required',
-        description: 'Please sign in to access this page',
-      });
-    }
-  }, [isLoading, user, toast]);
 
   if (isLoading) {
     // Show loading state
@@ -35,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    // Redirect to login page if not authenticated
+    // Redirect to login page if not authenticated without showing toast
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
