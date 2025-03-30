@@ -1,15 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { FaGoogle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
-import AppLogo from '@/components/shared/Logo';
+import { SignupContent } from '@/components/auth/SignupContent';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -17,9 +12,14 @@ const SignUp = () => {
   const [username, setUsername] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,14 +50,14 @@ const SignUp = () => {
       if (result.success) {
         toast({
           title: 'Account created',
-          description: 'Your account has been created successfully.',
+          description: 'Your account has been created successfully. Please check your email to verify.',
         });
-        navigate('/');
+        navigate('/login');
       } else {
         toast({
           variant: 'destructive',
           title: 'Sign up failed',
-          description: result.message,
+          description: result.message || 'An unknown error occurred',
         });
       }
     } catch (error: any) {
@@ -72,18 +72,19 @@ const SignUp = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    let googleSignInSuccess = false;
     try {
       setIsSubmitting(true);
       const result = await signInWithGoogle();
-      
-      if (!result.success) {
+      googleSignInSuccess = !!(result && result.success);
+
+      if (result && !result.success) {
         toast({
           variant: 'destructive',
           title: 'Sign up failed',
-          description: result.message,
+          description: result.message || 'An unknown error occurred during Google sign-up',
         });
       }
-      // If successful, user will be redirected to Google
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -91,7 +92,9 @@ const SignUp = () => {
         description: error.message || 'An unexpected error occurred',
       });
     } finally {
-      setIsSubmitting(false);
+      if (!googleSignInSuccess) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -115,157 +118,87 @@ const SignUp = () => {
     }
   };
 
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <div className="p-6 flex items-start">
+          <span className="p-1 rounded-full opacity-50">
+            <ChevronLeft size={24} />
+          </span>
+        </div>
+        <div className="flex-1 flex flex-col p-6 pt-0 items-center justify-center">
+          <div className="w-full max-w-sm space-y-6 animate-pulse">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-muted"></div>
+              <div className="h-8 w-56 bg-muted rounded"></div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-10 w-full bg-muted rounded-full"></div>
+              <div className="h-4 w-20 bg-muted rounded"></div>
+              <div className="h-10 w-full bg-muted rounded"></div>
+              <div className="h-4 w-20 bg-muted rounded"></div>
+              <div className="h-10 w-full bg-muted rounded"></div>
+              <div className="h-4 w-20 bg-muted rounded"></div>
+              <div className="h-10 w-full bg-muted rounded"></div>
+              <div className="flex items-start space-x-2 pt-2">
+                <div className="h-4 w-4 bg-muted rounded"></div>
+                <div className="space-y-1.5">
+                  <div className="h-4 w-48 bg-muted rounded"></div>
+                  <div className="h-3 w-64 bg-muted rounded"></div>
+                </div>
+              </div>
+              <div className="h-10 w-full bg-muted rounded-full pt-4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
-      {/* Header with back button */}
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <motion.div 
         className="p-6 flex items-start"
         variants={itemVariants}
         initial="hidden"
         animate="visible"
       >
-        <button 
-          onClick={() => navigate(-1)} 
-          className="p-1 text-white rounded-full"
-        >
-          <ChevronLeft size={24} />
-        </button>
       </motion.div>
       
       <motion.div 
-        className="flex-1 flex flex-col p-6 pt-0"
+        className="flex-1 flex flex-col p-6 pt-0 items-center justify-center"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        {/* Logo and Title */}
-        <motion.div 
-          className="mb-12 flex flex-col items-center"
-          variants={itemVariants}
-        >
-          <AppLogo size={64} className="mb-4" withText={false} />
-          <h1 className="text-3xl font-bold text-white">Sign up for free</h1>
-        </motion.div>
-        
-        {/* Social Login Buttons */}
-        <motion.div 
-          className="space-y-3 mb-8"
-          variants={itemVariants}
-        >
-          <Button 
-            variant="outline" 
-            className="w-full py-6 border border-[#292929] bg-transparent text-white flex items-center justify-center gap-3 rounded-full hover:bg-[#292929]"
-            onClick={handleGoogleSignUp}
+        <div className="w-full max-w-sm">
+          <motion.div 
+            className="mb-10 flex flex-col items-center"
+            variants={itemVariants}
           >
-            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-              <FaGoogle className="h-4 w-4 text-black" />
-            </div>
-            <span className="font-medium">Sign up with Google</span>
-          </Button>
-        </motion.div>
-        
-        {/* Divider */}
-        <motion.div 
-          className="relative mb-8" 
-          variants={itemVariants}
-        >
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#292929]"></div>
-          </div>
-          <div className="relative flex justify-center">
-            <span className="px-4 bg-[#0D0D0D] text-[#868686]">or</span>
-          </div>
-        </motion.div>
-        
-        {/* Email Sign Up Form */}
-        <motion.form 
-          onSubmit={handleEmailSignUp}
-          className="space-y-6"
-          variants={itemVariants}
-        >
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-white mb-2 block">What's your email?</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="username" className="text-white mb-2 block">Create a username</Label>
-              <Input
-                id="username"
-                placeholder="Create a username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password" className="text-white mb-2 block">Create a password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Create a password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
-              />
-            </div>
-            
-            <div className="flex items-start space-x-2 pt-2">
-              <Checkbox 
-                id="terms" 
-                checked={agreedToTerms}
-                onCheckedChange={(checked) => {
-                  setAgreedToTerms(checked as boolean);
-                }}
-                className="bg-[#292929] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
-              />
-              <label
-                htmlFor="terms"
-                className="text-[#868686] text-sm leading-relaxed cursor-pointer"
-              >
-                I agree to the <Link to="/terms" className="text-white hover:underline">Terms and Conditions</Link> and <Link to="/privacy" className="text-white hover:underline">Privacy Policy</Link>.
-              </label>
-            </div>
-            
-            <div className="pt-4">
-              <Button 
-                type="submit" 
-                className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full" 
-                disabled={isSubmitting}
-              >
-                Sign Up
-              </Button>
-            </div>
-          </div>
-        </motion.form>
-        
-        {/* Login Link */}
-        <motion.div 
-          className="mt-auto pt-8 border-t border-[#292929] text-center"
-          variants={itemVariants}
-        >
-          <p className="text-[#868686]">
-            Already have an account?
-          </p>
-          <Link 
-            to="/auth/login" 
-            className="block w-full border border-[#868686] text-white py-3 px-6 rounded-full mt-4 font-medium hover:border-white"
-          >
-            Log in
-          </Link>
-        </motion.div>
+            <img src="/duitr-logo.svg" alt="Duitr Logo" className="h-16 w-16 mb-4" />
+            <h1 className="text-3xl font-semibold text-foreground">Create your account</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+Enter your details below to get started.
+            </p>
+          </motion.div>
+          
+          <motion.div variants={itemVariants} className="w-full">
+            <SignupContent
+              username={username}
+              setUsername={setUsername}
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              agreedToTerms={agreedToTerms}
+              setAgreedToTerms={setAgreedToTerms}
+              isSubmitting={isSubmitting}
+              handleEmailSignUp={handleEmailSignUp}
+              handleGoogleSignUp={handleGoogleSignUp}
+            />
+          </motion.div>
+        </div>
       </motion.div>
     </div>
   );

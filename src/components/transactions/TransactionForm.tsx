@@ -10,12 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useTranslation } from 'react-i18next';
+import Transactions from '@/pages/Transactions';
 
 const TransactionForm: React.FC = () => {
   const { wallets, addTransaction, addTransfer } = useFinance();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
@@ -159,33 +161,33 @@ const TransactionForm: React.FC = () => {
       <DialogContent className="bg-[#1A1A1A] border-0 text-white">
         <DialogHeader className="flex flex-row justify-between items-center">
           <DialogTitle className="text-xl font-bold">
-            {formData.type === 'transfer' ? 'Add Transfer' : 'Add Transaction'}
+            {formData.type === 'transfer' ? t('transactions.transfer') : t('transactions.add_transaction')}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="type" className="text-[#C6FE1E] mb-2 block">Transaction Type</Label>
+            <Label htmlFor="type" className="text-[#C6FE1E] mb-2 block">{t('transactions.transaction_type')}</Label>
             <div className="grid grid-cols-3 gap-2">
               <button 
                 type="button"
                 className={`py-2 px-4 rounded-full text-center ${formData.type === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
                 onClick={() => setFormData({ ...formData, type: 'income' })}
               >
-                Income
+                {t('transactions.income')}
               </button>
               <button 
                 type="button"
                 className={`py-2 px-4 rounded-full text-center ${formData.type === 'expense' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
                 onClick={() => setFormData({ ...formData, type: 'expense' })}
               >
-                Expense
+                {t('transactions.expense')}
               </button>
               <button 
                 type="button"
                 className={`py-2 px-4 rounded-full text-center ${formData.type === 'transfer' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
                 onClick={() => setFormData({ ...formData, type: 'transfer', category: '' })}
               >
-                Transfer
+                {t('transactions.transfer')}
               </button>
             </div>
           </div>
@@ -194,13 +196,13 @@ const TransactionForm: React.FC = () => {
             // Transfer form fields
             <>
               <div className="space-y-2">
-                <Label htmlFor="walletId" className="text-[#868686]">Origin Account</Label>
+                <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.from_account')}</Label>
                 <Select
                   value={formData.walletId}
                   onValueChange={(value) => setFormData({ ...formData, walletId: value })}
                 >
                   <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder="Select origin account" />
+                    <SelectValue placeholder={t('transactions.from_account')} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#242425] border-0 text-white">
                     {wallets.map((wallet) => (
@@ -213,13 +215,13 @@ const TransactionForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="destinationWalletId" className="text-[#868686]">Destination Account</Label>
+                <Label htmlFor="destinationWalletId" className="text-[#868686]">{t('transactions.to_account')}</Label>
                 <Select
                   value={formData.destinationWalletId}
                   onValueChange={(value) => setFormData({ ...formData, destinationWalletId: value })}
                 >
                   <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder="Select destination account" />
+                    <SelectValue placeholder={t('transactions.to_account')} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#242425] border-0 text-white">
                     {wallets.map((wallet) => (
@@ -237,7 +239,7 @@ const TransactionForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="amount" className="text-[#868686]">Transfer Amount</Label>
+                <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
                 <Input
                   id="amount"
                   name="amount"
@@ -252,7 +254,7 @@ const TransactionForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="fee" className="text-[#868686]">Admin Fee (if any)</Label>
+                <Label htmlFor="fee" className="text-[#868686]">{t('transactions.fee')}</Label>
                 <Input
                   id="fee"
                   name="fee"
@@ -269,7 +271,7 @@ const TransactionForm: React.FC = () => {
             // Regular transaction fields
             <>
               <div className="space-y-2">
-                <Label htmlFor="amount" className="text-[#868686]">Amount</Label>
+                <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
                 <Input
                   id="amount"
                   name="amount"
@@ -284,13 +286,13 @@ const TransactionForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-[#868686]">Category</Label>
+                <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t('transactions.category')} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#242425] border-0 text-white">
                     {categories.map((category) => (
@@ -303,13 +305,13 @@ const TransactionForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="walletId" className="text-[#868686]">Account</Label>
+                <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.account')}</Label>
                 <Select
                   value={formData.walletId}
                   onValueChange={(value) => setFormData({ ...formData, walletId: value })}
                 >
                   <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder="Select account" />
+                    <SelectValue placeholder={t('transactions.account')} />
                   </SelectTrigger>
                   <SelectContent className="bg-[#242425] border-0 text-white">
                     {wallets.map((wallet) => (
@@ -324,11 +326,11 @@ const TransactionForm: React.FC = () => {
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">Description</Label>
+            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
             <Input
               id="description"
               name="description"
-              placeholder="Enter description"
+              placeholder={t('transactions.enter_description')}
               value={formData.description}
               onChange={handleChange}
               required={formData.type !== 'transfer'}
@@ -337,7 +339,7 @@ const TransactionForm: React.FC = () => {
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[#868686]">Date</Label>
+            <Label className="text-[#868686]">{t('transactions.date')}</Label>
             <DatePicker 
               date={selectedDate}
               setDate={setSelectedDate}
@@ -345,7 +347,7 @@ const TransactionForm: React.FC = () => {
           </div>
           
           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00] font-semibold border-0">
-            {formData.type === 'transfer' ? 'Add Transfer' : 'Add Transaction'}
+            {formData.type === 'transfer' ? t('transactions.add_transfer') : t('transactions.add_transaction')}
           </Button>
         </form>
       </DialogContent>
