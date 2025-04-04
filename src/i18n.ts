@@ -40,7 +40,7 @@ i18n
         translation: idTranslation
       }
     },
-    fallbackLng: 'en',
+    fallbackLng: 'id', // Set Indonesian as the default language
     // Allow only supported languages
     supportedLngs: VALID_LANGUAGES,
     // If a language is detected that is not in supportedLngs, use fallbackLng
@@ -51,7 +51,7 @@ i18n
     },
     detection: {
       // Order of detection methods
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage', 'querystring', 'navigator'],
       // Key to use in localStorage
       lookupLocalStorage: 'preferredLanguage',
       // Cache language detection

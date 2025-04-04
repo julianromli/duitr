@@ -114,7 +114,10 @@
     "delete_success": "Transaksi berhasil dihapus",
     "search": "Cari transaksi...",
     "history": "Riwayat Transaksi",
-    "view_all": "Lihat Semua"
+    "view_all": "Lihat Semua",
+    "details": "Detail Transaksi",
+    "update_success": "Transaksi berhasil diperbarui",
+    "update_error": "Gagal memperbarui transaksi"
   },
   "budgets": {
     "title": "Anggaran",
@@ -145,16 +148,16 @@
     "monthly": "Bulanan",
     "yearly": "Tahunan",
     "categories": {
-      "groceries": "Belanjaan",
+      "groceries": "Kebutuhan Rumah",
       "dining": "Makan di Luar",
       "transportation": "Transportasi",
       "entertainment": "Hiburan",
-      "utilities": "Tagihan Utilitas",
+      "utilities": "Berlangganan",
       "housing": "Perumahan",
       "healthcare": "Kesehatan",
       "education": "Pendidikan",
       "shopping": "Belanja",
-      "personal_care": "Perawatan Pribadi",
+      "personal_care": "Personal Care",
       "travel": "Perjalanan",
       "gifts": "Hadiah",
       "other": "Lainnya"

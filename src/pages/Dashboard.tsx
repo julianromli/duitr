@@ -324,7 +324,13 @@ const Dashboard: React.FC = () => {
                       <p className="text-xs text-[#868686]">{t(`transactions.${transaction.type.toLowerCase()}`)}</p>
                     </div>
                   </div>
-                  <p className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : 'text-white'}`}>
+                  <p className={`font-medium ${
+                    transaction.type === 'income' 
+                      ? 'text-[#C6FE1E]' 
+                      : transaction.type === 'expense' 
+                        ? 'text-red-500' 
+                        : 'text-white'
+                  }`}>
                     {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
                   </p>
                 </motion.div>

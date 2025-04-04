@@ -17,7 +17,11 @@ import {
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { motion } from 'framer-motion';
 
-const TransactionList: React.FC = () => {
+interface TransactionListProps {
+  onTransactionClick?: (id: string) => void;
+}
+
+const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
   const { t } = useTranslation();
   const { transactions, formatCurrency, deleteTransaction } = useFinance();
   const { toast } = useToast();
@@ -70,6 +74,12 @@ const TransactionList: React.FC = () => {
     }
   };
 
+  const handleClick = (transaction: any) => {
+    if (onTransactionClick) {
+      onTransactionClick(transaction.id);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="relative w-full mb-6">
@@ -115,6 +125,7 @@ const TransactionList: React.FC = () => {
                 transition={{ delay: index * 0.05 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => handleClick(transaction)}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
@@ -122,12 +133,20 @@ const TransactionList: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-medium">{transaction.category}</p>
-                    <p className="text-xs text-[#868686]">{transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                    <p className="text-xs text-[#868686]">
+                      {t(`transactions.${transaction.type}`)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : 'text-white'}`}>
+                    <p className={`font-medium ${
+                      transaction.type === 'income' 
+                        ? 'text-[#C6FE1E]' 
+                        : transaction.type === 'expense' 
+                          ? 'text-red-500' 
+                          : 'text-white'
+                    }`}>
                       {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
                     </p>
                     <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
