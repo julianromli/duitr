@@ -111,7 +111,11 @@
     "delete_success": "Transaction deleted successfully",
     "search": "Search transactions...",
     "history": "Transactions History",
-    "view_all": "View All"
+    "view_all": "View All",
+    "details": "Transaction Details",
+    "type": "Type",
+    "update_success": "Transaction updated successfully",
+    "update_error": "Failed to update transaction"
   },
   "budgets": {
     "title": "Budget Management",
@@ -134,7 +138,7 @@
       "dining": "Dining",
       "transportation": "Transportation",
       "entertainment": "Entertainment",
-      "utilities": "Utilities",
+      "utilities": "Subscription",
       "housing": "Housing",
       "healthcare": "Healthcare",
       "education": "Education",

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TransactionList from '@/components/transactions/TransactionList';
 import TransactionForm from '@/components/transactions/TransactionForm';
@@ -6,10 +6,13 @@ import ExportButton from '@/components/export/ExportButton';
 import { ArrowLeftRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import TransactionDetail from '@/components/transactions/TransactionDetail';
 
 const Transactions: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // Animation variants
   const containerVariants = {
@@ -30,6 +33,11 @@ const Transactions: React.FC = () => {
       opacity: 1,
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
+  };
+
+  const handleTransactionClick = (id: string) => {
+    setSelectedTransactionId(id);
+    setIsDetailOpen(true);
   };
   
   return (
@@ -56,7 +64,14 @@ const Transactions: React.FC = () => {
           </div>
         </motion.div>
         
-        <TransactionList />
+        <TransactionList onTransactionClick={handleTransactionClick} />
+        
+        {/* Transaction Detail Dialog */}
+        <TransactionDetail 
+          transactionId={selectedTransactionId}
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+        />
       </div>
     </motion.div>
   );

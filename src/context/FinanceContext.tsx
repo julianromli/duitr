@@ -52,6 +52,7 @@ interface FinanceContextType {
   isLoading: boolean;
   updateCurrency: () => void;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => Promise<void>;
+  updateTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addBudget: (budget: Omit<Budget, 'id' | 'userId'>) => Promise<void>;
   updateBudget: (budget: Budget) => Promise<void>;
@@ -275,6 +276,137 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         title: 'Failed to add transaction',
         description: error.message || 'An unexpected error occurred',
       });
+    }
+  };
+
+  // Update transaction
+  const updateTransaction = async (updatedTransaction: Transaction) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication required',
+        description: 'You must be logged in to update transactions',
+      });
+      return;
+    }
+    
+    try {
+      // Find old transaction for comparison
+      const oldTransaction = transactions.find(t => t.id === updatedTransaction.id);
+      if (!oldTransaction) {
+        throw new Error('Transaction not found');
+      }
+      
+      // Prepare data for Supabase
+      const transactionData = {
+        amount: updatedTransaction.amount,
+        category: updatedTransaction.category,
+        description: updatedTransaction.description,
+        date: updatedTransaction.date,
+        type: updatedTransaction.type,
+        wallet_id: updatedTransaction.walletId,
+      };
+      
+      // Update transaction in Supabase
+      const { error } = await supabase
+        .from('transactions')
+        .update(transactionData)
+        .eq('id', updatedTransaction.id);
+        
+      if (error) throw error;
+      
+      // Update wallet balance if amount or type changed
+      if (
+        oldTransaction.amount !== updatedTransaction.amount || 
+        oldTransaction.type !== updatedTransaction.type ||
+        oldTransaction.walletId !== updatedTransaction.walletId
+      ) {
+        // Find wallets
+        const oldWallet = wallets.find(w => w.id === oldTransaction.walletId);
+        const newWallet = wallets.find(w => w.id === updatedTransaction.walletId);
+        
+        if (oldWallet) {
+          // Revert the old transaction effect on the old wallet
+          let updatedOldWalletBalance = oldWallet.balance;
+          if (oldTransaction.type === 'income') {
+            updatedOldWalletBalance -= oldTransaction.amount;
+          } else if (oldTransaction.type === 'expense') {
+            updatedOldWalletBalance += oldTransaction.amount;
+          }
+          
+          // Apply the updated transaction effect to the wallet
+          // If the wallet is different, update both wallets
+          if (oldTransaction.walletId === updatedTransaction.walletId) {
+            if (updatedTransaction.type === 'income') {
+              updatedOldWalletBalance += updatedTransaction.amount;
+            } else if (updatedTransaction.type === 'expense') {
+              updatedOldWalletBalance -= updatedTransaction.amount;
+            }
+            
+            // Update wallet in Supabase
+            const { error: walletError } = await supabase
+              .from('wallets')
+              .update({ balance: updatedOldWalletBalance })
+              .eq('id', oldWallet.id);
+              
+            if (walletError) throw walletError;
+            
+            // Update wallets state
+            setWallets(wallets.map(w => 
+              w.id === oldWallet.id 
+                ? { ...w, balance: updatedOldWalletBalance } 
+                : w
+            ));
+          } else if (newWallet) {
+            // Update old wallet
+            const { error: oldWalletError } = await supabase
+              .from('wallets')
+              .update({ balance: updatedOldWalletBalance })
+              .eq('id', oldWallet.id);
+              
+            if (oldWalletError) throw oldWalletError;
+            
+            // Update new wallet
+            let updatedNewWalletBalance = newWallet.balance;
+            if (updatedTransaction.type === 'income') {
+              updatedNewWalletBalance += updatedTransaction.amount;
+            } else if (updatedTransaction.type === 'expense') {
+              updatedNewWalletBalance -= updatedTransaction.amount;
+            }
+            
+            const { error: newWalletError } = await supabase
+              .from('wallets')
+              .update({ balance: updatedNewWalletBalance })
+              .eq('id', newWallet.id);
+              
+            if (newWalletError) throw newWalletError;
+            
+            // Update wallets state
+            setWallets(wallets.map(w => {
+              if (w.id === oldWallet.id) {
+                return { ...w, balance: updatedOldWalletBalance };
+              }
+              if (w.id === newWallet.id) {
+                return { ...w, balance: updatedNewWalletBalance };
+              }
+              return w;
+            }));
+          }
+        }
+      }
+      
+      // Update transaction state
+      setTransactions(transactions.map(t => 
+        t.id === updatedTransaction.id ? updatedTransaction : t
+      ));
+    } catch (error: any) {
+      console.error('Error updating transaction:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to update transaction',
+        description: error.message || 'An unexpected error occurred',
+      });
+      throw error;
     }
   };
 
@@ -762,6 +894,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         isLoading,
         updateCurrency,
         addTransaction,
+        updateTransaction,
         deleteTransaction,
         addBudget,
         updateBudget,
