@@ -180,8 +180,8 @@ const Settings: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         variant: 'destructive',
         title: t('settings.fileTooLarge'),

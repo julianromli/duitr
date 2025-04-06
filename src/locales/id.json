@@ -199,7 +199,7 @@
       "id": "Bahasa Indonesia"
     },
     "fileTooLarge": "File terlalu besar",
-    "profileImageSizeLimit": "Gambar profil harus kurang dari 2MB",
+    "profileImageSizeLimit": "Gambar profil harus kurang dari 10MB",
     "invalidFileType": "Jenis file tidak valid",
     "pleaseUploadImage": "Silakan unggah file gambar",
     "profileImageUpdated": "Gambar profil diperbarui",
