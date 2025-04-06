@@ -22,6 +22,8 @@ import {
   Settings as SettingsIcon, 
   Languages,
   Bell,
+  X,
+  ZoomIn
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFinance } from '@/context/FinanceContext';
@@ -29,7 +31,8 @@ import LanguageSwitcher from '@/components/settings/LanguageSwitcher';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 
 // Currency data - Only keep IDR
 const currencies = [
@@ -64,6 +67,7 @@ const Settings: React.FC = () => {
     username: user?.user_metadata?.name || user?.email?.split('@')[0] || '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isImageViewOpen, setIsImageViewOpen] = useState(false);
 
   // Load profile image and data
   useEffect(() => {
@@ -353,6 +357,13 @@ const Settings: React.FC = () => {
     }
   };
 
+  // Handle profile image click
+  const handleProfileImageClick = () => {
+    if (profileImage) {
+      setIsImageViewOpen(true);
+    }
+  };
+
   return (
     <motion.div 
       className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
@@ -380,15 +391,26 @@ const Settings: React.FC = () => {
           variants={itemVariants}
         >
           <div className="relative mb-4">
-            <Avatar className="h-24 w-24 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#C6FE1E]">
-              {profileImage ? (
-                <AvatarImage src={profileImage} alt={userProfile.username} className="aspect-square object-cover w-full h-full" />
-              ) : (
-                <AvatarFallback className="bg-[#242425] text-[#C6FE1E] text-2xl flex items-center justify-center">
-                  {userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : 'U'}
-                </AvatarFallback>
+            <div 
+              className="relative cursor-pointer" 
+              onClick={handleProfileImageClick}
+              title={profileImage ? t('settings.viewProfileImage') : ''}
+            >
+              <Avatar className="h-24 w-24 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#C6FE1E]">
+                {profileImage ? (
+                  <AvatarImage src={profileImage} alt={userProfile.username} className="aspect-square object-cover w-full h-full" />
+                ) : (
+                  <AvatarFallback className="bg-[#242425] text-[#C6FE1E] text-2xl flex items-center justify-center">
+                    {userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              {profileImage && (
+                <div className="absolute bottom-0 left-0 bg-black/50 w-full p-1 flex justify-center rounded-b-full">
+                  <ZoomIn size={14} className="text-white" />
+                </div>
               )}
-            </Avatar>
+            </div>
             <motion.button 
               className="absolute bottom-0 right-0 bg-[#C6FE1E] text-[#0D0D0D] p-2 rounded-full"
               onClick={triggerFileInput}
@@ -410,6 +432,24 @@ const Settings: React.FC = () => {
           <h2 className="text-xl font-bold">{userProfile.username}</h2>
           <p className="text-[#868686]">{userProfile.email}</p>
         </motion.div>
+        
+        {/* Profile Image View Modal */}
+        <Dialog open={isImageViewOpen} onOpenChange={setIsImageViewOpen}>
+          <DialogContent className="bg-[#1A1A1A] border-0 p-0 overflow-hidden max-w-md w-full">
+            <div className="relative">
+              <DialogClose className="absolute right-3 top-3 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70">
+                <X size={18} />
+              </DialogClose>
+              <div className="w-full max-h-[80vh] overflow-hidden flex items-center justify-center">
+                <img 
+                  src={profileImage || ''} 
+                  alt={userProfile.username} 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         
         {/* Profile Tabs */}
         <Tabs defaultValue="account" className="w-full">

@@ -210,7 +210,8 @@
     "email": "Email",
     "saving": "Saving...",
     "saveProfile": "Save Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "viewProfileImage": "View profile image"
   },
   "export": {
     "title": "Export Financial Data",

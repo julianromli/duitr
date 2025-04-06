@@ -214,7 +214,8 @@
     "email": "Email",
     "saving": "Menyimpan...",
     "saveProfile": "Simpan Profil",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "viewProfileImage": "Lihat foto profil"
   },
   "export": {
     "title": "Ekspor Data Keuangan",
