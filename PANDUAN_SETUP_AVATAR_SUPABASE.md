@@ -10,7 +10,7 @@ Dokumen ini berisi panduan lengkap untuk mengatur penyimpanan foto profil (avata
 4. Isi informasi bucket:
    - **Name**: avatars
    - **Public bucket**: Centang opsi ini untuk memungkinkan akses publik 
-   - **File size limit**: 5 MB (opsional)
+   - **File size limit**: 10 MB (opsional)
    - **Allowed MIME types**: image/jpeg, image/png, image/gif, image/webp (opsional)
 5. Klik "Create bucket" untuk membuat bucket
 
@@ -85,7 +85,7 @@ Setelah semua langkah di atas selesai:
 
 ## Catatan Penting
 
-- Pastikan ukuran file tidak melebihi batas (sebaiknya di bawah 2MB)
+- Pastikan ukuran file tidak melebihi batas (sebaiknya di bawah 10MB)
 - Format file yang didukung: JPG, PNG, GIF, WEBP
 - Foto profil disimpan dengan nama file yang sama dengan UUID pengguna
 - Jika masih muncul error, pastikan untuk memeriksa log di browser console
