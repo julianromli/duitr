@@ -195,7 +195,7 @@
       "id": "Indonesian"
     },
     "fileTooLarge": "File too large",
-    "profileImageSizeLimit": "Profile image must be less than 2MB",
+    "profileImageSizeLimit": "Profile image must be less than 10MB",
     "invalidFileType": "Invalid file type",
     "pleaseUploadImage": "Please upload an image file",
     "profileImageUpdated": "Profile image updated",
