@@ -184,11 +184,11 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   });
   
   const monthlyIncome = monthlyTransactions
-    .filter(t => t.type === 'income')
+    .filter(t => t.type === 'income' && t.category !== 'Transfer')
     .reduce((sum, t) => sum + t.amount, 0);
     
   const monthlyExpense = monthlyTransactions
-    .filter(t => t.type === 'expense')
+    .filter(t => t.type === 'expense' && t.category !== 'Transfer')
     .reduce((sum, t) => sum + t.amount, 0);
 
   // Format currency function

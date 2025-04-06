@@ -74,7 +74,8 @@ const Statistics: React.FC = () => {
       return (
         transactionDate >= startDate && 
         transactionDate <= endDate && 
-        t.type === typeMapping[activeTab]
+        t.type === typeMapping[activeTab] &&
+        t.category !== 'Transfer' // Exclude wallet transfers
       );
     });
   };

@@ -15,7 +15,7 @@ BEGIN
             'avatars', 
             'avatars', 
             TRUE, 
-            5242880, -- 5MB limit
+            10485760, -- 10MB limit
             ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']::text[]
         );
         
@@ -25,7 +25,7 @@ BEGIN
         UPDATE storage.buckets
         SET 
             public = TRUE,
-            file_size_limit = 5242880, -- 5MB limit
+            file_size_limit = 10485760, -- 10MB limit
             allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']::text[]
         WHERE name = 'avatars';
         

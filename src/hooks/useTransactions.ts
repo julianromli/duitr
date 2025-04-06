@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
 
@@ -75,11 +74,11 @@ export const useTransactions = () => {
       });
       
       const income = monthTransactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'income' && t.category !== 'Transfer')
         .reduce((sum, t) => sum + t.amount, 0);
         
       const expense = monthTransactions
-        .filter(t => t.type === 'expense')
+        .filter(t => t.type === 'expense' && t.category !== 'Transfer')
         .reduce((sum, t) => sum + t.amount, 0);
       
       monthlyStats.push({
