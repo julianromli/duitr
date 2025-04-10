@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useId } from "react";
 import { FaGoogle } from 'react-icons/fa'; // Keep consistency with original Login page
+import { Loader2 } from 'lucide-react';
+import { logAuthEvent } from '@/utils/auth-logger';
 
 // Define props expected from the parent Login page
 interface LoginContentProps {
@@ -34,6 +36,11 @@ function LoginContent({
 }: LoginContentProps) {
   const id = useId();
 
+  const onGoogleSignInClick = async () => {
+    logAuthEvent('google_button_clicked');
+    await handleGoogleSignIn();
+  };
+
   return (
     <>
       {/* Google Sign In Button - Kept separate as in original design */}
@@ -41,13 +48,19 @@ function LoginContent({
        <Button
           variant="outline"
           className="w-full py-6 border border-border bg-background text-foreground flex items-center justify-center gap-3 rounded-full hover:bg-accent" // Use theme colors
-          onClick={handleGoogleSignIn}
+          onClick={onGoogleSignInClick}
           disabled={isSubmitting}
         >
-          <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center"> {/* Keep Google's branding style */}
-            <FaGoogle className="h-4 w-4 text-black" />
-          </div>
-          <span className="font-medium">Continue with Google</span>
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center"> {/* Keep Google's branding style */}
+              <FaGoogle className="h-4 w-4 text-black" />
+            </div>
+          )}
+          <span className="font-medium">
+            {isSubmitting ? 'Connecting to Google...' : 'Continue with Google'}
+          </span>
       </Button>
 
       {/* Divider */}
@@ -115,7 +128,14 @@ function LoginContent({
           // className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Signing In...' : 'Sign in'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing In...
+            </>
+          ) : (
+            'Sign in'
+          )}
         </Button>
 
         {/* Link to Sign Up */}

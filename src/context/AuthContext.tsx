@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, getSession, getCurrentUser } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { logAuthEvent } from '@/utils/auth-logger';
 
 interface AuthContextType {
   user: User | null;
@@ -24,13 +25,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
-        const { data } = await getSession();
+        const { data, error } = await getSession();
         
-        if (data.session?.user) {
+        if (error) {
+          logAuthEvent('session_initialization_error', {}, error);
+          console.error('Error checking authentication status:', error);
+        } else if (data.session?.user) {
+          logAuthEvent('session_initialized', { userId: data.session.user.id });
           setUser(data.session.user);
+        } else {
+          logAuthEvent('no_session_on_init');
         }
       } catch (error) {
-        console.error('Error checking authentication status:', error);
+        console.error('Exception during authentication status check:', error);
+        logAuthEvent('session_init_exception', {}, error);
       } finally {
         setIsLoading(false);
       }
@@ -40,14 +48,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Set up listener for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      logAuthEvent('auth_state_change', { 
+        event, 
+        userId: session?.user?.id,
+        hasUser: !!session?.user
+      });
+      
       console.log('Auth state change event:', event, session?.user?.id);
-      setUser(session?.user ?? null);
+      
+      // Handle specific auth events
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        if (session?.user) {
+          setUser(session.user);
+          
+          // For new users who just signed in with Google, show a welcome toast
+          if (event === 'SIGNED_IN') {
+            toast({
+              title: 'Welcome to Duitr!',
+              description: `You've successfully signed in with Google.`,
+            });
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Just update the user to make sure we have the latest data
+        if (session?.user) {
+          setUser(session.user);
+        }
+      }
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -104,8 +139,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     try {
+      logAuthEvent('auth_context_google_signin_start');
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
+      
+      // This will redirect to Google - just handle UI state and potential errors
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: import.meta.env.MODE === 'production'
@@ -115,14 +153,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
+        logAuthEvent('auth_context_google_signin_error', {}, error);
         return { success: false, message: error.message };
       }
       
+      logAuthEvent('auth_context_google_signin_redirect', { 
+        url: data?.url,
+        provider: data?.provider 
+      });
+      
       return { success: true, message: 'Redirecting to Google...' };
     } catch (error: any) {
+      logAuthEvent('auth_context_google_signin_exception', {}, error);
       return { success: false, message: error.message || 'An error occurred during Google sign in' };
     } finally {
-      setIsLoading(false);
+      // We don't set isLoading=false here because we're about to redirect
+      // It will be reset when we come back from Google in the auth callback
     }
   };
 

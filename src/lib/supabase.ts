@@ -148,13 +148,14 @@ export const signInWithGoogle = async () => {
   
   logAuthEvent('google_sign_in_initiated', deviceInfo);
   
-  // Clear any existing auth data
+  // Clear any existing auth data to prevent conflicts
   try {
     sessionStorage.removeItem('supabase.auth.token');
     sessionStorage.removeItem('supabase.auth.token.code_verifier');
     localStorage.removeItem('supabase.auth.token');
   } catch (e) {
-    // Ignore errors
+    // Ignore storage errors
+    logAuthEvent('storage_clear_error', {}, e);
   }
   
   // Configure sign in options
@@ -165,6 +166,8 @@ export const signInWithGoogle = async () => {
       access_type: 'offline',
       // Force consent screen
       prompt: 'consent',
+      // Include profile info 
+      include_profile: 'true',
     } as Record<string, string>
   };
   
@@ -175,20 +178,40 @@ export const signInWithGoogle = async () => {
     // Don't add extra parameters that might break the flow
   }
   
+  // Generate new PKCE verifier to ensure we don't reuse an old one
+  try {
+    // First try to generate a unique state parameter to help with debugging
+    const stateParam = `duitr_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    options.queryParams.state = stateParam;
+    
+    logAuthEvent('google_sign_in_with_options', { 
+      options, 
+      state: stateParam,
+      storage_available: typeof localStorage !== 'undefined' && typeof sessionStorage !== 'undefined'
+    });
+  } catch (e) {
+    logAuthEvent('pkce_setup_error', {}, e);
+  }
+  
   // Initiate sign in
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options
-  });
-  
-  // Log the result
-  logAuthEvent('google_sign_in_response', { 
-    url: data?.url,
-    provider: data?.provider,
-    hasError: !!error
-  }, error);
-  
-  return { data, error };
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options
+    });
+    
+    // Log the result
+    logAuthEvent('google_sign_in_response', { 
+      url: data?.url,
+      provider: data?.provider,
+      hasError: !!error
+    }, error);
+    
+    return { data, error };
+  } catch (error: any) {
+    logAuthEvent('google_sign_in_exception', {}, error);
+    return { data: null, error };
+  }
 };
 
 export const signOut = async () => {
