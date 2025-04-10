@@ -16,7 +16,7 @@ interface TransferFormProps {
 }
 
 const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
-  const { wallets, addTransfer } = useFinance();
+  const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
   const { t } = useTranslation();
   
@@ -69,13 +69,15 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     const dateString = selectedDate.toISOString().split('T')[0];
     
     // Add transaction
-    addTransfer({
+    addTransaction({
       amount: parseFloat(formData.amount),
       date: dateString,
       description: formData.description || t('transactions.transfer'),
-      fromWalletId: formData.fromWalletId,
-      toWalletId: formData.toWalletId,
-      fee: parseFloat(formData.fee || '0')
+      type: 'transfer',
+      walletId: formData.fromWalletId,
+      destinationWalletId: formData.toWalletId,
+      fee: parseFloat(formData.fee || '0'),
+      category: 'Transfer'
     });
     
     // Reset form
@@ -100,27 +102,27 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white dark:bg-gray-800 dark:text-gray-200">
         <DialogHeader className="flex flex-row justify-between items-center">
           <DialogTitle className="text-xl font-bold">{t('transactions.transfer')}</DialogTitle>
-          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
+          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100">
             <X size={16} />
           </DialogClose>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="fromWalletId" className="text-[#868686]">{t('transactions.from_account')}</Label>
+            <Label htmlFor="fromWalletId" className="text-[#868686] dark:text-gray-400">{t('transactions.from_account')}</Label>
             <Select
               value={formData.fromWalletId}
               onValueChange={(value) => setFormData({ ...formData, fromWalletId: value })}
             >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
+              <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
                 <SelectValue placeholder={t('transactions.select_source')} />
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
+              <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
                 {wallets.map((wallet) => (
-                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
+                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">
                     {wallet.name}
                   </SelectItem>
                 ))}
@@ -129,21 +131,21 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="toWalletId" className="text-[#868686]">{t('transactions.to_account')}</Label>
+            <Label htmlFor="toWalletId" className="text-[#868686] dark:text-gray-400">{t('transactions.to_account')}</Label>
             <Select
               value={formData.toWalletId}
               onValueChange={(value) => setFormData({ ...formData, toWalletId: value })}
             >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
+              <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
                 <SelectValue placeholder={t('transactions.select_destination')} />
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
+              <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
                 {wallets.map((wallet) => (
                   <SelectItem 
                     key={wallet.id} 
                     value={wallet.id}
                     disabled={wallet.id === formData.fromWalletId}
-                    className="hover:bg-[#333] focus:bg-[#333]"
+                    className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600"
                   >
                     {wallet.name}
                   </SelectItem>
@@ -153,7 +155,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
+            <Label htmlFor="amount" className="text-[#868686] dark:text-gray-400">{t('transactions.amount')}</Label>
             <Input
               id="amount"
               name="amount"
@@ -163,12 +165,12 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               value={formData.amount}
               onChange={handleChange}
               required
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="fee" className="text-[#868686]">{t('transactions.fee')}</Label>
+            <Label htmlFor="fee" className="text-[#868686] dark:text-gray-400">{t('transactions.fee')}</Label>
             <Input
               id="fee"
               name="fee"
@@ -177,25 +179,25 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               placeholder="0"
               value={formData.fee}
               onChange={handleChange}
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
+            <Label htmlFor="description" className="text-[#868686] dark:text-gray-400">{t('transactions.description')}</Label>
             <Input
               id="description"
               name="description"
               placeholder={t('transactions.enter_description')}
               value={formData.description}
               onChange={handleChange}
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
             />
           </div>
           
           <div className="space-y-2">
-            <Label className="text-[#868686]">{t('transactions.date')}</Label>
-            <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+            <Label className="text-[#868686] dark:text-gray-400">{t('transactions.date')}</Label>
+            <div className="bg-[#242425] rounded-md border-0 text-white dark:bg-gray-700 dark:text-gray-200">
               <DatePicker 
                 date={selectedDate}
                 setDate={setSelectedDate}
@@ -203,7 +205,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
             </div>
           </div>
           
-          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white">
             {t('transactions.transfer')}
           </Button>
         </form>

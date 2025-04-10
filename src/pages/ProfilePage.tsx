@@ -188,18 +188,18 @@ const ProfilePage: React.FC = () => {
       animate="visible"
       variants={containerVariants}
     >
-      <div className="p-6">
-        {/* Header with back button */}
-        <motion.div
-          className="flex items-center justify-between mb-6"
+      <div className="p-6 pt-12">
+        {/* Header */}
+        <motion.div 
+          className="mb-6 flex items-center justify-between"
           variants={itemVariants}
         >
-           <div className="flex items-center">
-             <button onClick={() => navigate(-1)} className="mr-3 p-1 rounded-full hover:bg-gray-700"> {/* Navigate back */}
-               <ChevronLeft size={24} className="text-white" />
-             </button>
-             <h1 className="text-xl font-bold">{t('settings.profile')}</h1>
-           </div>
+          <div className="flex items-center">
+            <button onClick={() => navigate(-1)} className="mr-4 text-white">
+              <ChevronLeft size={24} />
+            </button>
+            <h1 className="text-xl font-bold">{t('settings.profile')}</h1>
+          </div>
         </motion.div>
 
         {/* Profile Header */}

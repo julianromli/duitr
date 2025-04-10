@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, ArrowUp, ArrowDown, Plus, ArrowLeftRight, Eye, EyeOff, Home, Clock, PieChart, User, Wallet } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import TransactionDetail from '@/components/transactions/TransactionDetail';
 import ExpenseForm from '@/components/transactions/ExpenseForm';
 import IncomeForm from '@/components/transactions/IncomeForm';
@@ -188,8 +188,8 @@ const Dashboard: React.FC = () => {
           >
             {/* Card Header with Profile */}
             <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#0D0D0D]">
+              <Link to="/profile" className="flex items-center gap-3 flex-grow group">
+                <Avatar className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#0D0D0D] group-hover:opacity-80 transition-opacity">
                   {profileImage ? (
                     <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
                   ) : (
@@ -198,13 +198,13 @@ const Dashboard: React.FC = () => {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div>
+                <div className="group-hover:opacity-80 transition-opacity">
                   <p className="text-[#0D0D0D] text-sm font-bold">{t('hello')} {username}!</p>
                   <p className="text-[#242425] text-xs">{t('welcomeBack')}</p>
                 </div>
-                {/* Settings in top-right corner */}
-                <div className="absolute right-10 z-10"><AppSettings/>
-                </div>
+              </Link>
+              {/* Settings in top-right corner */}
+              <div className="absolute right-10 z-10"><AppSettings/>
               </div>
             </div>
             

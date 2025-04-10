@@ -3,50 +3,14 @@ import { formatIDR } from '@/utils/currency';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-
-// Define the types for our financial data
-type Transaction = {
-  id: string;
-  amount: number;
-  category: string;
-  description: string;
-  date: string;
-  type: 'income' | 'expense';
-  walletId: string;
-  userId?: string;
-};
-
-type Budget = {
-  id: string;
-  category: string;
-  amount: number;
-  spent: number;
-  period: 'monthly' | 'weekly' | 'yearly';
-  userId?: string;
-};
-
-type Wallet = {
-  id: string;
-  name: string;
-  balance: number;
-  type: 'cash' | 'bank' | 'e-wallet' | 'investment';
-  color: string;
-  userId?: string;
-};
-
-type Transfer = {
-  amount: number;
-  description: string;
-  date: string;
-  fromWalletId: string;
-  toWalletId: string;
-  fee: number;
-};
+import { Transaction, Budget, Wallet, WantToBuyItem, PinjamanItem } from '@/types/finance';
 
 interface FinanceContextType {
   transactions: Transaction[];
   budgets: Budget[];
   wallets: Wallet[];
+  wantToBuyItems: WantToBuyItem[];
+  pinjamanItems: PinjamanItem[];
   currency: string;
   currencySymbol: string;
   isLoading: boolean;
@@ -60,17 +24,20 @@ interface FinanceContextType {
   addWallet: (wallet: Omit<Wallet, 'id' | 'userId'>) => Promise<void>;
   updateWallet: (wallet: Wallet) => Promise<void>;
   deleteWallet: (id: string) => Promise<void>;
-  addTransfer: (transfer: Transfer) => Promise<void>;
+  addWantToBuyItem: (item: Omit<WantToBuyItem, 'id' | 'userId' | 'created_at' | 'is_purchased'>) => Promise<void>;
+  updateWantToBuyItem: (item: WantToBuyItem) => Promise<void>;
+  deleteWantToBuyItem: (id: string) => Promise<void>;
+  addPinjamanItem: (item: Omit<PinjamanItem, 'id' | 'userId' | 'created_at' | 'is_settled'>) => Promise<void>;
+  updatePinjamanItem: (item: PinjamanItem) => Promise<void>;
+  deletePinjamanItem: (id: string) => Promise<void>;
   totalBalance: number;
   monthlyIncome: number;
   monthlyExpense: number;
   formatCurrency: (amount: number) => string;
 }
 
-// Create the context
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-// Provider component
 export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -78,16 +45,21 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [wantToBuyItems, setWantToBuyItems] = useState<WantToBuyItem[]>([]);
+  const [pinjamanItems, setPinjamanItems] = useState<PinjamanItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Always use IDR
   const [currency] = useState('IDR');
   const [currencySymbol] = useState('Rp');
 
-  // Load data from Supabase when user changes
   useEffect(() => {
     const loadUserData = async () => {
       if (!user) {
+        setTransactions([]);
+        setBudgets([]);
+        setWallets([]);
+        setWantToBuyItems([]);
+        setPinjamanItems([]);
         setIsLoading(false);
         return;
       }
@@ -95,17 +67,16 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       setIsLoading(true);
       
       try {
-        // Fetch wallets
-        const { data: walletsData, error: walletsError } = await supabase
-          .from('wallets')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        if (walletsError) throw walletsError;
-        
-        // No default wallets for new users
-        // Transform DB format to app format and handle 'credit' to 'e-wallet' type conversion
-        setWallets(walletsData.map(w => ({
+        const [walletsRes, transactionsRes, budgetsRes, wantToBuyRes, pinjamanRes] = await Promise.all([
+          supabase.from('wallets').select('*').eq('user_id', user.id),
+          supabase.from('transactions').select('*').eq('user_id', user.id),
+          supabase.from('budgets').select('*').eq('user_id', user.id),
+          supabase.from('want_to_buy_items').select('*').eq('user_id', user.id),
+          supabase.from('pinjaman_items').select('*').eq('user_id', user.id)
+        ]);
+
+        if (walletsRes.error) throw walletsRes.error;
+        setWallets(walletsRes.data.map(w => ({
           id: w.id,
           name: w.name,
           balance: w.balance,
@@ -114,37 +85,22 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           userId: w.user_id
         })));
         
-        // Fetch transactions
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        if (transactionsError) throw transactionsError;
-        
-        // Transform DB format to app format
-        setTransactions(transactionsData.map(t => ({
+        if (transactionsRes.error) throw transactionsRes.error;
+        setTransactions(transactionsRes.data.map(t => ({
           id: t.id,
           amount: t.amount,
           category: t.category,
           description: t.description,
           date: t.date,
-          type: t.type as 'income' | 'expense',
+          type: t.type as 'income' | 'expense' | 'transfer',
           walletId: t.wallet_id,
-          userId: t.user_id
+          userId: t.user_id,
+          destinationWalletId: t.destination_wallet_id,
+          fee: t.fee
         })));
         
-        // Fetch budgets
-        const { data: budgetsData, error: budgetsError } = await supabase
-          .from('budgets')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        if (budgetsError) throw budgetsError;
-        
-        // No default budgets for new users
-        // Transform DB format to app format
-        setBudgets(budgetsData.map(b => ({
+        if (budgetsRes.error) throw budgetsRes.error;
+        setBudgets(budgetsRes.data.map(b => ({
           id: b.id,
           category: b.category,
           amount: b.amount,
@@ -152,13 +108,45 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           period: b.period as 'monthly' | 'weekly' | 'yearly',
           userId: b.user_id
         })));
+
+        if (wantToBuyRes.error) {
+            console.warn('Error loading want_to_buy_items:', wantToBuyRes.error.message);
+            setWantToBuyItems([]);
+        } else {
+            setWantToBuyItems(wantToBuyRes.data.map(item => ({
+                id: item.id,
+                userId: item.user_id,
+                name: item.name,
+                icon: item.icon,
+                price: item.price,
+                category: item.category as 'Keinginan' | 'Kebutuhan',
+                estimated_date: item.estimated_date,
+                priority: item.priority as 'Tinggi' | 'Sedang' | 'Rendah',
+                is_purchased: item.is_purchased,
+                created_at: item.created_at
+            })));
+        }
+
+        if (pinjamanRes.error) {
+            console.warn('Error loading pinjaman_items:', pinjamanRes.error.message);
+            setPinjamanItems([]);
+        } else {
+            setPinjamanItems(pinjamanRes.data.map(item => ({
+                id: item.id,
+                userId: item.user_id,
+                name: item.name,
+                icon: item.icon,
+                category: item.category as 'Utang' | 'Piutang',
+                due_date: item.due_date,
+                amount: item.amount,
+                is_settled: item.is_settled,
+                created_at: item.created_at
+            })));
+         }
+
       } catch (error: any) {
         console.error('Error loading user data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error loading data',
-          description: error.message || 'Failed to load your financial data',
-        });
+        toast({ variant: 'destructive', title: 'Error loading data', description: error.message });
       } finally {
         setIsLoading(false);
       }
@@ -167,10 +155,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     loadUserData();
   }, [user, toast]);
 
-  // Calculate total balance from all wallets
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
 
-  // Calculate monthly income and expense (for the current month)
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
@@ -184,417 +170,498 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   });
   
   const monthlyIncome = monthlyTransactions
-    .filter(t => t.type === 'income' && t.category !== 'Transfer')
+    .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
     
   const monthlyExpense = monthlyTransactions
-    .filter(t => t.type === 'expense' && t.category !== 'Transfer')
+    .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  // Format currency function
   const formatCurrency = (amount: number) => {
     return formatIDR(amount);
   };
 
-  // Add new transaction
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'userId'>) => {
     if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication required',
-        description: 'You must be logged in to add transactions',
-      });
+      toast({ variant: 'destructive', title: 'Authentication required', description: 'You must be logged in.' });
       return;
     }
-    
+
+    let fromWallet: Wallet | undefined;
+    let toWallet: Wallet | undefined;
+    let updatedFromWallet: Wallet | undefined;
+    let updatedToWallet: Wallet | undefined;
+
+    if (transaction.type === 'transfer') {
+      if (!transaction.destinationWalletId) {
+         toast({ variant: 'destructive', title: 'Transfer Error', description: 'Destination wallet is missing.' });
+         return;
+      }
+      fromWallet = wallets.find(w => w.id === transaction.walletId);
+      toWallet = wallets.find(w => w.id === transaction.destinationWalletId);
+      if (!fromWallet || !toWallet) {
+          toast({ variant: 'destructive', title: 'Transfer Error', description: 'One or both wallets not found.' });
+          return;
+      }
+      if (fromWallet.id === toWallet.id) {
+          toast({ variant: 'destructive', title: 'Transfer Error', description: 'Cannot transfer to the same wallet.' });
+          return;
+      }
+       const fee = transaction.fee ?? 0;
+       updatedFromWallet = { ...fromWallet, balance: fromWallet.balance - (transaction.amount + fee) };
+       updatedToWallet = { ...toWallet, balance: toWallet.balance + transaction.amount };
+
+    } else {
+      fromWallet = wallets.find(w => w.id === transaction.walletId);
+       if (!fromWallet) {
+          toast({ variant: 'destructive', title: 'Transaction Error', description: 'Wallet not found.' });
+          return;
+       }
+       const newBalance = transaction.type === 'income'
+           ? fromWallet.balance + transaction.amount
+           : fromWallet.balance - transaction.amount;
+       updatedFromWallet = { ...fromWallet, balance: newBalance };
+    }
+
+
     try {
-      // Prepare data for Supabase
-      const newTransaction = {
+      const newTransactionData = {
         amount: transaction.amount,
-        category: transaction.category,
+        category: transaction.type === 'transfer' ? 'Transfer' : transaction.category,
         description: transaction.description,
         date: transaction.date,
         type: transaction.type,
         wallet_id: transaction.walletId,
-        user_id: user.id
+        user_id: user.id,
+        ...(transaction.type === 'transfer' && transaction.destinationWalletId 
+          ? { destination_wallet_id: transaction.destinationWalletId } 
+          : {}),
+        ...(transaction.type === 'transfer' && transaction.fee != null 
+          ? { fee: transaction.fee } 
+          : {}),
       };
       
-      // Insert transaction to Supabase
-      const { data, error } = await supabase
+      let finalTransactionData;
+      
+      const { data: transactionData, error: transactionError } = await supabase
         .from('transactions')
-        .insert(newTransaction)
+        .insert(newTransactionData)
         .select()
         .single();
         
-      if (error) throw error;
-      
-      // Format for application state
-      const formattedTransaction = {
-        id: data.id,
-        amount: data.amount,
-        category: data.category,
-        description: data.description,
-        date: data.date,
-        type: data.type,
-        walletId: data.wallet_id,
-        userId: data.user_id
-      };
-      
-      // Update local state
-      setTransactions([formattedTransaction, ...transactions]);
-      
-      // Update wallet balance
-      const wallet = wallets.find(w => w.id === transaction.walletId);
-      if (wallet) {
-        const updatedWallet = {
-          ...wallet,
-          balance: transaction.type === 'income' 
-            ? wallet.balance + transaction.amount 
-            : wallet.balance - transaction.amount
-        };
-        
-        // Update wallet in Supabase
+      if (transactionError) {
+        if (transactionError.message.includes('destination_wallet_id') || 
+            transactionError.message.includes('column') || 
+            transactionError.message.includes('schema')) {
+          console.error('Schema error detected:', transactionError);
+          
+          const fallbackData = {
+            amount: transaction.amount,
+            category: transaction.type === 'transfer' ? 'Transfer' : transaction.category,
+            description: transaction.description,
+            date: transaction.date,
+            type: transaction.type,
+            wallet_id: transaction.walletId,
+            user_id: user.id,
+          };
+          
+          if (transaction.type === 'transfer' && transaction.destinationWalletId) {
+            try {
+              const { data: basicTransData, error: basicTransError } = await supabase
+                .from('transactions')
+                .insert(fallbackData)
+                .select()
+                .single();
+                
+              if (basicTransError) throw basicTransError;
+              
+              const { error: updateError } = await supabase
+                .from('transactions')
+                .update({
+                  destination_wallet_id: transaction.destinationWalletId,
+                  fee: transaction.fee ?? 0
+                })
+                .eq('id', basicTransData.id);
+                
+              if (updateError) {
+                console.warn('Could not update transfer details:', updateError);
+                finalTransactionData = basicTransData;
+              } else {
+                const { data: updatedTrans } = await supabase
+                  .from('transactions')
+                  .select()
+                  .eq('id', basicTransData.id)
+                  .single();
+                  
+                finalTransactionData = updatedTrans;
+              }
+            } catch (fallbackError: any) {
+              console.error('Fallback transaction insert failed:', fallbackError);
+              throw fallbackError;
+            }
+          } else {
+            const { data: basicData, error: basicError } = await supabase
+              .from('transactions')
+              .insert(fallbackData)
+              .select()
+              .single();
+              
+            if (basicError) throw basicError;
+            finalTransactionData = basicData;
+          }
+        } else {
+          throw transactionError;
+        }
+      } else {
+        finalTransactionData = transactionData;
+      }
+
+      // Update wallet balances 
+      if (transaction.type === 'transfer') {
+        const { error: fromWalletError } = await supabase
+          .from('wallets')
+          .update({ balance: updatedFromWallet!.balance })
+          .eq('id', updatedFromWallet!.id);
+        if (fromWalletError) throw fromWalletError;
+
+        const { error: toWalletError } = await supabase
+          .from('wallets')
+          .update({ balance: updatedToWallet!.balance })
+          .eq('id', updatedToWallet!.id);
+        if (toWalletError) throw toWalletError;
+      } else {
         const { error: walletError } = await supabase
           .from('wallets')
-          .update({ balance: updatedWallet.balance })
-          .eq('id', wallet.id);
-          
+          .update({ balance: updatedFromWallet!.balance })
+          .eq('id', updatedFromWallet!.id);
         if (walletError) throw walletError;
-        
-        // Update local wallet state
-        setWallets(wallets.map(w => w.id === wallet.id ? updatedWallet : w));
       }
-      
-      toast({
-        title: 'Transaction added',
-        description: 'Your transaction has been successfully added',
-      });
+
+      const formattedTransaction: Transaction = {
+        id: finalTransactionData.id,
+        amount: finalTransactionData.amount,
+        category: finalTransactionData.category,
+        description: finalTransactionData.description,
+        date: finalTransactionData.date,
+        type: finalTransactionData.type,
+        walletId: finalTransactionData.wallet_id,
+        userId: finalTransactionData.user_id,
+        destinationWalletId: finalTransactionData.destination_wallet_id,
+        fee: finalTransactionData.fee,
+      };
+
+      setTransactions([formattedTransaction, ...transactions]);
+
+      setWallets(wallets.map(w => {
+          if (updatedFromWallet && w.id === updatedFromWallet.id) return updatedFromWallet;
+          if (updatedToWallet && w.id === updatedToWallet.id) return updatedToWallet;
+          return w;
+      }));
+
+      toast({ title: 'Success', description: `${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)} added.` });
+
     } catch (error: any) {
       console.error('Error adding transaction:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to add transaction',
-        description: error.message || 'An unexpected error occurred',
-      });
+      toast({ variant: 'destructive', title: 'Error', description: error.message || 'Failed to add transaction' });
     }
   };
 
-  // Update transaction
+
   const updateTransaction = async (updatedTransaction: Transaction) => {
     if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication required',
-        description: 'You must be logged in to update transactions',
-      });
+        toast({ variant: 'destructive', title: 'Authentication required' });
       return;
     }
     
-    try {
-      // Find old transaction for comparison
       const oldTransaction = transactions.find(t => t.id === updatedTransaction.id);
       if (!oldTransaction) {
-        throw new Error('Transaction not found');
-      }
-      
-      // Prepare data for Supabase
-      const transactionData = {
-        amount: updatedTransaction.amount,
-        category: updatedTransaction.category,
-        description: updatedTransaction.description,
-        date: updatedTransaction.date,
-        type: updatedTransaction.type,
-        wallet_id: updatedTransaction.walletId,
-      };
-      
-      // Update transaction in Supabase
-      const { error } = await supabase
-        .from('transactions')
-        .update(transactionData)
-        .eq('id', updatedTransaction.id);
-        
-      if (error) throw error;
-      
-      // Update wallet balance if amount or type changed
-      if (
-        oldTransaction.amount !== updatedTransaction.amount || 
-        oldTransaction.type !== updatedTransaction.type ||
-        oldTransaction.walletId !== updatedTransaction.walletId
-      ) {
-        // Find wallets
-        const oldWallet = wallets.find(w => w.id === oldTransaction.walletId);
-        const newWallet = wallets.find(w => w.id === updatedTransaction.walletId);
-        
-        if (oldWallet) {
-          // Revert the old transaction effect on the old wallet
-          let updatedOldWalletBalance = oldWallet.balance;
-          if (oldTransaction.type === 'income') {
-            updatedOldWalletBalance -= oldTransaction.amount;
+        toast({ variant: 'destructive', title: 'Error', description: 'Original transaction not found.' });
+        return;
+     }
+
+     let balanceUpdates: { walletId: string; change: number }[] = [];
+
+     if (oldTransaction.type === 'transfer') {
+        const oldFee = oldTransaction.fee ?? 0;
+        balanceUpdates.push({ walletId: oldTransaction.walletId, change: oldTransaction.amount + oldFee });
+        if (oldTransaction.destinationWalletId) {
+           balanceUpdates.push({ walletId: oldTransaction.destinationWalletId, change: -oldTransaction.amount });
+        }
+     } else if (oldTransaction.type === 'income') {
+        balanceUpdates.push({ walletId: oldTransaction.walletId, change: -oldTransaction.amount });
           } else if (oldTransaction.type === 'expense') {
-            updatedOldWalletBalance += oldTransaction.amount;
-          }
-          
-          // Apply the updated transaction effect to the wallet
-          // If the wallet is different, update both wallets
-          if (oldTransaction.walletId === updatedTransaction.walletId) {
-            if (updatedTransaction.type === 'income') {
-              updatedOldWalletBalance += updatedTransaction.amount;
+        balanceUpdates.push({ walletId: oldTransaction.walletId, change: oldTransaction.amount });
+     }
+
+     if (updatedTransaction.type === 'transfer') {
+        const newFee = updatedTransaction.fee ?? 0;
+        if (!updatedTransaction.destinationWalletId) {
+           toast({ variant: 'destructive', title: 'Update Error', description: 'Destination wallet missing for transfer.' });
+           return;
+        }
+         balanceUpdates.push({ walletId: updatedTransaction.walletId, change: -(updatedTransaction.amount + newFee) });
+         balanceUpdates.push({ walletId: updatedTransaction.destinationWalletId, change: updatedTransaction.amount });
+     } else if (updatedTransaction.type === 'income') {
+        balanceUpdates.push({ walletId: updatedTransaction.walletId, change: updatedTransaction.amount });
             } else if (updatedTransaction.type === 'expense') {
-              updatedOldWalletBalance -= updatedTransaction.amount;
-            }
-            
-            // Update wallet in Supabase
-            const { error: walletError } = await supabase
-              .from('wallets')
-              .update({ balance: updatedOldWalletBalance })
-              .eq('id', oldWallet.id);
+        balanceUpdates.push({ walletId: updatedTransaction.walletId, change: -updatedTransaction.amount });
+     }
+
+     const netBalanceChanges = balanceUpdates.reduce((acc, update) => {
+        acc[update.walletId] = (acc[update.walletId] || 0) + update.change;
+        return acc;
+     }, {} as { [walletId: string]: number });
+
+     const walletsToUpdateLocally: Wallet[] = [];
+     const walletsToUpdateInDB: { id: string; balance: number }[] = [];
+
+     for (const walletId in netBalanceChanges) {
+        const change = netBalanceChanges[walletId];
+        if (change === 0) continue;
+
+        const wallet = wallets.find(w => w.id === walletId);
+        if (!wallet) {
+            console.error(`Wallet ID ${walletId} not found during update for transaction ${updatedTransaction.id}`);
+            toast({ variant: 'destructive', title: 'Update Error', description: `Wallet ${walletId} not found.`});
+            continue;
+        }
+        const newBalance = wallet.balance + change;
+        walletsToUpdateLocally.push({ ...wallet, balance: newBalance });
+        walletsToUpdateInDB.push({ id: walletId, balance: newBalance });
+     }
+
+     try {
+        // Create update data with optional fields to handle schema issues
+        const updateData: {
+          amount: number;
+          category: string;
+          description: string;
+          date: string;
+          type: 'income' | 'expense' | 'transfer';
+          wallet_id: string;
+          destination_wallet_id?: string | null;
+          fee?: number | null;
+        } = {
+          amount: updatedTransaction.amount,
+          category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category,
+          description: updatedTransaction.description,
+          date: updatedTransaction.date,
+          type: updatedTransaction.type,
+          wallet_id: updatedTransaction.walletId,
+        };
+
+        // Add optional fields only if needed to avoid schema errors
+        if (updatedTransaction.type === 'transfer') {
+          if (updatedTransaction.destinationWalletId) {
+            try {
+              const { error: testError } = await supabase
+                .from('transactions')
+                .update({ destination_wallet_id: updatedTransaction.destinationWalletId })
+                .eq('id', updatedTransaction.id);
               
-            if (walletError) throw walletError;
-            
-            // Update wallets state
-            setWallets(wallets.map(w => 
-              w.id === oldWallet.id 
-                ? { ...w, balance: updatedOldWalletBalance } 
-                : w
-            ));
-          } else if (newWallet) {
-            // Update old wallet
-            const { error: oldWalletError } = await supabase
-              .from('wallets')
-              .update({ balance: updatedOldWalletBalance })
-              .eq('id', oldWallet.id);
-              
-            if (oldWalletError) throw oldWalletError;
-            
-            // Update new wallet
-            let updatedNewWalletBalance = newWallet.balance;
-            if (updatedTransaction.type === 'income') {
-              updatedNewWalletBalance += updatedTransaction.amount;
-            } else if (updatedTransaction.type === 'expense') {
-              updatedNewWalletBalance -= updatedTransaction.amount;
-            }
-            
-            const { error: newWalletError } = await supabase
-              .from('wallets')
-              .update({ balance: updatedNewWalletBalance })
-              .eq('id', newWallet.id);
-              
-            if (newWalletError) throw newWalletError;
-            
-            // Update wallets state
-            setWallets(wallets.map(w => {
-              if (w.id === oldWallet.id) {
-                return { ...w, balance: updatedOldWalletBalance };
+              if (!testError) {
+                updateData.destination_wallet_id = updatedTransaction.destinationWalletId;
               }
-              if (w.id === newWallet.id) {
-                return { ...w, balance: updatedNewWalletBalance };
+            } catch (e) {
+              console.warn('Cannot update destination_wallet_id due to schema issue');
+            }
+
+            try {
+              const { error: feeError } = await supabase
+                .from('transactions')
+                .update({ fee: updatedTransaction.fee ?? 0 })
+                .eq('id', updatedTransaction.id);
+
+              if (!feeError) {
+                updateData.fee = updatedTransaction.fee ?? 0;
               }
-              return w;
-            }));
+            } catch (e) {
+              console.warn('Cannot update fee due to schema issue');
+            }
           }
         }
-      }
-      
-      // Update transaction state
-      setTransactions(transactions.map(t => 
-        t.id === updatedTransaction.id ? updatedTransaction : t
-      ));
+
+        // Update transaction with core fields
+        const { error: transactionUpdateError } = await supabase
+          .from('transactions')
+          .update(updateData)
+          .eq('id', updatedTransaction.id);
+
+        if (transactionUpdateError) {
+          // If there's a schema error, try a more basic update
+          if (transactionUpdateError.message.includes('column') || 
+              transactionUpdateError.message.includes('schema')) {
+            console.error('Schema error on update:', transactionUpdateError);
+            
+            // Fallback to basic fields only
+            const { error: basicUpdateError } = await supabase
+              .from('transactions')
+              .update({
+                amount: updatedTransaction.amount,
+                category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category,
+                description: updatedTransaction.description,
+                date: updatedTransaction.date,
+                type: updatedTransaction.type,
+                wallet_id: updatedTransaction.walletId,
+              })
+              .eq('id', updatedTransaction.id);
+              
+            if (basicUpdateError) throw basicUpdateError;
+          } else {
+            throw transactionUpdateError;
+          }
+        }
+
+        await Promise.all(walletsToUpdateInDB.map(walletUpdate =>
+            supabase
+          .from('wallets')
+                .update({ balance: walletUpdate.balance })
+                .eq('id', walletUpdate.id)
+        ));
+
+        setTransactions(transactions.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+        setWallets(currentWallets => currentWallets.map(w => {
+            const updatedWallet = walletsToUpdateLocally.find(uw => uw.id === w.id);
+            return updatedWallet ? updatedWallet : w;
+        }));
+
+        toast({ title: 'Success', description: 'Transaction updated.' });
+
     } catch (error: any) {
-      console.error('Error updating transaction:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to update transaction',
-        description: error.message || 'An unexpected error occurred',
-      });
-      throw error;
-    }
+        console.error('Error updating transaction:', error);
+        toast({ variant: 'destructive', title: 'Update Error', description: error.message || 'Failed to update transaction' });
+     }
   };
 
-  // Delete transaction
+
   const deleteTransaction = async (id: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Authentication required' });
+      return;
+    }
     
+    const transactionToDelete = transactions.find(t => t.id === id);
+    if (!transactionToDelete) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Transaction not found.' });
+      return;
+    }
+
+    let fromWallet: Wallet | undefined;
+    let toWallet: Wallet | undefined;
+    let updatedFromWallet: Wallet | undefined;
+    let updatedToWallet: Wallet | undefined;
+
+    if (transactionToDelete.type === 'transfer') {
+        fromWallet = wallets.find(w => w.id === transactionToDelete.walletId);
+        if (transactionToDelete.destinationWalletId) {
+            toWallet = wallets.find(w => w.id === transactionToDelete.destinationWalletId);
+        }
+
+        if (!fromWallet) {
+            toast({ variant: 'destructive', title: 'Deletion Error', description: 'Source wallet not found.' });
+            return;
+        }
+        const fee = transactionToDelete.fee ?? 0;
+        updatedFromWallet = { ...fromWallet, balance: fromWallet.balance + (transactionToDelete.amount + fee) };
+        if (toWallet) {
+            updatedToWallet = { ...toWallet, balance: toWallet.balance - transactionToDelete.amount };
+        }
+
+    } else {
+        fromWallet = wallets.find(w => w.id === transactionToDelete.walletId);
+        if (!fromWallet) {
+            toast({ variant: 'destructive', title: 'Deletion Error', description: 'Wallet not found.' });
+            return;
+        }
+        const newBalance = transactionToDelete.type === 'income'
+            ? fromWallet.balance - transactionToDelete.amount
+            : fromWallet.balance + transactionToDelete.amount;
+        updatedFromWallet = { ...fromWallet, balance: newBalance };
+    }
+
+
     try {
-      // Get transaction details before deleting
-      const transaction = transactions.find(t => t.id === id);
-      if (!transaction) throw new Error('Transaction not found');
-      
-      // Delete from Supabase
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('transactions')
         .delete()
         .eq('id', id);
-        
-      if (error) throw error;
-      
-      // Update wallet balance
-      const wallet = wallets.find(w => w.id === transaction.walletId);
-      if (wallet) {
-        const updatedWallet = {
-          ...wallet,
-          balance: transaction.type === 'income' 
-            ? wallet.balance - transaction.amount 
-            : wallet.balance + transaction.amount
-        };
-        
-        // Update wallet in Supabase
-        const { error: walletError } = await supabase
-          .from('wallets')
-          .update({ balance: updatedWallet.balance })
-          .eq('id', wallet.id);
-          
-        if (walletError) throw walletError;
-        
-        // Update local wallet state
-        setWallets(wallets.map(w => w.id === wallet.id ? updatedWallet : w));
-      }
-      
-      // Update local state
-      setTransactions(transactions.filter(t => t.id !== id));
-      
-      toast({
-        title: 'Transaction deleted',
-        description: 'Your transaction has been successfully deleted',
-      });
-    } catch (error: any) {
-      console.error('Error deleting transaction:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to delete transaction',
-        description: error.message || 'An unexpected error occurred',
-      });
-    }
-  };
 
-  // Add new transfer
-  const addTransfer = async (transfer: Transfer) => {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication required',
-        description: 'You must be logged in to make transfers',
-      });
-      return;
-    }
-    
-    try {
-      // 1. Outgoing transaction (from source wallet)
-      const outgoingTransaction = {
-        amount: transfer.amount + transfer.fee,
-        category: 'Transfer',
-        description: `Transfer to ${wallets.find(w => w.id === transfer.toWalletId)?.name} - ${transfer.description}`,
-        date: transfer.date,
-        type: 'expense',
-        wallet_id: transfer.fromWalletId,
-        user_id: user.id
-      };
-      
-      // 2. Incoming transaction (to destination wallet)
-      const incomingTransaction = {
-        amount: transfer.amount,
-        category: 'Transfer',
-        description: `Transfer from ${wallets.find(w => w.id === transfer.fromWalletId)?.name} - ${transfer.description}`,
-        date: transfer.date,
-        type: 'income',
-        wallet_id: transfer.toWalletId,
-        user_id: user.id
-      };
-      
-      // Insert both transactions
-      const { data: outgoingData, error: outgoingError } = await supabase
-        .from('transactions')
-        .insert(outgoingTransaction)
-        .select()
-        .single();
-        
-      if (outgoingError) throw outgoingError;
-      
-      const { data: incomingData, error: incomingError } = await supabase
-        .from('transactions')
-        .insert(incomingTransaction)
-        .select()
-        .single();
-        
-      if (incomingError) throw incomingError;
-      
-      // Update wallet balances
-      const fromWallet = wallets.find(w => w.id === transfer.fromWalletId);
-      const toWallet = wallets.find(w => w.id === transfer.toWalletId);
-      
-      if (fromWallet && toWallet) {
-        const updatedFromWallet = {
-          ...fromWallet,
-          balance: fromWallet.balance - (transfer.amount + transfer.fee)
-        };
-        
-        const updatedToWallet = {
-          ...toWallet,
-          balance: toWallet.balance + transfer.amount
-        };
-        
-        // Update wallets in Supabase
+      if (deleteError) {
+        // If there's a schema-related error, try to reset any fields that might cause issues first
+        if (deleteError.message.includes('column') || 
+            deleteError.message.includes('schema') || 
+            deleteError.message.includes('destination_wallet_id')) {
+          console.error('Schema error on delete:', deleteError);
+          
+          try {
+            // Try to set problematic fields to null first
+            const { error: resetError } = await supabase
+              .from('transactions')
+              .update({
+                destination_wallet_id: null,
+                fee: null
+              })
+              .eq('id', id);
+              
+            // Even if reset fails, still try to delete
+            console.log('Reset fields result:', resetError ? 'Failed' : 'Success');
+            
+            // Try delete again
+            const { error: secondDeleteError } = await supabase
+              .from('transactions')
+              .delete()
+              .eq('id', id);
+              
+            if (secondDeleteError) throw secondDeleteError;
+          } catch (resetError: any) {
+            console.error('Failed to reset fields before delete:', resetError);
+            throw deleteError; // Use the original error
+          }
+        } else {
+          throw deleteError;
+        }
+      }
+
+       if (transactionToDelete.type === 'transfer') {
         const { error: fromWalletError } = await supabase
           .from('wallets')
-          .update({ balance: updatedFromWallet.balance })
-          .eq('id', fromWallet.id);
+              .update({ balance: updatedFromWallet!.balance })
+              .eq('id', updatedFromWallet!.id);
+          if (fromWalletError) console.error("Error updating source wallet on delete:", fromWalletError);
           
-        if (fromWalletError) throw fromWalletError;
         
+          if (updatedToWallet) {
         const { error: toWalletError } = await supabase
           .from('wallets')
           .update({ balance: updatedToWallet.balance })
-          .eq('id', toWallet.id);
-          
-        if (toWalletError) throw toWalletError;
-        
-        // Update local wallet state
-        setWallets(wallets.map(wallet => {
-          if (wallet.id === fromWallet.id) return updatedFromWallet;
-          if (wallet.id === toWallet.id) return updatedToWallet;
-          return wallet;
-        }));
-      }
-      
-      // Format and add to local state
-      const formattedOutgoing = {
-        id: outgoingData.id,
-        amount: outgoingData.amount,
-        category: outgoingData.category,
-        description: outgoingData.description,
-        date: outgoingData.date,
-        type: outgoingData.type as 'expense',
-        walletId: outgoingData.wallet_id,
-        userId: outgoingData.user_id
-      };
-      
-      const formattedIncoming = {
-        id: incomingData.id,
-        amount: incomingData.amount,
-        category: incomingData.category,
-        description: incomingData.description,
-        date: incomingData.date,
-        type: incomingData.type as 'income',
-        walletId: incomingData.wallet_id,
-        userId: incomingData.user_id
-      };
-      
-      setTransactions([formattedIncoming, formattedOutgoing, ...transactions]);
-      
-      toast({
-        title: 'Transfer completed',
-        description: 'Your money transfer has been successfully processed',
-      });
+                .eq('id', updatedToWallet.id);
+              if (toWalletError) console.error("Error updating destination wallet on delete:", toWalletError);
+          }
+       } else {
+          const { error: walletError } = await supabase
+              .from('wallets')
+              .update({ balance: updatedFromWallet!.balance })
+              .eq('id', updatedFromWallet!.id);
+           if (walletError) console.error("Error updating wallet on delete:", walletError);
+       }
+
+
+      setTransactions(transactions.filter(t => t.id !== id));
+      setWallets(currentWallets => currentWallets.map(w => {
+          if (updatedFromWallet && w.id === updatedFromWallet.id) return updatedFromWallet;
+          if (updatedToWallet && w.id === updatedToWallet.id) return updatedToWallet;
+          return w;
+      }));
+
+
+      toast({ title: 'Success', description: 'Transaction deleted.' });
+
     } catch (error: any) {
-      console.error('Error processing transfer:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Transfer failed',
-        description: error.message || 'An unexpected error occurred',
-      });
+      console.error('Error deleting transaction:', error);
+      toast({ variant: 'destructive', title: 'Deletion Error', description: error.message || 'Failed to delete transaction' });
     }
   };
 
-  // Add new budget
   const addBudget = async (budget: Omit<Budget, 'id' | 'userId'>) => {
     if (!user) {
       toast({
@@ -606,7 +673,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
     
     try {
-      // Prepare data for Supabase
       const newBudget = {
         category: budget.category,
         amount: budget.amount,
@@ -615,7 +681,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         user_id: user.id
       };
       
-      // Insert budget to Supabase
       const { data, error } = await supabase
         .from('budgets')
         .insert(newBudget)
@@ -624,7 +689,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
       if (error) throw error;
       
-      // Format for application state
       const formattedBudget = {
         id: data.id,
         category: data.category,
@@ -634,7 +698,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         userId: data.user_id
       };
       
-      // Update local state
       setBudgets([...budgets, formattedBudget]);
       
       toast({
@@ -651,12 +714,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Update existing budget
   const updateBudget = async (updatedBudget: Budget) => {
     if (!user) return;
     
     try {
-      // Prepare data for Supabase
       const budgetData = {
         category: updatedBudget.category,
         amount: updatedBudget.amount,
@@ -664,7 +725,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         period: updatedBudget.period
       };
       
-      // Update in Supabase
       const { error } = await supabase
         .from('budgets')
         .update(budgetData)
@@ -672,7 +732,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
       if (error) throw error;
       
-      // Update local state
       setBudgets(budgets.map(budget => 
         budget.id === updatedBudget.id ? updatedBudget : budget
       ));
@@ -691,12 +750,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Delete budget
   const deleteBudget = async (id: string) => {
     if (!user) return;
     
     try {
-      // Delete from Supabase
       const { error } = await supabase
         .from('budgets')
         .delete()
@@ -704,7 +761,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
       if (error) throw error;
       
-      // Update local state
       setBudgets(budgets.filter(budget => budget.id !== id));
       
       toast({
@@ -721,15 +777,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Add new wallet
   const addWallet = async (wallet: Omit<Wallet, 'id' | 'userId'>) => {
     try {
       if (!user) throw new Error('User not authenticated');
       
-      // Generate a temporary ID for optimistic update
       const tempId = Math.random().toString(36).substring(2, 9);
       
-      // Optimistic update
       const newWallet = {
         id: tempId,
         ...wallet,
@@ -738,7 +791,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       setWallets(prev => [...prev, newWallet]);
       
-      // Create record in Supabase
       const { data, error } = await supabase
         .from('wallets')
         .insert({
@@ -751,7 +803,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         .select();
       
       if (error) {
-        // Revert optimistic update
         setWallets(prev => prev.filter(w => w.id !== tempId));
         throw error;
       }
@@ -760,7 +811,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         throw new Error('No data returned from insert operation');
       }
       
-      // Update the temporary wallet with the real DB ID
       setWallets(prev => 
         prev.map(w => 
           w.id === tempId ? {
@@ -779,7 +829,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         description: `${wallet.name} has been added to your accounts`,
       });
     } catch (error: any) {
-      // Handle error
       toast({
         variant: 'destructive',
         title: 'Error adding wallet',
@@ -788,15 +837,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Update existing wallet
   const updateWallet = async (updatedWallet: Wallet) => {
     try {
-      // Optimistic update
       setWallets(prev => prev.map(wallet => 
         wallet.id === updatedWallet.id ? updatedWallet : wallet)
       );
       
-      // Update record in Supabase
       const { error } = await supabase
         .from('wallets')
         .update({
@@ -808,9 +854,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         .eq('id', updatedWallet.id);
       
       if (error) {
-        // Revert optimistic update if error
         setWallets(prev => {
-          // Get the original wallet before the update
           const originalWallet = wallets.find(w => w.id === updatedWallet.id);
           return prev.map(wallet => 
             wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
@@ -832,16 +876,13 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Delete wallet
   const deleteWallet = async (id: string) => {
     if (!user) return;
     
     try {
-      // Check if there are transactions associated with this wallet
       const walletTransactions = transactions.filter(t => t.walletId === id);
       
       if (walletTransactions.length > 0) {
-        // Delete associated transactions first
         for (const transaction of walletTransactions) {
           const { error } = await supabase
             .from('transactions')
@@ -852,7 +893,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
       }
       
-      // Delete wallet from Supabase
       const { error } = await supabase
         .from('wallets')
         .delete()
@@ -860,7 +900,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
       if (error) throw error;
       
-      // Update local state
       setTransactions(transactions.filter(t => t.walletId !== id));
       setWallets(wallets.filter(wallet => wallet.id !== id));
       
@@ -878,17 +917,199 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Update currency (always IDR)
   const updateCurrency = () => {
     // Currency is always IDR, no need to update
   };
 
-  return (
-    <FinanceContext.Provider
-      value={{
+  const addWantToBuyItem = async (item: Omit<WantToBuyItem, 'id' | 'userId' | 'created_at' | 'is_purchased'>) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('want_to_buy_items')
+        .insert({
+          name: item.name,
+          price: item.price,
+          category: item.category,
+          priority: item.priority,
+          estimated_date: item.estimated_date,
+          icon: item.icon,
+          user_id: user.id,
+          is_purchased: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const formattedItem: WantToBuyItem = {
+        id: data.id,
+        userId: data.user_id,
+        name: data.name,
+        icon: data.icon,
+        price: data.price,
+        category: data.category,
+        estimated_date: data.estimated_date,
+        priority: data.priority,
+        is_purchased: data.is_purchased,
+        created_at: data.created_at
+      };
+
+      setWantToBuyItems(prev => [formattedItem, ...prev]);
+      toast({ title: 'Success', description: 'Wishlist item added.' });
+
+    } catch (error: any) {
+      console.error("Error adding WantToBuy item:", error);
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const updateWantToBuyItem = async (item: WantToBuyItem) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
+        return;
+    }
+    const { userId, created_at, ...updateData } = item;
+    try {
+        const { error } = await supabase
+            .from('want_to_buy_items')
+            .update(updateData)
+            .eq('id', item.id)
+            .eq('user_id', user.id);
+        if (error) throw error;
+        setWantToBuyItems(prev => prev.map(i => i.id === item.id ? item : i));
+    } catch (error: any) {
+        console.error("Error updating WantToBuy item:", error);
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const deleteWantToBuyItem = async (id: string) => {
+     if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
+        return;
+    }
+    try {
+        const { error } = await supabase
+            .from('want_to_buy_items')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id);
+        if (error) throw error;
+        setWantToBuyItems(prev => prev.filter(i => i.id !== id));
+        toast({ title: 'Success', description: 'Wishlist item deleted.' });
+    } catch (error: any) {
+        console.error("Error deleting WantToBuy item:", error);
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const addPinjamanItem = async (item: Omit<PinjamanItem, 'id' | 'userId' | 'created_at' | 'is_settled'>) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('pinjaman_items')
+        .insert({
+          name: item.name,
+          category: item.category,
+          due_date: item.due_date,
+          amount: item.amount,
+          icon: item.icon,
+          user_id: user.id,
+          is_settled: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const formattedItem: PinjamanItem = {
+        id: data.id,
+        userId: data.user_id,
+        name: data.name,
+        icon: data.icon,
+        category: data.category,
+        due_date: data.due_date,
+        amount: data.amount,
+        is_settled: data.is_settled,
+        created_at: data.created_at
+      };
+
+      setPinjamanItems(prev => [formattedItem, ...prev].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()));
+      toast({ title: 'Success', description: 'Pinjaman item added.' });
+
+    } catch (error: any) {
+      console.error("Error adding Pinjaman item:", error);
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const updatePinjamanItem = async (item: PinjamanItem) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
+      return;
+    }
+    const { userId, created_at, ...updateData } = item;
+
+    try {
+      const { error } = await supabase
+        .from('pinjaman_items')
+        .update({
+          name: updateData.name,
+          category: updateData.category,
+          due_date: updateData.due_date,
+          amount: updateData.amount,
+          icon: updateData.icon,
+          is_settled: updateData.is_settled
+        })
+        .eq('id', item.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setPinjamanItems(prev =>
+        prev.map(i => i.id === item.id ? item : i)
+          .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+      );
+    } catch (error: any) {
+      console.error("Error updating Pinjaman item:", error);
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const deletePinjamanItem = async (id: string) => {
+     if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
+        return;
+    }
+    try {
+        const { error } = await supabase
+            .from('pinjaman_items')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        setPinjamanItems(prev => prev.filter(i => i.id !== id)); // No need to re-sort after filter
+        toast({ title: 'Success', description: 'Pinjaman item deleted.' });
+    } catch (error: any) {
+        console.error("Error deleting Pinjaman item:", error);
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+  };
+
+  const value = {
         transactions,
         budgets,
         wallets,
+    wantToBuyItems,
+    pinjamanItems,
         currency,
         currencySymbol,
         isLoading,
@@ -902,19 +1123,21 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         addWallet,
         updateWallet,
         deleteWallet,
-        addTransfer,
+    addWantToBuyItem,
+    updateWantToBuyItem,
+    deleteWantToBuyItem,
+    addPinjamanItem,
+    updatePinjamanItem,
+    deletePinjamanItem,
         totalBalance,
         monthlyIncome,
         monthlyExpense,
-        formatCurrency
-      }}
-    >
-      {children}
-    </FinanceContext.Provider>
-  );
+    formatCurrency,
+  };
+
+  return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 };
 
-// Custom hook to use the finance context
 export const useFinance = () => {
   const context = useContext(FinanceContext);
   if (context === undefined) {

@@ -34,7 +34,7 @@ const BudgetProgress: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+    <div className="grid grid-cols-1 gap-4 animate-fade-in">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">

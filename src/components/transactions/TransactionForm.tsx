@@ -11,10 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import Transactions from '@/pages/Transactions';
 
-const TransactionForm: React.FC = () => {
-  const { wallets, addTransaction, addTransfer } = useFinance();
+interface TransactionFormProps {
+  // Assuming props like open, onOpenChange if it's a dialog, or maybe none if standalone
+}
+
+const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
+  const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
@@ -80,26 +83,22 @@ const TransactionForm: React.FC = () => {
       }
       
       // Add transfer
-      addTransfer({
+      addTransaction({
         amount: parseFloat(formData.amount),
         description: formData.description || 'Transfer',
         date: dateString,
-        fromWalletId: formData.walletId,
-        toWalletId: formData.destinationWalletId,
+        type: 'transfer',
+        walletId: formData.walletId,
+        destinationWalletId: formData.destinationWalletId,
         fee: parseFloat(formData.fee) || 0,
+        category: 'Transfer'
       });
-    } else {
-      // Income/Expense validation
-      if (!formData.category || !formData.description || !formData.walletId) {
-        toast({
-          title: 'Error',
-          description: 'Please fill in all required fields',
-          variant: 'destructive',
-        });
+    } else if (formData.type === 'income' || formData.type === 'expense') {
+      if (!formData.category || !formData.walletId) {
+        toast({ title: t('common.error'), description: t('transactions.errors.fill_category_wallet'), variant: 'destructive' });
         return;
       }
-      
-      // Add transaction
+
       addTransaction({
         amount: parseFloat(formData.amount),
         category: formData.category,
@@ -150,205 +149,154 @@ const TransactionForm: React.FC = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <motion.button 
-          className="p-2 bg-[#1364FF] rounded-full flex items-center justify-center"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <Plus className="w-5 h-5 text-white" />
-        </motion.button>
+        <Button>{t('transactions.add_transaction')}</Button>
       </DialogTrigger>
-      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white dark:bg-gray-800 dark:text-gray-200">
         <DialogHeader className="flex flex-row justify-between items-center">
-          <DialogTitle className="text-xl font-bold">
-            {formData.type === 'transfer' ? t('transactions.transfer') : t('transactions.add_transaction')}
-          </DialogTitle>
+           <DialogTitle className="text-xl font-bold">{t(`transactions.add_${formData.type}`)}</DialogTitle>
+           <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white dark:hover:bg-gray-700 dark:text-gray-400 dark:hover:text-gray-100">
+             <X size={16} />
+           </DialogClose>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="type" className="text-[#C6FE1E] mb-2 block">{t('transactions.transaction_type')}</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <button 
-                type="button"
-                className={`py-2 px-4 rounded-full text-center ${formData.type === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
-                onClick={() => setFormData({ ...formData, type: 'income' })}
+           <div className="space-y-2">
+              <Label className="text-[#868686] dark:text-gray-400">{t('transactions.transaction_type')}</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value: 'income' | 'expense' | 'transfer') => setFormData({ ...formData, type: value, category: '', destinationWalletId: '', fee: '0' })}
               >
-                {t('transactions.income')}
-              </button>
-              <button 
-                type="button"
-                className={`py-2 px-4 rounded-full text-center ${formData.type === 'expense' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
-                onClick={() => setFormData({ ...formData, type: 'expense' })}
+                <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                  <SelectValue placeholder={t('transactions.select_type')} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                   <SelectItem value="expense" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('transactions.expense')}</SelectItem>
+                   <SelectItem value="income" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('transactions.income')}</SelectItem>
+                   <SelectItem value="transfer" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('transactions.transfer')}</SelectItem>
+                </SelectContent>
+              </Select>
+           </div>
+
+           <div className="space-y-2">
+              <Label htmlFor="walletId" className="text-[#868686] dark:text-gray-400">
+                {formData.type === 'transfer' ? t('transactions.from_account') : t('transactions.wallet')}
+              </Label>
+              <Select
+                value={formData.walletId}
+                onValueChange={(value) => setFormData({ ...formData, walletId: value })}
+                required
               >
-                {t('transactions.expense')}
-              </button>
-              <button 
-                type="button"
-                className={`py-2 px-4 rounded-full text-center ${formData.type === 'transfer' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
-                onClick={() => setFormData({ ...formData, type: 'transfer', category: '' })}
-              >
-                {t('transactions.transfer')}
-              </button>
-            </div>
-          </div>
-          
-          {formData.type === 'transfer' ? (
-            // Transfer form fields
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.from_account')}</Label>
-                <Select
-                  value={formData.walletId}
-                  onValueChange={(value) => setFormData({ ...formData, walletId: value })}
-                >
-                  <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder={t('transactions.from_account')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-0 text-white">
-                    {wallets.map((wallet) => (
-                      <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
-                        {wallet.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="destinationWalletId" className="text-[#868686]">{t('transactions.to_account')}</Label>
-                <Select
-                  value={formData.destinationWalletId}
-                  onValueChange={(value) => setFormData({ ...formData, destinationWalletId: value })}
-                >
-                  <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder={t('transactions.to_account')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-0 text-white">
-                    {wallets.map((wallet) => (
-                      <SelectItem 
-                        key={wallet.id} 
-                        value={wallet.id}
-                        disabled={wallet.id === formData.walletId}
-                        className="hover:bg-[#333] focus:bg-[#333]"
-                      >
-                        {wallet.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
-                  className="bg-[#242425] border-0 text-white"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="fee" className="text-[#868686]">{t('transactions.fee')}</Label>
-                <Input
-                  id="fee"
-                  name="fee"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.fee}
-                  onChange={handleChange}
-                  className="bg-[#242425] border-0 text-white"
-                />
-              </div>
-            </>
-          ) : (
-            // Regular transaction fields
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
-                  className="bg-[#242425] border-0 text-white"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder={t('transactions.category')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-0 text-white">
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category} className="hover:bg-[#333] focus:bg-[#333]">
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.account')}</Label>
-                <Select
-                  value={formData.walletId}
-                  onValueChange={(value) => setFormData({ ...formData, walletId: value })}
-                >
-                  <SelectTrigger className="bg-[#242425] border-0 text-white">
-                    <SelectValue placeholder={t('transactions.account')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-0 text-white">
-                    {wallets.map((wallet) => (
-                      <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
-                        {wallet.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
-            <Input
-              id="description"
-              name="description"
-              placeholder={t('transactions.enter_description')}
-              value={formData.description}
-              onChange={handleChange}
-              required={formData.type !== 'transfer'}
-              className="bg-[#242425] border-0 text-white"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-[#868686]">{t('transactions.date')}</Label>
-            <DatePicker 
-              date={selectedDate}
-              setDate={setSelectedDate}
-            />
-          </div>
-          
-          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00] font-semibold border-0">
-            {formData.type === 'transfer' ? t('transactions.add_transfer') : t('transactions.add_transaction')}
-          </Button>
+                <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                  <SelectValue placeholder={t(formData.type === 'transfer' ? 'transactions.select_source' : 'transactions.select_wallet')} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                  {wallets.map((wallet) => (
+                    <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">
+                      {wallet.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+           </div>
+
+           {formData.type === 'transfer' && (
+             <div className="space-y-2">
+               <Label htmlFor="destinationWalletId" className="text-[#868686] dark:text-gray-400">{t('transactions.to_account')}</Label>
+               <Select
+                 value={formData.destinationWalletId}
+                 onValueChange={(value) => setFormData({ ...formData, destinationWalletId: value })}
+                 required
+               >
+                 <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                   <SelectValue placeholder={t('transactions.select_destination')} />
+                 </SelectTrigger>
+                 <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                   {wallets.map((wallet) => (
+                     <SelectItem
+                       key={wallet.id}
+                       value={wallet.id}
+                       disabled={wallet.id === formData.walletId}
+                       className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600"
+                     >
+                       {wallet.name}
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+             </div>
+           )}
+
+           <div className="space-y-2">
+             <Label htmlFor="amount" className="text-[#868686] dark:text-gray-400">{t('transactions.amount')}</Label>
+             <Input
+               id="amount"
+               name="amount"
+               type="number"
+               step="0.01"
+               placeholder="0.00"
+               value={formData.amount}
+               onChange={handleChange}
+               required
+               className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+             />
+           </div>
+
+           {(formData.type === 'income' || formData.type === 'expense') && (
+             <div className="space-y-2">
+               <Label htmlFor="category" className="text-[#868686] dark:text-gray-400">{t('transactions.category')}</Label>
+               <Input
+                 id="category"
+                 name="category"
+                 placeholder={t('transactions.enter_category')}
+                 value={formData.category}
+                 onChange={handleChange}
+                 required
+                 className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+               />
+             </div>
+           )}
+
+           {formData.type === 'transfer' && (
+             <div className="space-y-2">
+               <Label htmlFor="fee" className="text-[#868686] dark:text-gray-400">{t('transactions.fee')}</Label>
+               <Input
+                 id="fee"
+                 name="fee"
+                 type="number"
+                 step="0.01"
+                 placeholder="0"
+                 value={formData.fee}
+                 onChange={handleChange}
+                 className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+               />
+             </div>
+           )}
+
+           <div className="space-y-2">
+             <Label htmlFor="description" className="text-[#868686] dark:text-gray-400">{t('transactions.description')}</Label>
+             <Input
+               id="description"
+               name="description"
+               placeholder={t('transactions.enter_description')}
+               value={formData.description}
+               onChange={handleChange}
+               className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+             />
+           </div>
+
+           <div className="space-y-2">
+             <Label className="text-[#868686] dark:text-gray-400">{t('transactions.date')}</Label>
+             <div className="bg-[#242425] rounded-md border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+               <DatePicker
+                 date={selectedDate}
+                 setDate={setSelectedDate}
+               />
+             </div>
+           </div>
+
+           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white">
+             {t(`transactions.add_${formData.type}`)}
+           </Button>
         </form>
       </DialogContent>
     </Dialog>

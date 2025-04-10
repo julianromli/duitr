@@ -156,7 +156,7 @@ const WalletList: React.FC = () => {
         {wallets.map((wallet) => (
           <motion.div 
             key={wallet.id} 
-            className="bg-[#242425] rounded-xl overflow-hidden"
+            className="bg-[#242425] rounded-xl overflow-hidden dark:bg-gray-800"
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -171,26 +171,26 @@ const WalletList: React.FC = () => {
                     {getWalletIcon(wallet.type)}
                   </div>
                   <div>
-                    <p className="font-medium text-white">{wallet.name}</p>
-                    <p className="text-xs text-[#868686] capitalize">{wallet.type}</p>
+                    <p className="font-medium text-white dark:text-gray-100">{wallet.name}</p>
+                    <p className="text-xs text-[#868686] capitalize dark:text-gray-400">{t(`wallets.types.${wallet.type}`, wallet.type)}</p>
                   </div>
                 </div>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger className="focus:outline-none">
-                    <MoreVertical size={18} className="text-[#868686]" />
+                    <MoreVertical size={18} className="text-[#868686] dark:text-gray-400" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-[#1A1A1A] border-none text-white">
+                  <DropdownMenuContent className="bg-[#1A1A1A] border-none text-white dark:bg-gray-700 dark:text-gray-200">
                     <DropdownMenuLabel>{t('common.options')}</DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-[#333]" />
+                    <DropdownMenuSeparator className="bg-[#333] dark:bg-gray-600" />
                     <DropdownMenuItem 
-                      className="focus:bg-[#333] cursor-pointer"
+                      className="focus:bg-[#333] cursor-pointer dark:focus:bg-gray-600"
                       onClick={() => handleEditWallet(wallet)}
                     >
                       <Edit className="mr-2 h-4 w-4" /> {t('wallets.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      className="text-red-400 focus:bg-[#333] focus:text-red-400 cursor-pointer"
+                      className="text-red-400 focus:bg-[#333] focus:text-red-400 cursor-pointer dark:focus:bg-gray-600 dark:focus:text-red-400"
                       onClick={() => handleDeleteWallet(wallet.id)}
                     >
                       <Trash className="mr-2 h-4 w-4" /> {t('wallets.delete')}
@@ -200,16 +200,16 @@ const WalletList: React.FC = () => {
               </div>
               
               <div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-white dark:text-gray-100">
                   {formatCurrency(wallet.balance)}
                 </p>
                 
                 <div className="flex mt-3 gap-6">
                   <div className="space-y-0.5">
-                    <div className="flex items-center text-xs text-[#C6FE1E]">
+                    <div className="flex items-center text-xs text-[#C6FE1E] dark:text-green-400">
                       <ArrowUpRight className="w-3 h-3 mr-1" /> {t('transactions.income')}
                     </div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-white dark:text-gray-200">
                       {formatCurrency(
                         walletStats.walletTransactions
                           .find(w => w.id === wallet.id)?.income || 0
@@ -218,10 +218,10 @@ const WalletList: React.FC = () => {
                   </div>
                   
                   <div className="space-y-0.5">
-                    <div className="flex items-center text-xs text-red-400">
+                    <div className="flex items-center text-xs text-red-400 dark:text-red-400">
                       <ArrowDownRight className="w-3 h-3 mr-1" /> {t('transactions.expense')}
                     </div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-white dark:text-gray-200">
                       {formatCurrency(
                         walletStats.walletTransactions
                           .find(w => w.id === wallet.id)?.expense || 0
@@ -244,21 +244,21 @@ const WalletList: React.FC = () => {
               <Wallet size={24} className="text-[#868686]" />
             </div>
             <p className="text-[#868686]">{t('wallets.no_wallets')}</p>
-            <p className="text-xs text-[#868686] mt-1">{t('wallets.use_plus_button')}</p>
+            <p className="text-xs text-[#868686] mt-1">{t('wallets.addAccount')}</p>
           </motion.div>
         )}
       </div>
 
       {/* Edit Wallet Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
+        <DialogContent className="bg-[#1A1A1A] border-none text-white dark:bg-gray-800 dark:text-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white">{t('wallets.edit')}</DialogTitle>
+            <DialogTitle>{t('wallets.edit')}</DialogTitle>
           </DialogHeader>
           {editWallet && (
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-[#868686]">{t('wallets.accountName')}</Label>
+                <Label htmlFor="name" className="text-[#868686] dark:text-gray-400">{t('wallets.accountName')}</Label>
                 <Input
                   id="name"
                   name="name"
@@ -266,12 +266,12 @@ const WalletList: React.FC = () => {
                   value={editWallet.name}
                   onChange={handleEditChange}
                   required
-                  className="bg-[#242425] border-none text-white"
+                  className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="balance" className="text-[#868686]">{t('wallets.balance')}</Label>
+                <Label htmlFor="balance" className="text-[#868686] dark:text-gray-400">{t('wallets.balance')}</Label>
                 <Input
                   id="balance"
                   name="balance"
@@ -281,24 +281,24 @@ const WalletList: React.FC = () => {
                   value={editWallet.balance}
                   onChange={handleEditChange}
                   required
-                  className="bg-[#242425] border-none text-white"
+                  className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="type" className="text-[#868686]">{t('wallets.accountType')}</Label>
+                <Label htmlFor="type" className="text-[#868686] dark:text-gray-400">{t('wallets.accountType')}</Label>
                 <Select 
                   value={editWallet.type} 
                   onValueChange={(value) => setEditWallet({ ...editWallet, type: value })}
                 >
-                  <SelectTrigger className="bg-[#242425] border-none text-white">
+                  <SelectTrigger className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200">
                     <SelectValue placeholder={t('wallets.selectAccountType')} />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-none text-white">
+                  <SelectContent className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200">
                     {walletTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value} className="flex items-center">
+                      <SelectItem key={type.value} value={type.value} className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">
                         <div className="flex items-center gap-2">
-                          <type.icon size={16} className="text-[#868686]" />
+                          <type.icon size={16} className="text-[#868686] dark:text-gray-400" />
                           <span>{type.label}</span>
                         </div>
                       </SelectItem>
@@ -308,44 +308,25 @@ const WalletList: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="color" className="text-[#868686]">{t('wallets.accountColor')}</Label>
-                <Select 
-                  value={editWallet.color} 
-                  onValueChange={(value) => setEditWallet({ ...editWallet, color: value })}
-                >
-                  <SelectTrigger className="bg-[#242425] border-none text-white">
-                    <SelectValue placeholder={t('wallets.selectColor')}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-4 h-4 rounded-full" 
-                          style={{ backgroundColor: editWallet.color }} 
-                        />
-                        <span>
-                          {colors.find(c => c.value === editWallet.color)?.label || t('wallets.selectColor')}
-                        </span>
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-none text-white">
-                    {colors.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-4 h-4 rounded-full" 
-                            style={{ backgroundColor: color.value }} 
-                          />
-                          <span>{color.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-[#868686] dark:text-gray-400">{t('wallets.accountColor')}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {colors.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setEditWallet({ ...editWallet, color: color.value })}
+                      className={cn(
+                        "w-8 h-8 rounded-full border-2",
+                        editWallet.color === color.value ? "border-white dark:border-gray-200" : "border-transparent"
+                      )}
+                      style={{ backgroundColor: color.value }}
+                      aria-label={color.label}
+                    />
+                  ))}
+                </div>
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium"
-              >
+              <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 mt-4 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white">
                 {t('common.save')}
               </Button>
             </form>
