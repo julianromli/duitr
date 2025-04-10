@@ -325,7 +325,8 @@ const Settings: React.FC = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/auth/login');
+      // Redirect to login page after successful sign out
+      navigate('/auth/login', { replace: true }); 
     } catch (error) {
       console.error('Error logging out:', error);
       toast({

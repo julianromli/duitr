@@ -140,12 +140,11 @@ const App = () => {
                     <Route path="/forgotpassword" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     
-                    {/* Auth callback routes - handle all possible formats */}
-                    <Route path="/callback" element={<AuthCallback />} />
-                    <Route path="/callback/:code" element={<AuthCallback />} />
-                    <Route path="/callback/*" element={<AuthCallback />} />
+                    {/* Auth callback route - must match Supabase redirect URI */}
+                    <Route path="/auth/callback" element={<AuthCallback />} />
                     
-                    {/* Handle 404 in auth flow by redirecting to the auth callback page */}
+                    {/* Handle common 404 patterns during auth flow by redirecting to the auth callback page */}
+                    {/* These might occur due to specific OAuth provider behaviors or network issues */}
                     <Route path="/r5sms-*" element={<Navigate to="/callback" replace />} />
                     <Route path="/sin1:*" element={<Navigate to="/callback" replace />} />
                     <Route path="*NOT_FOUND*" element={<Navigate to="/callback" replace />} />
