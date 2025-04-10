@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
+  const { user, isBalanceHidden, updateBalanceVisibility } = useAuth();
   
   // State for form dialogs
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
   };
   
   const toggleBalanceVisibility = () => {
-    setIsBalanceHidden(!isBalanceHidden);
+    updateBalanceVisibility(!isBalanceHidden);
   };
   
   // Display masked balance when hidden
@@ -72,13 +72,7 @@ const Dashboard: React.FC = () => {
   // Add Money Dialog
   const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
 
-  // Sample user data
-  const userData = {
-    name: 'Faiz',
-    notifications: 2,
-  };
-
-  const { user } = useAuth();
+  // Profile image and username state
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
 

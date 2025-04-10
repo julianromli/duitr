@@ -325,8 +325,8 @@ const Settings: React.FC = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      // Redirect to login page after successful sign out
-      navigate('/auth/login', { replace: true }); 
+      // Redirect to the specific external login URL after successful sign out
+      window.location.replace('/login'); 
     } catch (error) {
       console.error('Error logging out:', error);
       toast({
