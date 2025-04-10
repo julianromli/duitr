@@ -1,5 +1,6 @@
 // Add comment indicating changes made to the file
 // Created WantToBuyList component to display and manage wishlist items.
+// Fixed priority translation key to properly display translated priority values.
 
 import React from 'react';
 import { useFinance } from '@/context/FinanceContext';
@@ -7,7 +8,7 @@ import { WantToBuyItem } from '@/types/finance';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from 'react-i18next';
-import { Edit, Trash, ShoppingBag, Package, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Edit, Trash, ShoppingBag, Package, HelpCircle, AlertTriangle, Calendar } from 'lucide-react';
 import { formatIDR } from '@/utils/currency'; // Assuming formatIDR is suitable
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -52,6 +53,16 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
     }
   };
 
+  // Map priority values to translation keys
+  const getPriorityTranslationKey = (priority: string) => {
+    switch (priority) {
+      case 'Tinggi': return 'budget.priorityHigh';
+      case 'Sedang': return 'budget.priorityMedium';
+      case 'Rendah': return 'budget.priorityLow';
+      default: return 'budget.priorityMedium';
+    }
+  };
+
   const listVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -79,7 +90,7 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
         <motion.div
           key={item.id}
           variants={itemVariants}
-          className={`flex items-center p-3 bg-[#242425] dark:bg-gray-800 rounded-lg shadow-sm ${item.is_purchased ? 'opacity-60' : ''}`}
+          className={`flex items-center p-3 bg-[#242425] rounded-lg shadow-sm ${item.is_purchased ? 'opacity-60' : ''}`}
         >
           <Checkbox
             id={`wtb-${item.id}`}
@@ -101,9 +112,12 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
               <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category.toLowerCase()}`)}</span>
               <span className="flex items-center gap-1">
                     <AlertTriangle className={`h-3 w-3 ${getPriorityColor(item.priority)}`} />
-                    {t(`budget.priority${item.priority}`)}
+                    {t(getPriorityTranslationKey(item.priority))}
               </span>
-              <span>{t('budget.estimate')}: {format(new Date(item.estimated_date), 'dd MMM yyyy')}</span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-gray-400" />
+                {format(new Date(item.estimated_date), 'dd MMM yyyy')}
+              </span>
             </div>
           </div>
           <div className="ml-2 flex items-center flex-shrink-0">

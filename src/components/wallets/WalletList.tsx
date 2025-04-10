@@ -156,7 +156,7 @@ const WalletList: React.FC = () => {
         {wallets.map((wallet) => (
           <motion.div 
             key={wallet.id} 
-            className="bg-[#242425] rounded-xl overflow-hidden dark:bg-gray-800"
+            className="bg-[#242425] rounded-xl overflow-hidden"
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
