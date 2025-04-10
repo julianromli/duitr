@@ -1,5 +1,6 @@
 // Add comment indicating changes made to the file
 // Created PinjamanForm component for adding/editing debt/credit items.
+// Updated UI styling to match ExpenseForm.
 
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -37,6 +38,7 @@ interface PinjamanFormProps {
 const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToEdit }) => {
   const { addPinjamanItem, updatePinjamanItem } = useFinance();
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   const { control, handleSubmit, register, reset, formState: { errors } } = useForm<PinjamanFormData>({
     resolver: zodResolver(pinjamanSchema),
@@ -86,63 +88,79 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
           ...itemToEdit,
           ...itemPayload,
         });
+        
+        toast({
+          title: t('common.success'),
+          description: t('budget.pinjamanUpdated'),
+        });
       } else {
         addPinjamanItem(itemPayload);
+        
+        toast({
+          title: t('common.success'),
+          description: t('budget.pinjamanAdded'),
+        });
       }
       onOpenChange(false);
     } catch (error) {
       console.error("Form submission error:", error);
+      toast({
+        title: t('common.error'),
+        description: t('common.error_occurred'),
+        variant: 'destructive',
+      });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white dark:bg-gray-800 dark:text-gray-200">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? t('budget.editPinjaman') : t('budget.addPinjaman')}</DialogTitle>
-           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+        <DialogHeader className="flex flex-row justify-between items-center">
+          <DialogTitle className="text-xl font-bold">{isEditing ? t('budget.editPinjaman') : t('budget.addPinjaman')}</DialogTitle>
+          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
+            <X size={16} />
           </DialogClose>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           {/* Transaction Name */}
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-[#868686] dark:text-gray-400">{t('budget.pinjamanName')}</Label>
+            <Label htmlFor="name" className="text-[#868686]">{t('budget.pinjamanName')}</Label>
             <Input
               id="name"
               {...register('name')}
-              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+              className="bg-[#242425] border-0 text-white"
               placeholder={t('budget.pinjamanNamePlaceholder')}
             />
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">{t('budget.pinjamanAmount')}</Label>
+            <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
             <Input
               id="amount"
               type="number"
+              step="0.01"
+              placeholder="0.00"
               {...register('amount')}
-              placeholder="0"
+              className="bg-[#242425] border-0 text-white"
             />
-            {errors.amount && <p className="text-sm text-red-500">{errors.amount.message}</p>}
+            {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
           </div>
 
            {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-[#868686] dark:text-gray-400">{t('budget.pinjamanCategory')}</Label>
+            <Label htmlFor="category" className="text-[#868686]">{t('budget.pinjamanCategory')}</Label>
              <Controller
                 name="category"
                 control={control}
                 render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                      <SelectTrigger className="bg-[#242425] border-0 text-white">
                         <SelectValue placeholder={t('budget.selectCategory')} />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
-                        <SelectItem value="Utang" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.utang')}</SelectItem>
-                        <SelectItem value="Piutang" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.piutang')}</SelectItem>
+                      <SelectContent className="bg-[#242425] border-0 text-white">
+                        <SelectItem value="Utang" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.utang')}</SelectItem>
+                        <SelectItem value="Piutang" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.piutang')}</SelectItem>
                       </SelectContent>
                     </Select>
                 )}
@@ -152,12 +170,12 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
 
            {/* Due Date */}
           <div className="space-y-2">
-             <Label htmlFor="due_date" className="text-[#868686] dark:text-gray-400">{t('budget.dueDate')}</Label>
+             <Label htmlFor="due_date" className="text-[#868686]">{t('budget.dueDate')}</Label>
              <Controller
                 name="due_date"
                 control={control}
                 render={({ field }) => (
-                    <div className="bg-[#242425] rounded-md border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                    <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
                         <DatePicker
                             date={field.value}
                             setDate={field.onChange}
@@ -168,23 +186,9 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
             {errors.due_date && <p className="text-xs text-red-500">{errors.due_date.message}</p>}
           </div>
 
-          {/* Optional Icon */}
-          {/* <div className="space-y-2">
-            <Label htmlFor="icon" className="text-[#868686] dark:text-gray-400">{t('budget.itemIcon')} (Optional)</Label>
-            <Input
-              id="icon"
-              {...register('icon')}
-              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
-              placeholder={t('budget.iconPlaceholder')}
-            />
-             {errors.icon && <p className="text-xs text-red-500">{errors.icon.message}</p>}
-          </div> */}
-
-          <DialogFooter>
-            <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white">
-              {isEditing ? t('common.saveChanges') : t('common.addItem')}
-            </Button>
-          </DialogFooter>
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+            {isEditing ? t('common.saveChanges') : t('common.addItem')}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

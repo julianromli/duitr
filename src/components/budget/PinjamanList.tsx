@@ -1,5 +1,6 @@
 // Add comment indicating changes made to the file
 // Created PinjamanList component to display debts/credits with due date coloring.
+// Updated to show due date with icon instead of text label.
 
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
@@ -47,7 +48,7 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
   // Function to determine background and border color based on due date
   const getDueDateStyling = (dueDateStr: string, isSettled: boolean): string => {
       if (isSettled) {
-          return 'bg-[#242425]/50 dark:bg-gray-800/50 border-l-4 border-gray-500'; // Settled style
+          return 'bg-[#242425]/50 border-l-4 border-gray-500'; // Settled style
       }
       try {
         const dueDate = parseISO(dueDateStr);
@@ -63,10 +64,10 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
         if (diffDays <= 3) {
              return 'bg-yellow-500/20 dark:bg-yellow-800/40 border-l-4 border-yellow-500'; // Due soon (Yellow)
         }
-         return 'bg-[#242425] dark:bg-gray-800 border-l-4 border-green-500'; // Due later (Green border)
+         return 'bg-[#242425] border-l-4 border-green-500'; // Due later (Green border)
       } catch (e) {
           console.error("Error parsing due date:", dueDateStr, e);
-          return 'bg-[#242425] dark:bg-gray-800'; // Default background on error
+          return 'bg-[#242425]'; // Default background on error
       }
   };
 
@@ -121,7 +122,8 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
             <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
               <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category.toLowerCase()}`)}</span>
               <span className="flex items-center gap-1">
-                 <Clock className="h-3 w-3"/> {t('budget.dueDate')}: {format(parseISO(item.due_date), 'dd MMM yyyy')}
+                 <Clock className="h-3 w-3 text-gray-400"/> 
+                 {format(parseISO(item.due_date), 'dd MMM yyyy')}
               </span>
             </div>
           </div>

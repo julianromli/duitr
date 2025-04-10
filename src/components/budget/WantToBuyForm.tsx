@@ -1,5 +1,6 @@
 // Add comment indicating changes made to the file
 // Created WantToBuyForm component for adding/editing wishlist items.
+// Updated UI styling to match ExpenseForm.
 
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -101,35 +102,50 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
           ...itemToEdit, // Include id, userId, created_at, is_purchased from original item
           ...updateItemPayload, // Apply validated & formatted changes
         });
+        
+        toast({
+          title: t('common.success'),
+          description: t('budget.wantToBuyUpdated')
+        });
       } else {
         // Ensure addItemPayload matches the expected type for addWantToBuyItem
         addWantToBuyItem(addItemPayload);
+        
+        toast({
+          title: t('common.success'),
+          description: t('budget.wantToBuyAdded')
+        });
       }
       onOpenChange(false); // Close dialog on success
     } catch (error) {
       // Errors are handled within the context functions with toasts
       console.error("Form submission error:", error);
+      
+      toast({
+        title: t('common.error'),
+        description: t('common.error_occurred'),
+        variant: 'destructive'
+      });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white dark:bg-gray-800 dark:text-gray-200">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? t('budget.editWantToBuy') : t('budget.addWantToBuy')}</DialogTitle>
-           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+        <DialogHeader className="flex flex-row justify-between items-center">
+          <DialogTitle className="text-xl font-bold">{isEditing ? t('budget.editWantToBuy') : t('budget.addWantToBuy')}</DialogTitle>
+          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
+            <X size={16} />
           </DialogClose>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           {/* Item Name */}
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-[#868686] dark:text-gray-400">{t('budget.itemName')}</Label>
+            <Label htmlFor="name" className="text-[#868686]">{t('budget.itemName')}</Label>
             <Input
               id="name"
               {...register('name')}
-              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+              className="bg-[#242425] border-0 text-white"
               placeholder={t('budget.itemNamePlaceholder')}
             />
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
@@ -137,13 +153,13 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
 
           {/* Price */}
            <div className="space-y-2">
-            <Label htmlFor="price" className="text-[#868686] dark:text-gray-400">{t('budget.itemPrice')}</Label>
+            <Label htmlFor="price" className="text-[#868686]">{t('budget.itemPrice')}</Label>
             <Input
               id="price"
               type="number"
-              step="any" // Allow decimals
+              step="0.01"
               {...register('price')}
-              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+              className="bg-[#242425] border-0 text-white"
               placeholder="0.00"
             />
              {errors.price && <p className="text-xs text-red-500">{errors.price.message}</p>}
@@ -151,18 +167,18 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
 
            {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-[#868686] dark:text-gray-400">{t('budget.itemCategory')}</Label>
+            <Label htmlFor="category" className="text-[#868686]">{t('budget.itemCategory')}</Label>
              <Controller
                 name="category"
                 control={control}
                 render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                      <SelectTrigger className="bg-[#242425] border-0 text-white">
                         <SelectValue placeholder={t('budget.selectCategory')} />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
-                        <SelectItem value="Keinginan" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.keinginan')}</SelectItem>
-                        <SelectItem value="Kebutuhan" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.kebutuhan')}</SelectItem>
+                      <SelectContent className="bg-[#242425] border-0 text-white">
+                        <SelectItem value="Keinginan" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.keinginan')}</SelectItem>
+                        <SelectItem value="Kebutuhan" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.kebutuhan')}</SelectItem>
                       </SelectContent>
                     </Select>
                 )}
@@ -172,19 +188,19 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
 
           {/* Priority */}
            <div className="space-y-2">
-            <Label htmlFor="priority" className="text-[#868686] dark:text-gray-400">{t('budget.itemPriority')}</Label>
+            <Label htmlFor="priority" className="text-[#868686]">{t('budget.itemPriority')}</Label>
              <Controller
                 name="priority"
                 control={control}
                 render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                      <SelectTrigger className="bg-[#242425] border-0 text-white">
                         <SelectValue placeholder={t('budget.selectPriority')} />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
-                        <SelectItem value="Tinggi" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.priorityHigh')}</SelectItem>
-                        <SelectItem value="Sedang" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.priorityMedium')}</SelectItem>
-                        <SelectItem value="Rendah" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.priorityLow')}</SelectItem>
+                      <SelectContent className="bg-[#242425] border-0 text-white">
+                        <SelectItem value="Tinggi" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.priorityHigh')}</SelectItem>
+                        <SelectItem value="Sedang" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.priorityMedium')}</SelectItem>
+                        <SelectItem value="Rendah" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.priorityLow')}</SelectItem>
                       </SelectContent>
                     </Select>
                 )}
@@ -194,12 +210,12 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
 
            {/* Estimated Date */}
           <div className="space-y-2">
-             <Label htmlFor="estimated_date" className="text-[#868686] dark:text-gray-400">{t('budget.estimatedDate')}</Label>
+             <Label htmlFor="estimated_date" className="text-[#868686]">{t('budget.estimatedDate')}</Label>
              <Controller
                 name="estimated_date"
                 control={control}
                 render={({ field }) => (
-                    <div className="bg-[#242425] rounded-md border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                    <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
                         <DatePicker
                             date={field.value}
                             setDate={field.onChange}
@@ -210,22 +226,9 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
             {errors.estimated_date && <p className="text-xs text-red-500">{errors.estimated_date.message}</p>}
           </div>
 
-          {/* Optional Icon - Simple text input for now */}
-          {/* <div className="space-y-2">
-            <Label htmlFor="icon" className="text-[#868686] dark:text-gray-400">{t('budget.itemIcon')} (Optional)</Label>
-            <Input
-              id="icon"
-              {...register('icon')}
-              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
-              placeholder={t('budget.iconPlaceholder')}
-            />
-             {errors.icon && <p className="text-xs text-red-500">{errors.icon.message}</p>}\n          </div> */}
-
-          <DialogFooter>
-            <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white">
-              {isEditing ? t('common.saveChanges') : t('common.addItem')}
-            </Button>
-          </DialogFooter>
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+            {isEditing ? t('common.saveChanges') : t('common.addItem')}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
