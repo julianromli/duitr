@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,6 +8,7 @@ import AppLogo from '@/components/shared/Logo';
 
 const Header: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -92,15 +93,21 @@ const Header: React.FC = () => {
         return t('navbar.dashboard');
       case '/transactions':
         return t('navbar.transactions');
-      case '/budgets':
-        return t('navbar.budgets');
+      case '/budget':
+        return t('navbar.budget');
       case '/wallets':
         return t('navbar.wallets');
       case '/settings':
         return t('navbar.settings');
+      case '/profile':
+        return t('navbar.profile');
       default:
         return t('navbar.dashboard');
     }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
   };
 
   return (
@@ -112,7 +119,10 @@ const Header: React.FC = () => {
         </h1>
       </div>
       {user && (
-        <Avatar className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
+        <Avatar 
+          className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200 cursor-pointer"
+          onClick={handleProfileClick}
+        >
           {profileImage ? (
             <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
           ) : (

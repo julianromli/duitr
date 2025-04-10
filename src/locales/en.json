@@ -9,7 +9,17 @@
     "loading": "Loading...",
     "save": "Save Changes",
     "saved": "Saved",
-    "apply": "Apply"
+    "apply": "Apply",
+    "options": "Options",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saveChanges": "Save Changes",
+    "addItem": "Add Item",
+    "cancel": "Cancel",
+    "areYouSure": "Are you sure?",
+    "cannotBeUndone": "This action cannot be undone.",
+    "comingSoon": "Coming Soon...",
+    "added_successfully": "added successfully"
   },
   "pages": {
     "dashboard": "Dashboard",
@@ -24,7 +34,10 @@
     "budgets": "Budgets",
     "wallets": "Wallets",
     "settings": "Settings",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "home": "Home",
+    "statistics": "Statistics",
+    "budget": "Budget"
   },
   "dashboard": {
     "title": "Financial Overview",
@@ -307,5 +320,49 @@
     "red": "Red",
     "purple": "Purple",
     "orange": "Orange"
+  },
+  "budget": {
+    "wantToBuyTitle": "Dream Items",
+    "pinjamanTitle": "Debts & Credits",
+    "addWantToBuy": "Add Dream Item",
+    "editWantToBuy": "Edit Dream Item",
+    "addPinjaman": "Add Debt/Credit",
+    "editPinjaman": "Edit Debt/Credit",
+    "itemName": "Item Name",
+    "itemNamePlaceholder": "e.g., New Laptop",
+    "itemPrice": "Price",
+    "itemCategory": "Category",
+    "selectCategory": "Select category",
+    "keinginan": "Want",
+    "kebutuhan": "Need",
+    "itemPriority": "Priority",
+    "selectPriority": "Select priority",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low",
+    "estimatedDate": "Estimated Date",
+    "noWantToBuyItems": "No dream items added yet.",
+    "deleteWantToBuyConfirm": "Are you sure you want to delete the dream item",
+    "estimate": "Est.",
+    "pinjamanName": "Transaction Name",
+    "pinjamanNamePlaceholder": "e.g., Loan from John",
+    "pinjamanCategory": "Category",
+    "utang": "Debt",
+    "piutang": "Credit",
+    "dueDate": "Due Date",
+    "noPinjamanItems": "No debts or credits recorded yet.",
+    "deletePinjamanConfirm": "Are you sure you want to delete the transaction",
+    "wantToBuyAdded": "Dream item added.",
+    "wantToBuyDeleted": "Dream item deleted.",
+    "pinjamanAdded": "Debt/Credit item added.",
+    "pinjamanDeleted": "Debt/Credit item deleted."
+  },
+  "auth": {
+    "required": "Authentication required.",
+    "welcome_title": "Welcome!",
+    "welcome_description": "You've successfully signed in.",
+    "verification_sent": "Verification email sent! Please check your inbox.",
+    "signed_out_title": "Signed Out",
+    "signed_out_description": "You have been signed out."
   }
 } 

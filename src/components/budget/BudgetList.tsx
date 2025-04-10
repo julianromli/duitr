@@ -104,78 +104,80 @@ const BudgetList: React.FC = () => {
               
               return (
                 <div key={budget.id} className="space-y-2">
-                  <div className="flex justify-between items-baseline">
-                    {isEditing ? (
-                      <Input 
-                        value={editForm.category}
-                        onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                        className="w-40 h-8"
-                      />
-                    ) : (
-                      <div className="flex justify-between w-full">
-                        <h3 className="font-medium">{budget.category}</h3>
+                  {isEditing ? (
+                    <div className="flex flex-col space-y-3 bg-gray-100 dark:bg-gray-800 p-3 rounded-md border">
+                      <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <div className="text-sm font-medium">
-                            <span className={remaining < 0 ? 'text-finance-expense' : ''}>
-                              {formatCurrency(budget.spent)}
-                            </span>
-                            <span className="text-muted-foreground"> / </span>
-                            {isEditing ? (
-                              <Input 
-                                value={editForm.amount}
-                                onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
-                                className="w-24 h-7 inline mx-1"
-                                type="number"
-                                min="0"
-                              />
-                            ) : (
-                              <span className="text-muted-foreground">{formatCurrency(budget.amount)}</span>
-                            )}
-                          </div>
-                          
-                          {isEditing ? (
-                            <div className="flex items-center gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-7 w-7" 
-                                onClick={() => handleSaveEdit(budget)}
-                              >
-                                <Check className="h-4 w-4 text-finance-income" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-7 w-7" 
-                                onClick={handleCancelEdit}
-                              >
-                                <X className="h-4 w-4 text-finance-expense" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEdit(budget)}>
-                                  <Edit className="mr-2 h-4 w-4" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDelete(budget.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                          <label className="text-sm font-medium">Category:</label>
+                          <Input 
+                            value={editForm.category}
+                            onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                            className="w-40 h-8"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Amount:</label>
+                          <Input 
+                            value={editForm.amount}
+                            onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
+                            className="w-28 h-8"
+                            type="number"
+                            min="0"
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleCancelEdit}
+                          className="h-8"
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={() => handleSaveEdit(budget)}
+                          className="h-8 bg-finance-income text-black hover:bg-finance-income/90"
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">{budget.category}</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium">
+                          <span className={remaining < 0 ? 'text-finance-expense' : ''}>
+                            {formatCurrency(budget.spent)}
+                          </span>
+                          <span className="text-muted-foreground"> / </span>
+                          <span className="text-muted-foreground">{formatCurrency(budget.amount)}</span>
+                        </div>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(budget)}>
+                              <Edit className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(budget.id)}
+                              className="text-destructive"
+                            >
+                              <Trash className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  )}
                   
                   <Progress 
                     value={Math.min(percentage, 100)} 

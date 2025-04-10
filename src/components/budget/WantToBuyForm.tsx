@@ -1,0 +1,235 @@
+// Add comment indicating changes made to the file
+// Created WantToBuyForm component for adding/editing wishlist items.
+
+import React, { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useFinance } from '@/context/FinanceContext';
+import { WantToBuyItem } from '@/types/finance';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
+import { X, ShoppingBag, Calendar, Tag, AlertTriangle } from 'lucide-react'; // Added icons
+
+// Zod schema for validation
+const wantToBuySchema = z.object({
+  name: z.string().min(1, { message: 'Item name is required' }),
+  price: z.coerce.number().positive({ message: 'Price must be positive' }),
+  category: z.enum(['Keinginan', 'Kebutuhan'], { required_error: 'Category is required' }),
+  priority: z.enum(['Tinggi', 'Sedang', 'Rendah'], { required_error: 'Priority is required' }),
+  estimated_date: z.date({ required_error: 'Estimated date is required' }),
+  icon: z.string().optional().nullable(),
+});
+
+type WantToBuyFormData = z.infer<typeof wantToBuySchema>;
+
+interface WantToBuyFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  itemToEdit?: WantToBuyItem | null; // Pass item for editing
+}
+
+const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemToEdit }) => {
+  const { addWantToBuyItem, updateWantToBuyItem } = useFinance();
+  const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const { control, handleSubmit, register, reset, setValue, formState: { errors } } = useForm<WantToBuyFormData>({
+    resolver: zodResolver(wantToBuySchema),
+    defaultValues: {
+      name: '',
+      price: 0,
+      category: 'Keinginan',
+      priority: 'Sedang',
+      estimated_date: new Date(),
+      icon: null,
+    }
+  });
+
+  const isEditing = !!itemToEdit;
+
+  useEffect(() => {
+    if (itemToEdit) {
+      // Pre-fill form if editing
+      reset({
+        name: itemToEdit.name,
+        price: itemToEdit.price,
+        category: itemToEdit.category,
+        priority: itemToEdit.priority,
+        estimated_date: new Date(itemToEdit.estimated_date), // Convert string back to Date
+        icon: itemToEdit.icon,
+      });
+    } else {
+      // Reset to defaults when adding or dialog closes
+      reset({
+        name: '',
+        price: 0,
+        category: 'Keinginan',
+        priority: 'Sedang',
+        estimated_date: new Date(),
+        icon: null,
+      });
+    }
+  }, [itemToEdit, reset, open]); // Reset when itemToEdit changes or dialog opens/closes
+
+  const onSubmit = (data: WantToBuyFormData) => {
+    // Construct payload explicitly for add operation
+    const addItemPayload = {
+      name: data.name,
+      price: data.price,
+      category: data.category,
+      priority: data.priority,
+      estimated_date: data.estimated_date.toISOString().split('T')[0],
+      icon: data.icon, // icon is optional
+    };
+
+    // Construct payload for update operation (includes all editable fields)
+    const updateItemPayload = {
+      ...addItemPayload, // Reuse common fields
+      // is_purchased is handled separately or in the updateWantToBuyItem function
+    };
+
+    try {
+      if (isEditing && itemToEdit) {
+        updateWantToBuyItem({
+          ...itemToEdit, // Include id, userId, created_at, is_purchased from original item
+          ...updateItemPayload, // Apply validated & formatted changes
+        });
+      } else {
+        // Ensure addItemPayload matches the expected type for addWantToBuyItem
+        addWantToBuyItem(addItemPayload);
+      }
+      onOpenChange(false); // Close dialog on success
+    } catch (error) {
+      // Errors are handled within the context functions with toasts
+      console.error("Form submission error:", error);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white dark:bg-gray-800 dark:text-gray-200">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? t('budget.editWantToBuy') : t('budget.addWantToBuy')}</DialogTitle>
+           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          {/* Item Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-[#868686] dark:text-gray-400">{t('budget.itemName')}</Label>
+            <Input
+              id="name"
+              {...register('name')}
+              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+              placeholder={t('budget.itemNamePlaceholder')}
+            />
+            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+          </div>
+
+          {/* Price */}
+           <div className="space-y-2">
+            <Label htmlFor="price" className="text-[#868686] dark:text-gray-400">{t('budget.itemPrice')}</Label>
+            <Input
+              id="price"
+              type="number"
+              step="any" // Allow decimals
+              {...register('price')}
+              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+              placeholder="0.00"
+            />
+             {errors.price && <p className="text-xs text-red-500">{errors.price.message}</p>}
+          </div>
+
+           {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category" className="text-[#868686] dark:text-gray-400">{t('budget.itemCategory')}</Label>
+             <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                        <SelectValue placeholder={t('budget.selectCategory')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                        <SelectItem value="Keinginan" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.keinginan')}</SelectItem>
+                        <SelectItem value="Kebutuhan" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.kebutuhan')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                )}
+            />
+            {errors.category && <p className="text-xs text-red-500">{errors.category.message}</p>}
+          </div>
+
+          {/* Priority */}
+           <div className="space-y-2">
+            <Label htmlFor="priority" className="text-[#868686] dark:text-gray-400">{t('budget.itemPriority')}</Label>
+             <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                        <SelectValue placeholder={t('budget.selectPriority')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                        <SelectItem value="Tinggi" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.priorityHigh')}</SelectItem>
+                        <SelectItem value="Sedang" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.priorityMedium')}</SelectItem>
+                        <SelectItem value="Rendah" className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">{t('budget.priorityLow')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                )}
+             />
+             {errors.priority && <p className="text-xs text-red-500">{errors.priority.message}</p>}
+          </div>
+
+           {/* Estimated Date */}
+          <div className="space-y-2">
+             <Label htmlFor="estimated_date" className="text-[#868686] dark:text-gray-400">{t('budget.estimatedDate')}</Label>
+             <Controller
+                name="estimated_date"
+                control={control}
+                render={({ field }) => (
+                    <div className="bg-[#242425] rounded-md border-0 text-white dark:bg-gray-700 dark:text-gray-200">
+                        <DatePicker
+                            date={field.value}
+                            setDate={field.onChange}
+                         />
+                     </div>
+                )}
+            />
+            {errors.estimated_date && <p className="text-xs text-red-500">{errors.estimated_date.message}</p>}
+          </div>
+
+          {/* Optional Icon - Simple text input for now */}
+          {/* <div className="space-y-2">
+            <Label htmlFor="icon" className="text-[#868686] dark:text-gray-400">{t('budget.itemIcon')} (Optional)</Label>
+            <Input
+              id="icon"
+              {...register('icon')}
+              className="bg-[#242425] border-0 text-white dark:bg-gray-700 dark:text-gray-200"
+              placeholder={t('budget.iconPlaceholder')}
+            />
+             {errors.icon && <p className="text-xs text-red-500">{errors.icon.message}</p>}\n          </div> */}
+
+          <DialogFooter>
+            <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white">
+              {isEditing ? t('common.saveChanges') : t('common.addItem')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default WantToBuyForm; 

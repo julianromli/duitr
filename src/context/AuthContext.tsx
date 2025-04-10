@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase, getSession, getCurrentUser } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { logAuthEvent } from '@/utils/auth-logger';
+import i18n from '@/i18n';
 
 interface AuthContextType {
   user: User | null;
@@ -45,8 +46,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
         } else if (data.session?.user) {
           logAuthEvent('session_initialized', { userId: data.session.user.id });
-          setUser(data.session.user);
-          loadUserSettings(data.session.user);
+          const currentUser = data.session.user;
+          setUser(currentUser);
+          loadUserSettings(currentUser);
+
+          const preferredLanguage = localStorage.getItem('preferredLanguage');
+          if (!preferredLanguage) {
+            console.log('No preferred language found, setting default to id');
+            logAuthEvent('setting_default_language', { userId: currentUser.id, lang: 'id' });
+            i18n.changeLanguage('id');
+            localStorage.setItem('preferredLanguage', 'id');
+          }
         } else {
           logAuthEvent('no_session_on_init');
           setUser(null);
@@ -75,18 +85,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('Auth state change event:', event, session?.user?.id);
       
-      if (event === 'SIGNED_IN') {
-        if (session?.user) {
-          toast({
-            title: 'Welcome to Duitr!',
-            description: `You've successfully signed in.`,
-          });
+      if (currentUser && event === 'SIGNED_IN') {
+        const preferredLanguage = localStorage.getItem('preferredLanguage');
+        if (!preferredLanguage) {
+          console.log('No preferred language found after SIGNED_IN, setting default to id');
+          logAuthEvent('setting_default_language_post_signin', { userId: currentUser.id, lang: 'id' });
+          i18n.changeLanguage('id');
+          localStorage.setItem('preferredLanguage', 'id');
         }
       } else if (event === 'SIGNED_OUT') {
         setIsBalanceHidden(false);
       } else if (event === 'USER_UPDATED') {
-         if (session?.user) {
-            loadUserSettings(session.user);
+         if (currentUser) {
+            loadUserSettings(currentUser);
          }
       }
     });
@@ -148,10 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, message: error.message };
       }
       
-      return { 
-        success: true, 
-        message: 'Verification email sent! Please check your inbox.' 
-      };
+      return { success: true, message: i18n.t('auth.verification_sent') };
     } catch (error: any) {
       console.error('AuthContext: Exception during signup:', error);
       return { success: false, message: error.message || 'An error occurred during sign up' };
@@ -169,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, message: error.message };
       }
       
-      return { success: true, message: 'Logged in successfully!' };
+      return { success: true, message: '' };
     } catch (error: any) {
       return { success: false, message: error.message || 'An error occurred during sign in' };
     } finally {
@@ -201,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         provider: data?.provider 
       });
       
-      return { success: true, message: 'Redirecting to Google...' };
+      return { success: true, message: '' };
     } catch (error: any) {
       logAuthEvent('auth_context_google_signin_exception', {}, error);
       return { success: false, message: error.message || 'An error occurred during Google sign in' };
@@ -215,8 +223,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.auth.signOut();
       setUser(null);
       toast({
-        title: 'Signed out',
-        description: 'You have been signed out successfully.',
+        title: i18n.t('auth.signed_out_title'),
+        description: i18n.t('auth.signed_out_description'),
       });
     } catch (error: any) {
       toast({

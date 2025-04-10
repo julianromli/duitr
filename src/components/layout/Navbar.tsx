@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, CreditCard, User, FileText, Home } from 'lucide-react';
+import { BarChart3, CreditCard, User, FileText, Home, PiggyBank } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const Navbar: React.FC = () => {
@@ -45,8 +45,14 @@ const Navbar: React.FC = () => {
             <BarChart3 size={24} />
           </div>
         </Link>
-
-        <Link to="/profile" aria-label={t('navbar.settings')}>
+        
+        <Link to="/budget" aria-label={t('navbar.budget')}>
+          <div className={`p-2 rounded-full ${isActive('/budget') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
+            <PiggyBank size={24} />
+          </div>
+        </Link>
+        
+        <Link to="/profile" aria-label={t('navbar.profile')}>
           <div className={`p-2 rounded-full ${isActive('/profile') ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-[#868686] hover:text-white'}`}>
             <User size={24} />
           </div>

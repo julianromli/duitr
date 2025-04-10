@@ -4,8 +4,11 @@ export type Transaction = {
   category: string;
   description: string;
   date: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'transfer';
   walletId: string;
+  userId?: string;
+  destinationWalletId?: string | null;
+  fee?: number | null;
 };
 
 export type Budget = {
@@ -24,13 +27,31 @@ export type Wallet = {
   color: string;
 };
 
-export type Transfer = {
+// Type for items users want to buy
+export type WantToBuyItem = {
+  id: string;
+  userId: string;
+  name: string;
+  icon?: string | null;
+  price: number;
+  category: 'Keinginan' | 'Kebutuhan';
+  estimated_date: string; // ISO date string
+  priority: 'Tinggi' | 'Sedang' | 'Rendah';
+  is_purchased: boolean;
+  created_at: string;
+};
+
+// Type for loan/credit items
+export type PinjamanItem = {
+  id: string;
+  userId: string;
+  name: string;
+  icon?: string | null;
+  category: 'Utang' | 'Piutang';
+  due_date: string; // ISO date string
   amount: number;
-  description: string;
-  date: string;
-  fromWalletId: string;
-  toWalletId: string;
-  fee: number;
+  is_settled: boolean;
+  created_at: string;
 };
 
 export interface ExportOptions {

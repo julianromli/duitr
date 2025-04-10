@@ -9,7 +9,17 @@
     "loading": "Memuat...",
     "save": "Simpan Perubahan",
     "saved": "Tersimpan",
-    "apply": "Terapkan"
+    "apply": "Terapkan",
+    "options": "Opsi",
+    "edit": "Ubah",
+    "delete": "Hapus",
+    "saveChanges": "Simpan Perubahan",
+    "addItem": "Tambah Item",
+    "cancel": "Batal",
+    "areYouSure": "Apakah Anda yakin?",
+    "cannotBeUndone": "Tindakan ini tidak dapat dibatalkan.",
+    "comingSoon": "Segera Hadir...",
+    "added_successfully": "berhasil ditambahkan"
   },
   "pages": {
     "dashboard": "Dasbor",
@@ -24,7 +34,10 @@
     "budgets": "Anggaran",
     "wallets": "Dompet",
     "settings": "Pengaturan",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "home": "Beranda",
+    "statistics": "Statistik",
+    "budget": "Anggaran"
   },
   "dashboard": {
     "title": "Ikhtisar Keuangan",
@@ -311,5 +324,49 @@
     "red": "Merah",
     "purple": "Ungu",
     "orange": "Oranye"
+  },
+  "budget": {
+    "wantToBuyTitle": "Barang Impian",
+    "pinjamanTitle": "Utang & Piutang",
+    "addWantToBuy": "Tambah Barang Impian",
+    "editWantToBuy": "Ubah Barang Impian",
+    "addPinjaman": "Tambah Utang/Piutang",
+    "editPinjaman": "Ubah Utang/Piutang",
+    "itemName": "Nama Barang",
+    "itemNamePlaceholder": "cth., Laptop Baru",
+    "itemPrice": "Harga",
+    "itemCategory": "Kategori",
+    "selectCategory": "Pilih kategori",
+    "keinginan": "Keinginan",
+    "kebutuhan": "Kebutuhan",
+    "itemPriority": "Prioritas",
+    "selectPriority": "Pilih prioritas",
+    "priorityHigh": "Tinggi",
+    "priorityMedium": "Sedang",
+    "priorityLow": "Rendah",
+    "estimatedDate": "Perkiraan Tanggal",
+    "noWantToBuyItems": "Belum ada barang impian.",
+    "deleteWantToBuyConfirm": "Yakin ingin menghapus barang impian",
+    "estimate": "Perk.",
+    "pinjamanName": "Nama Transaksi",
+    "pinjamanNamePlaceholder": "cth., Utang ke John",
+    "pinjamanCategory": "Kategori",
+    "utang": "Utang",
+    "piutang": "Piutang",
+    "dueDate": "Tanggal Jatuh Tempo",
+    "noPinjamanItems": "Belum ada utang atau piutang tercatat.",
+    "deletePinjamanConfirm": "Yakin ingin menghapus transaksi",
+    "wantToBuyAdded": "Barang impian ditambahkan.",
+    "wantToBuyDeleted": "Barang impian dihapus.",
+    "pinjamanAdded": "Item Utang/Piutang ditambahkan.",
+    "pinjamanDeleted": "Item Utang/Piutang dihapus."
+  },
+  "auth": {
+    "required": "Diperlukan autentikasi.",
+    "welcome_title": "Selamat Datang!",
+    "welcome_description": "Anda berhasil masuk.",
+    "verification_sent": "Email verifikasi terkirim! Silakan periksa kotak masuk Anda.",
+    "signed_out_title": "Keluar",
+    "signed_out_description": "Anda telah berhasil keluar."
   }
 } 
