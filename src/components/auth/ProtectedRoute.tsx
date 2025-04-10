@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,19 +11,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
 
   if (isLoading) {
-    // Show loading state
+    // Updated loading state to match app theme
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin w-10 h-10 border-4 border-[#7B61FF] border-t-transparent rounded-full"></div>
-          <p className="text-gray-600">Loading...</p>
+          {/* Use a spinner or loading animation consistent with the app */}
+          <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    // Redirect to login page if not authenticated without showing toast
+    // Redirect to login page if not authenticated
+    // Pass the original location state so we can redirect back after login if needed
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

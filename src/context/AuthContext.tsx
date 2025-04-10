@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, getSession, getCurrentUser } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -7,10 +7,12 @@ import { logAuthEvent } from '@/utils/auth-logger';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isBalanceHidden: boolean;
   signUp: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   signInWithGoogle: () => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
+  updateBalanceVisibility: (isHidden: boolean) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,10 +20,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const { toast } = useToast();
 
+  const loadUserSettings = useCallback((currentUser: User | null) => {
+    if (currentUser?.user_metadata?.is_balance_hidden !== undefined) {
+      setIsBalanceHidden(currentUser.user_metadata.is_balance_hidden);
+      logAuthEvent('user_settings_loaded', { isBalanceHidden: currentUser.user_metadata.is_balance_hidden });
+    } else {
+      setIsBalanceHidden(false);
+      logAuthEvent('user_settings_defaulted', { isBalanceHidden: false });
+    }
+  }, []);
+
   useEffect(() => {
-    // Check for existing session on mount
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
@@ -30,15 +42,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           logAuthEvent('session_initialization_error', {}, error);
           console.error('Error checking authentication status:', error);
+          setUser(null);
         } else if (data.session?.user) {
           logAuthEvent('session_initialized', { userId: data.session.user.id });
           setUser(data.session.user);
+          loadUserSettings(data.session.user);
         } else {
           logAuthEvent('no_session_on_init');
+          setUser(null);
         }
       } catch (error) {
         console.error('Exception during authentication status check:', error);
         logAuthEvent('session_init_exception', {}, error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -46,7 +62,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Set up listener for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       logAuthEvent('auth_state_change', { 
         event, 
@@ -54,35 +69,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasUser: !!session?.user
       });
       
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      loadUserSettings(currentUser);
+      
       console.log('Auth state change event:', event, session?.user?.id);
       
-      // Handle specific auth events
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+      if (event === 'SIGNED_IN') {
         if (session?.user) {
-          setUser(session.user);
-          
-          // For new users who just signed in with Google, show a welcome toast
-          if (event === 'SIGNED_IN') {
-            toast({
-              title: 'Welcome to Duitr!',
-              description: `You've successfully signed in with Google.`,
-            });
-          }
+          toast({
+            title: 'Welcome to Duitr!',
+            description: `You've successfully signed in.`,
+          });
         }
       } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Just update the user to make sure we have the latest data
-        if (session?.user) {
-          setUser(session.user);
-        }
+        setIsBalanceHidden(false);
+      } else if (event === 'USER_UPDATED') {
+         if (session?.user) {
+            loadUserSettings(session.user);
+         }
       }
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, loadUserSettings]);
+
+  const updateBalanceVisibility = async (isHidden: boolean) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to change settings.' });
+      return;
+    }
+
+    try {
+      logAuthEvent('update_balance_visibility_attempt', { userId: user.id, isHidden });
+      setIsBalanceHidden(isHidden);
+
+      const { error } = await supabase.auth.updateUser({
+        data: { is_balance_hidden: isHidden }
+      });
+
+      if (error) {
+        logAuthEvent('update_balance_visibility_error', { userId: user.id }, error);
+        setIsBalanceHidden(!isHidden);
+        toast({ variant: 'destructive', title: 'Update Failed', description: error.message });
+        throw error;
+      }
+      
+      logAuthEvent('update_balance_visibility_success', { userId: user.id, isHidden });
+
+    } catch (error) {
+      console.error('Failed to update balance visibility:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -96,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ? 'https://duitr.my.id/auth/callback'
             : `${window.location.origin}/auth/callback`,
           data: {
-            name: email.split('@')[0], // Use part of email as name
+            name: email.split('@')[0],
           }
         }
       });
@@ -142,7 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logAuthEvent('auth_context_google_signin_start');
       setIsLoading(true);
       
-      // This will redirect to Google - just handle UI state and potential errors
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -167,8 +206,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logAuthEvent('auth_context_google_signin_exception', {}, error);
       return { success: false, message: error.message || 'An error occurred during Google sign in' };
     } finally {
-      // We don't set isLoading=false here because we're about to redirect
-      // It will be reset when we come back from Google in the auth callback
     }
   };
 
@@ -195,10 +232,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isLoading,
+    isBalanceHidden,
     signUp,
     signIn,
     signInWithGoogle,
     signOut,
+    updateBalanceVisibility,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
