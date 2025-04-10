@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { LoginContent } from '@/components/auth/LoginContent';
+import { logAuthEvent } from '@/utils/auth-logger';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,26 @@ const Login = () => {
   // Client-side only rendering to prevent hydration issues
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    
+    // Check for authentication errors in URL (may come from a failed OAuth redirect)
+    if (window.location.search.includes('error=')) {
+      // Parse error message from URL
+      const params = new URLSearchParams(window.location.search);
+      const errorMsg = params.get('error_description') || params.get('error') || 'Authentication failed';
+      
+      logAuthEvent('login_page_received_error', { error: errorMsg });
+      
+      // Show error toast
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Error',
+        description: decodeURIComponent(errorMsg),
+      });
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,15 +55,18 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
+      logAuthEvent('login_email_sign_in_attempt', { email });
       const result = await signIn(email, password);
       
       if (result.success) {
+        logAuthEvent('login_email_sign_in_success', { email });
         toast({
           title: 'Welcome back!',
           description: 'You have been logged in successfully.',
         });
         navigate('/');
       } else {
+        logAuthEvent('login_email_sign_in_failure', { message: result.message });
         toast({
           variant: 'destructive',
           title: 'Login failed',
@@ -51,6 +74,7 @@ const Login = () => {
         });
       }
     } catch (error: any) {
+      logAuthEvent('login_email_sign_in_exception', {}, error);
       toast({
         variant: 'destructive',
         title: 'Login error',
@@ -65,17 +89,24 @@ const Login = () => {
     let googleSignInSuccess = false;
     try {
       setIsSubmitting(true);
+      logAuthEvent('login_google_sign_in_attempt');
+      
       const result = await signInWithGoogle();
       googleSignInSuccess = !!(result && result.success);
 
       if (result && !result.success) {
+        logAuthEvent('login_google_sign_in_failure', { message: result.message });
         toast({
           variant: 'destructive',
           title: 'Login failed',
           description: result.message || 'An unknown error occurred during Google sign-in',
         });
+      } else {
+        logAuthEvent('login_google_sign_in_redirect_success');
+        // Success is handled by the redirect - don't show a toast here
       }
     } catch (error: any) {
+      logAuthEvent('login_google_sign_in_exception', {}, error);
       toast({
         variant: 'destructive',
         title: 'Login error',
@@ -85,6 +116,7 @@ const Login = () => {
       if (!googleSignInSuccess) {
         setIsSubmitting(false);
       }
+      // If successful, let the page redirect without setting isSubmitting=false
     }
   };
 

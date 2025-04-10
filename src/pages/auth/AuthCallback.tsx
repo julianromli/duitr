@@ -24,6 +24,7 @@ const AuthCallback = () => {
     const timeoutId = setTimeout(() => {
       if (loading && !error) {
         console.error('Auth callback timeout - forcing navigation to login');
+        logAuthEvent('auth_callback_timeout');
         navigate('/auth/login');
       }
     }, 10000); // 10 second timeout
@@ -62,7 +63,12 @@ const AuthCallback = () => {
     authProcessedRef.current = true;
 
     try {
-      logAuthEvent('auth_callback_started');
+      logAuthEvent('auth_callback_started', { 
+        url: window.location.href,
+        search: window.location.search,
+        hash: window.location.hash,
+        pathname: window.location.pathname
+      });
       
       // Handle auth callback
       const { data, error: authError } = await supabase.auth.getSession();
@@ -75,74 +81,116 @@ const AuthCallback = () => {
       if (data?.session) {
         // Success! We have a session
         handleSuccessfulLogin(data.session.user);
-      } else {
-        // If we don't have the URL code parameter or session, check the URL hash
-        // This happens with iOS redirects sometimes
-        if (window.location.hash && window.location.hash.includes('access_token')) {
-          logAuthEvent('processing_fragment_redirect');
+        return;
+      } 
+      
+      // If we don't have a session, we need to process the URL parameters
+      
+      // First try the hash fragment (commonly used in implicit flow)
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        logAuthEvent('processing_fragment_redirect');
+        
+        try {
+          // Parse the hash fragment
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
           
-          try {
-            // Try to exchange the access token for a session
-            const hashParams = new URLSearchParams(window.location.hash.substring(1));
-            const accessToken = hashParams.get('access_token');
+          if (accessToken) {
+            logAuthEvent('found_access_token_in_hash', {
+              token_length: accessToken.length,
+              has_refresh: !!refreshToken
+            });
             
-            if (accessToken) {
-              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: hashParams.get('refresh_token') || '',
-              });
-              
-              if (sessionError) throw sessionError;
-              
-              if (sessionData?.session?.user) {
-                handleSuccessfulLogin(sessionData.session.user);
-                return;
-              }
+            // Try to set the session with the tokens from the hash
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+            
+            if (sessionError) {
+              logAuthEvent('set_session_error', { error: sessionError.message });
+              throw sessionError;
             }
-          } catch (hashError) {
-            console.error('Error processing hash redirect:', hashError);
-            logAuthEvent('hash_redirect_error', { error: String(hashError) });
-          }
-        }
-        
-        // If still no session, try to parse URL params which may have the auth code
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        
-        if (code) {
-          logAuthEvent('processing_code_redirect', { code_length: code.length });
-          
-          // Exchange the code for a session
-          try {
-            const { data: sessionData, error: exchangeError } = 
-              await supabase.auth.exchangeCodeForSession(code);
-              
-            if (exchangeError) throw exchangeError;
             
             if (sessionData?.session?.user) {
               handleSuccessfulLogin(sessionData.session.user);
               return;
             }
-          } catch (exchangeError: any) {
-            console.error('Error exchanging code for session:', exchangeError);
+          }
+        } catch (hashError: any) {
+          console.error('Error processing hash redirect:', hashError);
+          logAuthEvent('hash_redirect_error', { error: String(hashError) });
+          
+          // Continue to try other methods rather than throwing here
+        }
+      }
+      
+      // Next, try to process authorization code (PKCE flow)
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      
+      if (code) {
+        logAuthEvent('processing_code_redirect', { code_length: code.length });
+        
+        // Clear any previous PKCE data that might interfere
+        try {
+          sessionStorage.removeItem('supabase.auth.token.code_verifier');
+        } catch (e) {
+          // Ignore storage errors
+        }
+        
+        try {
+          // Exchange the authorization code for a session
+          const { data: sessionData, error: exchangeError } = 
+            await supabase.auth.exchangeCodeForSession(code);
+            
+          if (exchangeError) {
             logAuthEvent('exchange_code_error', { error: exchangeError.message });
             
-            if (retryCount < 2) {
-              // Try one more time after a delay
-              setRetryCount(prevCount => prevCount + 1);
-              authProcessedRef.current = false;
-              setTimeout(() => {
-                handleAuthCallbackRef.current?.();
-              }, 1000);
-              return;
+            // Special handling for common error messages
+            if (exchangeError.message.includes('code_verifier')) {
+              throw new Error('Authentication failed: Missing or invalid code verifier. This might happen if you closed the browser during sign in. Please try again.');
             }
             
-            throw new Error(`Failed to exchange auth code: ${exchangeError.message}`);
+            throw exchangeError;
           }
+          
+          if (sessionData?.session?.user) {
+            handleSuccessfulLogin(sessionData.session.user);
+            return;
+          } else {
+            // This should rarely happen - we got a successful response but no session
+            logAuthEvent('no_session_after_exchange', { data: sessionData });
+            throw new Error('Authentication completed but no user session was created. Please try again.');
+          }
+        } catch (exchangeError: any) {
+          console.error('Error exchanging code for session:', exchangeError);
+          logAuthEvent('exchange_code_error', { error: exchangeError.message });
+          
+          if (retryCount < 2) {
+            // Try one more time after a delay
+            setRetryCount(prevCount => prevCount + 1);
+            authProcessedRef.current = false;
+            setTimeout(() => {
+              handleAuthCallbackRef.current?.();
+            }, 1000);
+            return;
+          }
+          
+          throw exchangeError;
+        }
+      } else {
+        // No code parameter found - check if there's an error message from the OAuth provider
+        const errorMsg = params.get('error_description') || params.get('error');
+        
+        if (errorMsg) {
+          logAuthEvent('oauth_provider_error', { error: errorMsg });
+          throw new Error(`Authentication error from provider: ${errorMsg}`);
         } else {
-          // No code parameter found
+          // No code and no error - this is unusual
           logAuthEvent('no_code_parameter');
-          throw new Error('No authentication code found in URL');
+          throw new Error('No authentication code found in URL. Please try signing in again.');
         }
       }
     } catch (err: any) {
@@ -182,6 +230,15 @@ const AuthCallback = () => {
     setRetryCount(0);
     authProcessedRef.current = false;
     
+    // Clear any stored PKCE data before retrying
+    try {
+      sessionStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token.code_verifier');
+      localStorage.removeItem('supabase.auth.token');
+    } catch (e) {
+      // Ignore errors
+    }
+    
     // Try auth process again
     setTimeout(() => {
       handleAuthCallbackRef.current?.();
@@ -204,11 +261,11 @@ const AuthCallback = () => {
   // If not mounted or waiting for client-side JS, show a simplified loading screen
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
           <div className="space-y-4">
             <div className="animate-spin w-12 h-12 border-4 border-[#7B61FF] border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-lg font-medium text-gray-700">Initializing...</p>
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Initializing...</p>
           </div>
         </div>
       </div>
@@ -216,14 +273,14 @@ const AuthCallback = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
         {loading ? (
           <div className="space-y-4">
             <div className="animate-spin w-12 h-12 border-4 border-[#7B61FF] border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-lg font-medium text-gray-700">Completing authentication...</p>
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Completing authentication...</p>
             {retryCount > 0 && (
-              <p className="text-sm text-gray-500">Retrying... ({retryCount}/2)</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Retrying... ({retryCount}/2)</p>
             )}
           </div>
         ) : error ? (
@@ -248,15 +305,7 @@ const AuthCallback = () => {
               </button>
             </div>
           </div>
-        ) : (
-          <div className="space-y-4 text-green-500">
-            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <h2 className="text-xl font-semibold">Authentication Successful</h2>
-            <p className="text-gray-600">You are now signed in. Redirecting...</p>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
