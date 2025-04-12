@@ -1,181 +1,196 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Calendar, Filter, Search, Trash2 } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
-import { useCategories } from '@/hooks/useCategories';
-import { format } from 'date-fns';
-import { Calendar, Search, ArrowUpRight, ArrowDownLeft, Wallet } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import CategoryIcon from '@/components/shared/CategoryIcon';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 
 interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
-  const { transactions, wallets, formatCurrency } = useFinance();
-  const { t, i18n } = useTranslation();
-  const { categories, getCategoryName } = useCategories();
-  const navigate = useNavigate();
-  const currentLanguage = i18n.language;
+  const { t } = useTranslation();
+  const { transactions, formatCurrency, deleteTransaction } = useFinance();
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   
-  const [filteredTransactions, setFilteredTransactions] = useState(transactions);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  
-  // Apply filters
-  useEffect(() => {
-    let result = [...transactions].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    
-    if (typeFilter !== 'all') {
-      result = result.filter(t => t.type === typeFilter);
-    }
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(t => 
-        t.description.toLowerCase().includes(query) || 
-        getCategoryName(t.category_id).toLowerCase().includes(query)
-      );
-    }
-    
-    setFilteredTransactions(result);
-  }, [transactions, typeFilter, searchQuery, categories]);
+  // Filter and sort transactions
+  const filteredTransactions = transactions
+    .filter(transaction => {
+      // Type filter
+      if (typeFilter !== 'all' && transaction.type !== typeFilter) {
+        return false;
+      }
+      
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          transaction.description.toLowerCase().includes(searchLower) ||
+          transaction.category.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, 'dd MMM yyyy');
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-  
-  const getWalletName = (id: string) => {
-    const wallet = wallets.find(w => w.id === id);
-    return wallet ? wallet.name : '';
+
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTransactionToDelete(id);
+    setIsDeleteDialogOpen(true);
   };
-  
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case 'income':
-        return <ArrowDownLeft className="w-5 h-5 text-green-500" />;
-      case 'expense':
-        return <ArrowUpRight className="w-5 h-5 text-red-500" />;
-      case 'transfer':
-        return <Wallet className="w-5 h-5 text-blue-500" />;
-      default:
-        return <Calendar className="w-5 h-5 text-gray-500" />;
-    }
-  };
-  
-  // Animation variants
-  const listVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
+
+  const handleConfirmDelete = () => {
+    if (transactionToDelete) {
+      deleteTransaction(transactionToDelete);
+      toast({
+        title: t('common.success'),
+        description: t('transactions.delete_success'),
+      });
+      setTransactionToDelete(null);
+      setIsDeleteDialogOpen(false);
     }
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
+  const handleClick = (transaction: any) => {
+    if (onTransactionClick) {
+      onTransactionClick(transaction.id);
+    }
   };
-  
+
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 text-[#868686] h-4 w-4" />
-          <Input
-            placeholder={t('transactions.search')}
-            className="bg-[#242425] border-0 text-white pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <Select
-          value={typeFilter}
-          onValueChange={setTypeFilter}
-        >
-          <SelectTrigger className="bg-[#242425] border-0 text-white">
-            <SelectValue placeholder={t('transactions.all_types')} />
-          </SelectTrigger>
-          <SelectContent className="bg-[#242425] border-0 text-white">
-            <SelectItem value="all" className="hover:bg-[#333] focus:bg-[#333]">
-              {t('transactions.all_types')}
-            </SelectItem>
-            <SelectItem value="income" className="hover:bg-[#333] focus:bg-[#333]">
-              {t('transactions.income')}
-            </SelectItem>
-            <SelectItem value="expense" className="hover:bg-[#333] focus:bg-[#333]">
-              {t('transactions.expense')}
-            </SelectItem>
-            <SelectItem value="transfer" className="hover:bg-[#333] focus:bg-[#333]">
-              {t('transactions.transfer')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="relative w-full mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#868686]" />
+        <Input
+          placeholder={t('transactions.search')}
+          className="pl-10 bg-[#242425] border-none h-12 rounded-xl text-white placeholder:text-[#868686]"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
       
-      {/* Transactions List */}
-      <motion.div 
-        className="space-y-3"
-        variants={listVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {filteredTransactions.length === 0 && (
-          <div className="bg-[#242425] rounded-lg p-4 text-center text-[#868686]">
-            {t('transactions.no_transactions')}
+      <div className="flex gap-2 mb-6">
+        <button
+          className={`px-4 py-2 rounded-full ${typeFilter === 'all' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
+          onClick={() => setTypeFilter('all')}
+        >
+          {t('transactions.all')}
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full ${typeFilter === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
+          onClick={() => setTypeFilter('income')}
+        >
+          {t('transactions.income')}
+        </button>
+        <button
+          className={`px-4 py-2 rounded-full ${typeFilter === 'expense' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'bg-[#242425] text-white'}`}
+          onClick={() => setTypeFilter('expense')}
+        >
+          {t('transactions.expense')}
+        </button>
+      </div>
+      
+      <div className="space-y-3 text-white">
+        {filteredTransactions.length > 0 ? (
+          <>
+            {filteredTransactions.map((transaction, index) => (
+              <motion.div
+                key={transaction.id}
+                className="flex items-center justify-between bg-[#242425] p-4 rounded-xl cursor-pointer"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleClick(transaction)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
+                    <CategoryIcon category={transaction.category} />
+                  </div>
+                  <div>
+                    <p className="font-medium">{transaction.category}</p>
+                    <p className="text-xs text-[#868686]">
+                      {t(`transactions.${transaction.type}`)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className={`font-medium ${
+                      transaction.type === 'income' 
+                        ? 'text-[#C6FE1E]' 
+                        : transaction.type === 'expense' 
+                          ? 'text-red-500' 
+                          : 'text-white'
+                    }`}>
+                      {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                    </p>
+                    <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
+                  </div>
+                  <button 
+                    onClick={(e) => handleDeleteClick(transaction.id, e)}
+                    className="text-[#868686] hover:text-red-500 transition-colors"
+                    title={t('transactions.delete')}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </>
+        ) : (
+          <div className="p-8 text-center">
+            <p className="text-[#868686]">{t('transactions.no_transactions')}</p>
           </div>
         )}
-        
-        {filteredTransactions.map((transaction) => (
-          <motion.div 
-            key={transaction.id}
-            variants={itemVariants}
-            className="bg-[#242425] rounded-lg p-4 flex items-center space-x-4 cursor-pointer hover:bg-[#2a2a2b] transition-colors"
-            onClick={() => onTransactionClick && onTransactionClick(transaction.id)}
-          >
-            <div className="bg-[#1A1A1A] rounded-full p-2">
-              {getTransactionIcon(transaction.type)}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-white text-sm font-medium truncate">
-                    {getCategoryName(transaction.category_id)}
-                  </h3>
-                  <p className="text-[#868686] text-xs truncate">{transaction.description}</p>
-                </div>
-                <div className="text-right">
-                  <p className={`text-sm font-semibold ${
-                    transaction.type === 'income' ? 'text-green-500' : 
-                    transaction.type === 'expense' ? 'text-red-500' : 'text-blue-500'
-                  }`}>
-                    {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : ''}
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                  <p className="text-[#868686] text-xs">{getWalletName(transaction.walletId)}</p>
-                </div>
-              </div>
-              <div className="flex justify-between items-center mt-1">
-                <p className="text-[#868686] text-xs">{formatDate(transaction.date)}</p>
-                {transaction.type === 'transfer' && transaction.destinationWalletId && (
-                  <p className="text-[#868686] text-xs">
-                    → {getWalletName(transaction.destinationWalletId)}
-                  </p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-[#242425] text-white border-none">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('transactions.delete')}</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#868686]">
+              {t('transactions.delete_confirmation')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#1a1a1a] text-white border-none hover:bg-[#333]">
+              {t('buttons.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete} 
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {t('buttons.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

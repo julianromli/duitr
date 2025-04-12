@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import { fetchCategories, Category } from '@/integrations/supabase/client';
 
 interface IncomeFormProps {
   open: boolean;
@@ -19,26 +18,15 @@ interface IncomeFormProps {
 const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
-  const { t, i18n } = useTranslation();
-  const currentLanguage = i18n.language;
+  const { t } = useTranslation();
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     amount: '',
-    categoryId: '',
+    category: '',
     description: '',
     walletId: '',
   });
-  
-  useEffect(() => {
-    const getCategories = async () => {
-      const incomeCategories = await fetchCategories('income');
-      setCategories(incomeCategories);
-    };
-    
-    getCategories();
-  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,7 +45,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
-    if (!formData.amount || !formData.categoryId || !formData.description || !formData.walletId) {
+    // Validation
+    if (!formData.amount || !formData.category || !formData.description || !formData.walletId) {
       toast({
         title: t('common.error'),
         description: t('transactions.errors.fill_all_fields'),
@@ -66,43 +55,45 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
-    const selectedCategory = categories.find(cat => cat.id === formData.categoryId);
-    if (!selectedCategory) {
-      toast({
-        title: t('common.error'),
-        description: t('transactions.errors.invalid_category'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    
+    // Format date to ISO string
     const dateString = selectedDate.toISOString().split('T')[0];
     
+    // Add transaction
     addTransaction({
       amount: parseFloat(formData.amount),
-      category_id: formData.categoryId,
-      category: currentLanguage === 'id' ? selectedCategory.id_name : selectedCategory.en_name,
+      category: formData.category,
       description: formData.description,
       date: dateString,
       type: 'income',
       walletId: formData.walletId,
     });
     
+    // Reset form
     setFormData({
       amount: '',
-      categoryId: '',
+      category: '',
       description: '',
       walletId: '',
     });
     setSelectedDate(new Date());
     
+    // Show success message
     toast({
       title: t('common.success'),
       description: t('transactions.income_added'),
     });
     
+    // Close dialog
     onOpenChange(false);
   };
+  
+  const categories = [
+    t('income.categories.salary'),
+    t('income.categories.business'),
+    t('income.categories.investment'),
+    t('income.categories.gift'),
+    t('income.categories.other')
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -131,18 +122,18 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="categoryId" className="text-[#868686]">{t('transactions.category')}</Label>
+            <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
             <Select
-              value={formData.categoryId}
-              onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+              value={formData.category}
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
                 <SelectValue placeholder={t('income.select_category')} />
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border-0 text-white">
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id} className="hover:bg-[#333] focus:bg-[#333]">
-                    {currentLanguage === 'id' ? category.id_name : category.en_name}
+                  <SelectItem key={category} value={category} className="hover:bg-[#333] focus:bg-[#333]">
+                    {category}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -198,4 +189,4 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default IncomeForm;
+export default IncomeForm; 

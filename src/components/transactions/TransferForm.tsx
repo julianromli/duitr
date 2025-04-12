@@ -74,11 +74,10 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       date: dateString,
       description: formData.description || t('transactions.transfer'),
       type: 'transfer',
-      category: 'Transfer',
-      category_id: 'transfer',
       walletId: formData.fromWalletId,
       destinationWalletId: formData.toWalletId,
       fee: parseFloat(formData.fee || '0'),
+      category: 'Transfer'
     });
     
     // Reset form
@@ -215,4 +214,4 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default TransferForm;
+export default TransferForm; 

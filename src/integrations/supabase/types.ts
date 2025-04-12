@@ -13,7 +13,7 @@ export type Database = {
         Row: {
           amount: number
           category: string
-          category_id: string
+          category_id: string | null
           created_at: string | null
           id: string
           period: string
@@ -23,7 +23,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
-          category_id: string
+          category_id?: string | null
           created_at?: string | null
           id?: string
           period: string
@@ -33,7 +33,7 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
-          category_id?: string
+          category_id?: string | null
           created_at?: string | null
           id?: string
           period?: string
@@ -50,7 +50,6 @@ export type Database = {
           icon: string | null
           id: string
           id_name: string
-          type: string
         }
         Insert: {
           category_key: string
@@ -59,7 +58,6 @@ export type Database = {
           icon?: string | null
           id?: string
           id_name: string
-          type?: string
         }
         Update: {
           category_key?: string
@@ -68,7 +66,6 @@ export type Database = {
           icon?: string | null
           id?: string
           id_name?: string
-          type?: string
         }
         Relationships: []
       }
@@ -112,7 +109,7 @@ export type Database = {
         Row: {
           amount: number
           category: string
-          category_id: string
+          category_id: string | null
           created_at: string | null
           date: string
           description: string | null
@@ -124,7 +121,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
-          category_id: string
+          category_id?: string | null
           created_at?: string | null
           date: string
           description?: string | null
@@ -136,7 +133,7 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
-          category_id?: string
+          category_id?: string | null
           created_at?: string | null
           date?: string
           description?: string | null
