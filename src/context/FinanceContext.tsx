@@ -4,6 +4,15 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Transaction, Budget, Wallet, WantToBuyItem, PinjamanItem } from '@/types/finance';
+import { 
+  legacyCategoryNameToId, 
+  getLocalizedCategoryName,
+  getCategoryUuidFromStringId,
+  getCategoryStringIdFromUuid
+} from '@/utils/categoryUtils';
+import { getCategoryById } from '@/services/categoryService';
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 interface FinanceContextType {
   transactions: Transaction[];
@@ -34,6 +43,7 @@ interface FinanceContextType {
   monthlyIncome: number;
   monthlyExpense: number;
   formatCurrency: (amount: number) => string;
+  getDisplayCategoryName: (transaction: Transaction) => string;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -41,6 +51,7 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -86,18 +97,29 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         })));
         
         if (transactionsRes.error) throw transactionsRes.error;
-        setTransactions(transactionsRes.data.map(t => ({
-          id: t.id,
-          amount: t.amount,
-          category: t.category,
-          description: t.description,
-          date: t.date,
-          type: t.type as 'income' | 'expense' | 'transfer',
-          walletId: t.wallet_id,
-          userId: t.user_id,
-          destinationWalletId: t.destination_wallet_id,
-          fee: t.fee
-        })));
+        setTransactions(transactionsRes.data.map(t => {
+          // Handle category ID conversions
+          let categoryId = t.category_id;
+          if (categoryId && categoryId.length > 30) {
+            categoryId = getCategoryStringIdFromUuid(categoryId);
+          } else if (!categoryId) {
+            categoryId = t.type === 'transfer' ? 'system_transfer' : legacyCategoryNameToId(t.category || '', t.type, i18next);
+          }
+          
+          return {
+            id: t.id,
+            amount: t.amount,
+            category: t.category,
+            categoryId: categoryId,
+            description: t.description,
+            date: t.date,
+            type: t.type as 'income' | 'expense' | 'transfer',
+            walletId: t.wallet_id,
+            userId: t.user_id,
+            destinationWalletId: t.destination_wallet_id,
+            fee: t.fee
+          };
+        }));
         
         if (budgetsRes.error) throw budgetsRes.error;
         setBudgets(budgetsRes.data.map(b => ({
@@ -181,6 +203,30 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     return formatIDR(amount);
   };
 
+  // Get display category name based on categoryId and current language
+  const getDisplayCategoryName = (transaction: Transaction): string => {
+    // If it's a transfer, always return "Transfer"
+    if (transaction.type === 'transfer') {
+      return t('transactions.transfer');
+    }
+
+    // If we have a categoryId, extract a readable name from it
+    if (transaction.categoryId) {
+      // For string IDs like 'expense_groceries', extract the part after the underscore
+      if (transaction.categoryId.includes('_')) {
+        const parts = transaction.categoryId.split('_');
+        // Capitalize the part after the underscore
+        if (parts.length > 1) {
+          const categoryName = parts[1];
+          return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+        }
+      }
+    }
+    
+    // Fallback to legacy category name if available
+    return transaction.category || 'Other';
+  };
+
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'userId'>) => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Authentication required', description: 'You must be logged in.' });
@@ -225,9 +271,35 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 
     try {
+      // Determine the categoryId
+      const categoryId = transaction.categoryId || 
+        (transaction.type === 'transfer' 
+          ? 'system_transfer' 
+          : legacyCategoryNameToId(transaction.category || '', transaction.type, i18next));
+
+      // Determine if we need to use UUID format based on database schema
+      let dbCategoryId = categoryId;
+
+      // If the column is UUID in the database, convert the string ID to UUID format
+      try {
+        const { data: schemaInfo } = await supabase
+          .from('transactions')
+          .select('category_id')
+          .limit(1);
+        
+        // Check if the column appears to be a UUID by attempting to access it
+        if (schemaInfo && schemaInfo.length > 0 && typeof schemaInfo[0].category_id === 'string' && schemaInfo[0].category_id.length > 30) {
+          dbCategoryId = getCategoryUuidFromStringId(categoryId);
+        }
+      } catch (e) {
+        console.error('Error checking schema:', e);
+        // Continue with original ID if we couldn't check
+      }
+
       const newTransactionData = {
         amount: transaction.amount,
         category: transaction.type === 'transfer' ? 'Transfer' : transaction.category,
+        category_id: dbCategoryId, // Add the category_id field for database
         description: transaction.description,
         date: transaction.date,
         type: transaction.type,
@@ -341,6 +413,11 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         id: finalTransactionData.id,
         amount: finalTransactionData.amount,
         category: finalTransactionData.category,
+        categoryId: finalTransactionData.category_id ? 
+          (finalTransactionData.category_id.length > 30 ? 
+            getCategoryStringIdFromUuid(finalTransactionData.category_id) : 
+            finalTransactionData.category_id) : 
+          legacyCategoryNameToId(finalTransactionData.category, finalTransactionData.type, i18next),
         description: finalTransactionData.description,
         date: finalTransactionData.date,
         type: finalTransactionData.type,
@@ -350,7 +427,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         fee: finalTransactionData.fee,
       };
 
-      setTransactions([formattedTransaction, ...transactions]);
+      // Sort transactions in descending order by date
+      const sortedTransactions = [formattedTransaction, ...transactions].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      setTransactions(sortedTransactions);
 
       setWallets(wallets.map(w => {
           if (updatedFromWallet && w.id === updatedFromWallet.id) return updatedFromWallet;
@@ -431,10 +513,36 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
      }
 
      try {
+        // Determine the categoryId
+        const categoryId = updatedTransaction.categoryId || 
+          (updatedTransaction.type === 'transfer' 
+            ? 'system_transfer' 
+            : legacyCategoryNameToId(updatedTransaction.category || '', updatedTransaction.type, i18next));
+
+        // Determine if we need to use UUID format based on database schema
+        let dbCategoryId = categoryId;
+
+        // If the column is UUID in the database, convert the string ID to UUID format
+        try {
+          const { data: schemaInfo } = await supabase
+            .from('transactions')
+            .select('category_id')
+            .limit(1);
+          
+          // Check if the column appears to be a UUID by attempting to access it
+          if (schemaInfo && schemaInfo.length > 0 && typeof schemaInfo[0].category_id === 'string' && schemaInfo[0].category_id.length > 30) {
+            dbCategoryId = getCategoryUuidFromStringId(categoryId);
+          }
+        } catch (e) {
+          console.error('Error checking schema:', e);
+          // Continue with original ID if we couldn't check
+        }
+
         // Create update data with optional fields to handle schema issues
         const updateData: {
           amount: number;
           category: string;
+          category_id: string;
           description: string;
           date: string;
           type: 'income' | 'expense' | 'transfer';
@@ -443,7 +551,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           fee?: number | null;
         } = {
           amount: updatedTransaction.amount,
-          category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category,
+          category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category || '',
+          category_id: dbCategoryId,
           description: updatedTransaction.description,
           date: updatedTransaction.date,
           type: updatedTransaction.type,
@@ -481,24 +590,26 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           }
         }
 
-        // Update transaction with core fields
-        const { error: transactionUpdateError } = await supabase
+        // Update the transaction in the database
+        const { data: updatedData, error: updateError } = await supabase
           .from('transactions')
           .update(updateData)
-          .eq('id', updatedTransaction.id);
+          .eq('id', updatedTransaction.id)
+          .select()
+          .single();
 
-        if (transactionUpdateError) {
+        if (updateError) {
           // If there's a schema error, try a more basic update
-          if (transactionUpdateError.message.includes('column') || 
-              transactionUpdateError.message.includes('schema')) {
-            console.error('Schema error on update:', transactionUpdateError);
+          if (updateError.message.includes('column') || 
+              updateError.message.includes('schema')) {
+            console.error('Schema error on update:', updateError);
             
             // Fallback to basic fields only
             const { error: basicUpdateError } = await supabase
               .from('transactions')
               .update({
                 amount: updatedTransaction.amount,
-                category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category,
+                category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category || '',
                 description: updatedTransaction.description,
                 date: updatedTransaction.date,
                 type: updatedTransaction.type,
@@ -508,7 +619,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
               
             if (basicUpdateError) throw basicUpdateError;
           } else {
-            throw transactionUpdateError;
+            throw updateError;
           }
         }
 
@@ -519,7 +630,20 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
                 .eq('id', walletUpdate.id)
         ));
 
-        setTransactions(transactions.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+        // Format and update local state
+        const formattedTransaction: Transaction = {
+          ...updatedTransaction,
+          categoryId: updateData.category_id,
+        };
+
+        // Sort transactions in descending order by date
+        const updatedTransactions = transactions.map(t => 
+          t.id === formattedTransaction.id ? formattedTransaction : t
+        ).sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setTransactions(updatedTransactions);
         setWallets(currentWallets => currentWallets.map(w => {
             const updatedWallet = walletsToUpdateLocally.find(uw => uw.id === w.id);
             return updatedWallet ? updatedWallet : w;
@@ -1133,7 +1257,32 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         monthlyIncome,
         monthlyExpense,
     formatCurrency,
+    getDisplayCategoryName,
   };
+
+  // Ensure transactions are sorted by date in descending order
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const sortedTransactions = [...transactions].map(t => {
+        // Ensure categoryId is in string ID format for client-side use
+        let categoryId = t.categoryId;
+        if (categoryId && categoryId.length > 30) {
+          categoryId = getCategoryStringIdFromUuid(categoryId);
+        } else if (!categoryId) {
+          categoryId = legacyCategoryNameToId(t.category || '', t.type, i18next);
+        }
+        
+        return {
+          ...t,
+          categoryId
+        };
+      }).sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      setTransactions(sortedTransactions);
+    }
+  }, []);
 
   return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 };

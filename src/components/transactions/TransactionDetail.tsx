@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
+import i18next from 'i18next';
 
 interface TransactionDetailProps {
   transactionId: string | null;
@@ -29,7 +31,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   onOpenChange 
 }) => {
   const { t } = useTranslation();
-  const { transactions, formatCurrency, wallets, updateTransaction } = useFinance();
+  const { transactions, formatCurrency, wallets, updateTransaction, getDisplayCategoryName } = useFinance();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   
@@ -45,6 +47,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
       setEditedTransaction({
         id: transaction.id,
         amount: transaction.amount,
+        categoryId: transaction.categoryId,
         category: transaction.category,
         description: transaction.description,
         date: transaction.date,
@@ -66,6 +69,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
         setEditedTransaction({
           id: transaction.id,
           amount: transaction.amount,
+          categoryId: transaction.categoryId,
           category: transaction.category,
           description: transaction.description,
           date: transaction.date,
@@ -81,38 +85,13 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
     return null;
   }
   
-  // Define categories based on transaction type
-  const getCategories = () => {
-    if (editedTransaction.type === 'income') {
-      return [
-        t('income.categories.salary') || 'Salary',
-        t('income.categories.business') || 'Business',
-        t('income.categories.investment') || 'Investment',
-        t('income.categories.gift') || 'Gift',
-        t('income.categories.freelance') || 'Freelance',
-        t('income.categories.refund') || 'Refund',
-        t('income.categories.bonus') || 'Bonus',
-        t('income.categories.other') || 'Other'
-      ];
-    } else {
-      return [
-        t('budgets.categories.groceries') || 'Groceries',
-        t('budgets.categories.dining') || 'Dining',
-        t('budgets.categories.transportation') || 'Transportation',
-        t('budgets.categories.utilities') || 'Utilities',
-        t('budgets.categories.housing') || 'Housing',
-        t('budgets.categories.entertainment') || 'Entertainment',
-        t('budgets.categories.shopping') || 'Shopping',
-        t('budgets.categories.healthcare') || 'Healthcare',
-        t('budgets.categories.education') || 'Education',
-        t('budgets.categories.personal_care') || 'Personal Care',
-        t('budgets.categories.travel') || 'Travel',
-        t('budgets.categories.gifts') || 'Gifts',
-        t('budgets.categories.other') || 'Other',
-        'Transfer'
-      ];
-    }
-  };
+  // Get categories for dropdown based on transaction type
+  const categories = editedTransaction.type === 'transfer' 
+    ? [] 
+    : getLocalizedCategoriesByType(
+        editedTransaction.type === 'income' ? 'income' : 'expense', 
+        i18next
+      );
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -129,63 +108,29 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
     return date.toISOString().split('T')[0];
   };
   
-  // Get the appropriate icon based on transaction type
-  const getTransactionIcon = () => {
-    if (transaction.type === 'income') {
-      return <ArrowUp className="text-[#C6FE1E]" size={24} />;
-    } else if (transaction.type === 'expense') {
-      return <ArrowDown className="text-red-500" size={24} />;
-    } else {
-      // For any other type including 'transfer'
-      return <ArrowLeftRight className="text-[#1364FF]" size={24} />;
-    }
+  // Get wallet name by ID
+  const getWalletName = (walletId: string) => {
+    const wallet = wallets.find(w => w.id === walletId);
+    return wallet ? wallet.name : 'Unknown Wallet';
   };
-
-  // Handle saving the edited transaction
-  const handleSave = async () => {
-    try {
-      await updateTransaction(editedTransaction);
-      
-      toast({
-        title: t('common.success'),
-        description: t('transactions.update_success') || "Transaction updated successfully",
-      });
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating transaction:', error);
-      toast({
-        title: t('common.error') || "Error",
-        description: t('transactions.update_error') || "Failed to update transaction",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handle changes to input fields
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  
+  // Handle form field change
+  const handleChange = (field: string, value: any) => {
     setEditedTransaction({
       ...editedTransaction,
-      [name]: name === 'amount' ? parseFloat(value) : value
+      [field]: value
     });
   };
-
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setEditedTransaction({
-      ...editedTransaction,
-      [name]: value
-    });
-  };
-
-  // Cancel editing
+  
+  // Handle cancel edit
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Reset to original transaction data
+    
     if (transaction) {
       setEditedTransaction({
         id: transaction.id,
         amount: transaction.amount,
+        categoryId: transaction.categoryId,
         category: transaction.category,
         description: transaction.description,
         date: transaction.date,
@@ -194,7 +139,47 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
       });
     }
   };
-
+  
+  // Handle save changes
+  const handleSave = () => {
+    updateTransaction({
+      ...transaction,
+      amount: parseFloat(editedTransaction.amount),
+      categoryId: editedTransaction.categoryId,
+      description: editedTransaction.description || '',
+      date: editedTransaction.date,
+      walletId: editedTransaction.walletId
+    });
+    
+    setIsEditing(false);
+    toast({
+      title: 'Success',
+      description: 'Transaction updated successfully'
+    });
+  };
+  
+  // Type icon based on transaction type
+  const getTypeIcon = () => {
+    if (transaction.type === 'income') {
+      return <ArrowUp className="w-5 h-5 text-[#C6FE1E] dark:text-green-400" />;
+    } else if (transaction.type === 'expense') {
+      return <ArrowDown className="w-5 h-5 text-[#FF6B6B] dark:text-red-400" />;
+    } else {
+      return <ArrowLeftRight className="w-5 h-5 text-[#C6FE1E] dark:text-yellow-400" />;
+    }
+  };
+  
+  // Get type label
+  const getTypeLabel = () => {
+    if (transaction.type === 'income') {
+      return t('transactions.income');
+    } else if (transaction.type === 'expense') {
+      return t('transactions.expense');
+    } else {
+      return t('transactions.transfer');
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-[#1A1A1A] border-none text-white">
@@ -229,152 +214,150 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
           </div>
         </DialogHeader>
         
-        {!isEditing ? (
-          // View mode
-          <div className="space-y-6">
-            {/* Main transaction info */}
-            <div className="flex flex-col items-center justify-center pt-2 pb-6">
-              <div className="mb-4 w-16 h-16 rounded-full bg-[#242425] flex items-center justify-center">
-                <CategoryIcon category={transaction.category} size="lg" />
-              </div>
-              
-              <h2 className="text-xl font-bold">{transaction.category}</h2>
-              <p className="text-sm text-[#868686]">{transaction.description}</p>
-              
-              <div className="mt-4 flex items-center">
-                {getTransactionIcon()}
-                <span className={`text-3xl font-bold ml-2 ${
-                  transaction.type === 'income' 
-                    ? 'text-[#C6FE1E]' 
-                    : transaction.type === 'expense' 
-                      ? 'text-red-500' 
-                      : 'text-[#1364FF]'
-                }`}>
-                  {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
-                </span>
+        <div className="mt-4">
+          {/* Amount */}
+          {isEditing ? (
+            <div className="mb-4">
+              <Label htmlFor="amount" className="text-[#868686] mb-1 block">
+                {t('transactions.amount')}
+              </Label>
+              <Input 
+                id="amount"
+                type="number"
+                step="0.01"
+                value={editedTransaction.amount}
+                onChange={(e) => handleChange('amount', e.target.value)}
+                className="bg-[#242425] border-0 text-white"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#868686]">{t('transactions.amount')}</span>
+              <span className={`text-xl font-bold ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
+                {formatCurrency(transaction.amount)}
+              </span>
+            </div>
+          )}
+          
+          {/* Category */}
+          {isEditing && transaction.type !== 'transfer' ? (
+            <div className="mb-4">
+              <Label htmlFor="category" className="text-[#868686] mb-1 block">
+                {t('transactions.category')}
+              </Label>
+              <Select 
+                value={editedTransaction.categoryId} 
+                onValueChange={(value) => handleChange('categoryId', value)}
+              >
+                <SelectTrigger className="bg-[#242425] border-0 text-white">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#242425] border-0 text-white">
+                  {categories.map((category) => (
+                    <SelectItem 
+                      key={category.id} 
+                      value={category.id}
+                      className="hover:bg-[#333] focus:bg-[#333]"
+                    >
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#868686]">{t('transactions.category')}</span>
+              <div className="flex items-center">
+                <CategoryIcon category={getDisplayCategoryName(transaction)} size="sm" />
+                <span className="ml-2">{getDisplayCategoryName(transaction)}</span>
               </div>
             </div>
-            
-            {/* Details list */}
-            <div className="bg-[#242425] rounded-xl p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#868686]">
-                  <Calendar size={16} />
-                  <span>{t('transactions.date')}</span>
-                </div>
-                <span className="text-white">{formatDate(transaction.date)}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#868686]">
-                  <Tag size={16} />
-                  <span>{t('transactions.category')}</span>
-                </div>
-                <span className="text-white">{transaction.category}</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#868686]">
-                  <FileText size={16} />
-                  <span>{t('transactions.description')}</span>
-                </div>
-                <span className="text-white">{transaction.description}</span>
-              </div>
+          )}
+          
+          {/* Wallet */}
+          {isEditing ? (
+            <div className="mb-4">
+              <Label htmlFor="wallet" className="text-[#868686] mb-1 block">
+                {t('transactions.wallet')}
+              </Label>
+              <Select 
+                value={editedTransaction.walletId} 
+                onValueChange={(value) => handleChange('walletId', value)}
+              >
+                <SelectTrigger className="bg-[#242425] border-0 text-white">
+                  <SelectValue placeholder="Select wallet" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#242425] border-0 text-white">
+                  {wallets.map((wallet) => (
+                    <SelectItem 
+                      key={wallet.id} 
+                      value={wallet.id}
+                      className="hover:bg-[#333] focus:bg-[#333]"
+                    >
+                      {wallet.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-        ) : (
-          // Edit mode
-          <div className="space-y-4">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">{t('transactions.type')}</Label>
-                <Select 
-                  value={editedTransaction.type} 
-                  onValueChange={(value) => handleSelectChange('type', value)}
-                >
-                  <SelectTrigger className="bg-[#242425] border-none text-white">
-                    <SelectValue placeholder={t('transactions.transaction_type')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-none text-white">
-                    <SelectItem value="income">{t('transactions.income')}</SelectItem>
-                    <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="amount">{t('transactions.amount')}</Label>
-                <Input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  className="bg-[#242425] border-none text-white"
-                  value={editedTransaction.amount}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="category">{t('transactions.category')}</Label>
-                <Select 
-                  value={editedTransaction.category} 
-                  onValueChange={(value) => handleSelectChange('category', value)}
-                >
-                  <SelectTrigger className="bg-[#242425] border-none text-white">
-                    <SelectValue placeholder={t('budgets.select_category')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-none text-white">
-                    {getCategories().map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="description">{t('transactions.description')}</Label>
-                <Input
-                  id="description"
-                  name="description"
-                  className="bg-[#242425] border-none text-white"
-                  value={editedTransaction.description}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="date">{t('transactions.date')}</Label>
-                <Input
-                  id="date"
-                  name="date"
-                  type="date"
-                  className="bg-[#242425] border-none text-white"
-                  value={formatDateForInput(editedTransaction.date)}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="walletId">{t('transactions.wallet')}</Label>
-                <Select 
-                  value={editedTransaction.walletId} 
-                  onValueChange={(value) => handleSelectChange('walletId', value)}
-                >
-                  <SelectTrigger className="bg-[#242425] border-none text-white">
-                    <SelectValue placeholder={t('wallets.select_wallet')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#242425] border-none text-white">
-                    {wallets.map(wallet => (
-                      <SelectItem key={wallet.id} value={wallet.id}>{wallet.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          ) : (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#868686]">{t('transactions.wallet')}</span>
+              <span>{getWalletName(transaction.walletId)}</span>
+            </div>
+          )}
+          
+          {/* Description */}
+          {isEditing ? (
+            <div className="mb-4">
+              <Label htmlFor="description" className="text-[#868686] mb-1 block">
+                {t('transactions.description')}
+              </Label>
+              <Input 
+                id="description"
+                value={editedTransaction.description}
+                onChange={(e) => handleChange('description', e.target.value)}
+                className="bg-[#242425] border-0 text-white"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#868686]">{t('transactions.description')}</span>
+              <span>{transaction.description || '-'}</span>
+            </div>
+          )}
+          
+          {/* Date */}
+          {isEditing ? (
+            <div className="mb-4">
+              <Label htmlFor="date" className="text-[#868686] mb-1 block">
+                {t('transactions.date')}
+              </Label>
+              <Input 
+                id="date"
+                type="date"
+                value={formatDateForInput(editedTransaction.date)}
+                onChange={(e) => handleChange('date', e.target.value)}
+                className="bg-[#242425] border-0 text-white"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[#868686]">{t('transactions.date')}</span>
+              <span>{formatDate(transaction.date)}</span>
+            </div>
+          )}
+          
+          {/* Type - non-editable */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[#868686]">{t('transactions.type')}</span>
+            <div className="flex items-center">
+              {getTypeIcon()}
+              <span className="ml-2">{getTypeLabel()}</span>
             </div>
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );

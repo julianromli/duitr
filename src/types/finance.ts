@@ -1,7 +1,8 @@
 export type Transaction = {
   id: string;
   amount: number;
-  category: string;
+  categoryId: string;
+  category?: string;
   description: string;
   date: string;
   type: 'income' | 'expense' | 'transfer';
@@ -13,45 +14,51 @@ export type Transaction = {
 
 export type Budget = {
   id: string;
-  category: string;
   amount: number;
-  spent: number;
-  period: 'monthly' | 'weekly' | 'yearly';
+  categoryId: string;
+  category?: string;
+  month: string;
+  year: string;
+  walletId: string;
+  userId?: string;
 };
 
 export type Wallet = {
   id: string;
   name: string;
   balance: number;
-  type: 'cash' | 'bank' | 'e-wallet' | 'investment';
+  icon: string;
   color: string;
+  userId?: string;
 };
 
 // Type for items users want to buy
 export type WantToBuyItem = {
   id: string;
-  userId: string;
   name: string;
-  icon?: string | null;
-  price: number;
-  category: 'Keinginan' | 'Kebutuhan';
-  estimated_date: string; // ISO date string
-  priority: 'Tinggi' | 'Sedang' | 'Rendah';
+  amount: number;
+  reason: string;
+  priority: number;
+  target_date: string;
   is_purchased: boolean;
-  created_at: string;
+  purchase_date?: string | null;
+  image_url?: string | null;
+  userId?: string;
+  created_at?: string;
 };
 
 // Type for loan/credit items
 export type PinjamanItem = {
   id: string;
-  userId: string;
   name: string;
-  icon?: string | null;
-  category: 'Utang' | 'Piutang';
-  due_date: string; // ISO date string
   amount: number;
+  description: string;
+  due_date: string | null;
   is_settled: boolean;
-  created_at: string;
+  settlement_date?: string | null;
+  lender_name: string;
+  userId?: string;
+  created_at?: string;
 };
 
 export interface ExportOptions {

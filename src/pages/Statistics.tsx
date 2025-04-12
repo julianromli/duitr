@@ -19,63 +19,103 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from 'framer-motion';
+import { Transaction } from '@/types/finance';
 
 type TabType = 'income' | 'outcome';
-type DateRange = '7days' | '30days' | 'month' | 'custom';
+
+// Define interface for grouped category data
+interface CategoryTotal {
+  total: number;
+  categoryId: string | null;
+  displayName: string;
+}
+
+// Chart data format
+interface ChartDataItem {
+  name: string;
+  value: number;
+  percentage: number;
+  categoryId: string | null;
+}
+
+// Function to group transactions by categoryId
+function groupTransactionsByCategory(
+  transactions: Transaction[], 
+  getDisplayCategoryName: (transaction: Transaction) => string
+): CategoryTotal[] {
+  const categoryTotals: Record<string, CategoryTotal> = {};
+  
+  transactions.forEach(transaction => {
+    // Get the display name for the category
+    const categoryName = getDisplayCategoryName(transaction);
+    
+    // Use the categoryName as the key
+    const key = categoryName;
+    
+    // Initialize if this is the first transaction for this category
+    if (!categoryTotals[key]) {
+      categoryTotals[key] = {
+        total: 0,
+        categoryId: transaction.categoryId || null,
+        displayName: categoryName
+      };
+    }
+    
+    // Add the amount to the total
+    categoryTotals[key].total += transaction.amount;
+  });
+  
+  return Object.values(categoryTotals);
+}
 
 const Statistics: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>('outcome');
-  const { formatCurrency } = useFinance();
-  const { allTransactions } = useTransactions();
+  const { transactions, formatCurrency, getDisplayCategoryName } = useFinance();
   
-  const [dateRange, setDateRange] = useState<DateRange>('month');
+  // State for date selection
+  const [dateRange, setDateRange] = useState<'7days' | '30days' | 'month' | 'custom'>('month');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  // Get current month and year for display
+  // Currently selected tab
+  const [activeTab, setActiveTab] = useState<TabType>('outcome');
+  
+  // Current month and year for display
   const currentDate = new Date();
   const currentMonthYear = format(currentDate, 'MMMM yyyy');
   
-  // Function to get filtered transactions based on selected date range
+  // Filter transactions based on selected date range and tab
   const getFilteredTransactions = () => {
     const now = new Date();
     let startDate: Date;
-    const endDate = new Date();
     
+    // Determine start date based on selected range
     if (dateRange === '7days') {
-      startDate = new Date();
+      startDate = new Date(now);
       startDate.setDate(now.getDate() - 7);
     } else if (dateRange === '30days') {
-      startDate = new Date();
+      startDate = new Date(now);
       startDate.setDate(now.getDate() - 30);
     } else if (dateRange === 'month') {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (dateRange === 'custom' && customStartDate && customEndDate) {
+      startDate = customStartDate;
+      // For custom range, use the selected end date instead of now
+      now.setHours(23, 59, 59, 999); // End of day
+      now.setTime(customEndDate.getTime());
     } else {
-      // Custom range
-      if (!customStartDate || !customEndDate) {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      } else {
-        startDate = customStartDate;
-        endDate.setTime(customEndDate.getTime());
-        endDate.setHours(23, 59, 59, 999); // End of the selected day
-      }
+      // Default to current month
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
     
-    // Use the correct type mapping for filtering
-    const typeMapping = {
-      'income': 'income',
-      'outcome': 'expense'
-    };
-    
-    return allTransactions.filter(t => {
-      const transactionDate = new Date(t.date);
+    // Filter transactions by date and type
+    return transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
       return (
         transactionDate >= startDate && 
-        transactionDate <= endDate && 
-        t.type === typeMapping[activeTab] &&
-        t.category !== 'Transfer' // Exclude wallet transfers
+        transactionDate <= now &&
+        transaction.type === (activeTab === 'income' ? 'income' : 'expense')
       );
     });
   };
@@ -85,25 +125,22 @@ const Statistics: React.FC = () => {
   // Calculate total for current filter
   const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
   
-  // Group by category and calculate percentages for pie chart
-  const categoryTotals: Record<string, number> = {};
-  filteredTransactions.forEach(t => {
-    if (!categoryTotals[t.category]) {
-      categoryTotals[t.category] = 0;
-    }
-    categoryTotals[t.category] += t.amount;
-  });
+  // Group transactions by category with new category system
+  const groupedCategories = groupTransactionsByCategory(filteredTransactions, getDisplayCategoryName);
   
   // Convert to chart data format and calculate percentages
-  const chartData = Object.keys(categoryTotals).map(category => {
-    const value = categoryTotals[category];
-    const percentage = totalAmount > 0 ? Math.round((value / totalAmount) * 100) : 0;
+  const chartData: ChartDataItem[] = groupedCategories.map(category => {
+    const percentage = totalAmount > 0 ? Math.round((category.total / totalAmount) * 100) : 0;
     return {
-      name: category,
-      value: value,
+      name: category.displayName,
+      value: category.total,
       percentage: percentage,
+      categoryId: category.categoryId
     };
   });
+  
+  // Sort data by value in descending order for better display
+  chartData.sort((a, b) => b.value - a.value);
   
   // Colors for pie chart - using a varied yet harmonious color palette
   const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'];
@@ -179,107 +216,106 @@ const Statistics: React.FC = () => {
             </Link>
             <h1 className="text-xl font-bold">{t('statistics.title')}</h1>
           </div>
-          <div className="relative">
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 rounded-full text-sm font-normal bg-[#242425] border-0 text-white hover:bg-[#333]"
-                >
-                  {getDateRangeLabel()}
-                  <ChevronDown size={16} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-4 bg-[#242425] border-0 text-white" align="end">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant={dateRange === '7days' ? 'default' : 'outline'} 
-                      className={dateRange === '7days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
-                      onClick={() => {
-                        setDateRange('7days');
-                        setIsCalendarOpen(false);
+          
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 rounded-full text-sm font-normal bg-[#242425] border-0 text-white hover:bg-[#333]"
+              >
+                {getDateRangeLabel()}
+                <ChevronDown size={16} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-4 bg-[#242425] border-0 text-white" align="end">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant={dateRange === '7days' ? 'default' : 'outline'} 
+                    className={dateRange === '7days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('7days');
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    {t('statistics.last7Days')}
+                  </Button>
+                  <Button 
+                    variant={dateRange === '30days' ? 'default' : 'outline'} 
+                    className={dateRange === '30days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('30days');
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    {t('statistics.last30Days')}
+                  </Button>
+                  <Button 
+                    variant={dateRange === 'month' ? 'default' : 'outline'} 
+                    className={dateRange === 'month' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('month');
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    {t('statistics.thisMonth')}
+                  </Button>
+                  <Button 
+                    variant={dateRange === 'custom' ? 'default' : 'outline'} 
+                    className={dateRange === 'custom' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('custom');
+                      if (!customStartDate || !customEndDate) {
+                        const today = new Date();
+                        setCustomStartDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                        setCustomEndDate(today);
+                      }
+                    }}
+                  >
+                    {t('statistics.customRange')}
+                  </Button>
+                </div>
+                
+                {dateRange === 'custom' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-[#868686] mb-1">{t('statistics.startDate')}</p>
+                        <p className="text-sm">{customStartDate ? format(customStartDate, 'MMM d, yyyy') : '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#868686] mb-1">{t('statistics.endDate')}</p>
+                        <p className="text-sm">{customEndDate ? format(customEndDate, 'MMM d, yyyy') : '-'}</p>
+                      </div>
+                    </div>
+                    
+                    <Calendar
+                      mode="range"
+                      selected={{
+                        from: customStartDate,
+                        to: customEndDate,
                       }}
-                    >
-                      {t('statistics.last7Days')}
-                    </Button>
-                    <Button 
-                      variant={dateRange === '30days' ? 'default' : 'outline'} 
-                      className={dateRange === '30days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
-                      onClick={() => {
-                        setDateRange('30days');
-                        setIsCalendarOpen(false);
+                      onSelect={(range) => {
+                        setCustomStartDate(range?.from);
+                        setCustomEndDate(range?.to);
                       }}
-                    >
-                      {t('statistics.last30Days')}
-                    </Button>
+                      className="rounded-md border-0 bg-[#1A1A1A]"
+                    />
+                    
                     <Button 
-                      variant={dateRange === 'month' ? 'default' : 'outline'} 
-                      className={dateRange === 'month' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
-                      onClick={() => {
-                        setDateRange('month');
-                        setIsCalendarOpen(false);
-                      }}
+                      className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-medium"
+                      onClick={() => setIsCalendarOpen(false)}
                     >
-                      {t('statistics.thisMonth')}
-                    </Button>
-                    <Button 
-                      variant={dateRange === 'custom' ? 'default' : 'outline'} 
-                      className={dateRange === 'custom' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
-                      onClick={() => {
-                        setDateRange('custom');
-                        if (!customStartDate || !customEndDate) {
-                          const today = new Date();
-                          setCustomStartDate(new Date(today.getFullYear(), today.getMonth(), 1));
-                          setCustomEndDate(today);
-                        }
-                      }}
-                    >
-                      {t('statistics.customRange')}
+                      {t('statistics.apply')}
                     </Button>
                   </div>
-                  
-                  {dateRange === 'custom' && (
-                    <div className="flex flex-col gap-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <p className="text-sm mb-1">{t('statistics.startDate')}</p>
-                          <Calendar
-                            className="bg-[#1A1A1A] rounded-lg text-white"
-                            mode="single"
-                            selected={customStartDate}
-                            onSelect={setCustomStartDate}
-                            disabled={(date) => date > new Date() || (customEndDate ? date > customEndDate : false)}
-                            initialFocus
-                          />
-                        </div>
-                        <div>
-                          <p className="text-sm mb-1">{t('statistics.endDate')}</p>
-                          <Calendar
-                            className="bg-[#1A1A1A] rounded-lg text-white"
-                            mode="single"
-                            selected={customEndDate}
-                            onSelect={setCustomEndDate}
-                            disabled={(date) => date > new Date() || (customStartDate ? date < customStartDate : false)}
-                            initialFocus
-                          />
-                        </div>
-                      </div>
-                      <Button 
-                        className="mt-2 bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00]"
-                        onClick={() => setIsCalendarOpen(false)}
-                      >
-                        {t('common.apply')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </motion.div>
         
-        {/* Tabs */}
+        {/* Tab buttons for Income/Expense */}
         <motion.div 
           className="mb-6"
           variants={itemVariants}
@@ -303,103 +339,92 @@ const Statistics: React.FC = () => {
         </motion.div>
         
         {/* Chart Section */}
-        <div className="py-6">
-          {filteredTransactions.length > 0 ? (
-            <>
-              <motion.div 
-                className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
-                variants={chartVariants}
-                key={`chart-${activeTab}`}
-              >
-                <div className="h-[220px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={90}
-                        paddingAngle={0}
-                        dataKey="value"
-                        strokeWidth={0}
-                        animationBegin={300}
-                        animationDuration={800}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}-${activeTab}`} 
-                            fill={COLORS[index % COLORS.length]} 
-                          />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  
-                  {/* Center Text */}
-                  <motion.div 
-                    className="absolute inset-0 flex flex-col items-center justify-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    key={`text-${activeTab}`}
-                  >
-                    <p className="text-xs text-[#868686] uppercase tracking-wide">
-                      {t('statistics.total')} {activeTab === 'income' ? t('statistics.income').toUpperCase() : t('statistics.expense').toUpperCase()}
-                    </p>
-                    <p className="text-xl font-bold mt-1 text-white">{formatCurrency(totalAmount)}</p>
-                  </motion.div>
-                </div>
-              </motion.div>
-              
-              {/* Category Breakdown */}
-              <motion.div 
-                className="mt-8" 
-                variants={itemVariants}
-                key={`breakdown-${activeTab}`}
-              >
-                <h3 className="text-lg font-bold mb-4">
-                  {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
-                </h3>
-                <div className="space-y-3">
-                  {chartData.map((category, index) => (
-                    <motion.div 
-                      key={`${category.name}-${index}-${activeTab}`}
-                      className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + (index * 0.05) }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div>
-                        <span className="font-medium">{category.name}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium">{formatCurrency(category.value)}</span>
-                        <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
-                          backgroundColor: COLORS[index % COLORS.length]
-                        }}>
-                          {category.percentage}%
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </>
-          ) : (
+        {filteredTransactions.length > 0 ? (
+          <>
             <motion.div 
-              className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              key="no-data"
+              className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
+              variants={chartVariants}
+              key={`chart-${activeTab}`}
             >
-              <p className="text-[#868686]">{t('statistics.noData')}</p>
+              <div className="h-[220px] w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={90}
+                      paddingAngle={0}
+                      dataKey="value"
+                      strokeWidth={0}
+                      animationBegin={300}
+                      animationDuration={800}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}-${activeTab}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* Center Text */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                  <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
+                  <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
+                </div>
+              </div>
             </motion.div>
-          )}
-        </div>
+            
+            <motion.div 
+              className="mt-8" 
+              variants={itemVariants}
+              key={`breakdown-${activeTab}`}
+            >
+              <h3 className="text-lg font-bold mb-4">
+                {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
+              </h3>
+              <div className="space-y-3">
+                {chartData.map((category, index) => (
+                  <motion.div 
+                    key={`${category.name}-${index}-${activeTab}`}
+                    className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + (index * 0.05) }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div>
+                      <span className="font-medium">{category.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium">{formatCurrency(category.value)}</span>
+                      <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
+                        backgroundColor: COLORS[index % COLORS.length]
+                      }}>
+                        {category.percentage}%
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        ) : (
+          <motion.div 
+            className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            key="no-data"
+          >
+            <p className="text-[#868686]">{t('statistics.noData')}</p>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
