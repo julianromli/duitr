@@ -315,7 +315,9 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
-                      <p className="text-xs text-[#868686]">{t(`transactions.${transaction.type.toLowerCase()}`)}</p>
+                      <p className="text-xs text-[#868686]">
+                          {transaction.description}
+                        </p>
                     </div>
                   </div>
                   <p className={`font-medium ${

@@ -56,16 +56,21 @@ export function getCategoryUuidFromStringId(categoryStringId: string): number {
     // Expense categories (inserted first, IDs 1-12)
     'expense_groceries': 1,
     'expense_food': 2,
-    'expense_dining': 2,  // Add mapping for dining (maps to food ID)
+    'expense_dining': 2,  // Maps to food ID
     'expense_transportation': 3,
     'expense_subscription': 4,
+    'expense_utilities': 4, // Maps to subscription ID
     'expense_housing': 5,
     'expense_entertainment': 6,
     'expense_shopping': 7,
     'expense_health': 8,
+    'expense_healthcare': 8, // Maps to health ID
     'expense_education': 9,
     'expense_travel': 10,
     'expense_personal': 11,
+    'expense_personal_care': 11, // Maps to personal ID
+    'expense_gifts': 6, // Maps to entertainment ID for now
+    'expense_gift': 6, // Maps to entertainment ID for now
     'expense_other': 12,
     
     // Income categories (inserted second, IDs 13-17)
@@ -73,15 +78,28 @@ export function getCategoryUuidFromStringId(categoryStringId: string): number {
     'income_business': 14,
     'income_investment': 15,
     'income_gift': 16,
+    'income_freelance': 17, // Maps to other income ID
+    'income_refund': 17, // Maps to other income ID
+    'income_bonus': 17, // Maps to other income ID
     'income_other': 17,
     
     // System category (inserted last, ID 18)
-    'system_transfer': 18
+    'system_transfer': 18,
+    'transfer': 18 // Shorthand for system_transfer
   };
 
   // Check if we have a direct mapping
-  if (categoryKeyToId[categoryStringId]) {
+  if (categoryKeyToId[categoryStringId] !== undefined) {
     return categoryKeyToId[categoryStringId];
+  }
+
+  // Handle numeric IDs (already converted)
+  if (!isNaN(Number(categoryStringId))) {
+    const numId = Number(categoryStringId);
+    // Check if it's a valid ID
+    if (numId >= 1 && numId <= 18) {
+      return numId;
+    }
   }
 
   // Fallback based on category type prefix
@@ -112,16 +130,16 @@ export function getCategoryStringIdFromUuid(id: string | number): string {
     const idToCategoryKey: Record<number, string> = {
       // Expense categories (inserted first, IDs 1-12)
       1: 'expense_groceries',
-      2: 'expense_food',
+      2: 'expense_food', // Also covers 'expense_dining'
       3: 'expense_transportation',
-      4: 'expense_subscription',
+      4: 'expense_subscription', // Also covers 'expense_utilities'
       5: 'expense_housing',
-      6: 'expense_entertainment',
+      6: 'expense_entertainment', // Also covers 'expense_gifts'
       7: 'expense_shopping',
-      8: 'expense_health',
+      8: 'expense_health', // Also covers 'expense_healthcare'
       9: 'expense_education',
       10: 'expense_travel',
-      11: 'expense_personal',
+      11: 'expense_personal', // Also covers 'expense_personal_care'
       12: 'expense_other',
       
       // Income categories (inserted second, IDs 13-17)
@@ -129,7 +147,7 @@ export function getCategoryStringIdFromUuid(id: string | number): string {
       14: 'income_business',
       15: 'income_investment',
       16: 'income_gift',
-      17: 'income_other',
+      17: 'income_other', // Also covers other income types
       
       // System category (inserted last, ID 18)
       18: 'system_transfer'
@@ -247,13 +265,18 @@ export async function getLocalizedCategoriesByType(
           'expense_dining': 2,
           'expense_transportation': 3,
           'expense_subscription': 4,
+          'expense_utilities': 4,
           'expense_housing': 5,
           'expense_entertainment': 6,
           'expense_shopping': 7,
           'expense_health': 8,
+          'expense_healthcare': 8,
           'expense_education': 9,
           'expense_travel': 10,
           'expense_personal': 11,
+          'expense_personal_care': 11,
+          'expense_gifts': 6,
+          'expense_gift': 6,
           'expense_other': 12
         };
         numericId = categoryKeyToId[cat.id] || 12; // Default to expense_other (12)
@@ -264,6 +287,9 @@ export async function getLocalizedCategoriesByType(
           'income_business': 14,
           'income_investment': 15,
           'income_gift': 16,
+          'income_freelance': 17,
+          'income_refund': 17,
+          'income_bonus': 17,
           'income_other': 17
         };
         numericId = categoryKeyToId[cat.id] || 17; // Default to income_other (17)

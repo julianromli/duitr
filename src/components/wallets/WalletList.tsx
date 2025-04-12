@@ -172,7 +172,9 @@ const WalletList: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-medium text-white dark:text-gray-100">{wallet.name}</p>
-                    <p className="text-xs text-[#868686] capitalize dark:text-gray-400">{t(`wallets.types.${wallet.type}`, wallet.type)}</p>
+                    <p className="text-xs text-[#868686] capitalize dark:text-gray-400">
+                      {wallet.type && walletTypes.find(t => t.value === wallet.type)?.label || wallet.type}
+                    </p>
                   </div>
                 </div>
                 
