@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
+import { Transaction } from '@/types/finance';
 
 type TransactionType = 'income' | 'expense' | 'all';
-type CategoryTotals = Record<string, number>;
+type CategoryTotals = Record<string | number, number>;
 type MonthlyData = {
   month: string;
   income: number;
@@ -10,7 +11,7 @@ type MonthlyData = {
 };
 
 export const useTransactions = () => {
-  const { transactions } = useFinance();
+  const { transactions, getDisplayCategoryName } = useFinance();
   const [filteredTransactions, setFilteredTransactions] = useState(transactions);
   const [typeFilter, setTypeFilter] = useState<TransactionType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,30 +28,33 @@ export const useTransactions = () => {
     
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(t => 
-        t.description.toLowerCase().includes(query) || 
-        t.category.toLowerCase().includes(query)
-      );
+      result = result.filter((t: Transaction) => {
+        const displayCategory = getDisplayCategoryName(t).toLowerCase();
+        return t.description.toLowerCase().includes(query) || 
+               displayCategory.includes(query);
+      });
     }
     
     setFilteredTransactions(result);
-  }, [transactions, typeFilter, searchQuery]);
+  }, [transactions, typeFilter, searchQuery, getDisplayCategoryName]);
 
   // Calculate category totals
   useEffect(() => {
     const totals: CategoryTotals = {};
     
-    filteredTransactions.forEach(transaction => {
-      const { category, amount, type } = transaction;
+    filteredTransactions.forEach((transaction: Transaction) => {
+      const { categoryId, amount, type } = transaction;
       
-      if (!totals[category]) {
-        totals[category] = 0;
+      if (!categoryId) return; // Skip if no categoryId
+      
+      if (!totals[categoryId]) {
+        totals[categoryId] = 0;
       }
       
       if (type === 'income') {
-        totals[category] += amount;
+        totals[categoryId] += amount;
       } else {
-        totals[category] += amount;
+        totals[categoryId] += amount;
       }
     });
     
@@ -74,11 +78,11 @@ export const useTransactions = () => {
       });
       
       const income = monthTransactions
-        .filter(t => t.type === 'income' && t.category !== 'Transfer')
+        .filter(t => t.type === 'income' && t.categoryId !== 'system_transfer')
         .reduce((sum, t) => sum + t.amount, 0);
         
       const expense = monthTransactions
-        .filter(t => t.type === 'expense' && t.category !== 'Transfer')
+        .filter(t => t.type === 'expense' && t.categoryId !== 'system_transfer')
         .reduce((sum, t) => sum + t.amount, 0);
       
       monthlyStats.push({

@@ -1,7 +1,7 @@
 export type Transaction = {
   id: string;
   amount: number;
-  categoryId: string;
+  categoryId: string | number;
   category?: string;
   description: string;
   date: string;
@@ -15,12 +15,15 @@ export type Transaction = {
 export type Budget = {
   id: string;
   amount: number;
-  categoryId: string;
+  categoryId: string | number;
   category?: string;
   month: string;
   year: string;
   walletId: string;
   userId?: string;
+  // Legacy fields for compatibility
+  spent?: number;
+  period?: 'monthly' | 'weekly' | 'yearly';
 };
 
 export type Wallet = {
@@ -29,6 +32,7 @@ export type Wallet = {
   balance: number;
   icon: string;
   color: string;
+  type?: 'cash' | 'bank' | 'e-wallet' | 'investment';
   userId?: string;
 };
 

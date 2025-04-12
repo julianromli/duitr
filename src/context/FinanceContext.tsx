@@ -91,7 +91,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           id: w.id,
           name: w.name,
           balance: w.balance,
-          type: w.type === 'credit' ? 'e-wallet' as const : w.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
+          icon: w.icon,
           color: w.color,
           userId: w.user_id
         })));
@@ -100,16 +100,28 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         setTransactions(transactionsRes.data.map(t => {
           // Handle category ID conversions
           let categoryId = t.category_id;
-          if (categoryId && categoryId.length > 30) {
-            categoryId = getCategoryStringIdFromUuid(categoryId);
-          } else if (!categoryId) {
-            categoryId = t.type === 'transfer' ? 'system_transfer' : legacyCategoryNameToId(t.category || '', t.type, i18next);
+          
+          // Convert to a usable category ID for the frontend
+          if (categoryId) {
+            // If it's a UUID (old format)
+            if (typeof categoryId === 'string' && categoryId.length > 30) {
+              categoryId = getCategoryStringIdFromUuid(categoryId);
+            } 
+            // If it's a number (new format after migration)
+            else if (typeof categoryId === 'number' || !isNaN(Number(categoryId))) {
+              // We can use the numeric ID directly, or convert to string key if needed
+              // For now, we'll keep the numeric ID
+              categoryId = Number(categoryId);
+            }
+          } else {
+            // Default category ID if none exists
+            categoryId = t.type === 'transfer' ? 'system_transfer' : 'expense_other';
           }
           
           return {
             id: t.id,
             amount: t.amount,
-            category: t.category,
+            category: '',  // Empty since it's no longer in the database
             categoryId: categoryId,
             description: t.description,
             date: t.date,
@@ -124,11 +136,15 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (budgetsRes.error) throw budgetsRes.error;
         setBudgets(budgetsRes.data.map(b => ({
           id: b.id,
-          category: b.category,
           amount: b.amount,
+          categoryId: b.category_id,
+          month: b.month || new Date().getMonth().toString(),
+          year: b.year || new Date().getFullYear().toString(),
+          walletId: b.wallet_id || wallets[0]?.id || '',
+          userId: b.user_id,
+          // Keep legacy fields for compatibility if they exist
           spent: b.spent,
-          period: b.period as 'monthly' | 'weekly' | 'yearly',
-          userId: b.user_id
+          period: b.period as 'monthly' | 'weekly' | 'yearly' | undefined
         })));
 
         if (wantToBuyRes.error) {
@@ -210,21 +226,107 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       return t('transactions.transfer');
     }
 
-    // If we have a categoryId, extract a readable name from it
+    // If we have a categoryId
     if (transaction.categoryId) {
-      // For string IDs like 'expense_groceries', extract the part after the underscore
-      if (transaction.categoryId.includes('_')) {
+      // If it's a string that includes an underscore (like 'expense_groceries')
+      if (typeof transaction.categoryId === 'string' && transaction.categoryId.includes('_')) {
+        // Convert string id to proper display name using mappings
+        const categoryKeyToName: Record<string, string> = {
+          // Expense categories
+          'expense_groceries': i18next.language === 'id' ? 'Kebutuhan Rumah' : 'Groceries',
+          'expense_food': i18next.language === 'id' ? 'Makan di Luar' : 'Dining',
+          'expense_dining': i18next.language === 'id' ? 'Makan di Luar' : 'Dining',
+          'expense_transportation': i18next.language === 'id' ? 'Transportasi' : 'Transportation',
+          'expense_subscription': i18next.language === 'id' ? 'Berlangganan' : 'Subscription',
+          'expense_housing': i18next.language === 'id' ? 'Perumahan' : 'Housing',
+          'expense_entertainment': i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
+          'expense_shopping': i18next.language === 'id' ? 'Belanja' : 'Shopping',
+          'expense_health': i18next.language === 'id' ? 'Kesehatan' : 'Health',
+          'expense_education': i18next.language === 'id' ? 'Pendidikan' : 'Education',
+          'expense_travel': i18next.language === 'id' ? 'Perjalanan' : 'Travel',
+          'expense_personal': i18next.language === 'id' ? 'Personal Care' : 'Personal Care',
+          'expense_other': i18next.language === 'id' ? 'Lainnya' : 'Other',
+          
+          // Income categories
+          'income_salary': i18next.language === 'id' ? 'Gaji' : 'Salary',
+          'income_business': i18next.language === 'id' ? 'Bisnis' : 'Business',
+          'income_investment': i18next.language === 'id' ? 'Investasi' : 'Investment',
+          'income_gift': i18next.language === 'id' ? 'Hadiah' : 'Gift',
+          'income_other': i18next.language === 'id' ? 'Lainnya' : 'Other',
+          
+          // System
+          'system_transfer': i18next.language === 'id' ? 'Transfer' : 'Transfer'
+        };
+        
+        const displayName = categoryKeyToName[transaction.categoryId];
+        if (displayName) {
+          return displayName;
+        }
+        
+        // Fallback to simple capitalization if not found in mapping
         const parts = transaction.categoryId.split('_');
-        // Capitalize the part after the underscore
         if (parts.length > 1) {
           const categoryName = parts[1];
           return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
         }
       }
+      
+      // If it's a number (or numeric string), look up the name from the database mapping
+      if (typeof transaction.categoryId === 'number' || 
+         (typeof transaction.categoryId === 'string' && !isNaN(Number(transaction.categoryId)))) {
+          // Convert numeric ID to display name using database mappings
+          const numericId = Number(transaction.categoryId);
+          const idToName: Record<number, string> = {
+            // Expense categories
+            1: i18next.language === 'id' ? 'Kebutuhan Rumah' : 'Groceries',
+            2: i18next.language === 'id' ? 'Makan di Luar' : 'Dining',
+            3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
+            4: i18next.language === 'id' ? 'Berlangganan' : 'Subscription',
+            5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
+            6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
+            7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
+            8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
+            9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
+            10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
+            11: i18next.language === 'id' ? 'Personal Care' : 'Personal Care',
+            12: i18next.language === 'id' ? 'Lainnya' : 'Other',
+            
+            // Income categories
+            13: i18next.language === 'id' ? 'Gaji' : 'Salary',
+            14: i18next.language === 'id' ? 'Bisnis' : 'Business', 
+            15: i18next.language === 'id' ? 'Investasi' : 'Investment',
+            16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
+            17: i18next.language === 'id' ? 'Lainnya' : 'Other',
+            
+            // System
+            18: i18next.language === 'id' ? 'Transfer' : 'Transfer'
+          };
+          
+          const displayName = idToName[numericId];
+          if (displayName) {
+            return displayName;
+          }
+          
+          // For fallback, determine if it's expense or income based on the ID range
+          if (numericId <= 12) {
+            return i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
+          } else if (numericId <= 17) {
+            return i18next.language === 'id' ? 'Lainnya' : 'Other Income';
+          } else {
+            return 'Transfer';
+          }
+      }
     }
     
-    // Fallback to legacy category name if available
-    return transaction.category || 'Other';
+    // Fallback: If we still have a category property (legacy), use that
+    if (transaction.category) {
+      return transaction.category;
+    }
+    
+    // Ultimate fallback based on transaction type
+    return transaction.type === 'income' 
+      ? (i18next.language === 'id' ? 'Pendapatan' : 'Income') 
+      : (i18next.language === 'id' ? 'Pengeluaran' : 'Expense');
   };
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'userId'>) => {
@@ -277,29 +379,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           ? 'system_transfer' 
           : legacyCategoryNameToId(transaction.category || '', transaction.type, i18next));
 
-      // Determine if we need to use UUID format based on database schema
-      let dbCategoryId = categoryId;
-
-      // If the column is UUID in the database, convert the string ID to UUID format
-      try {
-        const { data: schemaInfo } = await supabase
-          .from('transactions')
-          .select('category_id')
-          .limit(1);
-        
-        // Check if the column appears to be a UUID by attempting to access it
-        if (schemaInfo && schemaInfo.length > 0 && typeof schemaInfo[0].category_id === 'string' && schemaInfo[0].category_id.length > 30) {
-          dbCategoryId = getCategoryUuidFromStringId(categoryId);
-        }
-      } catch (e) {
-        console.error('Error checking schema:', e);
-        // Continue with original ID if we couldn't check
-      }
+      // Convert string ID to integer for the database
+      const dbCategoryId = getCategoryUuidFromStringId(typeof categoryId === 'string' ? categoryId : String(categoryId));
 
       const newTransactionData = {
         amount: transaction.amount,
-        category: transaction.type === 'transfer' ? 'Transfer' : transaction.category,
-        category_id: dbCategoryId, // Add the category_id field for database
+        category_id: dbCategoryId,
         description: transaction.description,
         date: transaction.date,
         type: transaction.type,
@@ -317,7 +402,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const { data: transactionData, error: transactionError } = await supabase
         .from('transactions')
-        .insert(newTransactionData)
+        .insert(formatTransactionForDB(newTransactionData))
         .select()
         .single();
         
@@ -329,7 +414,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           
           const fallbackData = {
             amount: transaction.amount,
-            category: transaction.type === 'transfer' ? 'Transfer' : transaction.category,
+            category_id: dbCategoryId,
             description: transaction.description,
             date: transaction.date,
             type: transaction.type,
@@ -341,7 +426,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
             try {
               const { data: basicTransData, error: basicTransError } = await supabase
                 .from('transactions')
-                .insert(fallbackData)
+                .insert(formatTransactionForDB(fallbackData))
                 .select()
                 .single();
                 
@@ -412,12 +497,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       const formattedTransaction: Transaction = {
         id: finalTransactionData.id,
         amount: finalTransactionData.amount,
-        category: finalTransactionData.category,
+        category: '', // Leave empty as the column no longer exists
         categoryId: finalTransactionData.category_id ? 
-          (finalTransactionData.category_id.length > 30 ? 
+          (typeof finalTransactionData.category_id === 'string' && finalTransactionData.category_id.length > 30 ? 
             getCategoryStringIdFromUuid(finalTransactionData.category_id) : 
             finalTransactionData.category_id) : 
-          legacyCategoryNameToId(finalTransactionData.category, finalTransactionData.type, i18next),
+          12, // Default to expense_other if no category_id
         description: finalTransactionData.description,
         date: finalTransactionData.date,
         type: finalTransactionData.type,
@@ -519,29 +604,12 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
             ? 'system_transfer' 
             : legacyCategoryNameToId(updatedTransaction.category || '', updatedTransaction.type, i18next));
 
-        // Determine if we need to use UUID format based on database schema
-        let dbCategoryId = categoryId;
-
-        // If the column is UUID in the database, convert the string ID to UUID format
-        try {
-          const { data: schemaInfo } = await supabase
-            .from('transactions')
-            .select('category_id')
-            .limit(1);
-          
-          // Check if the column appears to be a UUID by attempting to access it
-          if (schemaInfo && schemaInfo.length > 0 && typeof schemaInfo[0].category_id === 'string' && schemaInfo[0].category_id.length > 30) {
-            dbCategoryId = getCategoryUuidFromStringId(categoryId);
-          }
-        } catch (e) {
-          console.error('Error checking schema:', e);
-          // Continue with original ID if we couldn't check
-        }
+        // Convert string ID to integer for the database
+        const dbCategoryId = getCategoryUuidFromStringId(typeof categoryId === 'string' ? categoryId : String(categoryId));
 
         // Create update data with optional fields to handle schema issues
         const updateData: {
           amount: number;
-          category: string;
           category_id: string;
           description: string;
           date: string;
@@ -551,7 +619,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           fee?: number | null;
         } = {
           amount: updatedTransaction.amount,
-          category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category || '',
           category_id: dbCategoryId,
           description: updatedTransaction.description,
           date: updatedTransaction.date,
@@ -593,7 +660,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Update the transaction in the database
         const { data: updatedData, error: updateError } = await supabase
           .from('transactions')
-          .update(updateData)
+          .update(formatTransactionForDB(updateData))
           .eq('id', updatedTransaction.id)
           .select()
           .single();
@@ -609,7 +676,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
               .from('transactions')
               .update({
                 amount: updatedTransaction.amount,
-                category: updatedTransaction.type === 'transfer' ? 'Transfer' : updatedTransaction.category || '',
+                category_id: dbCategoryId,
                 description: updatedTransaction.description,
                 date: updatedTransaction.date,
                 type: updatedTransaction.type,
@@ -1226,6 +1293,105 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         console.error("Error deleting Pinjaman item:", error);
         toast({ variant: 'destructive', title: 'Error', description: error.message });
     }
+  };
+
+  // Utility function to format transaction data for database operations
+  // Ensures compatibility with the updated schema (without 'category' column)
+  const formatTransactionForDB = (data: any) => {
+    // Create a copy of the data without the 'category' field
+    const { category, ...dbData } = data;
+    
+    try {
+      // Make sure category_id is properly formatted for database
+      if (dbData.category_id) {
+        // If it's a string ID like "expense_groceries", convert it to a proper db ID
+        if (typeof dbData.category_id === 'string' && dbData.category_id.includes('_')) {
+          // Map string category keys to the corresponding integer IDs
+          // These IDs are based on the order they were inserted in the category_reset_fixed.sql migration
+          const categoryKeyToId: Record<string, number> = {
+            // Expense categories (inserted first, IDs 1-12)
+            'expense_groceries': 1,
+            'expense_food': 2,
+            'expense_dining': 2, // Map dining to food (ID 2)
+            'expense_transportation': 3,
+            'expense_subscription': 4,
+            'expense_housing': 5,
+            'expense_entertainment': 6,
+            'expense_shopping': 7,
+            'expense_health': 8,
+            'expense_education': 9,
+            'expense_travel': 10,
+            'expense_personal': 11,
+            'expense_other': 12,
+            
+            // Income categories (inserted second, IDs 13-17)
+            'income_salary': 13,
+            'income_business': 14,
+            'income_investment': 15,
+            'income_gift': 16,
+            'income_other': 17,
+            
+            // System category (inserted last, ID 18)
+            'system_transfer': 18
+          };
+          
+          const categoryId = categoryKeyToId[dbData.category_id];
+          if (categoryId) {
+            dbData.category_id = categoryId;
+            console.log(`Converted category key ${dbData.category_id} to ID: ${categoryId}`);
+          } else {
+            // Fallback to appropriate "other" category if not found
+            if (dbData.category_id.startsWith('expense_')) {
+              dbData.category_id = 12; // expense_other
+            } else if (dbData.category_id.startsWith('income_')) {
+              dbData.category_id = 17; // income_other
+            } else {
+              dbData.category_id = 18; // system_transfer
+            }
+            console.log(`Using fallback ID for ${dbData.category_id}: ${dbData.category_id}`);
+          }
+        } 
+        // If it's already a number, it's fine
+        else if (typeof dbData.category_id === 'number' || !isNaN(Number(dbData.category_id))) {
+          // Ensure it's a number
+          dbData.category_id = Number(dbData.category_id);
+          console.log(`Using numeric category ID: ${dbData.category_id}`);
+        }
+        // If it's a UUID, convert it to the appropriate integer ID based on type
+        else if (typeof dbData.category_id === 'string' && dbData.category_id.includes('-')) {
+          // Convert UUID to category_key first
+          const categoryKey = getCategoryStringIdFromUuid(dbData.category_id);
+          
+          // Then convert category_key to integer ID using the mapping
+          if (categoryKey.startsWith('expense_')) {
+            dbData.category_id = 12; // expense_other as fallback
+          } else if (categoryKey.startsWith('income_')) {
+            dbData.category_id = 17; // income_other as fallback
+          } else {
+            dbData.category_id = 18; // system_transfer as fallback
+          }
+          
+          console.log(`Converted UUID to ID: ${dbData.category_id}`);
+        }
+      } else {
+        // Default to "other" category if no category_id is provided
+        // If we can determine the type, use the appropriate "other" category
+        if (data.type === 'income') {
+          dbData.category_id = 17; // income_other
+        } else if (data.type === 'transfer') {
+          dbData.category_id = 18; // system_transfer
+        } else {
+          // Default to expense_other
+          dbData.category_id = 12; // expense_other
+        }
+      }
+    } catch (error) {
+      console.error('Error formatting transaction for DB:', error);
+      // Last resort fallback - use expense_other (ID 12)
+      dbData.category_id = 12; 
+    }
+    
+    return dbData;
   };
 
   const value = {
