@@ -16,6 +16,7 @@ export type Category = {
   id_name: string;
   type: 'expense' | 'income';
   icon?: string | null;
+  created_at?: string;
 };
 
 // Helper functions to fetch categories
@@ -30,7 +31,7 @@ export const fetchCategories = async (type?: 'income' | 'expense') => {
   
   if (error) {
     console.error('Error fetching categories:', error);
-    return [];
+    throw new Error(`Failed to fetch categories: ${error.message}`);
   }
   
   return data as Category[];

@@ -47,6 +47,7 @@
     "@supabase/supabase-js": "^2.49.4",
     "@swc/core": "^1.11.16",
     "@tanstack/react-query": "^5.56.2",
+    "@testing-library/react": "^16.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
