@@ -51,7 +51,15 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
       try {
         const type = formData.type === 'expense' ? 'expense' : 'income';
         const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
-        setCategories(fetchedCategories);
+        
+        // Sort categories by ID to maintain consistent order
+        const sortedCategories = [...fetchedCategories].sort((a, b) => {
+          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
+          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
+          return idA - idB;
+        });
+        
+        setCategories(sortedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
         toast({
@@ -303,7 +311,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
                     formData.type === 'income' ? t('transactions.selectIncomeCategory') : t('transactions.selectExpenseCategory')
                   } />
                 </SelectTrigger>
-                <SelectContent className="bg-[#242425] border-0 text-white">
+                <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
                   {categories.map((category) => (
                     <SelectItem 
                       key={category.id} 

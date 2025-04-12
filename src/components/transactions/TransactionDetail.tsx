@@ -50,7 +50,16 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
         try {
           const type = transaction.type === 'income' ? 'income' : 'expense';
           const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
-          setCategories(fetchedCategories);
+          
+          // Sort categories by ID to maintain consistent order
+          const sortedCategories = [...fetchedCategories].sort((a, b) => {
+            // Ensure IDs are treated as numbers for comparison
+            const idA = typeof a.id === 'number' ? a.id : Number(a.id);
+            const idB = typeof b.id === 'number' ? b.id : Number(b.id);
+            return idA - idB; // This returns a number for comparison
+          });
+          
+          setCategories(sortedCategories);
         } catch (error) {
           console.error('Error loading categories:', error);
           toast({
@@ -268,14 +277,17 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                 <SelectTrigger className="bg-[#242425] border-0 text-white">
                   <SelectValue placeholder={t('transactions.selectCategory')} />
                 </SelectTrigger>
-                <SelectContent className="bg-[#242425] border-0 text-white">
+                <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
                   {categories.map((category) => (
                     <SelectItem 
                       key={category.id} 
                       value={String(category.id)}
                       className="hover:bg-[#333] focus:bg-[#333]"
                     >
-                      {category.name}
+                      <div className="flex items-center">
+                        <CategoryIcon category={String(category.id)} size="sm" />
+                        <span className="ml-2">{category.name}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
