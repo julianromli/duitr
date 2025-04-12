@@ -158,19 +158,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   // Default icon
   let Icon = HelpCircle;
   // Default icon color and background color
-  let iconColor = 'text-white';
-  let bgColor = '#1A1A1A'; // Default dark background
-  
-  // Set income category specific colors
-  if (isIncomeCategory) {
-    iconColor = 'text-black';
-    bgColor = '#C6FE1E'; // Green background for income categories
-  }
-  // Ensure expense categories have consistent styling
-  else if (isExpenseCategory) {
-    iconColor = 'text-white';
-    bgColor = '#1A1A1A'; // Dark background for expense categories
-  }
+  let iconColor = 'text-black';
+  let bgColor = '#C6FE1E'; // Green background for all categories
   
   // Set icon based on category
   switch (categoryForIcon) {
@@ -198,7 +187,9 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       Icon = GiftIcon;
       break;
     case 'expense_healthcare':
+    case 'expense_health':
     case '7':
+    case '8':
       Icon = Pill;
       break;
     case 'expense_children':
@@ -206,20 +197,28 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       Icon = Baby;
       break;
     case 'expense_utility':
+    case 'expense_subscription':
     case '9':
+    case '4':
       Icon = Zap;
       break;
     case 'expense_travel':
     case '10':
-      Icon = BusFront;
+      Icon = Plane;
       break;
     case 'expense_education':
+    case '9':
     case '11':
-      Icon = Briefcase;
+      Icon = Book;
       break;
     case 'expense_shopping':
+    case '7':
     case '12':
-      Icon = Shirt;
+      Icon = ShoppingBag;
+      break;
+    case 'expense_groceries':
+    case '1':
+      Icon = ShoppingCart;
       break;
     
     // Income Categories
@@ -252,7 +251,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case '17':
     case '19':
     default:
-      Icon = isIncomeCategory ? Coins : HelpCircle;
+      Icon = isIncomeCategory ? Coins : Package;
       break;
   }
 
@@ -263,7 +262,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     >
       <Icon
         className="h-5 w-5"
-        color={iconColor === 'text-white' ? 'white' : 'black'}
+        color="black"
       />
     </div>
   );

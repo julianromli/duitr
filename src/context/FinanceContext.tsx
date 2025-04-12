@@ -91,8 +91,9 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           id: w.id,
           name: w.name,
           balance: w.balance,
-          icon: w.icon,
+          icon: w.icon || 'wallet',
           color: w.color,
+          type: w.type || 'cash', // Ensure type is never undefined
           userId: w.user_id
         })));
         
@@ -221,101 +222,67 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Get display category name based on categoryId and current language
   const getDisplayCategoryName = (transaction: Transaction): string => {
-    // If it's a transfer, always return "Transfer"
-    if (transaction.type === 'transfer') {
-      return t('transactions.transfer');
-    }
-
-    // If we have a categoryId
+    // If we have a categoryId, try to use that first
     if (transaction.categoryId) {
-      // If it's a string that includes an underscore (like 'expense_groceries')
-      if (typeof transaction.categoryId === 'string' && transaction.categoryId.includes('_')) {
-        // Convert string id to proper display name using mappings
-        const categoryKeyToName: Record<string, string> = {
+      // First check if it's a UUID from the database
+      if (typeof transaction.categoryId === 'string' && transaction.categoryId.includes('-')) {
+        // Try to get the category name from the id 
+        const categoryStringId = getCategoryStringIdFromUuid(transaction.categoryId);
+        return i18next.t(`categories.${categoryStringId}`, { defaultValue: 'Unknown' });
+      }
+      
+      // If it's already a number or string number (new system)
+      if (typeof transaction.categoryId === 'number' || 
+         (typeof transaction.categoryId === 'string' && !isNaN(Number(transaction.categoryId)))) {
+        
+        const numericId = Number(transaction.categoryId);
+        
+        // Map of ID to localized category name
+        const idToName: Record<number, string> = {
           // Expense categories
-          'expense_groceries': i18next.language === 'id' ? 'Kebutuhan Rumah' : 'Groceries',
-          'expense_food': i18next.language === 'id' ? 'Makan di Luar' : 'Dining',
-          'expense_dining': i18next.language === 'id' ? 'Makan di Luar' : 'Dining',
-          'expense_transportation': i18next.language === 'id' ? 'Transportasi' : 'Transportation',
-          'expense_subscription': i18next.language === 'id' ? 'Berlangganan' : 'Subscription',
-          'expense_housing': i18next.language === 'id' ? 'Perumahan' : 'Housing',
-          'expense_entertainment': i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
-          'expense_shopping': i18next.language === 'id' ? 'Belanja' : 'Shopping',
-          'expense_health': i18next.language === 'id' ? 'Kesehatan' : 'Health',
-          'expense_education': i18next.language === 'id' ? 'Pendidikan' : 'Education',
-          'expense_travel': i18next.language === 'id' ? 'Perjalanan' : 'Travel',
-          'expense_personal': i18next.language === 'id' ? 'Personal Care' : 'Personal Care',
-          'expense_other': i18next.language === 'id' ? 'Lainnya' : 'Other',
-          
+          1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
+          2: i18next.language === 'id' ? 'Makanan' : 'Food',
+          3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
+          4: i18next.language === 'id' ? 'Langganan' : 'Subscription',
+          5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
+          6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
+          7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
+          8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
+          9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
+          10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
+          11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
+          12: i18next.language === 'id' ? 'Lainnya' : 'Other',
+            
           // Income categories
-          'income_salary': i18next.language === 'id' ? 'Gaji' : 'Salary',
-          'income_business': i18next.language === 'id' ? 'Bisnis' : 'Business',
-          'income_investment': i18next.language === 'id' ? 'Investasi' : 'Investment',
-          'income_gift': i18next.language === 'id' ? 'Hadiah' : 'Gift',
-          'income_other': i18next.language === 'id' ? 'Lainnya' : 'Other',
-          
+          13: i18next.language === 'id' ? 'Gaji' : 'Salary',
+          14: i18next.language === 'id' ? 'Bisnis' : 'Business',
+          15: i18next.language === 'id' ? 'Investasi' : 'Investment',
+          16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
+          17: i18next.language === 'id' ? 'Lainnya' : 'Other',
+            
           // System
-          'system_transfer': i18next.language === 'id' ? 'Transfer' : 'Transfer'
+          18: i18next.language === 'id' ? 'Transfer' : 'Transfer'
         };
         
-        const displayName = categoryKeyToName[transaction.categoryId];
+        const displayName = idToName[numericId];
         if (displayName) {
           return displayName;
         }
         
-        // Fallback to simple capitalization if not found in mapping
-        const parts = transaction.categoryId.split('_');
-        if (parts.length > 1) {
-          const categoryName = parts[1];
-          return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+        // For fallback, determine if it's expense or income based on the ID range
+        if (numericId <= 12) {
+          return i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
+        } else if (numericId <= 17) {
+          return i18next.language === 'id' ? 'Lainnya' : 'Other Income';
+        } else {
+          return 'Transfer';
         }
       }
-      
-      // If it's a number (or numeric string), look up the name from the database mapping
-      if (typeof transaction.categoryId === 'number' || 
-         (typeof transaction.categoryId === 'string' && !isNaN(Number(transaction.categoryId)))) {
-          // Convert numeric ID to display name using database mappings
-          const numericId = Number(transaction.categoryId);
-          const idToName: Record<number, string> = {
-            // Expense categories
-            1: i18next.language === 'id' ? 'Kebutuhan Rumah' : 'Groceries',
-            2: i18next.language === 'id' ? 'Makan di Luar' : 'Dining',
-            3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
-            4: i18next.language === 'id' ? 'Berlangganan' : 'Subscription',
-            5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
-            6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
-            7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
-            8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
-            9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
-            10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
-            11: i18next.language === 'id' ? 'Personal Care' : 'Personal Care',
-            12: i18next.language === 'id' ? 'Lainnya' : 'Other',
-            
-            // Income categories
-            13: i18next.language === 'id' ? 'Gaji' : 'Salary',
-            14: i18next.language === 'id' ? 'Bisnis' : 'Business', 
-            15: i18next.language === 'id' ? 'Investasi' : 'Investment',
-            16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
-            17: i18next.language === 'id' ? 'Lainnya' : 'Other',
-            
-            // System
-            18: i18next.language === 'id' ? 'Transfer' : 'Transfer'
-          };
-          
-          const displayName = idToName[numericId];
-          if (displayName) {
-            return displayName;
-          }
-          
-          // For fallback, determine if it's expense or income based on the ID range
-          if (numericId <= 12) {
-            return i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
-          } else if (numericId <= 17) {
-            return i18next.language === 'id' ? 'Lainnya' : 'Other Income';
-          } else {
-            return 'Transfer';
-          }
-      }
+    }
+    
+    // If it's a transfer, always return "Transfer"
+    if (transaction.type === 'transfer') {
+      return t('transactions.transfer');
     }
     
     // Fallback: If we still have a category property (legacy), use that
@@ -374,13 +341,25 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     try {
       // Determine the categoryId
-      const categoryId = transaction.categoryId || 
-        (transaction.type === 'transfer' 
-          ? 'system_transfer' 
-          : legacyCategoryNameToId(transaction.category || '', transaction.type, i18next));
+      let finalCategoryId = transaction.categoryId;
+      
+      // Handle specific cases
+      if (!finalCategoryId) {
+        if (transaction.type === 'transfer') {
+          finalCategoryId = 'system_transfer';
+        } else if (transaction.category) {
+          // Legacy fallback
+          finalCategoryId = legacyCategoryNameToId(transaction.category, transaction.type, i18next);
+        } else {
+          // Default fallbacks
+          finalCategoryId = transaction.type === 'income' ? 17 : 12; // Default to other
+        }
+      }
 
       // Convert string ID to integer for the database
-      const dbCategoryId = getCategoryUuidFromStringId(typeof categoryId === 'string' ? categoryId : String(categoryId));
+      const dbCategoryId = getCategoryUuidFromStringId(
+        typeof finalCategoryId === 'string' ? finalCategoryId : String(finalCategoryId)
+      );
 
       const newTransactionData = {
         amount: transaction.amount,
@@ -974,9 +953,13 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const tempId = Math.random().toString(36).substring(2, 9);
       
+      // Make sure the wallet type is valid
+      const walletType = wallet.type || 'cash'; // Default to cash if no type is specified
+      
       const newWallet = {
         id: tempId,
         ...wallet,
+        type: walletType,
         userId: user.id,
       };
       
@@ -987,8 +970,9 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         .insert({
           name: wallet.name,
           balance: wallet.balance,
-          type: wallet.type,
+          type: walletType,
           color: wallet.color,
+          icon: wallet.icon || 'wallet',
           user_id: user.id,
         })
         .select();
@@ -1008,8 +992,9 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
             id: data[0].id,
             name: data[0].name,
             balance: data[0].balance,
-            type: data[0].type === 'credit' ? 'e-wallet' as const : data[0].type as 'cash' | 'bank' | 'e-wallet' | 'investment',
+            type: data[0].type || 'cash', // Ensure type is never undefined
             color: data[0].color,
+            icon: data[0].icon || 'wallet',
             userId: data[0].user_id
           } : w
         )
@@ -1030,19 +1015,28 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const updateWallet = async (updatedWallet: Wallet) => {
     try {
+      // Ensure wallet type is valid
+      const walletType = updatedWallet.type || 'cash'; // Default to cash if type is undefined
+      
+      const walletToUpdate = {
+        ...updatedWallet,
+        type: walletType
+      };
+      
       setWallets(prev => prev.map(wallet => 
-        wallet.id === updatedWallet.id ? updatedWallet : wallet)
+        wallet.id === walletToUpdate.id ? walletToUpdate : wallet)
       );
       
       const { error } = await supabase
         .from('wallets')
         .update({
-          name: updatedWallet.name,
-          balance: updatedWallet.balance,
-          type: updatedWallet.type,
-          color: updatedWallet.color,
+          name: walletToUpdate.name,
+          balance: walletToUpdate.balance,
+          type: walletType,
+          color: walletToUpdate.color,
+          icon: walletToUpdate.icon || 'wallet',
         })
-        .eq('id', updatedWallet.id);
+        .eq('id', walletToUpdate.id);
       
       if (error) {
         setWallets(prev => {
