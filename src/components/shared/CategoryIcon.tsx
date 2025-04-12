@@ -27,19 +27,31 @@ import {
   Zap,
   User,
   Gift as GiftIcon,
-  Wallet
+  Wallet,
+  Music,
+  Pill,
+  Baby,
+  BusFront,
+  Shirt,
+  ArrowUpDown,
+  Coins,
+  Building2,
+  LineChart,
+  Wallet as WalletIcon
 } from 'lucide-react';
 
 interface CategoryIconProps {
   category: string | number;
   size?: 'sm' | 'md' | 'lg';
   animate?: boolean;
+  className?: string;
 }
 
 const CategoryIcon: React.FC<CategoryIconProps> = ({ 
   category, 
   size = 'md',
-  animate = true
+  animate = true,
+  className = ''
 }) => {
   const [displayName, setDisplayName] = useState<string>('');
   const [categoryType, setCategoryType] = useState<string>('');
@@ -129,133 +141,130 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     categoryForIcon = displayName.toLowerCase();
   }
 
-  // Define icon mapping
-  const getIconDetails = () => {
-    // Housing/Home
-    if (categoryForIcon.includes('housing') || categoryForIcon.includes('rent') || 
-        categoryForIcon.includes('perumahan')) {
-      return { 
-        icon: <Home className="text-white" />,
-        bgColor: 'bg-orange-500'
-      };
-    }
-    // Dining/Food
-    else if (categoryForIcon.includes('dining') || categoryForIcon.includes('food') || 
-             categoryForIcon.includes('makan')) {
-      return { 
-        icon: <Utensils className="text-white" />,
-        bgColor: 'bg-red-500'
-      };
-    }
-    // Transport
-    else if (categoryForIcon.includes('transport')) {
-      return { 
-        icon: <Car className="text-white" />,
-        bgColor: 'bg-indigo-500'
-      };
-    }
-    // Groceries/Household
-    else if (categoryForIcon.includes('groceries') || categoryForIcon.includes('kebutuhan rumah') || 
-             categoryForIcon.includes('rumah tangga')) {
-      return { 
-        icon: <Package className="text-white" />,
-        bgColor: 'bg-yellow-500'
-      };
-    }
-    // Subscription/Utilities
-    else if (categoryForIcon.includes('utilities') || categoryForIcon.includes('subscription') || 
-             categoryForIcon.includes('berlangganan')) {
-      return { 
-        icon: <Zap className="text-white" />,
-        bgColor: 'bg-yellow-300'
-      };
-    }
-    // Entertainment
-    else if (categoryForIcon.includes('entertain') || categoryForIcon.includes('hiburan')) {
-      return { 
-        icon: <Film className="text-white" />,
-        bgColor: 'bg-purple-500'
-      };
-    }
-    // Shopping
-    else if (categoryForIcon.includes('shop') || categoryForIcon.includes('belanja')) {
-      return { 
-        icon: <ShoppingBag className="text-white" />,
-        bgColor: 'bg-blue-400'
-      };
-    }
-    // Health
-    else if (categoryForIcon.includes('health') || categoryForIcon.includes('kesehatan')) {
-      return { 
-        icon: <Heart className="text-white" />,
-        bgColor: 'bg-pink-500'
-      };
-    }
-    // Education
-    else if (categoryForIcon.includes('education') || categoryForIcon.includes('edu') || 
-             categoryForIcon.includes('pendidikan')) {
-      return { 
-        icon: <Book className="text-white" />,
-        bgColor: 'bg-green-500'
-      };
-    }
-    // Personal
-    else if (categoryForIcon.includes('personal') || categoryForIcon.includes('pribadi')) {
-      return { 
-        icon: <User className="text-white" />,
-        bgColor: 'bg-violet-600'
-      };
-    }
-    // Travel
-    else if (categoryForIcon.includes('travel') || categoryForIcon.includes('perjalanan')) {
-      return { 
-        icon: <Plane className="text-white" />,
-        bgColor: 'bg-blue-500'
-      };
-    }
-    // Gifts
-    else if (categoryForIcon.includes('gift') || categoryForIcon.includes('hadiah')) {
-      return { 
-        icon: <GiftIcon className="text-white" />,
-        bgColor: 'bg-red-400'
-      };
-    }
-    // Salary/Income
-    else if (categoryForIcon.includes('salary') || categoryForIcon.includes('income') || 
-             categoryForIcon.includes('gaji') || categoryForIcon.includes('pendapatan')) {
-      return { 
-        icon: <Briefcase className="text-white" />,
-        bgColor: 'bg-green-600'
-      };
-    }
-    // Business
-    else if (categoryForIcon.includes('business') || categoryForIcon.includes('bisnis')) {
-      return { 
-        icon: <DollarSign className="text-white" />,
-        bgColor: 'bg-amber-600'
-      };
-    }
-    // Transfer
-    else if (categoryForIcon.includes('transfer') || categoryForIcon.includes('system')) {
-      return { 
-        icon: <ArrowLeftRight className="text-white" />,
-        bgColor: 'bg-slate-500'
-      };
-    }
-    // Default fallback
-    else {
-      return { 
-        icon: <HelpCircle className="text-white" />,
-        bgColor: 'bg-gray-500'
-      };
-    }
-  };
+  // Determine if this is an income category (typically IDs 13-17)
+  const isIncomeCategory = 
+    (typeof category === 'number' && category >= 13 && category <= 17) || 
+    (typeof category === 'string' && Number(category) >= 13 && Number(category) <= 17) ||
+    (typeof category === 'string' && category.startsWith('income_')) ||
+    categoryType === 'income';
 
-  const { icon, bgColor } = getIconDetails();
+  // Determine if this is an expense category
+  const isExpenseCategory = 
+    (typeof category === 'number' && category >= 1 && category <= 12) || 
+    (typeof category === 'string' && Number(category) >= 1 && Number(category) <= 12) ||
+    (typeof category === 'string' && category.startsWith('expense_')) ||
+    categoryType === 'expense';
+
+  // Default icon
+  let Icon = HelpCircle;
+  // Default icon color and background color
+  let iconColor = 'text-white';
+  let bgColor = '#1A1A1A'; // Default dark background
+  
+  // Set income category specific colors
+  if (isIncomeCategory) {
+    iconColor = 'text-black';
+    bgColor = '#C6FE1E'; // Green background for income categories
+  }
+  // Ensure expense categories have consistent styling
+  else if (isExpenseCategory) {
+    iconColor = 'text-white';
+    bgColor = '#1A1A1A'; // Dark background for expense categories
+  }
+  
+  // Set icon based on category
+  switch (categoryForIcon) {
+    // Expense Categories
+    case 'expense_food':
+    case 'expense_dining':
+    case '1':
+    case '2':
+      Icon = Utensils;
+      break;
+    case 'expense_entertainment':
+    case '3':
+      Icon = Music;
+      break;
+    case 'expense_transportation':
+    case '4':
+      Icon = Car;
+      break;
+    case 'expense_housing':
+    case '5':
+      Icon = Home;
+      break;
+    case 'expense_gift':
+    case '6':
+      Icon = GiftIcon;
+      break;
+    case 'expense_healthcare':
+    case '7':
+      Icon = Pill;
+      break;
+    case 'expense_children':
+    case '8':
+      Icon = Baby;
+      break;
+    case 'expense_utility':
+    case '9':
+      Icon = Zap;
+      break;
+    case 'expense_travel':
+    case '10':
+      Icon = BusFront;
+      break;
+    case 'expense_education':
+    case '11':
+      Icon = Briefcase;
+      break;
+    case 'expense_shopping':
+    case '12':
+      Icon = Shirt;
+      break;
+    
+    // Income Categories
+    case 'income_salary':
+    case '13':
+      Icon = Briefcase;
+      break;
+    case 'income_business':
+    case '14':
+      Icon = Building2;
+      break;
+    case 'income_investment':
+    case '15':
+      Icon = LineChart;
+      break;
+    case 'income_gift':
+    case '16':
+      Icon = GiftIcon;
+      break;
+    
+    // Other Categories
+    case 'transfer':
+    case '18':
+      Icon = ArrowUpDown;
+      break;
+    
+    // Default & Other Category
+    case 'expense_other':
+    case 'income_other':
+    case '17':
+    case '19':
+    default:
+      Icon = isIncomeCategory ? Coins : HelpCircle;
+      break;
+  }
 
   return (
-    <div className={`${iconClasses} ${bgColor} ${animate ? 'animate-fadeIn' : ''}`}>
-      {icon}
+    <div
+      className={`flex h-10 w-10 items-center justify-center rounded-full ${className}`}
+      style={{ backgroundColor: bgColor }}
+    >
+      <Icon
+        className="h-5 w-5"
+        color={iconColor === 'text-white' ? 'white' : 'black'}
+      />
     </div>
   );
 };

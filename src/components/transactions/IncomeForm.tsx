@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,6 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
+import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
+import i18next from 'i18next';
+import CategoryIcon from '@/components/shared/CategoryIcon';
 
 interface IncomeFormProps {
   open: boolean;
@@ -23,10 +26,43 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
-    category: '',
+    categoryId: '',
     description: '',
     walletId: '',
   });
+  
+  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  
+  // Load income categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const fetchedCategories = await getLocalizedCategoriesByType('income', i18next);
+        
+        // Sort categories by ID to maintain consistent order
+        const sortedCategories = [...fetchedCategories].sort((a, b) => {
+          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
+          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
+          return idA - idB;
+        });
+        
+        setCategories(sortedCategories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        toast({
+          title: t('common.error'),
+          description: t('categories.error.load'),
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+    
+    loadCategories();
+  }, [t]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,7 +82,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     }
     
     // Validation
-    if (!formData.amount || !formData.category || !formData.description || !formData.walletId) {
+    if (!formData.amount || !formData.categoryId || !formData.description || !formData.walletId) {
       toast({
         title: t('common.error'),
         description: t('transactions.errors.fill_all_fields'),
@@ -61,7 +97,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     // Add transaction
     addTransaction({
       amount: parseFloat(formData.amount),
-      category: formData.category,
+      categoryId: formData.categoryId,
       description: formData.description,
       date: dateString,
       type: 'income',
@@ -71,7 +107,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     // Reset form
     setFormData({
       amount: '',
-      category: '',
+      categoryId: '',
       description: '',
       walletId: '',
     });
@@ -86,18 +122,10 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     // Close dialog
     onOpenChange(false);
   };
-  
-  const categories = [
-    t('income.categories.salary'),
-    t('income.categories.business'),
-    t('income.categories.investment'),
-    t('income.categories.gift'),
-    t('income.categories.other')
-  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+      <DialogContent className="bg-[#1A1A1A] border-none text-white">
         <DialogHeader className="flex flex-row justify-between items-center">
           <DialogTitle className="text-xl font-bold">{t('transactions.add_income')}</DialogTitle>
           <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
@@ -122,18 +150,28 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
+            <Label htmlFor="categoryId" className="text-[#868686]">{t('transactions.category')}</Label>
             <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
+              value={formData.categoryId ? String(formData.categoryId) : ""}
+              onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+              disabled={isLoadingCategories}
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder={t('income.select_category')} />
+                <SelectValue placeholder={
+                  isLoadingCategories ? t('common.loading') : t('transactions.selectIncomeCategory')
+                } />
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
+              <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category} className="hover:bg-[#333] focus:bg-[#333]">
-                    {category}
+                  <SelectItem 
+                    key={category.id} 
+                    value={String(category.id)}
+                    className="hover:bg-[#333] focus:bg-[#333]"
+                  >
+                    <div className="flex items-center">
+                      <CategoryIcon category={String(category.id)} size="sm" />
+                      <span className="ml-2">{category.name}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -174,10 +212,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
           
           <div className="space-y-2">
             <Label className="text-[#868686]">{t('transactions.date')}</Label>
-            <DatePicker 
-              date={selectedDate}
-              setDate={setSelectedDate}
-            />
+            <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+              <DatePicker 
+                date={selectedDate}
+                setDate={setSelectedDate}
+              />
+            </div>
           </div>
           
           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
