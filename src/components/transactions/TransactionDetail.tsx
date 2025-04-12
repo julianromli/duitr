@@ -40,6 +40,30 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   
   // State for edited transaction
   const [editedTransaction, setEditedTransaction] = useState<any>(null);
+  // State for categories
+  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
+  
+  // Load categories when needed
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (transaction && transaction.type !== 'transfer' && isEditing) {
+        try {
+          const type = transaction.type === 'income' ? 'income' : 'expense';
+          const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
+          setCategories(fetchedCategories);
+        } catch (error) {
+          console.error('Error loading categories:', error);
+          toast({
+            title: t('common.error'),
+            description: t('categories.error.load'),
+            variant: 'destructive'
+          });
+        }
+      }
+    };
+    
+    loadCategories();
+  }, [transaction, isEditing, t]);
   
   // Reset edited transaction when transaction changes or dialog opens/closes
   useEffect(() => {
@@ -84,14 +108,6 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   if (!transaction || !editedTransaction) {
     return null;
   }
-  
-  // Get categories for dropdown based on transaction type
-  const categories = editedTransaction.type === 'transfer' 
-    ? [] 
-    : getLocalizedCategoriesByType(
-        editedTransaction.type === 'income' ? 'income' : 'expense', 
-        i18next
-      );
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -246,17 +262,17 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                 {t('transactions.category')}
               </Label>
               <Select 
-                value={editedTransaction.categoryId} 
+                value={String(editedTransaction.categoryId)} 
                 onValueChange={(value) => handleChange('categoryId', value)}
               >
                 <SelectTrigger className="bg-[#242425] border-0 text-white">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t('transactions.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#242425] border-0 text-white">
                   {categories.map((category) => (
                     <SelectItem 
                       key={category.id} 
-                      value={category.id}
+                      value={String(category.id)}
                       className="hover:bg-[#333] focus:bg-[#333]"
                     >
                       {category.name}
@@ -286,7 +302,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                 onValueChange={(value) => handleChange('walletId', value)}
               >
                 <SelectTrigger className="bg-[#242425] border-0 text-white">
-                  <SelectValue placeholder="Select wallet" />
+                  <SelectValue placeholder={t('transactions.selectWallet')} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#242425] border-0 text-white">
                   {wallets.map((wallet) => (

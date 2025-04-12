@@ -36,21 +36,36 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
     fee: '0',
   });
   
-  const [categories, setCategories] = useState<{id: string; name: string}[]>([]);
+  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   
   // Get categories for the current transaction type
   useEffect(() => {
     const loadCategories = async () => {
-      const type = formData.type === 'expense' ? 'expense' : 'income';
-      const fetchedCategories = await getLocalizedCategoriesByType(
-        formData.type === 'income' ? 'income' : 'expense', 
-        i18next
-      );
-      setCategories(fetchedCategories);
+      if (formData.type === 'transfer') {
+        setCategories([]);
+        return;
+      }
+      
+      setIsLoadingCategories(true);
+      try {
+        const type = formData.type === 'expense' ? 'expense' : 'income';
+        const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        toast({
+          title: t('common.error'),
+          description: t('categories.error.load'),
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoadingCategories(false);
+      }
     };
     
     loadCategories();
-  }, [formData.type]);
+  }, [formData.type, t]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -99,10 +114,24 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
       return;
     }
     
+    // For transfer, use system_transfer category
+    const categoryId = formData.type === 'transfer' 
+      ? 'system_transfer' 
+      : formData.categoryId;
+      
+    if (!categoryId && formData.type !== 'transfer') {
+      toast({
+        title: t('common.error'),
+        description: t('transactions.validation.categoryRequired'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     try {
       await addTransaction({
         amount: parseFloat(formData.amount),
-        categoryId: formData.categoryId,
+        categoryId: categoryId,
         description: formData.description,
         date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         type: formData.type,
@@ -141,35 +170,47 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="fixed bottom-20 right-4 rounded-full h-14 w-14 shadow-lg">
-          <span className="text-2xl font-bold">+</span>
-        </Button>
+        <button className="fixed z-10 bottom-24 right-4 md:right-8 w-14 h-14 rounded-full bg-[#C6FE1E] flex items-center justify-center shadow-lg">
+          <span className="text-2xl font-bold leading-none">+</span>
+        </button>
       </DialogTrigger>
-      <DialogContent className="max-w-md p-0 gap-0 bg-[#18181B]">
-        <div className="p-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold">{t('transactions.newTransaction')}</h2>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
-            <X className="h-4 w-4" />
-          </Button>
+      <DialogContent className="bg-[#1A1A1A] border-none text-white max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">
+            {formData.type === 'income' 
+              ? t('transactions.addIncome') 
+              : formData.type === 'expense' 
+                ? t('transactions.addExpense') 
+                : t('transactions.addTransfer')}
+          </h2>
+          <button 
+            className="rounded-full p-2 hover:bg-[#242425]"
+            onClick={() => setOpen(false)}
+          >
+            <X className="h-5 w-5 text-[#868686]" />
+          </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="px-4 pb-4">
+        <form onSubmit={handleSubmit}>
           {/* Transaction Type */}
           <div className="mb-4">
+            <label className="text-[#868686] mb-1 block">
+              {t('transactions.type')}
+            </label>
             <RadioGroup 
-              value={formData.type} 
-              onValueChange={(value) => handleTypeChange(value as 'income' | 'expense' | 'transfer')}
               className="flex justify-between"
+              value={formData.type}
+              onValueChange={(value) => handleTypeChange(value as 'income' | 'expense' | 'transfer')}
             >
               <div className="flex items-center">
                 <RadioGroupItem value="expense" id="expense" className="hidden" />
                 <Label 
                   htmlFor="expense"
                   className={`flex items-center justify-center px-4 py-2 rounded-lg ${
-                    formData.type === 'expense' ? 'bg-red-500 text-white' : 'bg-[#242425] text-[#868686]'
+                    formData.type === 'expense' ? 'bg-[#FF6B6B] text-white' : 'bg-[#242425] text-[#868686]'
                   }`}
                 >
-                  <ArrowUp className="mr-2 h-4 w-4" />
+                  <ArrowDown className="mr-2 h-4 w-4" />
                   {t('transactions.expense')}
                 </Label>
               </div>
@@ -182,7 +223,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
                     formData.type === 'income' ? 'bg-green-500 text-white' : 'bg-[#242425] text-[#868686]'
                   }`}
                 >
-                  <ArrowDown className="mr-2 h-4 w-4" />
+                  <ArrowUp className="mr-2 h-4 w-4" />
                   {t('transactions.income')}
                 </Label>
               </div>
@@ -220,52 +261,57 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
           
           {/* Date */}
           <div className="mb-4">
-            <Label htmlFor="date" className="text-[#868686] mb-1 block">
+            <Label className="text-[#868686] mb-1 block">
               {t('transactions.date')}
             </Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal bg-[#242425] border-0 text-white"
+                  className="w-full bg-[#242425] border-0 text-white flex justify-start"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
+                  {selectedDate ? format(selectedDate, 'PPP') : <span>{t('transactions.selectDate')}</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-[#242425]">
+              <PopoverContent className="bg-[#242425] border-0 text-white">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   initialFocus
+                  className="bg-[#242425] text-white rounded-md"
                 />
               </PopoverContent>
             </Popover>
           </div>
           
-          {/* Category - not shown for transfers */}
+          {/* Category - Not for transfers */}
           {formData.type !== 'transfer' && (
             <div className="mb-4">
               <Label htmlFor="categoryId" className="text-[#868686] mb-1 block">
                 {t('transactions.category')}
               </Label>
               <Select
-                value={formData.categoryId}
+                value={formData.categoryId ? String(formData.categoryId) : ""}
                 onValueChange={(value) => handleSelectChange('categoryId', value)}
+                disabled={isLoadingCategories}
               >
                 <SelectTrigger className="bg-[#242425] border-0 text-white">
-                  <SelectValue placeholder={t('transactions.selectCategory')} />
+                  <SelectValue placeholder={
+                    isLoadingCategories ? t('common.loading') : 
+                    formData.type === 'income' ? t('transactions.selectIncomeCategory') : t('transactions.selectExpenseCategory')
+                  } />
                 </SelectTrigger>
-                <SelectContent className="bg-[#242425] border-0 max-h-80">
+                <SelectContent className="bg-[#242425] border-0 text-white">
                   {categories.map((category) => (
                     <SelectItem 
                       key={category.id} 
-                      value={category.id}
-                      className="focus:bg-[#333] hover:bg-[#333]"
+                      value={String(category.id)}
+                      className="hover:bg-[#333] focus:bg-[#333]"
                     >
                       <div className="flex items-center">
-                        <CategoryIcon category={category.id} size="sm" animate={false} />
+                        <CategoryIcon category={String(category.id)} size="sm" />
                         <span className="ml-2">{category.name}</span>
                       </div>
                     </SelectItem>
@@ -275,7 +321,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
             </div>
           )}
           
-          {/* Source Wallet */}
+          {/* Wallet */}
           <div className="mb-4">
             <Label htmlFor="walletId" className="text-[#868686] mb-1 block">
               {formData.type === 'transfer' ? t('transactions.sourceWallet') : t('transactions.wallet')}
@@ -320,6 +366,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
                       key={wallet.id} 
                       value={wallet.id}
                       className="focus:bg-[#333] hover:bg-[#333]"
+                      disabled={wallet.id === formData.walletId}
                     >
                       {wallet.name}
                     </SelectItem>
@@ -362,8 +409,12 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
             />
           </div>
           
-          <Button type="submit" className="w-full">
-            {t('common.save')}
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-black hover:bg-[#B3EA0F]">
+            {formData.type === 'income' 
+              ? t('transactions.addIncome') 
+              : formData.type === 'expense' 
+                ? t('transactions.addExpense') 
+                : t('transactions.addTransfer')}
           </Button>
         </form>
       </DialogContent>

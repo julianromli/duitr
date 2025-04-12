@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase';
 
 export interface Category {
-  id: string;
+  id: string | number;
+  category_id?: number;
+  category_key?: string;
   id_name: string;
   en_name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'system';
   icon?: string;
 }
 
@@ -33,7 +35,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
  * @param type Category type ('income' or 'expense')
  * @returns A list of categories of the specified type
  */
-export const getCategoriesByType = async (type: 'income' | 'expense'): Promise<Category[]> => {
+export const getCategoriesByType = async (type: 'income' | 'expense' | 'system'): Promise<Category[]> => {
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -52,20 +54,38 @@ export const getCategoriesByType = async (type: 'income' | 'expense'): Promise<C
 
 /**
  * Get a single category by ID
- * @param id The UUID of the category
+ * @param id The UUID or integer ID of the category
  * @returns The category object or null if not found
  */
-export const getCategoryById = async (id: string): Promise<Category | null> => {
+export const getCategoryById = async (id: string | number): Promise<Category | null> => {
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let query;
+    
+    if (typeof id === 'number' || !isNaN(Number(id))) {
+      query = supabase
+        .from('categories')
+        .select('*')
+        .eq('category_id', id)
+        .single();
+    } else if (id.includes('_')) {
+      query = supabase
+        .from('categories')
+        .select('*')
+        .eq('category_key', id)
+        .single();
+    } else {
+      query = supabase
+        .from('categories')
+        .select('*')
+        .eq('id', id)
+        .single();
+    }
+    
+    const { data, error } = await query;
       
     if (error) {
       if (error.code === 'PGRST116') {
-        // No rows returned means category not found
+        console.warn(`Category not found with ID: ${id}`);
         return null;
       }
       throw error;
@@ -74,21 +94,37 @@ export const getCategoryById = async (id: string): Promise<Category | null> => {
     return data;
   } catch (error) {
     console.error('Error fetching category:', error);
-    throw error;
+    return null;
   }
 };
 
 /**
  * Get category name in current language
- * @param id Category UUID
+ * @param id Category UUID or integer ID
  * @param language Current language code (en or id)
  * @returns Localized category name
  */
-export async function getCategoryName(id: string, language: string = 'id'): Promise<string> {
+export async function getCategoryName(id: string | number, language: string = 'id'): Promise<string> {
   if (!id) return 'Other';
   
-  const category = await getCategoryById(id);
-  if (!category) return 'Other';
+  if (typeof id === 'string' && id.includes('_')) {
+    const parts = id.split('_');
+    if (parts.length > 1) {
+      const categoryName = parts[1];
+      return categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+    }
+  }
   
-  return language === 'id' ? category.id_name : category.en_name;
+  try {
+    const category = await getCategoryById(id);
+    if (!category) {
+      console.warn(`Category not found for ID: ${id}, returning default name`);
+      return 'Other';
+    }
+    
+    return language === 'id' ? category.id_name : category.en_name;
+  } catch (error) {
+    console.error(`Error getting category name for ID: ${id}`, error);
+    return 'Other';
+  }
 } 
