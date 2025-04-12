@@ -1,42 +1,38 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  DollarSign, 
-  CreditCard, 
-  ShoppingCart, 
-  Coffee, 
-  Briefcase, 
-  Home as HomeIcon, 
-  Smartphone,
-  Gift,
-  Film,
-  Zap,
-  Wifi,
-  BookOpen,
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
+import { getLocalizedCategoryName } from '@/utils/categoryUtils';
+import { getCategoryById } from '@/services/categoryService';
+import {
+  Home,
+  Coffee,
   Car,
-  Plane,
-  Bus,
-  Train,
-  HeartPulse,
-  GraduationCap,
-  Scissors,
-  ShoppingBag,
-  Building,
-  Receipt,
-  Wallet,
-  Bitcoin,
-  Coins,
-  BadgeDollarSign,
-  Banknote,
-  Pizza,
+  ShoppingCart,
+  Briefcase,
+  DollarSign,
+  Gift,
   Utensils,
-  ShowerHead,
-  Trophy
+  Package,
+  Heart,
+  Plane,
+  Film,
+  Settings,
+  Book,
+  Monitor,
+  Smartphone,
+  CreditCard,
+  ArrowLeftRight,
+  HelpCircle,
+  ShoppingBag,
+  Zap,
+  User,
+  Gift as GiftIcon,
+  Wallet
 } from 'lucide-react';
 
 interface CategoryIconProps {
   category: string;
-  size?: 'sm' | 'md' | 'lg'; 
+  size?: 'sm' | 'md' | 'lg';
   animate?: boolean;
 }
 
@@ -45,8 +41,44 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   size = 'md',
   animate = true
 }) => {
+  const [displayName, setDisplayName] = useState<string>(category || 'Other');
+  const { i18n } = useTranslation();
+  
+  useEffect(() => {
+    const loadCategory = async () => {
+      // Check if it's a UUID
+      if (category && category.includes('-')) {
+        try {
+          // Get the category from the database
+          const categoryData = await getCategoryById(category);
+          if (categoryData) {
+            setDisplayName(i18n.language === 'id' ? categoryData.id_name : categoryData.en_name);
+            return;
+          }
+        } catch (err) {
+          console.error('Error loading category:', err);
+        }
+      }
+      
+      // For legacy string ID categories or fallback
+      const loadedName = await getLocalizedCategoryName(category, i18next);
+      setDisplayName(loadedName);
+    };
+    
+    loadCategory();
+  }, [category, i18n.language]);
+
   // Convert category name to lowercase for consistent matching
-  const categoryLower = category.toLowerCase();
+  const categoryLower = displayName.toLowerCase();
+
+  // For category IDs like "expense_groceries", extract the actual category name
+  let categoryName = categoryLower;
+  if (category && typeof category === 'string' && category.includes('_')) {
+    const parts = category.split('_');
+    if (parts.length > 1) {
+      categoryName = parts[1].toLowerCase();
+    }
+  }
 
   // Define size classes
   const iconSizes = {
@@ -59,204 +91,126 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
 
   // Define icon mapping
   const getIconDetails = () => {
-    // INCOME CATEGORIES
-    if (categoryLower.includes('salary') || categoryLower === 'gaji') {
-      return {
-        icon: <Banknote className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'S'
+    // Check both categoryLower and extracted categoryName for better matching
+    
+    // Housing/Home
+    if (categoryName.includes('housing') || categoryName.includes('rent') || categoryLower.includes('perumahan')) {
+      return { 
+        icon: <Home className="text-white" />,
+        bgColor: 'bg-orange-500'
       };
-    } else if (categoryLower.includes('freelance') || categoryLower.includes('pekerja lepas')) {
-      return {
-        icon: <Briefcase className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'F'
+    }
+    // Dining/Food
+    else if (categoryName.includes('dining') || categoryName.includes('food') || categoryLower.includes('makan')) {
+      return { 
+        icon: <Utensils className="text-white" />,
+        bgColor: 'bg-red-500'
       };
-    } else if (categoryLower.includes('business') || categoryLower.includes('bisnis')) {
-      return {
-        icon: <Building className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'B'
+    }
+    // Transport
+    else if (categoryName.includes('transport')) {
+      return { 
+        icon: <Car className="text-white" />,
+        bgColor: 'bg-indigo-500'
       };
-    } else if (categoryLower.includes('investment') || categoryLower.includes('investasi')) {
-      return {
-        icon: <Bitcoin className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'I'
+    }
+    // Groceries/Household
+    else if (categoryName.includes('groceries') || categoryLower.includes('kebutuhan rumah') || categoryLower.includes('rumah tangga')) {
+      return { 
+        icon: <Package className="text-white" />,
+        bgColor: 'bg-yellow-500'
       };
-    } else if (categoryLower.includes('gift') || categoryLower.includes('hadiah') || categoryLower.includes('bonus')) {
-      return {
-        icon: <Gift className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'G'
+    }
+    // Subscription/Utilities
+    else if (categoryName.includes('utilities') || categoryName.includes('subscription') || categoryLower.includes('berlangganan')) {
+      return { 
+        icon: <Zap className="text-white" />,
+        bgColor: 'bg-yellow-300'
       };
-    } else if (categoryLower.includes('refund') || categoryLower.includes('pengembalian')) {
-      return {
-        icon: <Receipt className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'R'
+    }
+    // Entertainment
+    else if (categoryName.includes('entertain') || categoryLower.includes('hiburan')) {
+      return { 
+        icon: <Film className="text-white" />,
+        bgColor: 'bg-purple-500'
       };
-    } else if (categoryLower.includes('passive') || categoryLower.includes('pasif')) {
-      return {
-        icon: <Wifi className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'P'
+    }
+    // Shopping
+    else if (categoryName.includes('shop') || categoryLower.includes('belanja')) {
+      return { 
+        icon: <ShoppingBag className="text-white" />,
+        bgColor: 'bg-blue-400'
       };
-    } 
-    // EXPENSE CATEGORIES
-    else if (categoryLower.includes('groceries') || categoryLower.includes('kebutuhan rumah')) {
-      return {
-        icon: <ShoppingCart className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'G'
+    }
+    // Health
+    else if (categoryName.includes('health') || categoryLower.includes('kesehatan')) {
+      return { 
+        icon: <Heart className="text-white" />,
+        bgColor: 'bg-pink-500'
       };
-    } else if (categoryLower.includes('dining') || categoryLower.includes('makan') || categoryLower.includes('food')) {
-      return {
-        icon: <Utensils className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'D'
+    }
+    // Education
+    else if (categoryName.includes('education') || categoryName.includes('edu') || categoryLower.includes('pendidikan')) {
+      return { 
+        icon: <Book className="text-white" />,
+        bgColor: 'bg-green-500'
       };
-    } else if (categoryLower.includes('transportation') || categoryLower.includes('transportasi')) {
-      return {
-        icon: <Car className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'T'
+    }
+    // Personal
+    else if (categoryName.includes('personal') || categoryLower.includes('pribadi')) {
+      return { 
+        icon: <User className="text-white" />,
+        bgColor: 'bg-violet-600'
       };
-    } else if (categoryLower.includes('utilities') || categoryLower.includes('berlangganan') || categoryLower.includes('subscription')) {
-      return {
-        icon: <Zap className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'U'
+    }
+    // Travel
+    else if (categoryName.includes('travel') || categoryLower.includes('perjalanan')) {
+      return { 
+        icon: <Plane className="text-white" />,
+        bgColor: 'bg-blue-500'
       };
-    } else if (categoryLower.includes('housing') || categoryLower.includes('perumahan') || categoryLower.includes('rent')) {
-      return {
-        icon: <HomeIcon className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'H'
+    }
+    // Gifts
+    else if (categoryName.includes('gift') || categoryLower.includes('hadiah')) {
+      return { 
+        icon: <GiftIcon className="text-white" />,
+        bgColor: 'bg-red-400'
       };
-    } else if (categoryLower.includes('entertainment') || categoryLower.includes('hiburan')) {
-      return {
-        icon: <Film className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'E'
+    }
+    // Salary/Income
+    else if (categoryName.includes('salary') || categoryName.includes('income') || categoryLower.includes('gaji') || categoryLower.includes('pendapatan')) {
+      return { 
+        icon: <Briefcase className="text-white" />,
+        bgColor: 'bg-green-600'
       };
-    } else if (categoryLower.includes('shopping') || categoryLower.includes('belanja')) {
-      return {
-        icon: <ShoppingBag className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'S'
+    }
+    // Business
+    else if (categoryName.includes('business') || categoryLower.includes('bisnis')) {
+      return { 
+        icon: <DollarSign className="text-white" />,
+        bgColor: 'bg-amber-600'
       };
-    } else if (categoryLower.includes('healthcare') || categoryLower.includes('kesehatan')) {
-      return {
-        icon: <HeartPulse className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'H'
+    }
+    // Transfer
+    else if (categoryName.includes('transfer') || categoryLower.includes('transfer')) {
+      return { 
+        icon: <ArrowLeftRight className="text-white" />,
+        bgColor: 'bg-slate-500'
       };
-    } else if (categoryLower.includes('education') || categoryLower.includes('pendidikan')) {
-      return {
-        icon: <GraduationCap className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'E'
-      };
-    } else if (categoryLower.includes('personal_care') || categoryLower.includes('personal care')) {
-      return {
-        icon: <ShowerHead className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'P'
-      };
-    } else if (categoryLower.includes('travel') || categoryLower.includes('perjalanan')) {
-      return {
-        icon: <Plane className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'T'
-      };
-    } else if (categoryLower.includes('gifts') || categoryLower.includes('hadiah')) {
-      return {
-        icon: <Gift className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'G'
-      };
-    } else if (categoryLower.includes('transfer')) {
-      return {
-        icon: <Wallet className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'T'
-      };
-    } else if (categoryLower.includes('youtube') || categoryLower.includes('subscription')) {
-      return {
-        icon: <Film className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: '▶️'
-      };
-    } else if (categoryLower.includes('ovo') || categoryLower.includes('e-wallet')) {
-      return {
-        icon: <Smartphone className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'O'
-      };
-    } else if (categoryLower.includes('coffee') || categoryLower.includes('kopi')) {
-      return {
-        icon: <Coffee className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'C'
-      };
-    } else if (categoryLower.includes('app') || categoryLower.includes('store')) {
-      return {
-        icon: <Smartphone className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'A'
-      };
-    } else if (categoryLower.includes('e-book') || categoryLower.includes('book')) {
-      return {
-        icon: <BookOpen className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: 'B'
-      };
-    } else if (categoryLower.includes('other') || categoryLower.includes('lainnya')) {
-      return {
-        icon: <DollarSign className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: '$'
-      };
-    } else {
-      // Default
-      return {
-        icon: <CreditCard className="w-4 h-4 text-[#0D0D0D]" />,
-        bgColor: 'bg-[#C6FE1E]',
-        label: '$'
+    }
+    // Default fallback
+    else {
+      return { 
+        icon: <HelpCircle className="text-white" />,
+        bgColor: 'bg-gray-500'
       };
     }
   };
 
-  const { icon, bgColor, label } = getIconDetails();
+  const { icon, bgColor } = getIconDetails();
 
-  const iconVariants = {
-    hidden: { scale: 0.8, opacity: 0 },
-    visible: { 
-      scale: 1, 
-      opacity: 1,
-      transition: { 
-        duration: 0.3,
-        type: "spring",
-        stiffness: 300,
-        damping: 20
-      } 
-    }
-  };
-
-  // Return animated or static icon
-  return animate ? (
-    <motion.div 
-      className={`${bgColor} ${iconClasses}`}
-      initial="hidden"
-      animate="visible"
-      variants={iconVariants}
-      whileHover={{ scale: 1.05 }}
-    >
-      {icon}
-    </motion.div>
-  ) : (
-    <div className={`${bgColor} ${iconClasses}`}>
+  return (
+    <div className={`${iconClasses} ${bgColor} ${animate ? 'animate-fadeIn' : ''}`}>
       {icon}
     </div>
   );

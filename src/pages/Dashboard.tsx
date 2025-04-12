@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { totalBalance, transactions, formatCurrency, monthlyExpense, monthlyIncome } = useFinance();
+  const { totalBalance, transactions, formatCurrency, monthlyExpense, monthlyIncome, getDisplayCategoryName } = useFinance();
   const navigate = useNavigate();
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -311,10 +311,10 @@ const Dashboard: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
-                      <CategoryIcon category={transaction.category} />
+                      <CategoryIcon category={transaction.categoryId || transaction.category} />
                     </div>
                     <div>
-                      <p className="font-medium">{transaction.category}</p>
+                      <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
                       <p className="text-xs text-[#868686]">{t(`transactions.${transaction.type.toLowerCase()}`)}</p>
                     </div>
                   </div>
@@ -329,6 +329,11 @@ const Dashboard: React.FC = () => {
                   </p>
                 </motion.div>
               ))}
+              {recentTransactions.length === 0 && (
+                <div className="text-center py-5 text-[#868686]">
+                  {t('transactions.no_transactions')}
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
