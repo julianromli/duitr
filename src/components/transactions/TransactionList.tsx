@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Filter, Search, Trash2 } from 'lucide-react';
+import { Calendar, Filter, Search, Trash2, ChevronDown } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { motion } from 'framer-motion';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
@@ -23,12 +30,48 @@ interface TransactionListProps {
 
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
   const { t } = useTranslation();
-  const { transactions, formatCurrency, deleteTransaction, getDisplayCategoryName } = useFinance();
+  const { transactions, formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<'date-newest' | 'date-latest' | 'amount-highest' | 'amount-lowest'>('date-newest');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  
+  // For debugging - log first few transactions with categories
+  useEffect(() => {
+    const sampleTransactions = transactions.slice(0, 5);
+    console.log('Sample transactions with categories:', sampleTransactions.map(t => ({
+      id: t.id,
+      description: t.description,
+      categoryId: t.categoryId,
+      categoryKey: getCategoryKey(t.categoryId)
+    })));
+  }, [transactions]);
+  
+  // Category list in specified order
+  const categoryOptions = [
+    { value: 'all', label: 'All' },
+    { value: 'expense_groceries', label: 'Groceries' },
+    { value: 'expense_food', label: 'Dining' },
+    { value: 'expense_transportation', label: 'Transportation' },
+    { value: 'expense_subscription', label: 'Subscription' },
+    { value: 'expense_housing', label: 'Housing' },
+    { value: 'expense_entertainment', label: 'Entertainment' },
+    { value: 'expense_shopping', label: 'Shopping' },
+    { value: 'expense_health', label: 'Health' },
+    { value: 'expense_education', label: 'Education' },
+    { value: 'expense_travel', label: 'Travel' },
+    { value: 'expense_personal', label: 'Personal Care' },
+    { value: 'expense_other', label: 'Other (Expense)' },
+    { value: 'income_salary', label: 'Salary' },
+    { value: 'income_business', label: 'Business' },
+    { value: 'income_investment', label: 'Investment' },
+    { value: 'income_gift', label: 'Gift' },
+    { value: 'income_other', label: 'Other (Income)' },
+    { value: 'system_transfer', label: 'Transfer' },
+  ];
   
   // Filter transactions
   const filteredTransactions = transactions
@@ -36,6 +79,17 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       // Type filter
       if (typeFilter !== 'all' && transaction.type !== typeFilter) {
         return false;
+      }
+      
+      // Category filter
+      if (selectedCategory !== 'all') {
+        // Get the category key for this transaction using the FinanceContext utility
+        const categoryKey = getCategoryKey(transaction.categoryId);
+        
+        // Filter out if category key doesn't match selected category
+        if (categoryKey !== selectedCategory) {
+          return false;
+        }
       }
       
       // Search filter
@@ -93,15 +147,62 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       groups[date].push(transaction);
     });
     
-    // Convert to array and sort by date (newest first)
-    return Object.entries(groups)
-      .sort(([dateA], [dateB]) => {
-        return new Date(dateB).getTime() - new Date(dateA).getTime();
-      })
-      .map(([date, transactions]) => ({
-        date,
-        transactions
-      }));
+    // Sort transactions within each group based on sortOption
+    Object.keys(groups).forEach(date => {
+      const transactionsInGroup = groups[date];
+      
+      switch (sortOption) {
+        case 'date-newest':
+          // Already sorted by date in original data
+          break;
+        case 'date-latest':
+          transactionsInGroup.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          break;
+        case 'amount-highest':
+          transactionsInGroup.sort((a, b) => b.amount - a.amount);
+          break;
+        case 'amount-lowest':
+          transactionsInGroup.sort((a, b) => a.amount - b.amount);
+          break;
+      }
+    });
+    
+    // Convert to array and sort the groups based on sortOption
+    let sortedGroups = Object.entries(groups).map(([date, transactions]) => ({
+      date,
+      transactions
+    }));
+    
+    switch (sortOption) {
+      case 'date-newest':
+        sortedGroups.sort((groupA, groupB) => {
+          return new Date(groupB.date).getTime() - new Date(groupA.date).getTime();
+        });
+        break;
+      case 'date-latest':
+        sortedGroups.sort((groupA, groupB) => {
+          return new Date(groupA.date).getTime() - new Date(groupB.date).getTime();
+        });
+        break;
+      case 'amount-highest':
+        sortedGroups.sort((groupA, groupB) => {
+          // Find maximum amount in each group
+          const maxAmountA = Math.max(...groupA.transactions.map(t => t.amount));
+          const maxAmountB = Math.max(...groupB.transactions.map(t => t.amount));
+          return maxAmountB - maxAmountA;
+        });
+        break;
+      case 'amount-lowest':
+        sortedGroups.sort((groupA, groupB) => {
+          // Find minimum amount in each group
+          const minAmountA = Math.min(...groupA.transactions.map(t => t.amount));
+          const minAmountB = Math.min(...groupB.transactions.map(t => t.amount));
+          return minAmountA - minAmountB;
+        });
+        break;
+    }
+    
+    return sortedGroups;
   };
   
   const groupedTransactions = groupTransactionsByDate();
@@ -162,6 +263,54 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         </div>
       </div>
       
+      {/* Sorting and category filter dropdowns */}
+      <div className="flex justify-between mb-4 gap-2">
+        {/* Category filter dropdown */}
+        <Select 
+          value={selectedCategory} 
+          onValueChange={(value) => setSelectedCategory(value)}
+        >
+          <SelectTrigger className="w-[180px] bg-[#242425] border-0 text-white">
+            <SelectValue placeholder="Filter by Category" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
+            {categoryOptions.map(category => (
+              <SelectItem 
+                key={category.value} 
+                value={category.value} 
+                className="hover:bg-[#333] focus:bg-[#333]"
+              >
+                {category.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {/* Sorting dropdown */}
+        <Select 
+          value={sortOption} 
+          onValueChange={(value) => setSortOption(value as any)}
+        >
+          <SelectTrigger className="w-[180px] bg-[#242425] border-0 text-white">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#242425] border-0 text-white">
+            <SelectItem value="date-newest" className="hover:bg-[#333] focus:bg-[#333]">
+              Sort by Date - Newest
+            </SelectItem>
+            <SelectItem value="date-latest" className="hover:bg-[#333] focus:bg-[#333]">
+              Sort by Date - Latest
+            </SelectItem>
+            <SelectItem value="amount-highest" className="hover:bg-[#333] focus:bg-[#333]">
+              Sort by Highest Amount
+            </SelectItem>
+            <SelectItem value="amount-lowest" className="hover:bg-[#333] focus:bg-[#333]">
+              Sort by Lowest Amount
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
       {/* Transaction list */}
       {filteredTransactions.length === 0 ? (
         <div className="text-center py-8 text-[#868686]">
@@ -180,9 +329,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               className="space-y-3"
               variants={itemVariants}
             >
-              <div className="flex items-center text-[#868686] mb-2">
-                <Calendar size={14} className="mr-2" />
-                <span className="text-sm">{formatDate(group.date)}</span>
+              <div className="flex items-center justify-between text-[#868686] mb-2">
+                <div className="flex items-center">
+                  <Calendar size={14} className="mr-2" />
+                  <span className="text-sm">{formatDate(group.date)}</span>
+                </div>
               </div>
               
               {group.transactions.map(transaction => (

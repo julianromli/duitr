@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
@@ -117,9 +117,6 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
       <DialogContent className="bg-[#1A1A1A] border-0 text-white">
         <DialogHeader className="flex flex-row justify-between items-center">
           <DialogTitle className="text-xl font-bold">{isEditing ? t('budget.editPinjaman') : t('budget.addPinjaman')}</DialogTitle>
-          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
-            <X size={16} />
-          </DialogClose>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
           {/* Transaction Name */}

@@ -257,7 +257,7 @@ const WalletList: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{t('wallets.edit')}</DialogTitle>
           </DialogHeader>
-          {editWallet && (
+          
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-[#868686] dark:text-gray-400">{t('wallets.accountName')}</Label>
@@ -332,7 +332,6 @@ const WalletList: React.FC = () => {
                 {t('common.save')}
               </Button>
             </form>
-          )}
         </DialogContent>
       </Dialog>
     </motion.div>

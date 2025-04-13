@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FileSpreadsheet, Calendar, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -119,15 +119,14 @@ const ExportButton = () => {
           </button>
         </DialogTrigger>
         
-        <DialogContent className="bg-[#1A1A1A] border-0 text-white">
-          <DialogHeader className="flex flex-row justify-between items-center">
-            <DialogTitle className="text-xl font-bold">Export Transactions</DialogTitle>
-            <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
-              <X size={16} />
-            </DialogClose>
+        <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-[#2e2e2e] text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              Export Transactions
+            </DialogTitle>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4">
             <div className="grid gap-2">
               <Label className="text-[#868686]">Date Range</Label>
               <Select value={dateRange} onValueChange={handleDateRangeChange}>

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
 import { ArrowDown, ArrowRight, ArrowUp, X, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -183,23 +183,17 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
         </button>
       </DialogTrigger>
       <DialogContent className="bg-[#1A1A1A] border-none text-white max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">
             {formData.type === 'income' 
               ? t('transactions.addIncome') 
               : formData.type === 'expense' 
                 ? t('transactions.addExpense') 
                 : t('transactions.addTransfer')}
-          </h2>
-          <button 
-            className="rounded-full p-2 hover:bg-[#242425]"
-            onClick={() => setOpen(false)}
-          >
-            <X className="h-5 w-5 text-[#868686]" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           {/* Transaction Type */}
           <div className="mb-4">
             <label className="text-[#868686] mb-1 block">

@@ -145,7 +145,7 @@ const Wallets: React.FC = () => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-white">{t('wallets.addAccount')}</DialogTitle>
+                <DialogTitle className="text-xl font-bold">{t('wallets.addAccount')}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                 <div className="space-y-2">
