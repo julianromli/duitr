@@ -1,6 +1,7 @@
 // Add comment indicating changes made to the file
 // Created PinjamanForm component for adding/editing debt/credit items.
 // Updated UI styling to match ExpenseForm.
+// Fixed date handling to prevent timezone shifts when saving dates.
 
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -25,6 +26,8 @@ const pinjamanSchema = z.object({
   due_date: z.date({ required_error: 'Due date is required' }),
   amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
   icon: z.string().optional().nullable(),
+  description: z.string().optional().default(''),
+  lender_name: z.string().optional().default(''),
 });
 
 type PinjamanFormData = z.infer<typeof pinjamanSchema>;
@@ -48,6 +51,8 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
       due_date: new Date(),
       amount: 0,
       icon: null,
+      description: '',
+      lender_name: '',
     }
   });
 
@@ -57,10 +62,12 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
     if (itemToEdit) {
       reset({
         name: itemToEdit.name,
-        category: itemToEdit.category,
-        due_date: new Date(itemToEdit.due_date),
+        category: itemToEdit.category as 'Utang' | 'Piutang',
+        due_date: new Date(itemToEdit.due_date || new Date()),
         amount: itemToEdit.amount,
-        icon: itemToEdit.icon,
+        icon: itemToEdit.icon || null,
+        description: itemToEdit.description || '',
+        lender_name: itemToEdit.lender_name || '',
       });
     } else {
       reset({
@@ -69,17 +76,29 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
         due_date: new Date(),
         amount: 0,
         icon: null,
+        description: '',
+        lender_name: '',
       });
     }
   }, [itemToEdit, reset, open]);
 
   const onSubmit = (data: PinjamanFormData) => {
+    // Format date properly to avoid timezone shifts
+    const selectedDate = data.due_date;
+    // Create a date string in YYYY-MM-DD format that preserves the day regardless of timezone
+    const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    
+    console.log("Original selected date:", selectedDate);
+    console.log("Formatted date to save:", formattedDate);
+    
     const itemPayload = {
       name: data.name,
       category: data.category,
-      due_date: data.due_date.toISOString().split('T')[0],
+      due_date: formattedDate,
       amount: data.amount,
       icon: data.icon,
+      description: data.description,
+      lender_name: data.lender_name,
     };
 
     try {

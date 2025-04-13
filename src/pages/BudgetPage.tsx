@@ -70,21 +70,65 @@ const BudgetPage: React.FC = () => {
   };
 
   // Budget form handlers
-  const categoryOptions = [
-    t('budgets.categories.groceries'),
-    t('budgets.categories.dining'),
-    t('budgets.categories.transportation'),
-    t('budgets.categories.entertainment'),
-    t('budgets.categories.utilities'),
-    t('budgets.categories.housing'),
-    t('budgets.categories.healthcare'),
-    t('budgets.categories.education'),
-    t('budgets.categories.shopping'),
-    t('budgets.categories.personal_care'),
-    t('budgets.categories.travel'),
-    t('budgets.categories.gifts'),
-    t('budgets.categories.other')
+  // These are the internal category names (English) for mapping to IDs
+  const categoryKeys = [
+    'Groceries',
+    'Dining',
+    'Transportation',
+    'Entertainment',
+    'Utilities',
+    'Housing',
+    'Healthcare',
+    'Education',
+    'Shopping',
+    'Personal Care',
+    'Travel',
+    'Gifts',
+    'Other'
   ];
+  
+  // These are the translated category names to display in the UI
+  const categoryOptions = categoryKeys.map(key => {
+    // Map the English key to the corresponding translation key
+    const translationMap: Record<string, string> = {
+      'Groceries': 'budgets.categories.groceries',
+      'Dining': 'budgets.categories.dining',
+      'Transportation': 'budgets.categories.transportation',
+      'Entertainment': 'budgets.categories.entertainment',
+      'Utilities': 'budgets.categories.utilities',
+      'Housing': 'budgets.categories.housing',
+      'Healthcare': 'budgets.categories.healthcare',
+      'Education': 'budgets.categories.education',
+      'Shopping': 'budgets.categories.shopping',
+      'Personal Care': 'budgets.categories.personal_care',
+      'Travel': 'budgets.categories.travel',
+      'Gifts': 'budgets.categories.gifts',
+      'Other': 'budgets.categories.other'
+    };
+    
+    // Return the translated value for display
+    return {
+      key: key,
+      label: t(translationMap[key])
+    };
+  });
+  
+  // Mapping of category names to IDs
+  const categoryNameToId: Record<string, number> = {
+    'Groceries': 1,
+    'Dining': 2,
+    'Transportation': 3,
+    'Entertainment': 6,
+    'Utilities': 4,
+    'Housing': 5,
+    'Healthcare': 8,
+    'Education': 9,
+    'Shopping': 7,
+    'Personal Care': 11,
+    'Travel': 10,
+    'Gifts': 16,
+    'Other': 12
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -121,9 +165,17 @@ const BudgetPage: React.FC = () => {
       return;
     }
 
+    // Get the corresponding numeric category ID
+    const categoryId = categoryNameToId[newBudget.category] || 12; // Default to "Other" (12) if not found
+    
+    // Find the translated display name for the category
+    const categoryOption = categoryOptions.find(option => option.key === newBudget.category);
+    const displayCategoryName = categoryOption ? categoryOption.label : newBudget.category;
+
     // Add the new budget
     addBudget({
-      category: newBudget.category,
+      category: displayCategoryName, // Use the translated category name for display
+      categoryId: categoryId,  // Use the mapped numeric ID
       amount: Number(newBudget.amount),
       period: newBudget.period,
       spent: 0
@@ -199,9 +251,9 @@ const BudgetPage: React.FC = () => {
                       <SelectValue placeholder={t('budgets.select_category')} />
                     </SelectTrigger>
                     <SelectContent className="bg-[#242425] border-0 text-white">
-                      {categoryOptions.map((category) => (
-                        <SelectItem key={category} value={category} className="hover:bg-[#333] focus:bg-[#333]">
-                          {category}
+                      {categoryOptions.map((option) => (
+                        <SelectItem key={option.key} value={option.key} className="hover:bg-[#333] focus:bg-[#333]">
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
