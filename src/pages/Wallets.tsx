@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, PlusCircle, CreditCard, Wallet, Landmark, TrendingUp } from 'lucide-react';
 import WalletList from '@/components/wallets/WalletList';
@@ -26,10 +26,12 @@ import { useNavigate } from 'react-router-dom';
 
 const Wallets: React.FC = () => {
   const { t } = useTranslation();
-  const { addWallet } = useFinance();
+  const { addWallet, wallets } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     balance: '',
@@ -58,8 +60,10 @@ const Wallets: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
     
     // Validation
     if (!formData.name || !formData.balance || !formData.type) {
@@ -68,33 +72,37 @@ const Wallets: React.FC = () => {
         description: t('wallets.fillAllFields'),
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
     
-    // Add wallet
-    addWallet({
-      name: formData.name,
-      balance: parseFloat(formData.balance),
-      type: formData.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
-      color: formData.color,
-    });
-    
-    // Reset form
-    setFormData({
-      name: '',
-      balance: '',
-      type: '',
-      color: '#1364FF',
-    });
-    
-    // Show success message
-    toast({
-      title: t('common.success'),
-      description: t('wallets.accountAdded'),
-    });
-    
-    // Close dialog
-    setOpen(false);
+    try {
+      // Add wallet
+      await addWallet({
+        name: formData.name,
+        balance: parseFloat(formData.balance),
+        type: formData.type as 'cash' | 'bank' | 'e-wallet' | 'investment',
+        color: formData.color,
+      });
+      
+      // Reset form only on success
+      setFormData({
+        name: '',
+        balance: '',
+        type: '',
+        color: '#1364FF',
+      });
+      
+      // Close dialog only on success
+      setOpen(false);
+    } catch (error) {
+      console.error('Error adding wallet:', error);
+      setError('Gagal menambahkan wallet. Silakan coba lagi.');
+      // Toast error is already shown by addWallet function
+      // Keep the form open to allow the user to try again
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Animation variants
@@ -117,6 +125,26 @@ const Wallets: React.FC = () => {
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
+
+  // Error fallback
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white p-6">
+        <div className="flex items-center mb-6">
+          <button onClick={() => navigate('/')} className="mr-4">
+            <ChevronLeft size={24} className="text-white" />
+          </button>
+          <h1 className="text-xl font-bold">{t('wallets.title')}</h1>
+        </div>
+        <div className="bg-[#242425] rounded-xl p-6 text-center mt-8">
+          <p className="text-red-400 mb-4">{error}</p>
+          <Button onClick={() => setError(null)} className="bg-[#C6FE1E] text-[#0D0D0D]">
+            Coba Lagi
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -236,15 +264,32 @@ const Wallets: React.FC = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium rounded-xl"
+                  disabled={isLoading}
                 >
-                  {t('wallets.addAccount')}
+                  {isLoading ? 'Loading...' : t('wallets.addAccount')}
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
         </motion.div>
         
-        <WalletList />
+        {/* Wrap WalletList in an error boundary */}
+        <div className="wallet-list-container">
+          {wallets.length > 0 ? (
+            <WalletList />
+          ) : (
+            <motion.div 
+              className="bg-[#242425] rounded-xl p-6 text-center mt-4"
+              variants={itemVariants}
+            >
+              <div className="mx-auto w-12 h-12 mb-3 bg-[#333] rounded-full flex items-center justify-center">
+                <Wallet size={24} className="text-[#868686]" />
+              </div>
+              <p className="text-[#868686]">{t('wallets.no_wallets')}</p>
+              <p className="text-xs text-[#868686] mt-1">{t('wallets.addAccount')}</p>
+            </motion.div>
+          )}
+        </div>
       </div>
     </motion.div>
   );

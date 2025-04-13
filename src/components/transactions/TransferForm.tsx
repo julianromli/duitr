@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
 
@@ -103,7 +102,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1A1A1A] border-none text-white">
-        <DialogHeader className="flex flex-row justify-between items-center">
+        <DialogHeader>
           <DialogTitle className="text-xl font-bold">{t('transactions.transfer')}</DialogTitle>
         </DialogHeader>
         

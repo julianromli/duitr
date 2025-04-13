@@ -3,7 +3,6 @@ import { FileSpreadsheet, Calendar, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -31,7 +30,6 @@ import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { ExportOptions } from '@/types/finance';
 import { useToast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
 
 const ExportButton = () => {
   const { transactions } = useFinance();

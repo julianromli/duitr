@@ -30,7 +30,7 @@ export type Wallet = {
   id: string;
   name: string;
   balance: number;
-  icon: string;
+  icon?: string;
   color: string;
   type?: 'cash' | 'bank' | 'e-wallet' | 'investment';
   userId?: string;
