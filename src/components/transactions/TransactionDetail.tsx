@@ -208,33 +208,21 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-[#1A1A1A] border-none text-white">
-        <DialogHeader>
+        <DialogHeader className="pb-3">
           <div className="flex justify-between items-center">
             <DialogTitle className="text-xl font-bold">
               {t('transactions.details') || "Transaction Details"}
             </DialogTitle>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {!isEditing ? (
                 <button 
                   onClick={() => setIsEditing(true)} 
-                  className="rounded-full p-2 bg-[#242425] text-[#C6FE1E] hover:text-white transition-colors"
+                  className="rounded-full p-2 bg-[#242425] text-[#868686] hover:text-[#C6FE1E] transition-colors"
+                  aria-label={t('common.edit')}
                 >
-                  <Pencil size={16} />
+                  <Pencil size={20} />
                 </button>
-              ) : (
-                <button 
-                  onClick={handleSave} 
-                  className="rounded-full p-2 bg-[#242425] text-[#C6FE1E] hover:text-white transition-colors"
-                >
-                  <Save size={16} />
-                </button>
-              )}
-              <DialogClose 
-                className="rounded-full p-2 bg-[#242425] text-[#868686] hover:text-white transition-colors"
-                onClick={isEditing ? handleCancelEdit : undefined}
-              >
-                <X size={16} />
-              </DialogClose>
+              ) : null}
             </div>
           </div>
         </DialogHeader>
@@ -385,6 +373,24 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
               <span className="ml-2">{getTypeLabel()}</span>
             </div>
           </div>
+          
+          {/* Save button at the bottom for editing mode */}
+          {isEditing && (
+            <div className="mt-6">
+              <Button 
+                onClick={handleSave}
+                className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0"
+              >
+                {t('common.save')}
+              </Button>
+              <Button 
+                onClick={handleCancelEdit}
+                className="w-full mt-3 bg-[#242425] text-white hover:bg-[#333] border-0"
+              >
+                {t('common.cancel')}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
@@ -126,11 +125,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1A1A1A] border-none text-white">
-        <DialogHeader className="flex flex-row justify-between items-center">
+        <DialogHeader>
           <DialogTitle className="text-xl font-bold">{t('transactions.add_expense')}</DialogTitle>
-          <DialogClose className="rounded-full hover:bg-[#333] text-[#868686] hover:text-white">
-            <X size={16} />
-          </DialogClose>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
@@ -158,7 +154,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
             >
               <SelectTrigger className="bg-[#242425] border-0 text-white">
                 <SelectValue placeholder={
-                  isLoadingCategories ? t('common.loading') : t('transactions.selectExpenseCategory')
+                  isLoadingCategories ? t('common.loading') : t('transactions.categoryform')
                 } />
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">

@@ -44,6 +44,7 @@ interface FinanceContextType {
   monthlyExpense: number;
   formatCurrency: (amount: number) => string;
   getDisplayCategoryName: (transaction: Transaction) => string;
+  getCategoryKey: (categoryId: any) => string;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -294,6 +295,73 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     return transaction.type === 'income' 
       ? (i18next.language === 'id' ? 'Pendapatan' : 'Income') 
       : (i18next.language === 'id' ? 'Pengeluaran' : 'Expense');
+  };
+
+  // Get the category key (e.g., 'expense_food') from a category ID
+  const getCategoryKey = (categoryId: any): string => {
+    // If it's already a string key (e.g., 'expense_food')
+    if (typeof categoryId === 'string' && categoryId.includes('_')) {
+      return categoryId;
+    }
+    
+    // If it's a UUID, convert to string ID
+    if (typeof categoryId === 'string' && categoryId.includes('-')) {
+      return getCategoryStringIdFromUuid(categoryId);
+    }
+    
+    // If it's a number or numeric string, map to category key
+    if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
+      const numId = Number(categoryId);
+      
+      // Map numeric IDs back to string keys
+      const idToCategoryKey: Record<number, string> = {
+        // Expense categories (IDs 1-12)
+        1: 'expense_groceries',
+        2: 'expense_food',
+        3: 'expense_transportation',
+        4: 'expense_subscription',
+        5: 'expense_housing',
+        6: 'expense_entertainment',
+        7: 'expense_shopping',
+        8: 'expense_health',
+        9: 'expense_education',
+        10: 'expense_travel',
+        11: 'expense_personal',
+        12: 'expense_other',
+        
+        // Income categories (IDs 13-17)
+        13: 'income_salary',
+        14: 'income_business',
+        15: 'income_investment',
+        16: 'income_gift',
+        17: 'income_other',
+        
+        // System category (ID 18)
+        18: 'system_transfer'
+      };
+      
+      // Return the mapped category key or a default based on range
+      if (idToCategoryKey[numId]) {
+        return idToCategoryKey[numId];
+      }
+      
+      // Fallback based on ID ranges
+      if (numId <= 12) {
+        return 'expense_other';
+      } else if (numId <= 17) {
+        return 'income_other';
+      } else {
+        return 'system_transfer';
+      }
+    }
+    
+    // Default fallback for empty or undefined
+    if (!categoryId) {
+      return 'expense_other';
+    }
+    
+    // Ultimate fallback
+    return 'expense_other';
   };
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'userId'>) => {
@@ -1418,6 +1486,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         monthlyExpense,
     formatCurrency,
     getDisplayCategoryName,
+    getCategoryKey,
   };
 
   // Ensure transactions are sorted by date in descending order
