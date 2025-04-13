@@ -1029,28 +1029,91 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         ...wallet,
         type: walletType,
         userId: user.id,
+        icon: wallet.icon || 'wallet', // Set default icon
       };
       
       setWallets(prev => [...prev, newWallet]);
+
+      // Create insert data with optional fields
+      const insertData: any = {
+        name: wallet.name,
+        balance: wallet.balance,
+        type: walletType,
+        color: wallet.color,
+        user_id: user.id,
+      };
+      
+      // Only add icon if it exists in the wallet object
+      if (wallet.icon) {
+        try {
+          // Test if the icon column exists
+          const { error: testError } = await supabase
+            .from('wallets')
+            .update({ icon: wallet.icon })
+            .eq('id', '00000000-0000-0000-0000-000000000000'); // A non-existent ID to safely test
+            
+          if (!testError || !testError.message.includes('column')) {
+            insertData.icon = wallet.icon || 'wallet';
+          }
+        } catch (e) {
+          // Icon column might not exist - that's ok
+          console.warn('Icon column might not exist in wallets table');
+        }
+      }
       
       const { data, error } = await supabase
         .from('wallets')
-        .insert({
-          name: wallet.name,
-          balance: wallet.balance,
-          type: walletType,
-          color: wallet.color,
-          icon: wallet.icon || 'wallet',
-          user_id: user.id,
-        })
+        .insert(insertData)
         .select();
       
       if (error) {
+        // Try again without icon field if there was an error
+        if (error.message.includes('column') && insertData.icon) {
+          delete insertData.icon;
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('wallets')
+            .insert(insertData)
+            .select();
+            
+          if (retryError) {
+            setWallets(prev => prev.filter(w => w.id !== tempId));
+            throw retryError;
+          }
+          
+          if (!retryData || retryData.length === 0) {
+            setWallets(prev => prev.filter(w => w.id !== tempId));
+            throw new Error('No data returned from insert operation');
+          }
+          
+          setWallets(prev => 
+            prev.map(w => 
+              w.id === tempId ? {
+                id: retryData[0].id,
+                name: retryData[0].name,
+                balance: retryData[0].balance,
+                type: retryData[0].type || 'cash',
+                color: retryData[0].color,
+                icon: 'wallet', // Set default since db doesn't have this column
+                userId: retryData[0].user_id
+              } : w
+            )
+          );
+          
+          toast({
+            title: 'Wallet added',
+            description: `${wallet.name} has been added to your accounts`,
+          });
+          
+          return;
+        }
+        
         setWallets(prev => prev.filter(w => w.id !== tempId));
         throw error;
       }
       
       if (!data || data.length === 0) {
+        setWallets(prev => prev.filter(w => w.id !== tempId));
         throw new Error('No data returned from insert operation');
       }
       
@@ -1073,6 +1136,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         description: `${wallet.name} has been added to your accounts`,
       });
     } catch (error: any) {
+      console.error('Error adding wallet:', error);
       toast({
         variant: 'destructive',
         title: 'Error adding wallet',
@@ -1095,25 +1159,65 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         wallet.id === walletToUpdate.id ? walletToUpdate : wallet)
       );
       
+      // Create update data with required fields
+      const updateData: any = {
+        name: walletToUpdate.name,
+        balance: walletToUpdate.balance,
+        type: walletType,
+        color: walletToUpdate.color,
+      };
+      
+      // Only add icon if it exists in the wallet object
+      if (walletToUpdate.icon) {
+        try {
+          // Test if the icon column exists
+          const { error: testError } = await supabase
+            .from('wallets')
+            .update({ icon: 'test' })
+            .eq('id', '00000000-0000-0000-0000-000000000000'); // A non-existent ID to safely test
+            
+          if (!testError || !testError.message.includes('column')) {
+            updateData.icon = walletToUpdate.icon;
+          }
+        } catch (e) {
+          // Icon column might not exist - that's ok
+          console.warn('Icon column might not exist in wallets table');
+        }
+      }
+      
       const { error } = await supabase
         .from('wallets')
-        .update({
-          name: walletToUpdate.name,
-          balance: walletToUpdate.balance,
-          type: walletType,
-          color: walletToUpdate.color,
-          icon: walletToUpdate.icon || 'wallet',
-        })
+        .update(updateData)
         .eq('id', walletToUpdate.id);
       
       if (error) {
-        setWallets(prev => {
-          const originalWallet = wallets.find(w => w.id === updatedWallet.id);
-          return prev.map(wallet => 
-            wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
-          );
-        });
-        throw error;
+        // Try again without the icon field if there was a column error
+        if (error.message.includes('column') && updateData.icon) {
+          delete updateData.icon;
+          
+          const { error: retryError } = await supabase
+            .from('wallets')
+            .update(updateData)
+            .eq('id', walletToUpdate.id);
+            
+          if (retryError) {
+            setWallets(prev => {
+              const originalWallet = wallets.find(w => w.id === updatedWallet.id);
+              return prev.map(wallet => 
+                wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
+              );
+            });
+            throw retryError;
+          }
+        } else {
+          setWallets(prev => {
+            const originalWallet = wallets.find(w => w.id === updatedWallet.id);
+            return prev.map(wallet => 
+              wallet.id === updatedWallet.id ? (originalWallet || wallet) : wallet
+            );
+          });
+          throw error;
+        }
       }
       
       toast({
@@ -1121,6 +1225,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         description: `${updatedWallet.name} has been updated`,
       });
     } catch (error: any) {
+      console.error('Error updating wallet:', error);
       toast({
         variant: 'destructive',
         title: 'Error updating wallet',
