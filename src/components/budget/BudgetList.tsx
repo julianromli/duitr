@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PieChart, Edit, Trash, X, Check } from 'lucide-react';
 import { useBudgets } from '@/hooks/useBudgets';
 import { Progress } from '@/components/ui/progress';
@@ -24,6 +24,21 @@ const BudgetList: React.FC = () => {
     amount: ''
   });
   
+  useEffect(() => {
+    if (editingBudget) {
+      const currentBudget = budgets.find(b => b.id === editingBudget);
+      if (currentBudget) {
+        console.log("Found budget for editing:", currentBudget);
+        setEditForm({
+          category: currentBudget.category || '',
+          amount: currentBudget.amount.toString()
+        });
+      } else {
+        console.warn("Could not find budget with ID:", editingBudget);
+      }
+    }
+  }, [budgets, editingBudget]);
+
   const getProgressColor = (percentage: number) => {
     if (percentage >= 90) return 'bg-finance-expense';
     if (percentage >= 75) return 'bg-amber-500';
@@ -31,9 +46,10 @@ const BudgetList: React.FC = () => {
   };
 
   const handleEdit = (budget: any) => {
+    console.log("Editing budget:", budget);
     setEditingBudget(budget.id);
     setEditForm({
-      category: budget.category,
+      category: budget.category || '',
       amount: budget.amount.toString()
     });
   };
@@ -44,15 +60,6 @@ const BudgetList: React.FC = () => {
 
   const handleSaveEdit = (budget: any) => {
     // Validate inputs
-    if (!editForm.category.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name cannot be empty",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!editForm.amount || isNaN(Number(editForm.amount)) || Number(editForm.amount) <= 0) {
       toast({
         title: "Error",
@@ -62,10 +69,10 @@ const BudgetList: React.FC = () => {
       return;
     }
 
-    // Update the budget
+    // Update the budget with only the amount changed, preserve category
     updateBudget({
       ...budget,
-      category: editForm.category,
+      category: budget.category,
       amount: Number(editForm.amount)
     });
 
@@ -109,11 +116,7 @@ const BudgetList: React.FC = () => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <label className="text-sm font-medium">Category:</label>
-                          <Input 
-                            value={editForm.category}
-                            onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                            className="w-40 h-8"
-                          />
+                          <span className="text-sm">{budget.category || 'No Category'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="text-sm font-medium">Amount:</label>

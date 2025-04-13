@@ -1,6 +1,7 @@
 // Add comment indicating changes made to the file
 // Created PinjamanList component to display debts/credits with due date coloring.
 // Updated to show due date with icon instead of text label.
+// Fixed date parsing to ensure consistent display regardless of timezone.
 
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
@@ -37,11 +38,30 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
     updatePinjamanItem({ ...item, is_settled: !item.is_settled });
   };
 
-   const getCategoryIcon = (category: string) => {
+   const getCategoryIcon = (category?: string) => {
     switch (category) {
       case 'Utang': return <Landmark className="h-4 w-4 text-red-500" />;
       case 'Piutang': return <HandCoins className="h-4 w-4 text-green-500" />;
       default: return <HelpCircle className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  // Function to format a date string consistently
+  const formatDateString = (dateStr: string | null): string => {
+    if (!dateStr) return ''; 
+    
+    try {
+      // For YYYY-MM-DD format strings, parse without timezone conversion
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return format(new Date(year, month - 1, day), 'dd MMM yyyy');
+      }
+      
+      // Otherwise use parseISO which handles ISO strings
+      return format(parseISO(dateStr), 'dd MMM yyyy');
+    } catch (e) {
+      console.error('Error formatting date:', dateStr, e);
+      return dateStr;
     }
   };
 
@@ -51,7 +71,15 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
           return 'bg-[#242425]/50 border-l-4 border-gray-500'; // Settled style
       }
       try {
-        const dueDate = parseISO(dueDateStr);
+        // Parse the date in a timezone-agnostic way
+        let dueDate;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dueDateStr)) {
+          const [year, month, day] = dueDateStr.split('-').map(Number);
+          dueDate = new Date(year, month - 1, day);
+        } else {
+          dueDate = parseISO(dueDateStr);
+        }
+        
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Compare dates only
         dueDate.setHours(0, 0, 0, 0);
@@ -80,29 +108,22 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
   };
 
   return (
-    <motion.div
-        className="space-y-3"
-        variants={listVariants}
-        initial="hidden"
-        animate="visible"
+    <motion.div 
+      className="space-y-2 mt-4"
+      initial="hidden"
+      animate="visible"
+      variants={listVariants}
     >
-       {pinjamanItems.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-4">{t('budget.noPinjamanItems')}</p>
-      )}
       {pinjamanItems.map((item) => (
         <motion.div
           key={item.id}
           variants={itemVariants}
-          className={cn(
-            `flex items-center p-3 rounded-lg shadow-sm transition-opacity duration-300`,
-             getDueDateStyling(item.due_date, item.is_settled),
-             item.is_settled ? 'opacity-60' : ''
-           )}
+          className={`flex items-center p-3 rounded-md ${getDueDateStyling(item.due_date || '', item.is_settled)}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -120,10 +141,10 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
                 </span>
             </div>
             <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
-              <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category.toLowerCase()}`)}</span>
+              <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category?.toLowerCase() || 'utang'}`)}</span>
               <span className="flex items-center gap-1">
                  <Clock className="h-3 w-3 text-gray-400"/> 
-                 {format(parseISO(item.due_date), 'dd MMM yyyy')}
+                 {formatDateString(item.due_date)}
               </span>
             </div>
           </div>

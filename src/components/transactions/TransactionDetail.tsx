@@ -209,22 +209,18 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-[#1A1A1A] border-none text-white">
         <DialogHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-xl font-bold">
-              {t('transactions.details') || "Transaction Details"}
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              {!isEditing ? (
-                <button 
-                  onClick={() => setIsEditing(true)} 
-                  className="rounded-full p-2 bg-[#242425] text-[#868686] hover:text-[#C6FE1E] transition-colors"
-                  aria-label={t('common.edit')}
-                >
-                  <Pencil size={20} />
-                </button>
-              ) : null}
-            </div>
-          </div>
+          <DialogTitle className="text-xl font-bold">
+            {t('transactions.details') || "Transaction Details"}
+          </DialogTitle>
+          {!isEditing && (
+            <button 
+              onClick={() => setIsEditing(true)} 
+              className="absolute right-14 top-6 rounded-full p-2 bg-[#242425] text-[#868686] hover:text-[#C6FE1E] transition-colors"
+              aria-label={t('common.edit')}
+            >
+              <Pencil size={20} />
+            </button>
+          )}
         </DialogHeader>
         
         <div className="mt-4">

@@ -17,10 +17,11 @@ export type Budget = {
   amount: number;
   categoryId: string | number;
   category?: string;
-  month: string;
-  year: string;
-  walletId: string;
+  month?: string;
+  year?: string;
+  walletId?: string;
   userId?: string;
+  type?: string;
   // Legacy fields for compatibility
   spent?: number;
   period?: 'monthly' | 'weekly' | 'yearly';
@@ -63,6 +64,8 @@ export type PinjamanItem = {
   lender_name: string;
   userId?: string;
   created_at?: string;
+  category?: 'Utang' | 'Piutang';
+  icon?: string | null;
 };
 
 export interface ExportOptions {

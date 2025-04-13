@@ -27,7 +27,7 @@ interface FinanceContextType {
   addTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => Promise<void>;
   updateTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
-  addBudget: (budget: Omit<Budget, 'id' | 'userId'>) => Promise<void>;
+  addBudget: (budget: Omit<Budget, 'id'>) => Promise<void>;
   updateBudget: (budget: Budget) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
   addWallet: (wallet: Omit<Wallet, 'id' | 'userId'>) => Promise<void>;
@@ -136,18 +136,50 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         }));
         
         if (budgetsRes.error) throw budgetsRes.error;
-        setBudgets(budgetsRes.data.map(b => ({
-          id: b.id,
-          amount: b.amount,
-          categoryId: b.category_id,
-          month: b.month || new Date().getMonth().toString(),
-          year: b.year || new Date().getFullYear().toString(),
-          walletId: b.wallet_id || wallets[0]?.id || '',
-          userId: b.user_id,
-          // Keep legacy fields for compatibility if they exist
-          spent: b.spent,
-          period: b.period as 'monthly' | 'weekly' | 'yearly' | undefined
-        })));
+        setBudgets(budgetsRes.data.map(b => {
+          // Map category_id to display name
+          const categoryId = b.category_id;
+          let categoryDisplayName = '';
+          
+          // If it's a numeric category ID, map to display name
+          if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
+            const numericId = Number(categoryId);
+            
+            // Map of ID to localized category name - same mapping used in getDisplayCategoryName
+            const idToName: Record<number, string> = {
+              // Expense categories
+              1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
+              2: i18next.language === 'id' ? 'Makanan' : 'Food',
+              3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
+              4: i18next.language === 'id' ? 'Langganan' : 'Subscription',
+              5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
+              6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
+              7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
+              8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
+              9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
+              10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
+              11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
+              12: i18next.language === 'id' ? 'Lainnya' : 'Other',
+              16: i18next.language === 'id' ? 'Hadiah' : 'Gift'
+            };
+            
+            categoryDisplayName = idToName[numericId] || 'Other';
+          }
+          
+          return {
+            id: b.id,
+            amount: b.amount,
+            categoryId: b.category_id,
+            category: categoryDisplayName, // Add category display name
+            month: b.month || new Date().getMonth().toString(),
+            year: b.year || new Date().getFullYear().toString(),
+            walletId: b.wallet_id || wallets[0]?.id || '',
+            userId: b.user_id,
+            // Keep legacy fields for compatibility if they exist
+            spent: b.spent,
+            period: b.period as 'monthly' | 'weekly' | 'yearly' | undefined
+          };
+        }));
 
         if (wantToBuyRes.error) {
             console.warn('Error loading want_to_buy_items:', wantToBuyRes.error.message);
@@ -900,54 +932,103 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  const addBudget = async (budget: Omit<Budget, 'id' | 'userId'>) => {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication required',
-        description: 'You must be logged in to add budgets',
-      });
-      return;
-    }
-    
+  const addBudget = async (budget: Omit<Budget, 'id'>) => {
     try {
-      const newBudget = {
-        category: budget.category,
+      if (!user) {
+        console.log("User not authenticated");
+        return;
+      }
+
+      // Use categoryId directly or default to 12 (Other)
+      const categoryId = budget.categoryId || 12; // Default to "Other" if not provided
+
+      // Data minimal yang diperlukan, tanpa referensi ke id
+      const budgetData = {
+        user_id: user.id,
+        category_id: categoryId,
         amount: budget.amount,
-        spent: budget.spent,
-        period: budget.period,
-        user_id: user.id
+        period: budget.period || 'monthly',
+        spent: budget.spent || 0
       };
-      
-      const { data, error } = await supabase
-        .from('budgets')
-        .insert(newBudget)
-        .select()
-        .single();
+
+      console.log("Inserting budget with data:", budgetData);
+
+      try {
+        // Gunakan metode insert sederhana tanpa menyebut kolom id
+        const { data, error } = await supabase
+          .from('budgets')
+          .insert(budgetData)
+          .select();
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      const formattedBudget = {
-        id: data.id,
-        category: data.category,
-        amount: data.amount,
-        spent: data.spent,
-        period: data.period as 'monthly' | 'weekly' | 'yearly',
-        userId: data.user_id
-      };
-      
-      setBudgets([...budgets, formattedBudget]);
-      
-      toast({
-        title: 'Budget added',
-        description: 'Your budget has been successfully added',
-      });
+        if (!data || data.length === 0) {
+          throw new Error('No data returned from budget insert operation');
+        }
+        
+        // Format the budget from the database response
+        const responseData = data[0];
+        const formattedBudget: Budget = {
+          id: responseData.id,
+          categoryId: responseData.category_id,
+          amount: responseData.amount,
+          period: responseData.period || 'monthly',
+          spent: responseData.spent || 0,
+          category: budget.category
+        };
+
+        // Update budgets state
+        setBudgets((prevBudgets) => [...prevBudgets, formattedBudget]);
+        
+        toast({
+          title: t('common.success'),
+          description: t('budgets.success.created'),
+        });
+      } catch (insertError: any) {
+        console.error("Insert error:", insertError);
+        
+        // Solusi fallback jika terjadi error: gunakan .upsert() alih-alih .insert()
+        try {
+          console.log("Trying upsert method...");
+          const { data, error } = await supabase
+            .from('budgets')
+            .upsert(budgetData)
+            .select();
+            
+          if (error) throw error;
+          
+          if (!data || data.length === 0) {
+            throw new Error('No data returned from budget upsert operation');
+          }
+          
+          // Format the budget from the database response
+          const responseData = data[0];
+          const formattedBudget: Budget = {
+            id: responseData.id,
+            categoryId: responseData.category_id,
+            amount: responseData.amount,
+            period: responseData.period || 'monthly',
+            spent: responseData.spent || 0,
+            category: budget.category
+          };
+
+          // Update budgets state
+          setBudgets((prevBudgets) => [...prevBudgets, formattedBudget]);
+          
+          toast({
+            title: t('common.success'),
+            description: t('budgets.success.created'),
+          });
+        } catch (upsertError) {
+          throw insertError; // Throw original error if fallback fails
+        }
+      }
     } catch (error: any) {
-      console.error('Error adding budget:', error);
+      console.error("Error in addBudget:", error);
       toast({
-        variant: 'destructive',
-        title: 'Failed to add budget',
-        description: error.message || 'An unexpected error occurred',
+        title: t('common.error'),
+        description: t('budgets.errors.add_budget') + " " + (error.message || ""),
+        variant: "destructive"
       });
     }
   };
@@ -956,22 +1037,64 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (!user) return;
     
     try {
+      // Struktur data untuk update
       const budgetData = {
-        category: updatedBudget.category,
+        category_id: updatedBudget.categoryId,
         amount: updatedBudget.amount,
         spent: updatedBudget.spent,
-        period: updatedBudget.period
+        period: updatedBudget.period || 'monthly'
       };
       
-      const { error } = await supabase
-        .from('budgets')
-        .update(budgetData)
-        .eq('id', updatedBudget.id);
+      console.log("Updating budget with data:", budgetData);
+      
+      try {
+        // Coba metode update standar terlebih dahulu
+        const { error } = await supabase
+          .from('budgets')
+          .update(budgetData)
+          .eq('id', updatedBudget.id);
+          
+        if (error) throw error;
+      } catch (updateError: any) {
+        console.log("Standard update failed:", updateError.message);
         
-      if (error) throw error;
+        // Coba dengan menambahkan field 'type'
+        try {
+          const { error } = await supabase
+            .from('budgets')
+            .update({
+              ...budgetData,
+              type: 'expense'
+            })
+            .eq('id', updatedBudget.id);
+            
+          if (error) throw error;
+        } catch (typeUpdateError: any) {
+          console.log("Type update failed:", typeUpdateError.message);
+          
+          // Fallback ke update minimal
+          const { error } = await supabase
+            .from('budgets')
+            .update({
+              amount: updatedBudget.amount,
+              category_id: updatedBudget.categoryId
+            })
+            .eq('id', updatedBudget.id);
+            
+          if (error) throw error;
+        }
+      }
+      
+      // Find the existing budget to ensure we maintain the category name if not provided in updatedBudget
+      const existingBudget = budgets.find(b => b.id === updatedBudget.id);
+      const updatedBudgetWithCategory: Budget = {
+        ...updatedBudget,
+        // Keep the existing category name if it's not provided in the update
+        category: updatedBudget.category || (existingBudget ? existingBudget.category : '')
+      };
       
       setBudgets(budgets.map(budget => 
-        budget.id === updatedBudget.id ? updatedBudget : budget
+        budget.id === updatedBudget.id ? updatedBudgetWithCategory : budget
       ));
       
       toast({
