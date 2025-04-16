@@ -74,7 +74,7 @@ const ExportButton = () => {
     setDateRange(value as any);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
       // Determine date range
       let exportStartDate = startDate;
@@ -85,8 +85,8 @@ const ExportButton = () => {
         exportEndDate = undefined;
       }
       
-      // Export data
-      exportToExcel(transactions, {
+      // Export data - now with await since it's async
+      await exportToExcel(transactions, {
         startDate: exportStartDate,
         endDate: exportEndDate,
         ...options
