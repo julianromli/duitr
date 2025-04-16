@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import TransactionList from '@/components/transactions/TransactionList';
 import TransactionForm from '@/components/transactions/TransactionForm';
@@ -13,6 +13,17 @@ const Transactions: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  
+  // Log performance on initial load
+  useEffect(() => {
+    const startTime = performance.now();
+    
+    // This will be called after the component has rendered
+    return () => {
+      const loadTime = performance.now() - startTime;
+      console.log(`Transactions page initial render time: ${loadTime.toFixed(2)}ms`);
+    };
+  }, []);
   
   // Animation variants
   const containerVariants = {
@@ -39,6 +50,11 @@ const Transactions: React.FC = () => {
     setSelectedTransactionId(id);
     setIsDetailOpen(true);
   };
+  
+  // Log that floating '+' button has been removed
+  useEffect(() => {
+    console.log("Floating '+' button removed");
+  }, []);
   
   return (
     <motion.div 

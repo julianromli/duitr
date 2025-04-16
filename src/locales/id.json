@@ -90,6 +90,7 @@
   },
   "transactions": {
     "title": "Transaksi",
+    "loadMore": "Muat Lebih Banyak",
     "add_transaction": "Tambah Transaksi",
     "transaction_type": "Jenis Transaksi",
     "create": "Tambah Transaksi",
