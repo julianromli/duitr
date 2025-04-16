@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import i18next from 'i18next';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TransactionDetailProps {
   transactionId: string | null;
@@ -141,10 +142,11 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   
   // Handle form field change
   const handleChange = (field: string, value: any) => {
-    setEditedTransaction({
-      ...editedTransaction,
-      [field]: value
-    });
+    if (field === 'date') {
+      // This will be handled by the DatePicker directly
+      return;
+    }
+    setEditedTransaction({ ...editedTransaction, [field]: value });
   };
   
   // Handle cancel edit
@@ -346,13 +348,15 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
               <Label htmlFor="date" className="text-[#868686] mb-1 block">
                 {t('transactions.date')}
               </Label>
-              <Input 
-                id="date"
-                type="date"
-                value={formatDateForInput(editedTransaction.date)}
-                onChange={(e) => handleChange('date', e.target.value)}
-                className="bg-[#242425] border-0 text-white"
-              />
+              <div className="bg-[#242425] rounded-md border-0">
+                <DatePicker 
+                  date={editedTransaction.date ? new Date(editedTransaction.date) : undefined}
+                  setDate={(date) => setEditedTransaction({ 
+                    ...editedTransaction, 
+                    date: date ? date.toISOString().split('T')[0] : '' 
+                  })}
+                />
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-between mb-4">

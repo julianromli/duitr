@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import i18next from 'i18next';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TransactionFormProps {
   // Props if needed
@@ -266,26 +267,12 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
             <Label className="text-[#868686] mb-1 block">
               {t('transactions.date')}
             </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full bg-[#242425] border-0 text-white flex justify-start"
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, 'PPP') : <span>{t('transactions.selectDate')}</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="bg-[#242425] border-0 text-white">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  initialFocus
-                  className="bg-[#242425] text-white rounded-md"
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="bg-[#242425] rounded-md border-0">
+              <DatePicker 
+                date={selectedDate}
+                setDate={setSelectedDate}
+              />
+            </div>
           </div>
           
           {/* Category - Not for transfers */}
