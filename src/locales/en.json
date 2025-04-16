@@ -90,6 +90,7 @@
   },
   "transactions": {
     "title": "Transactions",
+    "loadMore": "Load More",
     "add_transaction": "Add Transaction",
     "transaction_type": "Transaction Type",
     "no_transactions": "No transactions found",

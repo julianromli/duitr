@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Filter, Search, Trash2, ChevronDown } from 'lucide-react';
+import { Calendar, Filter, Search, Trash2, ChevronDown, Loader } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { getCategoryStringIdFromUuid } from '@/utils/categoryUtils';
 
 interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
@@ -30,27 +33,294 @@ interface TransactionListProps {
 
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
   const { t } = useTranslation();
-  const { transactions, formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
+  const { formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
   const { toast } = useToast();
+  
+  // Pagination and loading state
+  const [page, setPage] = useState(0);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const pageSize = 20;
+  
+  // Filtering state
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<'date-newest' | 'date-latest' | 'amount-highest' | 'amount-lowest'>('date-newest');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [filterParams, setFilterParams] = useState({
+    searchTerm: '',
+    typeFilter: 'all',
+    selectedCategory: 'all',
+    sortOption: 'date-newest'
+  });
   
-  // For debugging - log first few transactions with categories
+  // Error state
+  const [error, setError] = useState<string | null>(null);
+  
+  // Reference to track if component is mounted
+  const isMounted = useRef(true);
+  
+  // Add a loading flag to prevent multiple loading states
+  const isLoadingRef = useRef(false);
+  
+  // Fetch transactions with pagination
+  const fetchTransactions = async (pageNum: number, isInitialLoad = false) => {
+    // Prevent duplicate loading
+    if (isLoadingRef.current) {
+      return;
+    }
+    
+    try {
+      // Set loading flags
+      isLoadingRef.current = true;
+      
+      if (isInitialLoad) {
+        setIsLoading(true);
+        setError(null);
+      } else {
+        setIsLoadingMore(true);
+      }
+      
+      // Calculate pagination
+      const start = pageNum * pageSize;
+      const end = start + pageSize - 1;
+      
+      // Basic transaction query
+      const { data, error: queryError } = await supabase
+        .from('transactions')
+        .select('id, date, type, amount, description, wallet_id, category_id')
+        .order('date', { ascending: false })
+        .range(start, end);
+      
+      // Handle query errors
+      if (queryError) {
+        throw new Error(`Transaction query error: ${queryError.message}`);
+      }
+      
+      // Handle no data
+      if (!data || data.length === 0) {
+        if (isInitialLoad) {
+          setTransactions([]);
+        }
+        setHasMore(false);
+        return;
+      }
+      
+      // Get wallet names
+      let walletNames: Record<string, string> = {};
+      const walletIds = [...new Set(data.map(t => t.wallet_id).filter(Boolean))];
+      
+      if (walletIds.length > 0) {
+        const { data: walletData, error: walletError } = await supabase
+          .from('wallets')
+          .select('id, name')
+          .in('id', walletIds);
+        
+        if (walletError) {
+          console.warn('Error fetching wallet data:', walletError);
+        } else if (walletData) {
+          walletNames = walletData.reduce((acc, wallet) => {
+            acc[wallet.id] = wallet.name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+      
+      // Format transaction data
+      const processedTransactions = data.map(t => {
+        // Handle category conversion
+        let categoryId = t.category_id;
+        
+        if (categoryId) {
+          if (typeof categoryId === 'string' && categoryId.length > 30) {
+            categoryId = getCategoryStringIdFromUuid(categoryId);
+          } else if (typeof categoryId === 'number' || !isNaN(Number(categoryId))) {
+            categoryId = Number(categoryId);
+          }
+        } else {
+          categoryId = t.type === 'transfer' ? 'system_transfer' : 'expense_other';
+        }
+        
+        return {
+          id: t.id,
+          amount: t.amount,
+          category: '',
+          categoryId: categoryId,
+          description: t.description || '',
+          date: t.date,
+          type: t.type,
+          walletId: t.wallet_id,
+          walletName: walletNames[t.wallet_id] || 'Unknown Wallet'
+        };
+      });
+      
+      // Update state
+      if (isMounted.current) {
+        if (isInitialLoad) {
+          setTransactions(processedTransactions);
+        } else {
+          setTransactions(prev => [...prev, ...processedTransactions]);
+        }
+        
+        setHasMore(processedTransactions.length === pageSize);
+      }
+    } catch (err: any) {
+      console.error('Error fetching transactions:', err);
+      if (isMounted.current) {
+        setError(err.message || 'Failed to load transactions');
+        
+        if (isInitialLoad) {
+          setTransactions([]);
+        }
+      }
+    } finally {
+      // Reset loading flags
+      isLoadingRef.current = false;
+      
+      if (isMounted.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
+    }
+  };
+  
+  // Initial data loading - simplify to avoid double loading
   useEffect(() => {
-    const sampleTransactions = transactions.slice(0, 5);
-    console.log('Sample transactions with categories:', sampleTransactions.map(t => ({
-      id: t.id,
-      description: t.description,
-      categoryId: t.categoryId,
-      categoryKey: getCategoryKey(t.categoryId)
-    })));
-  }, [transactions]);
+    // Make sure we're not already loading
+    if (!isLoadingRef.current) {
+      // Reset state 
+      setPage(0);
+      setHasMore(true);
+      setError(null);
+      
+      // Reset transactions only if we're changing filters
+      if (Object.values(filterParams).some(param => param !== '')) {
+        setTransactions([]);
+      }
+      
+      // Fetch data with minimal delay
+      fetchTransactions(0, true);
+    }
+    
+    // Cleanup
+    return () => {
+      // Nothing to clean up for this effect
+    };
+  }, [filterParams]);
   
-  // Category list in specified order
+  // Component cleanup
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Handle filter changes
+  const applyFilters = () => {
+    setFilterParams({
+      searchTerm,
+      typeFilter,
+      selectedCategory,
+      sortOption
+    });
+  };
+  
+  // Apply search filter with debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      applyFilters();
+    }, 500);
+    
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+  
+  // Apply other filters immediately
+  useEffect(() => {
+    applyFilters();
+  }, [typeFilter, selectedCategory, sortOption]);
+  
+  // Load more transactions
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchTransactions(nextPage, false);
+    }
+  };
+  
+  // Delete transaction
+  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTransactionToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleConfirmDelete = async () => {
+    if (transactionToDelete) {
+      try {
+        await deleteTransaction(transactionToDelete);
+        toast({
+          title: t('common.success'),
+          description: t('transactions.delete_success'),
+        });
+        
+        // Reset page and fetch transactions again
+        setPage(0);
+        fetchTransactions(0, true);
+      } catch (err) {
+        console.error('Error deleting transaction:', err);
+        toast({
+          title: t('common.error'),
+          description: t('transactions.delete_error'),
+          variant: 'destructive'
+        });
+      } finally {
+        setTransactionToDelete(null);
+        setIsDeleteDialogOpen(false);
+      }
+    }
+  };
+  
+  // Handle transaction click
+  const handleClick = (transaction: any) => {
+    if (onTransactionClick) {
+      onTransactionClick(transaction.id);
+    }
+  };
+  
+  // Group transactions by date
+  const groupTransactionsByDate = () => {
+    const groups: Record<string, any[]> = {};
+    
+    transactions.forEach(transaction => {
+      const date = transaction.date;
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(transaction);
+    });
+    
+    return Object.entries(groups)
+      .map(([date, transactions]) => ({ date, transactions }))
+      .sort((a, b) => {
+        if (sortOption.includes('date-newest')) {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        } else if (sortOption.includes('date-latest')) {
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        }
+        return 0;
+      });
+  };
+  
+  const groupedTransactions = groupTransactionsByDate();
+  
+  // Category list
   const categoryOptions = [
     { value: 'all', label: 'All' },
     { value: 'expense_groceries', label: 'Groceries' },
@@ -73,139 +343,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     { value: 'system_transfer', label: 'Transfer' },
   ];
   
-  // Filter transactions
-  const filteredTransactions = transactions
-    .filter(transaction => {
-      // Type filter
-      if (typeFilter !== 'all' && transaction.type !== typeFilter) {
-        return false;
-      }
-      
-      // Category filter
-      if (selectedCategory !== 'all') {
-        // Get the category key for this transaction using the FinanceContext utility
-        const categoryKey = getCategoryKey(transaction.categoryId);
-        
-        // Filter out if category key doesn't match selected category
-        if (categoryKey !== selectedCategory) {
-          return false;
-        }
-      }
-      
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const displayCategory = getDisplayCategoryName(transaction).toLowerCase();
-        
-        return (
-          transaction.description.toLowerCase().includes(searchLower) ||
-          displayCategory.includes(searchLower)
-        );
-      }
-      
-      return true;
-    });
-  
+  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-
-  const handleDeleteClick = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setTransactionToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (transactionToDelete) {
-      deleteTransaction(transactionToDelete);
-      toast({
-        title: t('common.success'),
-        description: t('transactions.delete_success'),
-      });
-      setTransactionToDelete(null);
-      setIsDeleteDialogOpen(false);
-    }
-  };
-
-  const handleClick = (transaction: any) => {
-    if (onTransactionClick) {
-      onTransactionClick(transaction.id);
-    }
-  };
-  
-  // Group transactions by date for better UI organization
-  const groupTransactionsByDate = () => {
-    const groups: { [date: string]: typeof filteredTransactions } = {};
-    
-    filteredTransactions.forEach(transaction => {
-      const date = transaction.date;
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(transaction);
-    });
-    
-    // Sort transactions within each group based on sortOption
-    Object.keys(groups).forEach(date => {
-      const transactionsInGroup = groups[date];
-      
-      switch (sortOption) {
-        case 'date-newest':
-          // Already sorted by date in original data
-          break;
-        case 'date-latest':
-          transactionsInGroup.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          break;
-        case 'amount-highest':
-          transactionsInGroup.sort((a, b) => b.amount - a.amount);
-          break;
-        case 'amount-lowest':
-          transactionsInGroup.sort((a, b) => a.amount - b.amount);
-          break;
-      }
-    });
-    
-    // Convert to array and sort the groups based on sortOption
-    let sortedGroups = Object.entries(groups).map(([date, transactions]) => ({
-      date,
-      transactions
-    }));
-    
-    switch (sortOption) {
-      case 'date-newest':
-        sortedGroups.sort((groupA, groupB) => {
-          return new Date(groupB.date).getTime() - new Date(groupA.date).getTime();
-        });
-        break;
-      case 'date-latest':
-        sortedGroups.sort((groupA, groupB) => {
-          return new Date(groupA.date).getTime() - new Date(groupB.date).getTime();
-        });
-        break;
-      case 'amount-highest':
-        sortedGroups.sort((groupA, groupB) => {
-          // Find maximum amount in each group
-          const maxAmountA = Math.max(...groupA.transactions.map(t => t.amount));
-          const maxAmountB = Math.max(...groupB.transactions.map(t => t.amount));
-          return maxAmountB - maxAmountA;
-        });
-        break;
-      case 'amount-lowest':
-        sortedGroups.sort((groupA, groupB) => {
-          // Find minimum amount in each group
-          const minAmountA = Math.min(...groupA.transactions.map(t => t.amount));
-          const minAmountB = Math.min(...groupB.transactions.map(t => t.amount));
-          return minAmountA - minAmountB;
-        });
-        break;
-    }
-    
-    return sortedGroups;
-  };
-  
-  const groupedTransactions = groupTransactionsByDate();
   
   // Animation variants
   const containerVariants = {
@@ -226,7 +368,44 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
-
+  
+  // Transaction rendering with wallet name
+  const renderTransactionItem = (transaction: any) => (
+    <motion.div
+      key={transaction.id}
+      className="bg-[#242425] p-4 rounded-xl cursor-pointer mb-2"
+      onClick={() => handleClick(transaction)}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      variants={itemVariants}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
+          <div className="ml-3">
+            <h3 className="font-medium">
+              {getDisplayCategoryName(transaction)}
+            </h3>
+            <p className="text-xs text-[#868686]">
+              {transaction.description}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center">
+          <span className={`font-medium mr-3 ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
+            {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+          </span>
+          <button 
+            onClick={(e) => handleDeleteClick(transaction.id, e)}
+            className="text-[#868686] hover:text-[#FF6B6B] transition-colors"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+  
   return (
     <div>
       {/* Search and filter */}
@@ -311,69 +490,80 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         </Select>
       </div>
       
-      {/* Transaction list */}
-      {filteredTransactions.length === 0 ? (
-        <div className="text-center py-8 text-[#868686]">
-          {t('transactions.no_transactions')}
+      {/* Single loading state */}
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader className="w-8 h-8 animate-spin text-[#C6FE1E]" />
         </div>
       ) : (
-        <motion.div 
-          className="space-y-8"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {groupedTransactions.map(group => (
+        <>
+          {/* Error state */}
+          {error && (
+            <div className="text-center py-8 text-[#FF6B6B]">
+              <p className="mb-2">{error}</p>
+              <Button 
+                onClick={() => fetchTransactions(0, true)}
+                className="bg-[#242425] hover:bg-[#333] text-white mt-2"
+              >
+                {t('common.retry')}
+              </Button>
+            </div>
+          )}
+          
+          {/* Empty state */}
+          {!error && transactions.length === 0 && (
+            <div className="text-center py-8 text-[#868686]">
+              {t('transactions.no_transactions')}
+            </div>
+          )}
+          
+          {/* Transactions list */}
+          {!error && transactions.length > 0 && (
             <motion.div 
-              key={group.date} 
-              className="space-y-3"
-              variants={itemVariants}
+              className="space-y-8 pb-20"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
             >
-              <div className="flex items-center justify-between text-[#868686] mb-2">
-                <div className="flex items-center">
-                  <Calendar size={14} className="mr-2" />
-                  <span className="text-sm">{formatDate(group.date)}</span>
-                </div>
-              </div>
-              
-              {group.transactions.map(transaction => (
-                <motion.div
-                  key={transaction.id}
-                  className="bg-[#242425] p-4 rounded-xl cursor-pointer"
-                  onClick={() => handleClick(transaction)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              {groupedTransactions.map(group => (
+                <motion.div 
+                  key={group.date} 
+                  className="space-y-3"
                   variants={itemVariants}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-[#868686] mb-2">
                     <div className="flex items-center">
-                      <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
-                      <div className="ml-3">
-                        <h3 className="font-medium">
-                          {getDisplayCategoryName(transaction)}
-                        </h3>
-                        <p className="text-xs text-[#868686]">
-                          {transaction.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <span className={`font-medium mr-3 ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
-                        {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
-                      </span>
-                      <button 
-                        onClick={(e) => handleDeleteClick(transaction.id, e)}
-                        className="text-[#868686] hover:text-[#FF6B6B] transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <Calendar size={14} className="mr-2" />
+                      <span className="text-sm">{formatDate(group.date)}</span>
                     </div>
                   </div>
+                  
+                  {group.transactions.map(transaction => renderTransactionItem(transaction))}
                 </motion.div>
               ))}
+              
+              {/* Load more button */}
+              {hasMore && (
+                <div className="flex justify-center mt-6">
+                  <Button
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="bg-[#242425] hover:bg-[#333] text-white"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        {t('common.loading')}
+                      </>
+                    ) : (
+                      t('transactions.loadMore')
+                    )}
+                  </Button>
+                </div>
+              )}
             </motion.div>
-          ))}
-        </motion.div>
+          )}
+        </>
       )}
       
       {/* Delete Confirmation Dialog */}

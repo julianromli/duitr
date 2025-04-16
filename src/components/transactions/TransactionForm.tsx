@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
-import { ArrowDown, ArrowRight, ArrowUp, X, Calendar } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, X, Calendar, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -178,8 +178,8 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="fixed z-10 bottom-24 right-4 md:right-8 w-14 h-14 rounded-full bg-[#C6FE1E] flex items-center justify-center shadow-lg">
-          <span className="text-2xl font-bold leading-none">+</span>
+        <button className="p-2 bg-[#242425] rounded-full hover:bg-[#333]">
+          <Plus className="h-5 w-5 text-[#C6FE1E]" />
         </button>
       </DialogTrigger>
       <DialogContent className="bg-[#1A1A1A] border-none text-white max-w-md">
