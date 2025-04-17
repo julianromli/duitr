@@ -7,7 +7,7 @@
     "info": "Information",
     "warning": "Warning",
     "loading": "Loading...",
-    "save": "Save Changes",
+    "save": "Save",
     "saved": "Saved",
     "apply": "Apply",
     "options": "Options",
@@ -19,7 +19,9 @@
     "areYouSure": "Are you sure?",
     "cannotBeUndone": "This action cannot be undone.",
     "comingSoon": "Coming Soon...",
-    "added_successfully": "added successfully"
+    "added_successfully": "added successfully",
+    "errorMessage": "An error occurred. Please try again later.",
+    "reset_filters": "Reset Filters"
   },
   "pages": {
     "dashboard": "Dashboard",
@@ -94,6 +96,10 @@
     "add_transaction": "Add Transaction",
     "transaction_type": "Transaction Type",
     "no_transactions": "No transactions found",
+    "no_transactions_filtered": "No transactions found with the current filters",
+    "no_transactions_category": "No transactions found in the '{{category}}' category",
+    "filtered_by_category": "Filtered by category: {{category}}",
+    "filter_by_category": "Filter by Category",
     "date": "Date",
     "category": "Category",
     "categoryform": "Select Category",
