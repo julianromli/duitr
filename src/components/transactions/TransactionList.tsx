@@ -598,12 +598,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
           </div>
         </div>
         <div className="flex items-center">
-          <span className={`font-medium mr-3 ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
+          <span className={`font-medium mr-3 ${transaction.type === 'expense' ? 'text-red-500' : 'text-[#C6FE1E]'}`}>
             {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
           </span>
           <button 
             onClick={(e) => handleDeleteClick(transaction.id, e)}
-            className="text-[#868686] hover:text-[#FF6B6B] transition-colors"
+            className="text-[#868686] hover:text-red-500 transition-colors"
           >
             <Trash2 size={16} />
           </button>
