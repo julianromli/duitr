@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Filter, Search, Trash2, ChevronDown, Loader } from 'lucide-react';
+import { Calendar, Filter, Search, Trash2, ChevronDown, Loader, X } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -89,12 +89,114 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       const start = pageNum * pageSize;
       const end = start + pageSize - 1;
       
-      // Basic transaction query
-      const { data, error: queryError } = await supabase
+      console.log(`Fetching transactions: page ${pageNum}, sort: ${filterParams.sortOption}, type: ${filterParams.typeFilter}, category: ${filterParams.selectedCategory}`);
+      
+      // Build the query with filters
+      let query = supabase
         .from('transactions')
-        .select('id, date, type, amount, description, wallet_id, category_id')
-        .order('date', { ascending: false })
-        .range(start, end);
+        .select('id, date, type, amount, description, wallet_id, category_id');
+      
+      // Apply sorting based on option
+      if (filterParams.sortOption === 'amount-highest') {
+        query = query.order('amount', { ascending: false });
+      } else if (filterParams.sortOption === 'amount-lowest') {
+        query = query.order('amount', { ascending: true });
+      } else {
+        // Default to date sorting (newest or latest)
+        query = query.order('date', { ascending: filterParams.sortOption === 'date-latest' });
+      }
+      
+      // Apply type filter if not 'all'
+      if (filterParams.typeFilter !== 'all') {
+        query = query.eq('type', filterParams.typeFilter);
+      }
+      
+      // Apply category filter if not 'all'
+      if (filterParams.selectedCategory !== 'all') {
+        logCategoryDebug('Filtering transactions by category', filterParams.selectedCategory);
+        
+        try {
+          // If the selected category value contains underscore (like expense_food), use that directly as category_key
+          if (filterParams.selectedCategory.includes('_')) {
+            const { data: categoryByKey, error: keyError } = await supabase
+              .from('categories')
+              .select('category_id, category_key, en_name, type')
+              .eq('category_key', filterParams.selectedCategory)
+              .single();
+              
+            if (!keyError && categoryByKey?.category_id) {
+              const categoryId = categoryByKey.category_id;
+              logCategoryDebug('Found category by key match', {
+                categoryKey: filterParams.selectedCategory,
+                categoryId,
+                matchedName: categoryByKey.en_name
+              });
+              
+              // Apply direct filter by category_id
+              query = query.eq('category_id', categoryId);
+            } else {
+              // Try to look up by category label as fallback
+              const categoryLabel = categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label;
+              if (categoryLabel) {
+                const { data: categoryByName, error: nameError } = await supabase
+                  .from('categories')
+                  .select('category_id, en_name, category_key, type')
+                  .ilike('en_name', categoryLabel)
+                  .single();
+                  
+                if (!nameError && categoryByName?.category_id) {
+                  const categoryId = categoryByName.category_id;
+                  logCategoryDebug('Found category by name match', {
+                    categoryLabel,
+                    matchedName: categoryByName.en_name,
+                    categoryId,
+                    key: categoryByName.category_key
+                  });
+                  
+                  // Apply direct filter by category_id
+                  query = query.eq('category_id', categoryId);
+                } else {
+                  // To show no results (empty state), use an impossible category_id
+                  query = query.eq('category_id', -999);
+                }
+              } else {
+                // No label found for the selected category
+                query = query.eq('category_id', -999);
+              }
+            }
+          } else {
+            // Last resort: try with the numeric ID if it's a number
+            const numericId = Number(filterParams.selectedCategory);
+            if (!isNaN(numericId)) {
+              logCategoryDebug('Using direct numeric ID', numericId);
+              query = query.eq('category_id', numericId);
+            } else {
+              // Log that we couldn't find the category
+              logCategoryDebug('Could not find matching category', {
+                selectedCategory: filterParams.selectedCategory
+              });
+              
+              // To show no results (empty state), use an impossible category_id
+              query = query.eq('category_id', -999);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing category filter:', error);
+          logCategoryDebug('Exception during category filtering', error);
+          query = query.eq('category_id', -999);
+        }
+      }
+      
+      // Apply search term if present
+      if (filterParams.searchTerm) {
+        query = query.ilike('description', `%${filterParams.searchTerm}%`);
+      }
+      
+      // Apply pagination
+      query = query.range(start, end);
+      
+      // Execute the query
+      const { data, error: queryError } = await query;
       
       // Handle query errors
       if (queryError) {
@@ -135,21 +237,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         // Handle category conversion
         let categoryId = t.category_id;
         
-        if (categoryId) {
-          if (typeof categoryId === 'string' && categoryId.length > 30) {
-            categoryId = getCategoryStringIdFromUuid(categoryId);
-          } else if (typeof categoryId === 'number' || !isNaN(Number(categoryId))) {
-            categoryId = Number(categoryId);
-          }
-        } else {
-          categoryId = t.type === 'transfer' ? 'system_transfer' : 'expense_other';
-        }
+        // For numeric category_id, keep it as is - we'll display by category_id directly
+        // The getDisplayCategoryName function will handle the proper display
         
         return {
           id: t.id,
           amount: t.amount,
           category: '',
-          categoryId: categoryId,
+          categoryId: categoryId, // Keep as the numeric ID from database
           description: t.description || '',
           date: t.date,
           type: t.type,
@@ -158,7 +253,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         };
       });
       
-      // Update state
+      // Update state based on sort option
       if (isMounted.current) {
         if (isInitialLoad) {
           setTransactions(processedTransactions);
@@ -167,6 +262,47 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         }
         
         setHasMore(processedTransactions.length === pageSize);
+        
+        // Log details of the fetched transactions for debugging
+        if (filterParams.selectedCategory !== 'all') {
+          // Get the visible category name for the selected filter
+          const selectedCategoryLabel = categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label || filterParams.selectedCategory;
+          
+          logCategoryDebug('Fetched transactions with category filter', {
+            categoryFilter: selectedCategoryLabel,
+            categoryValue: filterParams.selectedCategory,
+            count: processedTransactions.length,
+            transactionDetails: processedTransactions.map(t => ({
+              id: t.id,
+              categoryId: t.categoryId,
+              description: t.description,
+              type: t.type,
+              amount: t.amount
+            }))
+          });
+          
+          // Verify all fetched transactions match the selected category
+          const matchingCategory = processedTransactions.every(t => {
+            if (filterParams.selectedCategory.includes('_')) {
+              // For category values like "expense_transportation"
+              // Need to check if transaction's category_id matches the correct numeric ID from database
+              const categoryKey = filterParams.selectedCategory;
+              
+              // We already filtered in the database query, so this should always be true
+              // But we'll keep this validation for debugging purposes
+              return t.categoryId !== undefined && t.categoryId !== null;
+            } else {
+              // For direct category IDs (numeric values)
+              return t.categoryId === Number(filterParams.selectedCategory);
+            }
+          });
+          
+          // Log if all transactions match the expected category
+          logCategoryDebug('Category filter validation', {
+            allTransactionsMatchCategory: matchingCategory,
+            selectedCategory: filterParams.selectedCategory
+          });
+        }
       }
     } catch (err: any) {
       console.error('Error fetching transactions:', err);
@@ -188,8 +324,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     }
   };
   
-  // Initial data loading - simplify to avoid double loading
+  // Fetch transactions when filters or sorting changes
   useEffect(() => {
+    console.log('Filter params changed:', filterParams);
+    
     // Make sure we're not already loading
     if (!isLoadingRef.current) {
       // Reset state 
@@ -219,19 +357,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     };
   }, []);
   
-  // Handle filter changes
-  const applyFilters = () => {
-    setFilterParams({
-      searchTerm,
-      typeFilter,
-      selectedCategory,
-      sortOption
-    });
-  };
-  
   // Apply search filter with debounce
   useEffect(() => {
     const handler = setTimeout(() => {
+      // Reset transactions when search changes
+      setTransactions([]);
       applyFilters();
     }, 500);
     
@@ -242,12 +372,62 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   
   // Apply other filters immediately
   useEffect(() => {
+    // Reset transactions when filters change
+    setTransactions([]);
     applyFilters();
   }, [typeFilter, selectedCategory, sortOption]);
+  
+  // Debug function to log category selection and filtering
+  const logCategoryDebug = (action: string, details?: any) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Category Debug] ${action}`, details || '');
+    }
+  }
+  
+  // Helper function to fetch all category information for debugging
+  const logAllCategories = async () => {
+    try {
+      const { data: allCategories, error } = await supabase
+        .from('categories')
+        .select('category_id, en_name, category_key, type');
+        
+      if (error) {
+        console.error('Error fetching all categories:', error);
+      } else {
+        console.log('All available categories:', allCategories);
+      }
+    } catch (e) {
+      console.error('Exception fetching categories:', e);
+    }
+  }
+  
+  // Handle filter changes
+  const applyFilters = () => {
+    if (selectedCategory !== 'all') {
+      const categoryLabel = categoryOptions.find(cat => cat.value === selectedCategory)?.label;
+      logCategoryDebug('Applying category filter', { 
+        value: selectedCategory, 
+        label: categoryLabel 
+      });
+      
+      // When selecting a category, log all available categories for debugging
+      if (process.env.NODE_ENV !== 'production') {
+        logAllCategories();
+      }
+    }
+    
+    setFilterParams({
+      searchTerm,
+      typeFilter,
+      selectedCategory,
+      sortOption
+    });
+  };
   
   // Load more transactions
   const handleLoadMore = () => {
     if (!isLoadingMore && hasMore) {
+      console.log(`Loading more transactions with sorting: ${sortOption}`);
       const nextPage = page + 1;
       setPage(nextPage);
       fetchTransactions(nextPage, false);
@@ -294,8 +474,23 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     }
   };
   
-  // Group transactions by date
+  // Group transactions by date - but only if sorting by date
   const groupTransactionsByDate = () => {
+    // For amount-based sorting, we don't group by date
+    if (sortOption.includes('amount-')) {
+      // Ensure client-side sorting is consistent with database ordering
+      const sortedTransactions = [...transactions].sort((a, b) => {
+        if (sortOption === 'amount-highest') {
+          return b.amount - a.amount;
+        } else if (sortOption === 'amount-lowest') {
+          return a.amount - b.amount;
+        }
+        return 0;
+      });
+      
+      return [{ date: null, transactions: sortedTransactions }];
+    }
+    
     const groups: Record<string, any[]> = {};
     
     transactions.forEach(transaction => {
@@ -309,9 +504,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     return Object.entries(groups)
       .map(([date, transactions]) => ({ date, transactions }))
       .sort((a, b) => {
-        if (sortOption.includes('date-newest')) {
+        if (sortOption === 'date-newest') {
           return new Date(b.date).getTime() - new Date(a.date).getTime();
-        } else if (sortOption.includes('date-latest')) {
+        } else if (sortOption === 'date-latest') {
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         }
         return 0;
@@ -345,8 +540,13 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   
   // Format date for display
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch (e) {
+      console.error('Error formatting date:', dateString, e);
+      return dateString || 'Unknown date';
+    }
   };
   
   // Animation variants
@@ -388,6 +588,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
             </h3>
             <p className="text-xs text-[#868686]">
               {transaction.description}
+              {/* Show date on the same line when sorting by amount */}
+              {sortOption.includes('amount-') && (
+                <span className="ml-2 text-[#A0A0A0]">
+                  {formatDate(transaction.date)}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -447,10 +653,15 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         {/* Category filter dropdown */}
         <Select 
           value={selectedCategory} 
-          onValueChange={(value) => setSelectedCategory(value)}
+          onValueChange={(value) => {
+            // When changing category filter, reset transactions and page
+            setTransactions([]);
+            setPage(0);
+            setSelectedCategory(value);
+          }}
         >
           <SelectTrigger className="w-[180px] bg-[#242425] border-0 text-white">
-            <SelectValue placeholder="Filter by Category" />
+            <SelectValue placeholder={t('transactions.filter_by_category')} />
           </SelectTrigger>
           <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
             {categoryOptions.map(category => (
@@ -468,7 +679,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         {/* Sorting dropdown */}
         <Select 
           value={sortOption} 
-          onValueChange={(value) => setSortOption(value as any)}
+          onValueChange={(value) => {
+            // When changing sort option, reset transactions and page
+            setTransactions([]);
+            setPage(0);
+            setSortOption(value as any);
+          }}
         >
           <SelectTrigger className="w-[180px] bg-[#242425] border-0 text-white">
             <SelectValue placeholder="Sort by" />
@@ -510,14 +726,43 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
             </div>
           )}
           
-          {/* Empty state */}
+          {/* Empty state - show filter notice if filters are applied */}
           {!error && transactions.length === 0 && (
             <div className="text-center py-8 text-[#868686]">
-              {t('transactions.no_transactions')}
+              {(filterParams.typeFilter !== 'all' || filterParams.selectedCategory !== 'all' || filterParams.searchTerm) ? (
+                <>
+                  <p className="mb-4">
+                    {filterParams.selectedCategory !== 'all' 
+                      ? t('transactions.no_transactions_category', { 
+                          category: categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label || filterParams.selectedCategory 
+                        })
+                      : t('transactions.no_transactions_filtered')}
+                  </p>
+                  <Button
+                    onClick={() => {
+                      if (filterParams.selectedCategory !== 'all') {
+                        setSelectedCategory('all');
+                      }
+                      if (filterParams.typeFilter !== 'all') {
+                        setTypeFilter('all');
+                      }
+                      if (filterParams.searchTerm) {
+                        setSearchTerm('');
+                      }
+                      logCategoryDebug('Reset all filters', filterParams);
+                    }}
+                    className="bg-[#242425] hover:bg-[#333] text-white"
+                  >
+                    {t('common.reset_filters')}
+                  </Button>
+                </>
+              ) : (
+                t('transactions.no_transactions')
+              )}
             </div>
           )}
           
-          {/* Transactions list */}
+          {/* Transactions list - Add category filter indicator */}
           {!error && transactions.length > 0 && (
             <motion.div 
               className="space-y-8 pb-20"
@@ -525,18 +770,53 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               initial="hidden"
               animate="visible"
             >
+              {/* Show active filter indication if category is selected */}
+              {filterParams.selectedCategory !== 'all' && (
+                <div className="text-[#C6FE1E] text-sm mb-4 flex items-center py-2 px-3 bg-[#1A1A1A] rounded-lg border border-[#333]">
+                  <Filter size={16} className="mr-2 text-[#C6FE1E]" />
+                  <span>
+                    {t('transactions.filtered_by_category', { 
+                      category: categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label || filterParams.selectedCategory 
+                    })}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-[#868686] hover:text-[#C6FE1E] hover:bg-[#242425] p-1"
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      logCategoryDebug('Reset category filter', { from: filterParams.selectedCategory });
+                    }}
+                  >
+                    <X size={14} />
+                  </Button>
+                </div>
+              )}
+            
               {groupedTransactions.map(group => (
                 <motion.div 
-                  key={group.date} 
+                  key={group.date || 'amount-sorted'} 
                   className="space-y-3"
                   variants={itemVariants}
                 >
-                  <div className="flex items-center justify-between text-[#868686] mb-2">
-                    <div className="flex items-center">
-                      <Calendar size={14} className="mr-2" />
-                      <span className="text-sm">{formatDate(group.date)}</span>
+                  {/* Display date header only for date-sorted transactions */}
+                  {group.date && (
+                    <div className="flex items-center justify-between text-[#868686] mb-2">
+                      <div className="flex items-center">
+                        <Calendar size={14} className="mr-2" />
+                        <span className="text-sm">{formatDate(group.date)}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  
+                  {/* For amount-based sorting, show a hint about the sorting order */}
+                  {!group.date && sortOption.includes('amount-') && (
+                    <div className="text-[#868686] text-sm mb-2">
+                      {sortOption === 'amount-highest' ? 
+                        'Sorted by highest amount' : 
+                        'Sorted by lowest amount'}
+                    </div>
+                  )}
                   
                   {group.transactions.map(transaction => renderTransactionItem(transaction))}
                 </motion.div>
