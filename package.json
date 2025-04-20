@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "pwa:icons": "node generate-pwa-icons.mjs",
-    "pwa:verify": "node verify-pwa.mjs",
+    "pwa:verify": "node verify-pwa.mjs",npm install html2canvas
     "copy-pwa": "node public/copy-to-dist.mjs",
     "vercel:deploy": "npx vercel"
   },
@@ -53,7 +53,6 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "framer-motion": "^12.6.2",
-    "html2canvas": "^1.4.1",
     "i18next": "^24.2.3",
     "i18next-browser-languagedetector": "^8.0.4",
     "input-otp": "^1.2.4",
