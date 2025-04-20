@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "pwa:icons": "node generate-pwa-icons.mjs",
-    "pwa:verify": "node verify-pwa.mjs",npm install html2canvas
+    "pwa:verify": "node verify-pwa.mjs",
     "copy-pwa": "node public/copy-to-dist.mjs",
     "vercel:deploy": "npx vercel"
   },
@@ -74,7 +74,8 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
     "xlsx": "^0.18.5",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
