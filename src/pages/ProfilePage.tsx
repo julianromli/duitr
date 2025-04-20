@@ -12,7 +12,8 @@ import {
   Camera,
   ChevronLeft,
   X,
-  ZoomIn
+  ZoomIn,
+  Heart
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -163,6 +164,14 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleDonateClick = () => {
+    window.open('https://saweria.co/faizintifada', '_blank');
+  };
+
+  const handleInstagramClick = () => {
+    window.open('https://instagram.com/faizintifada', '_blank');
+  };
+
   const handleProfileImageClick = () => {
     if (profileImage) {
       setIsImageViewOpen(true);
@@ -310,6 +319,27 @@ const ProfilePage: React.FC = () => {
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('settings.logout')}
               </Button>
+              
+              {/* Donate Button */}
+              <Button
+                onClick={handleDonateClick}
+                className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00] border border-black mt-4 rounded-lg font-semibold"
+                aria-label="Donate to Developer via Saweria"
+              >
+                <Heart className="mr-2 h-4 w-4" />Support the Author<Heart className="ml-2 h-4 w-4" />
+              </Button>
+              
+              {/* Copyright Text */}
+              <div className="text-center mt-4 text-xs text-[#CCCCCC] dark:text-[#CCCCCC]">
+                Made by{" "}
+                <button 
+                  onClick={handleInstagramClick}
+                  className="text-[#CCCCCC] hover:text-[#A6DD00] dark:text-[#CCCCCC] underline focus:outline-none"
+                  aria-label="Visit Faiz Intifada's Instagram"
+                >
+                  Faiz Intifada
+                </button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
