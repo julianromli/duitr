@@ -312,10 +312,8 @@ const Dashboard: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center">
-                      <CategoryIcon category={transaction.categoryId || transaction.category} />
-                    </div>
+                  <div className="flex items-center gap-4">
+                    <CategoryIcon category={transaction.categoryId || transaction.category} size="md" />
                     <div>
                       <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
                       <p className="text-xs text-[#868686]">

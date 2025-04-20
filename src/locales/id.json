@@ -1,5 +1,6 @@
 {
   "common": {
+    "all": "Semua",
     "app_name": "Keuangan",
     "currency": "IDR",
     "success": "Berhasil",
@@ -19,7 +20,8 @@
     "areYouSure": "Apakah Anda yakin?",
     "cannotBeUndone": "Tindakan ini tidak dapat dibatalkan.",
     "comingSoon": "Segera Hadir...",
-    "added_successfully": "berhasil ditambahkan"
+    "added_successfully": "berhasil ditambahkan",
+    "clear_filters": "Hapus Filter"
   },
   "pages": {
     "dashboard": "Dasbor",
@@ -138,6 +140,21 @@
     "details": "Detail Transaksi",
     "update_success": "Transaksi berhasil diperbarui",
     "update_error": "Gagal memperbarui transaksi"
+
+  },
+  "expense": {
+    "title": "Pengeluaran"
+  },
+  "income": {
+    "title": "Pemasukan"
+
+  },
+  "sort": {
+    "date_newest": "Terbaru",
+    "date_oldest": "Terlama",
+    "amount_highest": "Terbesar",
+    "amount_lowest": "Terkecil"
+
   },
   "budgets": {
     "title": "Anggaran",

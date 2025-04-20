@@ -219,7 +219,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     <span className="text-muted-foreground">Kategori</span>
                     <div className="flex items-center gap-2">
                       <CategoryIcon 
-                        category={getDisplayCategoryName(transaction)} 
+                        category={transaction.categoryId} 
                         size="sm" 
                       />
                       <span className="font-medium">{getDisplayCategoryName(transaction)}</span>

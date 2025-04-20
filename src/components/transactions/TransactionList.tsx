@@ -595,7 +595,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
-          <div className="ml-3">
+          <div className="ml-4">
             <h3 className="font-medium">
               {getDisplayCategoryName(transaction)}
             </h3>
@@ -703,21 +703,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               </SelectContent>
             </Select>
           </div>
-          
-          {/* Apply filters button */}
-          <Button
-            className="w-full bg-[#C6FE1E] text-black hover:bg-[#B0E018] py-5"
-            onClick={() => {
-              setFilterParams({
-                searchTerm,
-                typeFilter,
-                selectedCategory,
-                sortOption
-              });
-            }}
-          >
-            {t('common.apply')}
-          </Button>
         </div>
         
         <motion.div
@@ -750,7 +735,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
                 <div className="text-center py-8 text-[#868686]">
                   {(searchTerm || typeFilter !== 'all' || selectedCategory !== 'all') ? (
                     <>
-                      <p className="mb-2">{t('transactions.no_matches')}</p>
+                      <p className="mb-2">{t('transactions.no_transactions_filtered')}</p>
                       <Button 
                         onClick={() => {
                           setSearchTerm('');
