@@ -119,9 +119,16 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
 
   // Define size classes
   const iconSizes = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-12 h-12'
+    sm: 'w-10 h-10',
+    md: 'w-12 h-12',
+    lg: 'w-14 h-14'
+  };
+  
+  // Define icon sizes based on container size
+  const iconInnerSizes = {
+    sm: 'h-5 w-5',
+    md: 'h-5 w-5',
+    lg: 'h-6 w-6'
   };
   
   const iconClasses = `${iconSizes[size]} rounded-full flex items-center justify-center`;
@@ -257,11 +264,12 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   return (
     <div
       className={`flex items-center justify-center rounded-full bg-primary ${className}`}
-      style={{ width: iconSizes[size].split(' ')[0], height: iconSizes[size].split(' ')[1] }}
+      style={{ width: 34, height: 34 }}
     >
       <Icon
-        className="h-5 w-5"
+        className={iconInnerSizes[size]}
         color="black"
+        strokeWidth={2}
       />
     </div>
   );

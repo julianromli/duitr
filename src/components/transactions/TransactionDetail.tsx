@@ -283,7 +283,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
             <div className="flex items-center justify-between mb-4">
               <span className="text-[#868686]">{t('transactions.category')}</span>
               <div className="flex items-center">
-                <CategoryIcon category={getDisplayCategoryName(transaction)} size="sm" />
+                <CategoryIcon category={transaction.categoryId} size="sm" />
                 <span className="ml-2">{getDisplayCategoryName(transaction)}</span>
               </div>
             </div>

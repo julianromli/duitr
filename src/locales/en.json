@@ -1,5 +1,6 @@
 {
   "common": {
+    "all": "All",
     "app_name": "Finance",
     "currency": "USD",
     "success": "Success",
@@ -21,7 +22,8 @@
     "comingSoon": "Coming Soon...",
     "added_successfully": "added successfully",
     "errorMessage": "An error occurred. Please try again later.",
-    "reset_filters": "Reset Filters"
+    "reset_filters": "Reset Filters",
+    "clear_filters": "Clear Filters"
   },
   "pages": {
     "dashboard": "Dashboard",
@@ -137,6 +139,20 @@
     "type": "Type",
     "update_success": "Transaction updated successfully",
     "update_error": "Failed to update transaction"
+
+  },
+  "expense": {
+    "title": "Expense"
+  },
+  "income": {
+    "title": "Income"
+
+  },
+  "sort": {
+    "date_newest": "Newest",
+    "date_oldest": "Oldest",
+    "amount_highest": "Highest",
+    "amount_lowest": "Lowest"
   },
   "budgets": {
     "title": "Budget Management",
