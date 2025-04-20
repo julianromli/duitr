@@ -26,6 +26,8 @@ import {
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { getCategoryStringIdFromUuid } from '@/utils/categoryUtils';
+import { useNavigate } from 'react-router-dom';
+import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 
 interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
@@ -35,6 +37,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   const { t } = useTranslation();
   const { formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Pagination and loading state
   const [page, setPage] = useState(0);
@@ -57,6 +60,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     selectedCategory: 'all',
     sortOption: 'date-newest'
   });
+  
+  // State for transaction detail overlay
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // Error state
   const [error, setError] = useState<string | null>(null);
@@ -467,10 +474,15 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     }
   };
   
-  // Handle transaction click
+  // Handle transaction click - updated to use overlay
   const handleClick = (transaction: any) => {
     if (onTransactionClick) {
+      // Support legacy dialog mode if callback is provided
       onTransactionClick(transaction.id);
+    } else {
+      // Show transaction detail overlay
+      setSelectedTransaction(transaction);
+      setIsDetailOpen(true);
     }
   };
   
@@ -555,7 +567,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05
+        when: "beforeChildren",
+        staggerChildren: 0.1
       }
     }
   };
@@ -613,262 +626,224 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   );
   
   return (
-    <div>
-      {/* Search and filter */}
-      <div className="mb-6 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#868686]" size={16} />
-          <Input 
-            placeholder={t('transactions.search')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-[#242425] border-0 text-white"
-          />
-        </div>
-        
-        <div className="flex items-center bg-[#242425] rounded-full p-1">
-          <button 
-            className={`flex-1 py-2 text-center rounded-full ${typeFilter === 'all' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-white'}`}
-            onClick={() => setTypeFilter('all')}
-          >
-            {t('transactions.all')}
-          </button>
-          <button 
-            className={`flex-1 py-2 text-center rounded-full ${typeFilter === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-white'}`}
-            onClick={() => setTypeFilter('income')}
-          >
-            {t('transactions.income')}
-          </button>
-          <button 
-            className={`flex-1 py-2 text-center rounded-full ${typeFilter === 'expense' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'text-white'}`}
-            onClick={() => setTypeFilter('expense')}
-          >
-            {t('transactions.expense')}
-          </button>
-        </div>
-      </div>
-      
-      {/* Sorting and category filter dropdowns */}
-      <div className="flex justify-between mb-4 gap-2">
-        {/* Category filter dropdown */}
-        <Select 
-          value={selectedCategory} 
-          onValueChange={(value) => {
-            // When changing category filter, reset transactions and page
-            setTransactions([]);
-            setPage(0);
-            setSelectedCategory(value);
-          }}
-        >
-          <SelectTrigger className="w-[180px] bg-[#242425] border-0 text-white">
-            <SelectValue placeholder={t('transactions.filter_by_category')} />
-          </SelectTrigger>
-          <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
-            {categoryOptions.map(category => (
-              <SelectItem 
-                key={category.value} 
-                value={category.value} 
-                className="hover:bg-[#333] focus:bg-[#333]"
+    <>
+      <div className="space-y-6">
+        {/* Search and filter section */}
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#868686]" size={18} />
+            <Input
+              placeholder={t('transactions.search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-[#242425] border-none text-white"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#868686] hover:text-white transition-colors"
               >
-                {category.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        {/* Sorting dropdown */}
-        <Select 
-          value={sortOption} 
-          onValueChange={(value) => {
-            // When changing sort option, reset transactions and page
-            setTransactions([]);
-            setPage(0);
-            setSortOption(value as any);
-          }}
-        >
-          <SelectTrigger className="w-[180px] bg-[#242425] border-0 text-white">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent className="bg-[#242425] border-0 text-white">
-            <SelectItem value="date-newest" className="hover:bg-[#333] focus:bg-[#333]">
-              Sort by Date - Newest
-            </SelectItem>
-            <SelectItem value="date-latest" className="hover:bg-[#333] focus:bg-[#333]">
-              Sort by Date - Latest
-            </SelectItem>
-            <SelectItem value="amount-highest" className="hover:bg-[#333] focus:bg-[#333]">
-              Sort by Highest Amount
-            </SelectItem>
-            <SelectItem value="amount-lowest" className="hover:bg-[#333] focus:bg-[#333]">
-              Sort by Lowest Amount
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* Single loading state */}
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <Loader className="w-8 h-8 animate-spin text-[#C6FE1E]" />
-        </div>
-      ) : (
-        <>
-          {/* Error state */}
-          {error && (
-            <div className="text-center py-8 text-[#FF6B6B]">
-              <p className="mb-2">{error}</p>
-              <Button 
-                onClick={() => fetchTransactions(0, true)}
-                className="bg-[#242425] hover:bg-[#333] text-white mt-2"
-              >
-                {t('common.retry')}
-              </Button>
-            </div>
-          )}
+                <X size={18} />
+              </button>
+            )}
+          </div>
           
-          {/* Empty state - show filter notice if filters are applied */}
-          {!error && transactions.length === 0 && (
-            <div className="text-center py-8 text-[#868686]">
-              {(filterParams.typeFilter !== 'all' || filterParams.selectedCategory !== 'all' || filterParams.searchTerm) ? (
-                <>
-                  <p className="mb-4">
-                    {filterParams.selectedCategory !== 'all' 
-                      ? t('transactions.no_transactions_category', { 
-                          category: categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label || filterParams.selectedCategory 
-                        })
-                      : t('transactions.no_transactions_filtered')}
-                  </p>
-                  <Button
-                    onClick={() => {
-                      if (filterParams.selectedCategory !== 'all') {
-                        setSelectedCategory('all');
-                      }
-                      if (filterParams.typeFilter !== 'all') {
-                        setTypeFilter('all');
-                      }
-                      if (filterParams.searchTerm) {
-                        setSearchTerm('');
-                      }
-                      logCategoryDebug('Reset all filters', filterParams);
-                    }}
-                    className="bg-[#242425] hover:bg-[#333] text-white"
-                  >
-                    {t('common.reset_filters')}
-                  </Button>
-                </>
-              ) : (
-                t('transactions.no_transactions')
-              )}
-            </div>
-          )}
-          
-          {/* Transactions list - Add category filter indicator */}
-          {!error && transactions.length > 0 && (
-            <motion.div 
-              className="space-y-8 pb-20"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+          {/* Filter buttons */}
+          <div className="flex bg-[#242425] rounded-full overflow-hidden">
+            <button
+              className={`flex-1 py-2 px-4 text-sm ${typeFilter === 'all' ? 'bg-[#C6FE1E] text-black font-medium' : 'text-[#868686]'}`}
+              onClick={() => setTypeFilter('all')}
             >
-              {/* Show active filter indication if category is selected */}
-              {filterParams.selectedCategory !== 'all' && (
-                <div className="text-[#C6FE1E] text-sm mb-4 flex items-center py-2 px-3 bg-[#1A1A1A] rounded-lg border border-[#333]">
-                  <Filter size={16} className="mr-2 text-[#C6FE1E]" />
-                  <span>
-                    {t('transactions.filtered_by_category', { 
-                      category: categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label || filterParams.selectedCategory 
-                    })}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="ml-auto text-[#868686] hover:text-[#C6FE1E] hover:bg-[#242425] p-1"
-                    onClick={() => {
-                      setSelectedCategory('all');
-                      logCategoryDebug('Reset category filter', { from: filterParams.selectedCategory });
-                    }}
+              {t('common.all')}
+            </button>
+            <button
+              className={`flex-1 py-2 px-4 text-sm ${typeFilter === 'income' ? 'bg-[#C6FE1E] text-black font-medium' : 'text-[#868686]'}`}
+              onClick={() => setTypeFilter('income')}
+            >
+              {t('income.title')}
+            </button>
+            <button
+              className={`flex-1 py-2 px-4 text-sm ${typeFilter === 'expense' ? 'bg-[#C6FE1E] text-black font-medium' : 'text-[#868686]'}`}
+              onClick={() => setTypeFilter('expense')}
+            >
+              {t('expense.title')}
+            </button>
+          </div>
+          
+          {/* Sorting and additional filters row */}
+          <div className="flex gap-3">
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger className="bg-[#242425] border-none text-white h-auto py-2 flex-1">
+                <SelectValue placeholder={t('categories.all')} />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1A1A] border-[#333] text-white">
+                {categoryOptions.map(category => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={sortOption}
+              onValueChange={(value: 'date-newest' | 'date-latest' | 'amount-highest' | 'amount-lowest') => setSortOption(value)}
+            >
+              <SelectTrigger className="bg-[#242425] border-none text-white h-auto py-2 flex-1">
+                <SelectValue placeholder={t('sort.date_newest')} />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1A1A] border-[#333] text-white">
+                <SelectItem value="date-newest">{t('sort.date_newest')}</SelectItem>
+                <SelectItem value="date-latest">{t('sort.date_oldest')}</SelectItem>
+                <SelectItem value="amount-highest">{t('sort.amount_highest')}</SelectItem>
+                <SelectItem value="amount-lowest">{t('sort.amount_lowest')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Apply filters button */}
+          <Button
+            className="w-full bg-[#C6FE1E] text-black hover:bg-[#B0E018] py-5"
+            onClick={() => {
+              setFilterParams({
+                searchTerm,
+                typeFilter,
+                selectedCategory,
+                sortOption
+              });
+            }}
+          >
+            {t('common.apply')}
+          </Button>
+        </div>
+        
+        <motion.div
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader className="w-8 h-8 animate-spin text-[#C6FE1E]" />
+            </div>
+          ) : (
+            <>
+              {/* Error state */}
+              {error && (
+                <div className="text-center py-8 text-[#FF6B6B]">
+                  <p className="mb-2">{error}</p>
+                  <Button 
+                    onClick={() => fetchTransactions(0, true)}
+                    className="bg-[#242425] hover:bg-[#333] text-white mt-2"
                   >
-                    <X size={14} />
+                    {t('common.retry')}
                   </Button>
                 </div>
               )}
-            
-              {groupedTransactions.map(group => (
-                <motion.div 
-                  key={group.date || 'amount-sorted'} 
-                  className="space-y-3"
-                  variants={itemVariants}
-                >
-                  {/* Display date header only for date-sorted transactions */}
+              
+              {/* Empty state - show filter notice if filters are applied */}
+              {!error && transactions.length === 0 && (
+                <div className="text-center py-8 text-[#868686]">
+                  {(searchTerm || typeFilter !== 'all' || selectedCategory !== 'all') ? (
+                    <>
+                      <p className="mb-2">{t('transactions.no_matches')}</p>
+                      <Button 
+                        onClick={() => {
+                          setSearchTerm('');
+                          setTypeFilter('all');
+                          setSelectedCategory('all');
+                          setFilterParams({
+                            searchTerm: '',
+                            typeFilter: 'all',
+                            selectedCategory: 'all',
+                            sortOption
+                          });
+                        }}
+                        className="bg-[#242425] hover:bg-[#333] text-white mt-2"
+                      >
+                        {t('common.clear_filters')}
+                      </Button>
+                    </>
+                  ) : (
+                    <p>{t('transactions.no_transactions')}</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Transaction list */}
+              {groupedTransactions.map((group, groupIndex) => (
+                <div key={groupIndex} className="space-y-2">
+                  {/* Date header - Only show if we're grouping by date */}
                   {group.date && (
-                    <div className="flex items-center justify-between text-[#868686] mb-2">
-                      <div className="flex items-center">
-                        <Calendar size={14} className="mr-2" />
-                        <span className="text-sm">{formatDate(group.date)}</span>
-                      </div>
+                    <div className="flex items-center gap-1.5 text-[#A0A0A0] text-sm mb-2">
+                      <Calendar size={14} />
+                      <span>{new Date(group.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                     </div>
                   )}
                   
-                  {/* For amount-based sorting, show a hint about the sorting order */}
-                  {!group.date && sortOption.includes('amount-') && (
-                    <div className="text-[#868686] text-sm mb-2">
-                      {sortOption === 'amount-highest' ? 
-                        'Sorted by highest amount' : 
-                        'Sorted by lowest amount'}
-                    </div>
-                  )}
-                  
-                  {group.transactions.map(transaction => renderTransactionItem(transaction))}
-                </motion.div>
+                  {/* Transactions */}
+                  {group.transactions.map((transaction: any) => (
+                    renderTransactionItem(transaction)
+                  ))}
+                </div>
               ))}
               
               {/* Load more button */}
               {hasMore && (
-                <div className="flex justify-center mt-6">
-                  <Button
-                    onClick={handleLoadMore}
+                <div className="text-center py-4">
+                  <Button 
+                    onClick={() => fetchTransactions(page + 1)}
                     disabled={isLoadingMore}
                     className="bg-[#242425] hover:bg-[#333] text-white"
                   >
                     {isLoadingMore ? (
-                      <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        {t('common.loading')}
-                      </>
-                    ) : (
-                      t('transactions.loadMore')
-                    )}
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                    ) : null}
+                    {t('common.load_more')}
                   </Button>
                 </div>
               )}
-            </motion.div>
+            </>
           )}
-        </>
-      )}
+        </motion.div>
+        
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#1A1A1A] border-0 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
+              <AlertDialogDescription className="text-[#868686]">
+                {t('transactions.delete_confirmation')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#242425] border-0 text-white hover:bg-[#333]">
+                {t('common.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleConfirmDelete}
+                className="bg-[#FF6B6B] text-white hover:bg-red-400"
+              >
+                {t('transactions.delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
       
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#1A1A1A] border-0 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#868686]">
-              {t('transactions.delete_confirmation')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#242425] border-0 text-white hover:bg-[#333]">
-              {t('common.cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmDelete}
-              className="bg-[#FF6B6B] text-white hover:bg-red-400"
-            >
-              {t('transactions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+      {/* Transaction Detail Overlay */}
+      {selectedTransaction && !onTransactionClick && (
+        <TransactionDetailOverlay
+          transaction={selectedTransaction}
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+        />
+      )}
+    </>
   );
 };
 

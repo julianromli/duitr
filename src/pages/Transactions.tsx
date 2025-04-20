@@ -1,31 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import TransactionList from '@/components/transactions/TransactionList';
-import TransactionForm from '@/components/transactions/TransactionForm';
-import ExportButton from '@/components/export/ExportButton';
-import { ArrowLeftRight, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useFinance } from '@/context/FinanceContext';
 import { motion } from 'framer-motion';
-import TransactionDetail from '@/components/transactions/TransactionDetail';
+import TransactionList from '@/components/transactions/TransactionList';
+import { Button } from '@/components/ui/button';
+import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
+import ExportButton from '@/components/export/ExportButton';
+import TransactionForm from '@/components/transactions/TransactionForm';
 
 const Transactions: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
+  const { transactions } = useFinance();
+  
+  // State for transaction detail overlay
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const handleTransactionClick = (id: string) => {
+    // Get the transaction data from our context
+    const transaction = transactions.find(t => t.id === id);
+    if (transaction) {
+      setSelectedTransaction(transaction);
+      setIsDetailOpen(true);
+    }
+  };
   
-  // Log performance on initial load
-  useEffect(() => {
-    const startTime = performance.now();
-    
-    // This will be called after the component has rendered
-    return () => {
-      const loadTime = performance.now() - startTime;
-      console.log(`Transactions page initial render time: ${loadTime.toFixed(2)}ms`);
-    };
-  }, []);
-  
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -45,16 +47,6 @@ const Transactions: React.FC = () => {
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
-
-  const handleTransactionClick = (id: string) => {
-    setSelectedTransactionId(id);
-    setIsDetailOpen(true);
-  };
-  
-  // Log that floating '+' button has been removed
-  useEffect(() => {
-    console.log("Floating '+' button removed");
-  }, []);
   
   return (
     <motion.div 
@@ -81,14 +73,16 @@ const Transactions: React.FC = () => {
         </motion.div>
         
         <TransactionList onTransactionClick={handleTransactionClick} />
-        
-        {/* Transaction Detail Dialog */}
-        <TransactionDetail 
-          transactionId={selectedTransactionId}
+      </div>
+      
+      {/* Transaction Detail Overlay */}
+      {selectedTransaction && (
+        <TransactionDetailOverlay
+          transaction={selectedTransaction}
           open={isDetailOpen}
           onOpenChange={setIsDetailOpen}
         />
-      </div>
+      )}
     </motion.div>
   );
 };

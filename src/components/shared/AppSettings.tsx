@@ -37,7 +37,7 @@ export const AppSettings: React.FC = () => {
   // Render a simpler version during SSR/initial render to prevent blank screen
   if (!isMounted) {
     return (
-      <div className="flex items-center gap-2 p-1 rounded-full bg-gray-900/10 dark:bg-gray-800/30 backdrop-blur-sm">
+      <div className="flex items-center gap-2 p-1 rounded-full">
         <div><LanguageSwitcher /></div>
         <div className="w-px h-4 bg-gray-400/20 dark:bg-gray-600/30" />
         <div><ThemeToggle /></div>
@@ -47,7 +47,7 @@ export const AppSettings: React.FC = () => {
   
   return (
     <motion.div 
-      className="flex items-center gap-2 p-1 rounded-full bg-gray-900/10 dark:bg-gray-800/30 backdrop-blur-sm"
+      className="flex items-center gap-2 p-1 rounded-full"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
