@@ -112,12 +112,12 @@ const ExportButton = () => {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <button className="p-2 bg-[#242425] rounded-full hover:bg-[#333]">
-            <Download size={20} className="text-[#C6FE1E]" />
+          <button className="p-2 bg-secondary rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/70">
+            <Download size={20} className="text-primary" />
           </button>
         </DialogTrigger>
         
-        <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-[#2e2e2e] text-white">
+        <DialogContent className="sm:max-w-[425px] bg-card border-border text-foreground">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
               Export Transactions
@@ -126,17 +126,17 @@ const ExportButton = () => {
           
           <div className="space-y-4">
             <div className="grid gap-2">
-              <Label className="text-[#868686]">Date Range</Label>
+              <Label className="text-muted-foreground">Date Range</Label>
               <Select value={dateRange} onValueChange={handleDateRangeChange}>
-                <SelectTrigger className="bg-[#242425] border-0 text-white">
+                <SelectTrigger className="bg-secondary border-0 text-foreground">
                   <SelectValue placeholder="Select date range" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#242425] border-0 text-white">
-                  <SelectItem value="all" className="hover:bg-[#333] focus:bg-[#333]">All Time</SelectItem>
-                  <SelectItem value="30days" className="hover:bg-[#333] focus:bg-[#333]">Last 30 Days</SelectItem>
-                  <SelectItem value="90days" className="hover:bg-[#333] focus:bg-[#333]">Last 90 Days</SelectItem>
-                  <SelectItem value="thisYear" className="hover:bg-[#333] focus:bg-[#333]">This Year</SelectItem>
-                  <SelectItem value="custom" className="hover:bg-[#333] focus:bg-[#333]">Custom Range</SelectItem>
+                <SelectContent className="bg-secondary border-0 text-foreground">
+                  <SelectItem value="all" className="hover:bg-secondary/80 focus:bg-secondary/80">All Time</SelectItem>
+                  <SelectItem value="30days" className="hover:bg-secondary/80 focus:bg-secondary/80">Last 30 Days</SelectItem>
+                  <SelectItem value="90days" className="hover:bg-secondary/80 focus:bg-secondary/80">Last 90 Days</SelectItem>
+                  <SelectItem value="thisYear" className="hover:bg-secondary/80 focus:bg-secondary/80">This Year</SelectItem>
+                  <SelectItem value="custom" className="hover:bg-secondary/80 focus:bg-secondary/80">Custom Range</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -144,15 +144,15 @@ const ExportButton = () => {
             {dateRange === 'custom' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label className="text-[#868686]">Start Date</Label>
+                  <Label className="text-muted-foreground">Start Date</Label>
                   <Popover open={calendarOpen === 'start'} onOpenChange={(open) => open ? setCalendarOpen('start') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425] border-0 text-white hover:bg-[#333]">
+                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-secondary border-0 text-foreground hover:bg-secondary/80">
                         <Calendar className="mr-2 h-4 w-4" />
                         {startDate ? format(startDate, 'PP') : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#242425] border-0">
+                    <PopoverContent className="w-auto p-0 bg-secondary border-0">
                       <CalendarComponent
                         mode="single"
                         selected={startDate}
@@ -161,22 +161,22 @@ const ExportButton = () => {
                           setCalendarOpen(null);
                         }}
                         initialFocus
-                        className="bg-[#242425] text-white"
+                        className="bg-secondary text-foreground"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label className="text-[#868686]">End Date</Label>
+                  <Label className="text-muted-foreground">End Date</Label>
                   <Popover open={calendarOpen === 'end'} onOpenChange={(open) => open ? setCalendarOpen('end') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425] border-0 text-white hover:bg-[#333]">
+                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-secondary border-0 text-foreground hover:bg-secondary/80">
                         <Calendar className="mr-2 h-4 w-4" />
                         {endDate ? format(endDate, 'PP') : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#242425] border-0">
+                    <PopoverContent className="w-auto p-0 bg-secondary border-0">
                       <CalendarComponent
                         mode="single"
                         selected={endDate}
@@ -185,7 +185,7 @@ const ExportButton = () => {
                           setCalendarOpen(null);
                         }}
                         initialFocus
-                        className="bg-[#242425] text-white"
+                        className="bg-secondary text-foreground"
                       />
                     </PopoverContent>
                   </Popover>
@@ -193,17 +193,17 @@ const ExportButton = () => {
               </div>
             )}
             
-            <div className="grid gap-2">
-              <Label className="text-[#868686]">Data to Include</Label>
+            <div>
+              <Label className="text-muted-foreground">Data to Include</Label>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="transactions" 
                     checked={options.includeTransactions} 
                     onCheckedChange={(checked) => setOptions({...options, includeTransactions: !!checked})}
-                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
+                    className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="transactions" className="cursor-pointer text-white">Transaction history</Label>
+                  <Label htmlFor="transactions" className="cursor-pointer text-foreground">Transaction history</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -211,9 +211,9 @@ const ExportButton = () => {
                     id="summary" 
                     checked={options.includeSummary} 
                     onCheckedChange={(checked) => setOptions({...options, includeSummary: !!checked})}
-                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
+                    className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="summary" className="cursor-pointer text-white">Summary statistics</Label>
+                  <Label htmlFor="summary" className="cursor-pointer text-foreground">Summary statistics</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -221,9 +221,9 @@ const ExportButton = () => {
                     id="budgets" 
                     checked={options.includeBudgets} 
                     onCheckedChange={(checked) => setOptions({...options, includeBudgets: !!checked})}
-                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
+                    className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="budgets" className="cursor-pointer text-white">Budget progress</Label>
+                  <Label htmlFor="budgets" className="cursor-pointer text-foreground">Budget progress</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -231,9 +231,9 @@ const ExportButton = () => {
                     id="wallets" 
                     checked={options.includeWallets} 
                     onCheckedChange={(checked) => setOptions({...options, includeWallets: !!checked})}
-                    className="bg-[#242425] border-[#868686] data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D]"
+                    className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="wallets" className="cursor-pointer text-white">Wallet balances</Label>
+                  <Label htmlFor="wallets" className="cursor-pointer text-foreground">Wallet balances</Label>
                 </div>
               </div>
             </div>
@@ -242,13 +242,13 @@ const ExportButton = () => {
           <DialogFooter>
             <Button 
               onClick={() => setOpen(false)} 
-              className="bg-[#242425] text-white hover:bg-[#333] border-0"
+              className="bg-secondary text-foreground hover:bg-secondary/80 border-0"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleExport} 
-              className="bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 gap-2"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold border-0 gap-2"
             >
               <FileSpreadsheet className="h-4 w-4" />
               Export

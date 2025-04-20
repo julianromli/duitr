@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
 import { getLocalizedCategoryName, getCategoryStringIdFromUuid } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
+import { useTheme } from '@/context/ThemeContext';
 import {
   Home,
   Coffee,
@@ -56,6 +57,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   const [displayName, setDisplayName] = useState<string>('');
   const [categoryType, setCategoryType] = useState<string>('');
   const { i18n } = useTranslation();
+  const { theme } = useTheme();
   
   useEffect(() => {
     const loadCategory = async () => {
@@ -157,9 +159,6 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
 
   // Default icon
   let Icon = HelpCircle;
-  // Default icon color and background color
-  let iconColor = 'text-black';
-  let bgColor = '#C6FE1E'; // Green background for all categories
   
   // Set icon based on category
   switch (categoryForIcon) {
@@ -257,8 +256,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
 
   return (
     <div
-      className={`flex h-10 w-10 items-center justify-center rounded-full ${className}`}
-      style={{ backgroundColor: bgColor }}
+      className={`flex items-center justify-center rounded-full bg-primary ${className}`}
+      style={{ width: iconSizes[size].split(' ')[0], height: iconSizes[size].split(' ')[1] }}
     >
       <Icon
         className="h-5 w-5"

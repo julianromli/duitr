@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { motion } from 'framer-motion';
+import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 
 const RecentTransactions: React.FC = () => {
   const { t } = useTranslation();
@@ -26,6 +27,10 @@ const RecentTransactions: React.FC = () => {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  
+  // State for transaction detail overlay
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // Get the most recent 5 transactions
   const recentTransactions = transactions.slice(0, 5);
@@ -53,78 +58,96 @@ const RecentTransactions: React.FC = () => {
     }
   };
   
+  // Handle transaction click to show detail overlay
+  const handleTransactionClick = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setIsDetailOpen(true);
+  };
+  
   return (
-    <DashboardCard
-      title={t('dashboard.recent_transactions')}
-      actionButton={
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-[#C6FE1E] hover:text-white transition-colors"
-          onClick={() => navigate('/transactions')}
-        >
-          {t('dashboard.view_all')}
-          <ArrowRight className="ml-1 h-4 w-4" />
-        </Button>
-      }
-    >
-      <div className="space-y-4">
-        {recentTransactions.length > 0 ? (
-          recentTransactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className="flex items-center justify-between"
-            >
-              <div className="flex items-center">
-                <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
-                <div className="ml-3">
-                  <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
-                  <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
+    <>
+      <DashboardCard
+        title={t('dashboard.recent_transactions')}
+        actionButton={
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-[#C6FE1E] hover:text-white transition-colors"
+            onClick={() => navigate('/transactions')}
+          >
+            {t('dashboard.view_all')}
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          {recentTransactions.length > 0 ? (
+            recentTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between cursor-pointer hover:bg-[#242425] p-2 rounded-lg transition-colors"
+                onClick={() => handleTransactionClick(transaction)}
+              >
+                <div className="flex items-center">
+                  <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
+                  <div className="ml-3">
+                    <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
+                    <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <span className={`mr-4 font-medium ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
+                    {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                  </span>
+                  <button 
+                    onClick={(e) => handleDeleteClick(transaction.id, e)}
+                    className="text-[#868686] hover:text-[#FF6B6B] transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center">
-                <span className={`mr-4 font-medium ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
-                  {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
-                </span>
-                <button 
-                  onClick={(e) => handleDeleteClick(transaction.id, e)}
-                  className="text-[#868686] hover:text-[#FF6B6B] transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+            ))
+          ) : (
+            <div className="text-center py-4 text-[#868686]">
+              {t('transactions.no_transactions')}
             </div>
-          ))
-        ) : (
-          <div className="text-center py-4 text-[#868686]">
-            {t('transactions.no_transactions')}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+        
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#1A1A1A] border-0 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
+              <AlertDialogDescription className="text-[#868686]">
+                {t('transactions.delete_confirmation')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#242425] border-0 text-white hover:bg-[#333]">
+                {t('common.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleConfirmDelete}
+                className="bg-[#FF6B6B] text-white hover:bg-red-400"
+              >
+                {t('transactions.delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DashboardCard>
       
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#1A1A1A] border-0 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
-            <AlertDialogDescription className="text-[#868686]">
-              {t('transactions.delete_confirmation')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#242425] border-0 text-white hover:bg-[#333]">
-              {t('common.cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmDelete}
-              className="bg-[#FF6B6B] text-white hover:bg-red-400"
-            >
-              {t('transactions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </DashboardCard>
+      {/* Transaction Detail Overlay */}
+      {selectedTransaction && (
+        <TransactionDetailOverlay
+          transaction={selectedTransaction}
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+        />
+      )}
+    </>
   );
 };
 

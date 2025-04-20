@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Bell, ArrowUp, ArrowDown, Plus, ArrowLeftRight, Eye, EyeOff, Home, Clock, PieChart, User, Wallet } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Link, useNavigate } from 'react-router-dom';
-import TransactionDetail from '@/components/transactions/TransactionDetail';
 import ExpenseForm from '@/components/transactions/ExpenseForm';
 import IncomeForm from '@/components/transactions/IncomeForm';
 import TransferForm from '@/components/transactions/TransferForm';
@@ -15,19 +14,22 @@ import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { totalBalance, transactions, formatCurrency, monthlyExpense, monthlyIncome, getDisplayCategoryName } = useFinance();
   const navigate = useNavigate();
-  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { user, isBalanceHidden, updateBalanceVisibility } = useAuth();
   
   // State for form dialogs
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
   const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
   const [isTransferFormOpen, setIsTransferFormOpen] = useState(false);
+  
+  // State for transaction detail overlay
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // Sort transactions by date (newest first)
   const recentTransactions = [...transactions]
@@ -39,8 +41,9 @@ const Dashboard: React.FC = () => {
     return `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
   };
 
-  const handleTransactionClick = (id: string) => {
-    setSelectedTransactionId(id);
+  // Update to use overlay component
+  const handleTransactionClick = (transaction: any) => {
+    setSelectedTransaction(transaction);
     setIsDetailOpen(true);
   };
   
@@ -305,7 +308,7 @@ const Dashboard: React.FC = () => {
                 <motion.div
                   key={transaction.id}
                   className="flex items-center justify-between bg-[#242425] p-4 rounded-xl cursor-pointer"
-                  onClick={() => handleTransactionClick(transaction.id)}
+                  onClick={() => handleTransactionClick(transaction)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -339,18 +342,20 @@ const Dashboard: React.FC = () => {
             </div>
           </motion.div>
         </div>
-
-        {/* Transaction Detail Dialog */}
-        <TransactionDetail 
-          transactionId={selectedTransactionId} 
-          open={isDetailOpen} 
-          onOpenChange={setIsDetailOpen} 
-        />
         
         {/* Transaction Form Dialogs */}
         <ExpenseForm open={isExpenseFormOpen} onOpenChange={setIsExpenseFormOpen} />
         <IncomeForm open={isIncomeFormOpen} onOpenChange={setIsIncomeFormOpen} />
         <TransferForm open={isTransferFormOpen} onOpenChange={setIsTransferFormOpen} />
+        
+        {/* Transaction Detail Overlay */}
+        {selectedTransaction && (
+          <TransactionDetailOverlay
+            transaction={selectedTransaction}
+            open={isDetailOpen}
+            onOpenChange={setIsDetailOpen}
+          />
+        )}
       </motion.div>
     </>
   );

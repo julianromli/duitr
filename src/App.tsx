@@ -23,6 +23,7 @@ import SignUp from "@/pages/auth/SignUp";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import AuthCallback from "@/pages/auth/AuthCallback";
+import TransactionDetailPage from "@/pages/TransactionDetailPage";
 import { useEffect, useState } from "react";
 import { TestDatePicker } from "@/components/ui/test-date-picker";
 import { InstallAppBanner } from "@/components/shared/InstallAppBanner";
@@ -89,6 +90,10 @@ const AppContent = () => {
         <Route
           path="/transactions"
           element={<ProtectedRoute><Layout><Transactions /></Layout></ProtectedRoute>}
+        />
+        <Route
+          path="/transaction-detail"
+          element={<ProtectedRoute><Layout><TransactionDetailPage /></Layout></ProtectedRoute>}
         />
          <Route
           path="/budget"
