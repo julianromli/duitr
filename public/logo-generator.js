@@ -97,25 +97,23 @@
   }
   
   // Fungsi utama
-  function generateAllLogos() {
-    // Baca file SVG master
-    fetch('/duitr-logo.svg')
-      .then(response => response.text())
-      .then(svgString => {
-        // Ekstrak warna dari SVG
-        const colors = extractColors(svgString);
-        
-        // Hasilkan semua versi logo
-        generatePWAIcons(svgString, colors);
-        generateFavicon(svgString, colors);
-        generateAppLogo(svgString, colors);
-        
-        console.log('Semua logo berhasil dibuat!');
-        console.log('Warna yang digunakan:', colors);
-      })
-      .catch(error => {
-        console.error('Error membaca file SVG master:', error);
-      });
+  function generateAllLogos(svgString) {
+    try {
+      // Ekstrak warna dari SVG yang diberikan
+      const colors = extractColors(svgString);
+      
+      // Hasilkan semua versi logo
+      generatePWAIcons(svgString, colors);
+      generateFavicon(svgString, colors);
+      generateAppLogo(svgString, colors);
+      
+      console.log('Semua logo berhasil dibuat!');
+      console.log('Warna yang digunakan:', colors);
+      alert('Semua ikon telah dihasilkan dan diunduh sebagai file SVG.');
+    } catch (error) {
+      console.error('Error saat menghasilkan logo:', error);
+      alert('Terjadi kesalahan saat menghasilkan logo. Periksa konsol untuk detail.');
+    }
   }
   
   // Expose fungsi ke global scope untuk digunakan di UI
@@ -138,6 +136,12 @@
   
   // Auto-run jika parameter autorun=true di URL
   if (typeof window !== 'undefined' && window.location.search.includes('autorun=true')) {
-    document.addEventListener('DOMContentLoaded', generateAllLogos);
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/duitr-logo.svg')
+        .then(response => response.text())
+        .then(svgString => {
+          generateAllLogos(svgString);
+        });
+    });
   }
 })(); 

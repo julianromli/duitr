@@ -176,7 +176,7 @@ const SignUp = () => {
             className="mb-10 flex flex-col items-center"
             variants={itemVariants}
           >
-            <img src="/duitr-logo.svg" alt="Duitr Logo" className="h-16 w-16 mb-4" />
+            <img src="/pwa-icons/new/192.png" alt="Duitr Logo" className="h-16 w-16 mb-4" />
             <h1 className="text-3xl font-semibold text-foreground">Create your account</h1>
             <p className="text-sm text-muted-foreground mt-2">
 Enter your details below to get started.
