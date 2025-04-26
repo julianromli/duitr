@@ -28,6 +28,8 @@ import TransactionDetailPage from "@/pages/TransactionDetailPage";
 import { useEffect, useState } from "react";
 import { TestDatePicker } from "@/components/ui/test-date-picker";
 import { InstallAppBanner } from "@/components/shared/InstallAppBanner";
+import EditCategoryPage from "@/pages/EditCategoryPage";
+import SupabaseTestPage from "@/pages/SupabaseTestPage";
 
 const queryClient = new QueryClient();
 
@@ -86,8 +88,9 @@ const AppContent = () => {
         {/* Offline page */}
         <Route path="/offline" element={<Offline />} />
         
-        {/* Test Route */}
+        {/* Test Routes */}
         <Route path="/test-datepicker" element={<TestDatePicker />} />
+        <Route path="/test-supabase" element={<SupabaseTestPage />} />
 
         {/* Protected App Routes - Notice /app route is removed as it's now at root */}
         <Route
@@ -98,15 +101,19 @@ const AppContent = () => {
           path="/transaction-detail"
           element={<ProtectedRoute><Layout><TransactionDetailPage /></Layout></ProtectedRoute>}
         />
-         <Route
+        <Route
+          path="/editcategory"
+          element={<ProtectedRoute><Layout><EditCategoryPage /></Layout></ProtectedRoute>}
+        />
+        <Route
           path="/budget"
           element={<ProtectedRoute><Layout><BudgetPage /></Layout></ProtectedRoute>}
         />
-         <Route
+        <Route
           path="/statistics"
           element={<ProtectedRoute><Layout><Statistics /></Layout></ProtectedRoute>}
         />
-         <Route
+        <Route
           path="/wallets"
           element={<ProtectedRoute><Layout><Wallets /></Layout></ProtectedRoute>}
         />

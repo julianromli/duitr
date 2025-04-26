@@ -17,6 +17,7 @@ import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TransactionFormProps {
   // Props if needed
@@ -52,13 +53,25 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
       setIsLoadingCategories(true);
       try {
         const type = formData.type === 'expense' ? 'expense' : 'income';
-        const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
         
-        // Sort categories by ID to maintain consistent order
-        const sortedCategories = [...fetchedCategories].sort((a, b) => {
-          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
-          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
-          return idA - idB;
+        // Fetch categories directly from Supabase
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('type', type)
+          .order('en_name');
+        
+        if (error) throw error;
+        
+        // Transform data to match the expected format
+        const formattedCategories = data.map(category => ({
+          id: category.id,
+          name: i18next.language === 'id' ? category.id_name : category.en_name
+        }));
+        
+        // Sort categories alphabetically
+        const sortedCategories = [...formattedCategories].sort((a, b) => {
+          return a.name.localeCompare(b.name);
         });
         
         setCategories(sortedCategories);
@@ -75,7 +88,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
     };
     
     loadCategories();
-  }, [formData.type, t]);
+  }, [formData.type, t, i18next.language]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -294,7 +307,9 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
                       className="hover:bg-[#333] focus:bg-[#333]"
                     >
                       <div className="flex items-center">
-                        <CategoryIcon category={String(category.id)} size="sm" />
+                        <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full mr-2">
+                          <CategoryIcon category={String(category.id)} size="sm" />
+                        </div>
                         <span className="ml-2">{category.name}</span>
                       </div>
                     </SelectItem>

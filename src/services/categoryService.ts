@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Category {
   id: string | number;
@@ -6,8 +6,9 @@ export interface Category {
   category_key?: string;
   id_name: string;
   en_name: string;
-  type: 'income' | 'expense' | 'system';
+  type?: 'income' | 'expense' | 'system';
   icon?: string;
+  created_at?: string;
 }
 
 /**
@@ -67,7 +68,7 @@ export const getCategoryById = async (id: string | number): Promise<Category | n
         .select('*')
         .eq('category_id', id)
         .single();
-    } else if (id.includes('_')) {
+    } else if (typeof id === 'string' && id.includes('_')) {
       query = supabase
         .from('categories')
         .select('*')
@@ -88,7 +89,10 @@ export const getCategoryById = async (id: string | number): Promise<Category | n
         console.warn(`Category not found with ID: ${id}`);
         return null;
       }
-      throw error;
+      
+      // For other errors, log but don't throw to avoid breaking the app
+      console.error(`Database error fetching category: ${error.message}`, error);
+      return null;
     }
     
     return data;

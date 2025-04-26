@@ -25,16 +25,17 @@ import {
 } from "@/components/ui/select";
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { getCategoryStringIdFromUuid } from '@/utils/categoryUtils';
+import { getCategoryStringIdFromUuid, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { useNavigate } from 'react-router-dom';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
+import i18next from 'i18next';
 
 interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [loadedTransactionIds, setLoadedTransactionIds] = useState<Set<string>>(new Set());
   const pageSize = 20;
   
   // Filtering state
@@ -264,11 +266,33 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       if (isMounted.current) {
         if (isInitialLoad) {
           setTransactions(processedTransactions);
+          setLoadedTransactionIds(new Set(processedTransactions.map(t => t.id)));
+          // Only set hasMore to false if we got fewer transactions than pageSize
+          setHasMore(processedTransactions.length >= pageSize);
+          
+          // Log details of the fetched transactions for debugging
+          console.log(`Fetched ${processedTransactions.length} transactions, ${processedTransactions.length} new, ${processedTransactions.length} total loaded`);
         } else {
-          setTransactions(prev => [...prev, ...processedTransactions]);
+          // Filter out any transactions already loaded to prevent duplicates
+          const newTransactions = processedTransactions.filter(t => !loadedTransactionIds.has(t.id));
+          
+          // Update the list of loaded transaction IDs
+          const updatedIds = new Set([...loadedTransactionIds]);
+          newTransactions.forEach(t => updatedIds.add(t.id));
+          setLoadedTransactionIds(updatedIds);
+          
+          // Add only new transactions to the list
+          if (newTransactions.length > 0) {
+            setTransactions(prev => [...prev, ...newTransactions]);
+          }
+          
+          // Only set hasMore to false if we received fewer transactions than requested
+          // This means we've reached the end of available data
+          setHasMore(processedTransactions.length >= pageSize);
+          
+          // Log details of the fetched transactions for debugging
+          console.log(`Fetched ${processedTransactions.length} transactions, ${newTransactions.length} new, ${transactions.length + newTransactions.length} total loaded`);
         }
-        
-        setHasMore(processedTransactions.length === pageSize);
         
         // Log details of the fetched transactions for debugging
         if (filterParams.selectedCategory !== 'all') {
@@ -341,6 +365,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       setPage(0);
       setHasMore(true);
       setError(null);
+      setLoadedTransactionIds(new Set());
       
       // Reset transactions only if we're changing filters
       if (Object.values(filterParams).some(param => param !== '')) {
@@ -527,28 +552,78 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   
   const groupedTransactions = groupTransactionsByDate();
   
-  // Category list
-  const categoryOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'expense_groceries', label: 'Groceries' },
-    { value: 'expense_food', label: 'Dining' },
-    { value: 'expense_transportation', label: 'Transportation' },
-    { value: 'expense_subscription', label: 'Subscription' },
-    { value: 'expense_housing', label: 'Housing' },
-    { value: 'expense_entertainment', label: 'Entertainment' },
-    { value: 'expense_shopping', label: 'Shopping' },
-    { value: 'expense_health', label: 'Health' },
-    { value: 'expense_education', label: 'Education' },
-    { value: 'expense_travel', label: 'Travel' },
-    { value: 'expense_personal', label: 'Personal Care' },
-    { value: 'expense_other', label: 'Other (Expense)' },
-    { value: 'income_salary', label: 'Salary' },
-    { value: 'income_business', label: 'Business' },
-    { value: 'income_investment', label: 'Investment' },
-    { value: 'income_gift', label: 'Gift' },
-    { value: 'income_other', label: 'Other (Income)' },
-    { value: 'system_transfer', label: 'Transfer' },
-  ];
+  // Category list - generate from DEFAULT_CATEGORIES
+  // This ensures we always have a fallback when DB categories are unavailable
+  const generateCategoryOptions = () => {
+    const allOption = [{ value: 'all', label: t('categories.all') }];
+    
+    // Generate expense category options
+    const expenseOptions = DEFAULT_CATEGORIES.expense.map(cat => {
+      const isIdLanguage = i18n.language === 'id';
+      let label = cat.name;
+      
+      // Handle Indonesian translation if needed
+      if (isIdLanguage) {
+        const translations: Record<string, string> = {
+          "Groceries": "Belanjaan",
+          "Dining": "Makanan",
+          "Transportation": "Transportasi",
+          "Subscription": "Langganan",
+          "Housing": "Perumahan",
+          "Entertainment": "Hiburan",
+          "Shopping": "Belanja",
+          "Health": "Kesehatan",
+          "Education": "Pendidikan",
+          "Travel": "Perjalanan",
+          "Personal": "Pribadi",
+          "Other": "Lainnya",
+          "Donate": "Sedekah"
+        };
+        label = translations[cat.name] || cat.name;
+      }
+      
+      return {
+        value: `expense_${cat.name.toLowerCase().replace(/\s+/g, '_')}`,
+        label: label
+      };
+    });
+    
+    // Generate income category options
+    const incomeOptions = DEFAULT_CATEGORIES.income.map(cat => {
+      const isIdLanguage = i18n.language === 'id';
+      let label = cat.name;
+      
+      // Handle Indonesian translation if needed
+      if (isIdLanguage) {
+        const translations: Record<string, string> = {
+          "Salary": "Gaji",
+          "Business": "Bisnis",
+          "Investment": "Investasi",
+          "Gift": "Hadiah",
+          "Other": "Lainnya"
+        };
+        label = translations[cat.name] || cat.name;
+      }
+      
+      return {
+        value: `income_${cat.name.toLowerCase().replace(/\s+/g, '_')}`,
+        label: label
+      };
+    });
+    
+    // Generate system category options
+    const systemOptions = DEFAULT_CATEGORIES.system.map(cat => {
+      return {
+        value: `system_${cat.name.toLowerCase().replace(/\s+/g, '_')}`,
+        label: cat.name
+      };
+    });
+    
+    // Combine all options
+    return [...allOption, ...expenseOptions, ...incomeOptions, ...systemOptions];
+  };
+  
+  const categoryOptions = generateCategoryOptions();
   
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -624,6 +699,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       </div>
     </motion.div>
   );
+  
+  // Update the component to re-render category options when language changes
+  useEffect(() => {
+    // Re-render component when language changes to update category labels
+  }, [i18n.language]);
   
   return (
     <>
@@ -781,7 +861,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               {hasMore && (
                 <div className="text-center py-4">
                   <Button 
-                    onClick={() => fetchTransactions(page + 1)}
+                    onClick={handleLoadMore}
                     disabled={isLoadingMore}
                     className="bg-[#242425] hover:bg-[#333] text-white"
                   >

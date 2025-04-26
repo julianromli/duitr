@@ -8,9 +8,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
+import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import { createClient } from '@supabase/supabase-js';
+
+// Create a local Supabase client for this component
+const supabaseClient = createClient(
+  import.meta.env.VITE_SUPABASE_URL || "https://cxqluedeykgqmthzveiw.supabase.co",
+  import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cWx1ZWRleWtncW10aHp2ZWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDQxNjcsImV4cCI6MjA1ODU4MDE2N30.Lh08kodIf9QzggcjUP4mTc2axGFEtW8o9efDXRVNQ_E"
+);
+
+// Define the category type from Supabase
+interface SupabaseCategory {
+  id: string;
+  category_key: string;
+  id_name: string;
+  en_name: string;
+  icon?: string;
+  created_at: string;
+  type?: string;
+}
 
 interface ExpenseFormProps {
   open: boolean;
@@ -38,18 +56,34 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     const loadCategories = async () => {
       setIsLoadingCategories(true);
       try {
-        const fetchedCategories = await getLocalizedCategoriesByType('expense', i18next);
-        
-        // Sort categories by ID to maintain consistent order
-        const sortedCategories = [...fetchedCategories].sort((a, b) => {
-          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
-          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
-          return idA - idB;
-        });
-        
-        setCategories(sortedCategories);
+        // Use the utility function for loading categories that has better error handling
+        const loadedCategories = await getLocalizedCategoriesByType('expense', i18next);
+        setCategories(loadedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
+        // Use default categories as fallback
+        const defaultCategories = DEFAULT_CATEGORIES.expense.map(cat => ({
+          id: cat.id,
+          name: i18next.language === 'id' ? 
+            // Translate to Indonesian if needed
+            cat.name === 'Groceries' ? 'Belanjaan' :
+            cat.name === 'Dining' ? 'Makanan' :
+            cat.name === 'Transportation' ? 'Transportasi' :
+            cat.name === 'Subscription' ? 'Langganan' :
+            cat.name === 'Housing' ? 'Perumahan' :
+            cat.name === 'Entertainment' ? 'Hiburan' :
+            cat.name === 'Shopping' ? 'Belanja' :
+            cat.name === 'Health' ? 'Kesehatan' :
+            cat.name === 'Education' ? 'Pendidikan' :
+            cat.name === 'Travel' ? 'Perjalanan' :
+            cat.name === 'Personal' ? 'Pribadi' :
+            cat.name === 'Donate' ? 'Sedekah' :
+            cat.name === 'Other' ? 'Lainnya' : cat.name
+            : cat.name
+        }));
+        
+        setCategories(defaultCategories);
+        
         toast({
           title: t('common.error'),
           description: t('categories.error.load'),
@@ -61,7 +95,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     };
     
     loadCategories();
-  }, [t]);
+  }, [t, i18next.language]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -165,7 +199,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
                     className="hover:bg-[#333] focus:bg-[#333]"
                   >
                     <div className="flex items-center">
-                      <CategoryIcon category={String(category.id)} size="sm" />
+                      <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full mr-2">
+                        <CategoryIcon category={category.id} size="sm" />
+                      </div>
                       <span className="ml-2">{category.name}</span>
                     </div>
                   </SelectItem>

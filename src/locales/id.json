@@ -25,6 +25,11 @@
     "added_successfully": "berhasil ditambahkan",
     "clear_filters": "Hapus Filter"
   },
+  "categories": {
+    "error": {
+      "load": "Gagal memuat kategori. Silakan restart aplikasi atau periksa koneksi internet Anda."
+    }
+  },
   "pages": {
     "dashboard": "Dasbor",
     "transactions": "Transaksi",

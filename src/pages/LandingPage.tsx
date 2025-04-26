@@ -47,15 +47,27 @@ const LandingPage: React.FC = () => {
         <div className={`inline-block bg-gradient-to-r from-[#2D2D2D] to-[#333333] rounded-full py-2 px-4 mb-10 shadow-lg transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 transform-none' : 'opacity-0 transform -translate-y-8'}`}>
           <div className="flex items-center space-x-2">
             <div className="flex -space-x-2">
-              {/* Avatar circles with gradient borders - made smaller */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-[#2D2D2D] flex items-center justify-center text-xs font-bold">
-                K
+              {/* Avatar circles with images from Unsplash */}
+              <div className="w-8 h-8 rounded-full border-2 border-[#2D2D2D] overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80&auto=format" 
+                  alt="User avatar" 
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lime-400 to-green-500 border-2 border-[#2D2D2D] flex items-center justify-center text-xs font-bold">
-                S
+              <div className="w-8 h-8 rounded-full border-2 border-[#2D2D2D] overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80&auto=format" 
+                  alt="User avatar" 
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-[#2D2D2D] flex items-center justify-center text-xs font-bold">
-                R
+              <div className="w-8 h-8 rounded-full border-2 border-[#2D2D2D] overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80&auto=format" 
+                  alt="User avatar" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
             <p className="text-sm font-medium ml-1">Trusted by thousands of people</p>
