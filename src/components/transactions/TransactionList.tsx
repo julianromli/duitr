@@ -29,6 +29,8 @@ import { getCategoryStringIdFromUuid, DEFAULT_CATEGORIES } from '@/utils/categor
 import { useNavigate } from 'react-router-dom';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 import i18next from 'i18next';
+import { format, parseISO, isToday, isYesterday, parse } from 'date-fns';
+import { id as idLocale, enUS as enUSLocale } from 'date-fns/locale';
 
 interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
@@ -531,20 +533,22 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     const groups: Record<string, any[]> = {};
     
     transactions.forEach(transaction => {
-      const date = transaction.date;
-      if (!groups[date]) {
-        groups[date] = [];
+      // Group by local date string (YYYY-MM-DD)
+      const localDateString = format(parseISO(transaction.date), 'yyyy-MM-dd');
+      if (!groups[localDateString]) {
+        groups[localDateString] = [];
       }
-      groups[date].push(transaction);
+      groups[localDateString].push(transaction);
     });
     
     return Object.entries(groups)
-      .map(([date, transactions]) => ({ date, transactions }))
+      .map(([date, transactions]) => ({ date, transactions })) // date here is 'yyyy-MM-dd'
       .sort((a, b) => {
+        // Sort groups by date string 
         if (sortOption === 'date-newest') {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
+          return b.date.localeCompare(a.date); // Descending
         } else if (sortOption === 'date-latest') {
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
+          return a.date.localeCompare(b.date); // Ascending
         }
         return 0;
       });
@@ -625,14 +629,28 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   
   const categoryOptions = generateCategoryOptions();
   
-  // Format date for display
+  // Format date for display headers (accepts YYYY-MM-DD string)
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown date';
+    
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      // Get the locale based on i18n language
+      const currentLocale = i18n.language.startsWith('id') ? idLocale : enUSLocale;
+      
+      // Parse the YYYY-MM-DD string
+      const date = parse(dateString, 'yyyy-MM-dd', new Date());
+      
+      if (isToday(date)) {
+        return t('common.today'); // Use translation for "Today"
+      }
+      if (isYesterday(date)) {
+        return t('common.yesterday'); // Use translation for "Yesterday"
+      }
+      // Format other dates like "April 26, 2024" or "26 April 2024"
+      return format(date, 'PPP', { locale: currentLocale }); 
     } catch (e) {
       console.error('Error formatting date:', dateString, e);
-      return dateString || 'Unknown date';
+      return dateString; // Fallback to the original string
     }
   };
   
@@ -679,7 +697,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               {/* Show date on the same line when sorting by amount */}
               {sortOption.includes('amount-') && (
                 <span className="ml-2 text-[#A0A0A0]">
-                  {formatDate(transaction.date)}
+                  {/* Format the full ISO string for inline display */}
+                  {format(parseISO(transaction.date), 'Pp')}
                 </span>
               )}
             </p>

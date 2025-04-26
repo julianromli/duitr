@@ -20,6 +20,8 @@ import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import { format, parseISO } from 'date-fns';
+import { id as idLocale, enUS as enUSLocale } from 'date-fns/locale';
 
 interface TransactionDetailProps {
   transactionId: string | null;
@@ -85,7 +87,6 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
         categoryId: transaction.categoryId,
         category: transaction.category,
         description: transaction.description,
-        date: transaction.date,
         type: transaction.type,
         walletId: transaction.walletId
       });
@@ -107,7 +108,6 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
           categoryId: transaction.categoryId,
           category: transaction.category,
           description: transaction.description,
-          date: transaction.date,
           type: transaction.type,
           walletId: transaction.walletId
         });
@@ -120,13 +120,18 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
     return null;
   }
   
+  // Format date for display
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    if (!dateString) return '-'; // Handle null/empty date
+    try {
+      const date = parseISO(dateString); // Parse the ISO string
+      const currentLocale = i18next.language.startsWith('id') ? idLocale : enUSLocale; // Get locale
+      // Format as "April 26, 2024, 11:15 AM" or similar based on locale
+      return format(date, 'PPP p', { locale: currentLocale }); 
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return dateString; // Fallback to original string on error
+    }
   };
   
   // Format date for input field
@@ -174,7 +179,6 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
         categoryId: transaction.categoryId,
         category: transaction.category,
         description: transaction.description,
-        date: transaction.date,
         type: transaction.type,
         walletId: transaction.walletId
       });
@@ -188,7 +192,6 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
       amount: parseFloat(editedTransaction.amount),
       categoryId: editedTransaction.categoryId,
       description: editedTransaction.description || '',
-      date: editedTransaction.date,
       walletId: editedTransaction.walletId
     });
     
@@ -355,28 +358,11 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
             </div>
           )}
           
-          {/* Date */}
-          {isEditing ? (
-            <div className="mb-4">
-              <Label htmlFor="date" className="text-[#868686] mb-1 block">
-                {t('transactions.date')}
-              </Label>
-              <div className="bg-[#242425] rounded-md border-0">
-                <DatePicker 
-                  date={editedTransaction.date ? new Date(editedTransaction.date) : undefined}
-                  setDate={(date) => setEditedTransaction({ 
-                    ...editedTransaction, 
-                    date: date ? date.toISOString().split('T')[0] : '' 
-                  })}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[#868686]">{t('transactions.date')}</span>
-              <span>{formatDate(transaction.date)}</span>
-            </div>
-          )}
+          {/* Date - Display Only (Not Editable) */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[#868686]">{t('transactions.date')}</span>
+            <span>{formatDate(transaction.date)}</span>
+          </div>
           
           {/* Type - non-editable */}
           <div className="flex items-center justify-between mb-4">

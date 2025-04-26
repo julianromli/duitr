@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import CategoryIcon from '@/components/shared/CategoryIcon';
@@ -28,7 +27,6 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
     categoryId: '',
@@ -156,7 +154,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
         amount: parseFloat(formData.amount),
         categoryId: categoryId,
         description: formData.description,
-        date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        date: new Date().toISOString(), // <-- Use current timestamp directly
         type: formData.type,
         walletId: formData.walletId,
         destinationWalletId: formData.type === 'transfer' ? formData.destinationWalletId : undefined,
@@ -173,7 +171,6 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
         fee: '0',
       });
       
-      setSelectedDate(new Date());
       setOpen(false);
       
       toast({
@@ -267,19 +264,6 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
               onValueChange={(numericValue) => setFormData({ ...formData, amount: String(numericValue) })}
               className="bg-[#2A3435] text-white border-none rounded-lg"
             />
-          </div>
-          
-          {/* Date */}
-          <div className="mb-4">
-            <Label className="text-[#868686] mb-1 block">
-              {t('transactions.date')}
-            </Label>
-            <div className="bg-[#242425] rounded-md border-0">
-              <DatePicker 
-                date={selectedDate}
-                setDate={setSelectedDate}
-              />
-            </div>
           </div>
           
           {/* Category - Not for transfers */}
