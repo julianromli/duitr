@@ -234,8 +234,10 @@
       // Handle button clicks
       updateSvgBtn.addEventListener('click', updateMasterSvg);
       generateAllBtn.addEventListener('click', function() {
-        if (window.duitrLogo) {
-          window.duitrLogo.generateAllLogos();
+        if (window.duitrLogo && svgEditor.value) {
+          window.duitrLogo.generateAllLogos(svgEditor.value);
+        } else {
+          alert('SVG Editor kosong atau fungsi generator tidak ditemukan.');
         }
       });
       downloadMasterBtn.addEventListener('click', downloadMasterSvg);

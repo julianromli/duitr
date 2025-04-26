@@ -37,7 +37,7 @@ function LoginForm() {
             aria-hidden="true"
           >
              {/* Ensure duitr-logo.svg is in the public folder */}
-            <img src="/duitr-logo.svg" alt="Duitr Logo" className="h-8 w-8" />
+            <img src="/pwa-icons/new/192.png" alt="Duitr Logo" className="h-8 w-8" />
           </div>
           <DialogHeader>
             <DialogTitle className="text-center sm:text-center">Welcome back</DialogTitle> {/* Centered as per demo */}
