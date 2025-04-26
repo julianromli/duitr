@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +10,9 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
+import i18next from 'i18next';
+import CategoryIcon from '@/components/shared/CategoryIcon';
 
 interface TransferFormProps {
   open: boolean;
@@ -29,6 +32,9 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     description: '',
     fee: '0'
   });
+  
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -77,6 +83,9 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     // Format date to ISO string
     const dateString = selectedDate.toISOString().split('T')[0];
     
+    // Use the system transfer category from DEFAULT_CATEGORIES
+    const transferCategory = DEFAULT_CATEGORIES.system[0];
+    
     // Add transaction
     addTransaction({
       amount: parseFloat(formData.amount),
@@ -86,7 +95,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       walletId: formData.fromWalletId,
       destinationWalletId: formData.toWalletId,
       fee: parseFloat(formData.fee || '0'),
-      category: 'Transfer'
+      categoryId: transferCategory.id
     });
     
     // Reset form
@@ -108,6 +117,47 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     // Close dialog
     onOpenChange(false);
   };
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const fetchedCategories = await getLocalizedCategoriesByType('system', i18next);
+        
+        // Sort categories by ID to maintain consistent order
+        const sortedCategories = [...fetchedCategories].sort((a, b) => {
+          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
+          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
+          return idA - idB;
+        });
+        
+        setCategories(sortedCategories);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        
+        // Use default categories as fallback
+        const defaultCategories = DEFAULT_CATEGORIES.system.map(cat => ({
+          id: cat.id,
+          name: i18next.language === 'id' ? 
+            // Translate to Indonesian if needed
+            cat.name === 'Transfer' ? 'Transfer' : cat.name
+            : cat.name
+        }));
+        
+        setCategories(defaultCategories);
+        
+        toast({
+          title: t('common.error'),
+          description: t('categories.error.load'),
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+    
+    loadCategories();
+  }, [t, i18next.language]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

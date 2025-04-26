@@ -16,29 +16,88 @@ import { getCategoryById, getCategoryName as getDynamicCategoryName } from '@/se
 export async function getLocalizedCategoryName(categoryId: string | number, i18n: typeof i18next): Promise<string> {
   const currentLanguage = i18n.language || 'id';
   
-  // Check if it's a number (new integer ID from DB)
-  if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
-    return await getDynamicCategoryName(categoryId, currentLanguage);
-  }
-  
-  // Check if it's a UUID (from database)
-  if (typeof categoryId === 'string' && categoryId.includes('-')) {
-    return await getDynamicCategoryName(categoryId, currentLanguage);
-  }
-  
-  // Check if it's a category key string (e.g., 'expense_groceries')
-  if (typeof categoryId === 'string' && categoryId.includes('_')) {
-    // First try to get from the database by category_key
-    try {
-      return await getDynamicCategoryName(categoryId, currentLanguage);
-    } catch (error) {
-      // Fallback to static system
-      return getStaticCategoryName(categoryId, currentLanguage);
+  try {
+    // Check if it's a number (new integer ID from DB)
+    if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
+      try {
+        const name = await getDynamicCategoryName(categoryId, currentLanguage);
+        // If we got a valid name back, return it
+        if (name && name !== 'Other') {
+          return name;
+        }
+      } catch (dbError) {
+        console.warn(`Error getting category name from database for ID ${categoryId}:`, dbError);
+        // Continue to fallback mechanism
+      }
+      
+      // If we get here, the category might exist but the service couldn't find it
+      // Let's check DEFAULT_CATEGORIES as fallback
+      if (typeof categoryId === 'number' || !isNaN(Number(categoryId))) {
+        const numericId = Number(categoryId);
+        // Try to find the category in DEFAULT_CATEGORIES by id
+        for (const type in DEFAULT_CATEGORIES) {
+          const category = DEFAULT_CATEGORIES[type as CategoryType].find(cat => cat.id === String(numericId));
+          if (category) {
+            // Return the properly localized name
+            if (currentLanguage === 'id') {
+              const translations: Record<string, string> = {
+                "Groceries": "Belanjaan",
+                "Dining": "Makanan",
+                "Transportation": "Transportasi",
+                "Subscription": "Langganan",
+                "Housing": "Perumahan",
+                "Entertainment": "Hiburan",
+                "Shopping": "Belanja",
+                "Health": "Kesehatan",
+                "Education": "Pendidikan",
+                "Travel": "Perjalanan",
+                "Personal": "Pribadi",
+                "Other": "Lainnya",
+                "Donate": "Sedekah",
+                "Salary": "Gaji",
+                "Business": "Bisnis",
+                "Investment": "Investasi",
+                "Gift": "Hadiah",
+                "Transfer": "Transfer"
+              };
+              return translations[category.name] || category.name;
+            }
+            return category.name;
+          }
+        }
+      }
     }
-  }
   
-  // Fallback to legacy system
-  return getStaticCategoryName(String(categoryId), currentLanguage);
+    // Continue with existing logic for other cases
+    // Check if it's a UUID (from database)
+    if (typeof categoryId === 'string' && categoryId.includes('-')) {
+      try {
+        return await getDynamicCategoryName(categoryId, currentLanguage);
+      } catch (error) {
+        console.warn(`Error getting category name for UUID ${categoryId}:`, error);
+        // Continue to fallback
+      }
+    }
+    
+    // Check if it's a category key string (e.g., 'expense_groceries')
+    if (typeof categoryId === 'string' && categoryId.includes('_')) {
+      // First try to get from the database by category_key
+      try {
+        return await getDynamicCategoryName(categoryId, currentLanguage);
+      } catch (error) {
+        console.warn(`Error getting category name for key ${categoryId}:`, error);
+        // Fallback to static system
+        return getStaticCategoryName(categoryId, currentLanguage);
+      }
+    }
+    
+    // Fallback to legacy system
+    return getStaticCategoryName(String(categoryId), currentLanguage);
+  } catch (error) {
+    console.error(`Error getting category name for ID ${categoryId}:`, error);
+    // Ultimate fallback
+    return currentLanguage === 'id' ? 'Lainnya' : 'Other';
+  }
 }
 
 /**
@@ -72,6 +131,7 @@ export function getCategoryUuidFromStringId(categoryStringId: string): number {
     'expense_gifts': 6, // Maps to entertainment ID for now
     'expense_gift': 6, // Maps to entertainment ID for now
     'expense_other': 12,
+    'expense_donation': 19, // Donation expense
     
     // Income categories (inserted second, IDs 13-17)
     'income_salary': 13,
@@ -96,8 +156,8 @@ export function getCategoryUuidFromStringId(categoryStringId: string): number {
   // Handle numeric IDs (already converted)
   if (!isNaN(Number(categoryStringId))) {
     const numId = Number(categoryStringId);
-    // Check if it's a valid ID
-    if (numId >= 1 && numId <= 18) {
+    // Check if it's a valid ID - accept any positive number
+    if (numId >= 1) {
       return numId;
     }
   }
@@ -150,7 +210,10 @@ export function getCategoryStringIdFromUuid(id: string | number): string {
       17: 'income_other', // Also covers other income types
       
       // System category (inserted last, ID 18)
-      18: 'system_transfer'
+      18: 'system_transfer',
+      
+      // Additional category
+      19: 'expense_donation'
     };
     
     // Return the mapped category key or a default based on range
@@ -235,74 +298,33 @@ export async function getLocalizedCategoriesByType(
     // Import functions from categoryService
     const { getCategoriesByType } = await import('@/services/categoryService');
     
-    // Get categories from the database
-    const categories = await getCategoriesByType(type);
-    const currentLanguage = i18n.language || 'id';
-    
-    // Map to simple format with localized names
-    return categories.map(category => ({
-      // Use numeric category_id for database compatibility
-      id: typeof category.category_id === 'number' ? category.category_id : 
-          (typeof category.category_id === 'string' && !isNaN(Number(category.category_id))) ? 
-            Number(category.category_id) : category.id,
-      name: currentLanguage === 'id' ? category.id_name : category.en_name
-    }));
-  } catch (error) {
-    console.error('Error getting categories:', error);
-    
-    // Fallback to static categories if database fails
-    const filteredCategories = CATEGORIES.filter(cat => cat.type === type);
-    
-    // Convert string IDs to numeric IDs for expense categories (1-12) and income categories (13-17)
-    return filteredCategories.map(cat => {
-      let numericId: number;
+    try {
+      // Get categories from the database
+      const categories = await getCategoriesByType(type);
+      const currentLanguage = i18n.language || 'id';
       
-      if (typeof cat.id === 'string' && cat.id.startsWith('expense_')) {
-        // Map expense categories to numeric IDs (1-12)
-        const categoryKeyToId: Record<string, number> = {
-          'expense_groceries': 1,
-          'expense_food': 2,
-          'expense_dining': 2,
-          'expense_transportation': 3,
-          'expense_subscription': 4,
-          'expense_utilities': 4,
-          'expense_housing': 5,
-          'expense_entertainment': 6,
-          'expense_shopping': 7,
-          'expense_health': 8,
-          'expense_healthcare': 8,
-          'expense_education': 9,
-          'expense_travel': 10,
-          'expense_personal': 11,
-          'expense_personal_care': 11,
-          'expense_gifts': 6,
-          'expense_gift': 6,
-          'expense_other': 12
-        };
-        numericId = categoryKeyToId[cat.id] || 12; // Default to expense_other (12)
-      } else if (typeof cat.id === 'string' && cat.id.startsWith('income_')) {
-        // Map income categories to numeric IDs (13-17)
-        const categoryKeyToId: Record<string, number> = {
-          'income_salary': 13,
-          'income_business': 14,
-          'income_investment': 15,
-          'income_gift': 16,
-          'income_freelance': 17,
-          'income_refund': 17,
-          'income_bonus': 17,
-          'income_other': 17
-        };
-        numericId = categoryKeyToId[cat.id] || 17; // Default to income_other (17)
-      } else {
-        // Default to expense_other
-        numericId = 12;
+      if (!categories || categories.length === 0) {
+        console.log(`No ${type} categories found in database, using defaults`);
+        return getDefaultCategories(type, currentLanguage);
       }
       
-      return {
-        id: numericId,
-        name: i18n.language === 'id' ? cat.nameId : cat.nameEn
-      };
-    });
+      // Map to simple format with localized names
+      return categories.map(category => ({
+        // Use numeric category_id for database compatibility
+        id: typeof category.category_id === 'number' ? category.category_id : 
+            (typeof category.category_id === 'string' && !isNaN(Number(category.category_id))) ? 
+              Number(category.category_id) : category.id,
+        name: currentLanguage === 'id' ? category.id_name : category.en_name
+      }));
+    } catch (dbError) {
+      // Database query failed, log error and return default categories
+      console.error(`Database error getting ${type} categories:`, dbError);
+      return getDefaultCategories(type, i18n.language);
+    }
+  } catch (error) {
+    console.error('Error getting categories:', error);
+    // Use the default categories as fallback
+    return getDefaultCategories(type, i18n.language);
   }
 }
 
@@ -346,4 +368,77 @@ export function legacyCategoryNameToId(
   
   // Default to 'other' for the appropriate type
   return categoryType === 'income' ? 'income_other' : 'expense_other';
+}
+
+// Add default categories as fallback when Supabase isn't available
+export const DEFAULT_CATEGORIES = {
+  expense: [
+    { id: "1", name: "Groceries" },
+    { id: "2", name: "Dining" },
+    { id: "3", name: "Transportation" },
+    { id: "4", name: "Subscription" },
+    { id: "5", name: "Housing" },
+    { id: "6", name: "Entertainment" },
+    { id: "7", name: "Shopping" },
+    { id: "8", name: "Health" },
+    { id: "9", name: "Education" },
+    { id: "10", name: "Travel" },
+    { id: "11", name: "Personal" },
+    { id: "12", name: "Other" },
+    { id: "19", name: "Donate" }
+  ],
+  income: [
+    { id: "13", name: "Salary" },
+    { id: "14", name: "Business" },
+    { id: "15", name: "Investment" },
+    { id: "16", name: "Gift" },
+    { id: "17", name: "Other" }
+  ],
+  system: [
+    { id: "18", name: "Transfer" }
+  ]
+};
+
+// Get default categories by type
+export function getDefaultCategories(type: CategoryType, language: string = 'en'): { id: string; name: string }[] {
+  // Return translated default categories
+  const categories = DEFAULT_CATEGORIES[type] || [];
+  
+  if (language === 'id') {
+    // Translate to Indonesian
+    return categories.map(cat => {
+      const translations: Record<string, string> = {
+        // Expense categories
+        "Groceries": "Belanjaan",
+        "Dining": "Makanan",
+        "Transportation": "Transportasi",
+        "Subscription": "Langganan",
+        "Housing": "Perumahan",
+        "Entertainment": "Hiburan",
+        "Shopping": "Belanja",
+        "Health": "Kesehatan",
+        "Education": "Pendidikan",
+        "Travel": "Perjalanan",
+        "Personal": "Pribadi",
+        "Other": "Lainnya",
+        "Donate": "Sedekah",
+        
+        // Income categories
+        "Salary": "Gaji",
+        "Business": "Bisnis",
+        "Investment": "Investasi",
+        "Gift": "Hadiah",
+        
+        // System
+        "Transfer": "Transfer"
+      };
+      
+      return {
+        id: cat.id,
+        name: translations[cat.name] || cat.name
+      };
+    });
+  }
+  
+  return categories;
 } 

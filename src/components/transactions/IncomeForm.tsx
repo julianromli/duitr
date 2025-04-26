@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
+import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 
@@ -50,6 +50,22 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
         setCategories(sortedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
+        
+        // Use default categories as fallback
+        const defaultCategories = DEFAULT_CATEGORIES.income.map(cat => ({
+          id: cat.id,
+          name: i18next.language === 'id' ? 
+            // Translate to Indonesian if needed
+            cat.name === 'Salary' ? 'Gaji' :
+            cat.name === 'Investment' ? 'Investasi' :
+            cat.name === 'Gift' ? 'Hadiah' :
+            cat.name === 'Side Hustle' ? 'Pekerjaan Sampingan' :
+            cat.name === 'Other' ? 'Lainnya' : cat.name
+            : cat.name
+        }));
+        
+        setCategories(defaultCategories);
+        
         toast({
           title: t('common.error'),
           description: t('categories.error.load'),
@@ -61,7 +77,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     };
     
     loadCategories();
-  }, [t]);
+  }, [t, i18next.language]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

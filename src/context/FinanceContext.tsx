@@ -8,7 +8,9 @@ import {
   legacyCategoryNameToId, 
   getLocalizedCategoryName,
   getCategoryUuidFromStringId,
-  getCategoryStringIdFromUuid
+  getCategoryStringIdFromUuid,
+  getDefaultCategories,
+  DEFAULT_CATEGORIES
 } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
 import i18next from 'i18next';
@@ -145,7 +147,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
             const numericId = Number(categoryId);
             
-            // Map of ID to localized category name - same mapping used in getDisplayCategoryName
+            // Map of ID to localized category name
             const idToName: Record<number, string> = {
               // Expense categories
               1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
@@ -160,7 +162,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
               10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
               11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
               12: i18next.language === 'id' ? 'Lainnya' : 'Other',
-              16: i18next.language === 'id' ? 'Hadiah' : 'Gift'
+              16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
+              19: i18next.language === 'id' ? 'Sedekah' : 'Donate'
             };
             
             categoryDisplayName = idToName[numericId] || 'Other';
@@ -294,12 +297,51 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           17: i18next.language === 'id' ? 'Lainnya' : 'Other',
             
           // System
-          18: i18next.language === 'id' ? 'Transfer' : 'Transfer'
+          18: i18next.language === 'id' ? 'Transfer' : 'Transfer',
+          
+          // Other expense categories
+          19: i18next.language === 'id' ? 'Sedekah' : 'Donate'
         };
         
         const displayName = idToName[numericId];
         if (displayName) {
           return displayName;
+        }
+        
+        // If not in our standard mapping, check DEFAULT_CATEGORIES as fallback
+        const categoryType = numericId <= 12 ? 'expense' : 
+                             numericId <= 17 ? 'income' : 'system';
+                             
+        const defaultCategory = DEFAULT_CATEGORIES[categoryType].find(
+          cat => cat.id === String(numericId)
+        );
+        
+        if (defaultCategory) {
+          // Return localized name from default categories
+          if (i18next.language === 'id') {
+            const translations: Record<string, string> = {
+              "Groceries": "Belanjaan",
+              "Dining": "Makanan",
+              "Transportation": "Transportasi",
+              "Subscription": "Langganan", 
+              "Housing": "Perumahan",
+              "Entertainment": "Hiburan",
+              "Shopping": "Belanja",
+              "Health": "Kesehatan",
+              "Education": "Pendidikan",
+              "Travel": "Perjalanan",
+              "Personal": "Pribadi",
+              "Other": "Lainnya",
+              "Donate": "Sedekah",
+              "Salary": "Gaji",
+              "Business": "Bisnis",
+              "Investment": "Investasi",
+              "Gift": "Hadiah", 
+              "Transfer": "Transfer"
+            };
+            return translations[defaultCategory.name] || defaultCategory.name;
+          }
+          return defaultCategory.name;
         }
         
         // For fallback, determine if it's expense or income based on the ID range
@@ -369,7 +411,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         17: 'income_other',
         
         // System category (ID 18)
-        18: 'system_transfer'
+        18: 'system_transfer',
+        
+        // Additional expense categories
+        19: 'expense_donation'
       };
       
       // Return the mapped category key or a default based on range
@@ -1622,7 +1667,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
             'income_other': 17,
             
             // System category (inserted last, ID 18)
-            'system_transfer': 18
+            'system_transfer': 18,
+            
+            // Additional expense categories
+            'expense_donation': 19
           };
           
           const categoryId = categoryKeyToId[dbData.category_id];

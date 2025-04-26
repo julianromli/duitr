@@ -27,6 +27,11 @@
     "reset_filters": "Reset Filters",
     "clear_filters": "Clear Filters"
   },
+  "categories": {
+    "error": {
+      "load": "Failed to load categories. Please restart the app or check your internet connection."
+    }
+  },
   "pages": {
     "dashboard": "Dashboard",
     "transactions": "Transactions",
@@ -141,14 +146,12 @@
     "type": "Type",
     "update_success": "Transaction updated successfully",
     "update_error": "Failed to update transaction"
-
   },
   "expense": {
     "title": "Expense"
   },
   "income": {
     "title": "Income"
-
   },
   "sort": {
     "date_newest": "Newest",
