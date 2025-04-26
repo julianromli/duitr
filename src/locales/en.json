@@ -99,6 +99,11 @@
     "fillAllFields": "Please fill in all required fields",
     "accountAdded": "Account added successfully"
   },
+
+  "categories": {
+    "all": "All"
+  },
+
   "transactions": {
     "title": "Transactions",
     "loadMore": "Load More",

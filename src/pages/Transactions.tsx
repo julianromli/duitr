@@ -54,7 +54,8 @@ const Transactions: React.FC = () => {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-    >
+    >category.all
+    
       <div className="p-6 pt-12">
         <motion.div 
           className="flex items-center justify-between mb-6"
