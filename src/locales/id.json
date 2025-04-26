@@ -97,6 +97,10 @@
     "fillAllFields": "Silakan isi semua kolom yang diperlukan",
     "accountAdded": "Akun berhasil ditambahkan"
   },
+  "categories": {
+    "all": "Semua"
+  },
+
   "transactions": {
     "title": "Transaksi",
     "loadMore": "Muat Lebih Banyak",
