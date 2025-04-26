@@ -6,13 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
 import { FormattedInput } from '@/components/ui/formatted-input';
 import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface TransferFormProps {
   open: boolean;
@@ -24,7 +23,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const { toast } = useToast();
   const { t } = useTranslation();
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
     fromWalletId: '',
@@ -52,15 +50,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedDate) {
-      toast({
-        title: t('common.error'),
-        description: t('transactions.errors.select_date'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    
     // Validation
     if (!formData.amount || !formData.fromWalletId || !formData.toWalletId) {
       toast({
@@ -80,16 +69,13 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
-    // Format date to ISO string
-    const dateString = selectedDate.toISOString().split('T')[0];
-    
     // Use the system transfer category from DEFAULT_CATEGORIES
     const transferCategory = DEFAULT_CATEGORIES.system[0];
     
     // Add transaction
     addTransaction({
       amount: parseFloat(formData.amount),
-      date: dateString,
+      date: new Date().toISOString(),
       description: formData.description || t('transactions.transfer'),
       type: 'transfer',
       walletId: formData.fromWalletId,
@@ -106,7 +92,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       description: '',
       fee: '0'
     });
-    setSelectedDate(new Date());
     
     // Show success message
     toast({
@@ -247,16 +232,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               onChange={handleChange}
               className="bg-[#242425] border-0 text-white"
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-[#868686]">{t('transactions.date')}</Label>
-            <div className="bg-[#242425] rounded-md border-0">
-              <DatePicker 
-                date={selectedDate}
-                setDate={setSelectedDate}
-              />
-            </div>
           </div>
           
           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
