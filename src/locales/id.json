@@ -1,5 +1,7 @@
 {
   "common": {
+    "add": "Tambah",
+    "load_more": "Muat Lebih Banyak",
     "all": "Semua",
     "app_name": "Keuangan",
     "currency": "IDR",
@@ -273,6 +275,7 @@
     "wallet_balances": "Saldo dompet",
     "cancel": "Batal",
     "export": "Ekspor",
+    "export_to_excel": "Export Ke Excel",
     "successful": "Ekspor Berhasil",
     "successful_description": "Data keuangan Anda telah diekspor ke Excel",
     "failed": "Ekspor Gagal",

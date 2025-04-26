@@ -16,6 +16,7 @@ import CategoryIcon from '@/components/shared/CategoryIcon';
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 interface TransactionFormProps {
   // Props if needed
@@ -178,11 +179,6 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button className="p-2 bg-[#242425] rounded-full hover:bg-[#333]">
-          <Plus className="h-5 w-5 text-[#C6FE1E]" />
-        </button>
-      </DialogTrigger>
       <DialogContent className="bg-[#1A1A1A] border-none text-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
@@ -251,14 +247,12 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
             <Label htmlFor="amount" className="text-[#868686] mb-1 block">
               {t('transactions.amount')}
             </Label>
-            <Input
+            <FormattedInput
               id="amount"
-              name="amount"
-              type="number"
-              placeholder="0"
               value={formData.amount}
-              onChange={handleChange}
-              className="bg-[#242425] border-0 text-white"
+              onChange={(value) => setFormData({ ...formData, amount: value })}
+              onValueChange={(numericValue) => setFormData({ ...formData, amount: String(numericValue) })}
+              className="bg-[#2A3435] text-white border-none rounded-lg"
             />
           </div>
           

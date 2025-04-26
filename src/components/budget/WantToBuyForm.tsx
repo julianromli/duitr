@@ -17,6 +17,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { ShoppingBag, Calendar, Tag, AlertTriangle } from 'lucide-react'; // Removed X icon
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 // Zod schema for validation
 const wantToBuySchema = z.object({
@@ -151,13 +152,20 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
           {/* Price */}
            <div className="space-y-2">
             <Label htmlFor="price" className="text-[#868686]">{t('budget.itemPrice')}</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              {...register('price')}
-              className="bg-[#242425] border-0 text-white"
-              placeholder="0.00"
+            <Controller
+              name="price"
+              control={control}
+              render={({ field }) => (
+                <FormattedInput
+                  id="price"
+                  value={field.value.toString()}
+                  onChange={(value) => {
+                    field.onChange(value ? parseFloat(value.replace(/\./g, '')) : 0);
+                  }}
+                  className="bg-[#242425] border-0 text-white"
+                  placeholder="0"
+                />
+              )}
             />
              {errors.price && <p className="text-xs text-red-500">{errors.price.message}</p>}
           </div>

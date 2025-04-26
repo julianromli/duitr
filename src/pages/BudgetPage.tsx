@@ -24,6 +24,9 @@ import { useFinance } from '@/context/FinanceContext';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { WantToBuyItem, PinjamanItem } from '@/types/finance';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 const BudgetPage: React.FC = () => {
   const { t } = useTranslation();
@@ -132,10 +135,15 @@ const BudgetPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewBudget({
-      ...newBudget,
-      [name]: value
-    });
+    setNewBudget({ ...newBudget, [name]: value });
+  };
+
+  const handleAmountChange = (value: string) => {
+    setNewBudget({ ...newBudget, amount: value });
+  };
+
+  const handleAmountValueChange = (numericValue: number) => {
+    setNewBudget({ ...newBudget, amount: String(numericValue) });
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -262,13 +270,13 @@ const BudgetPage: React.FC = () => {
                 
                 <div className="grid gap-2">
                   <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
-                  <Input
+                  <FormattedInput
                     id="amount"
                     name="amount"
-                    type="number"
                     placeholder={t('budgets.enter_amount')}
                     value={newBudget.amount}
-                    onChange={handleInputChange}
+                    onChange={handleAmountChange}
+                    onValueChange={handleAmountValueChange}
                     className="bg-[#242425] border-0 text-white"
                   />
                 </div>

@@ -23,6 +23,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 const Wallets: React.FC = () => {
   const { t } = useTranslation();
@@ -58,6 +59,14 @@ const Wallets: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleBalanceChange = (value: string) => {
+    setFormData({ ...formData, balance: value });
+  };
+
+  const handleBalanceValueChange = (numericValue: number) => {
+    setFormData({ ...formData, balance: String(numericValue) });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,14 +200,13 @@ const Wallets: React.FC = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="balance" className="text-[#868686]">{t('wallets.startingBalance')}</Label>
-                  <Input
+                  <FormattedInput
                     id="balance"
                     name="balance"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
+                    placeholder="0"
                     value={formData.balance}
-                    onChange={handleChange}
+                    onChange={handleBalanceChange}
+                    onValueChange={handleBalanceValueChange}
                     required
                     className="bg-[#242425] border-none text-white"
                   />

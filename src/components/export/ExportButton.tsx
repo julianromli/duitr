@@ -30,10 +30,12 @@ import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { ExportOptions } from '@/types/finance';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const ExportButton = () => {
   const { transactions } = useFinance();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [dateRange, setDateRange] = useState<'all' | '30days' | '90days' | 'thisYear' | 'custom'>('30days');
   const [startDate, setStartDate] = useState<Date | undefined>(new Date(new Date().setDate(new Date().getDate() - 30)));
@@ -95,14 +97,14 @@ const ExportButton = () => {
       // Close dialog and show success message
       setOpen(false);
       toast({
-        title: 'Export Successful',
-        description: 'Your financial data has been exported to Excel',
+        title: t('export.successful'),
+        description: t('export.successful_description'),
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: 'Export Failed',
-        description: 'An error occurred while exporting your data',
+        title: t('export.failed'),
+        description: t('export.failed_description'),
         variant: 'destructive',
       });
     }
@@ -112,31 +114,34 @@ const ExportButton = () => {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <button className="p-2 bg-secondary rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/70">
-            <Download size={20} className="text-primary" />
+          <button className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg hover:bg-secondary/80 dark:hover:bg-secondary/70">
+            <Download size={18} className="text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              {t('export.export_to_excel')}
+            </span>
           </button>
         </DialogTrigger>
         
         <DialogContent className="sm:max-w-[425px] bg-card border-border text-foreground">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              Export Transactions
+              {t('export.title')}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="grid gap-2">
-              <Label className="text-muted-foreground">Date Range</Label>
+              <Label className="text-muted-foreground">{t('export.date_range')}</Label>
               <Select value={dateRange} onValueChange={handleDateRangeChange}>
                 <SelectTrigger className="bg-secondary border-0 text-foreground">
-                  <SelectValue placeholder="Select date range" />
+                  <SelectValue placeholder={t('export.date_range')} />
                 </SelectTrigger>
                 <SelectContent className="bg-secondary border-0 text-foreground">
-                  <SelectItem value="all" className="hover:bg-secondary/80 focus:bg-secondary/80">All Time</SelectItem>
-                  <SelectItem value="30days" className="hover:bg-secondary/80 focus:bg-secondary/80">Last 30 Days</SelectItem>
-                  <SelectItem value="90days" className="hover:bg-secondary/80 focus:bg-secondary/80">Last 90 Days</SelectItem>
-                  <SelectItem value="thisYear" className="hover:bg-secondary/80 focus:bg-secondary/80">This Year</SelectItem>
-                  <SelectItem value="custom" className="hover:bg-secondary/80 focus:bg-secondary/80">Custom Range</SelectItem>
+                  <SelectItem value="all" className="hover:bg-secondary/80 focus:bg-secondary/80">{t('export.all_time')}</SelectItem>
+                  <SelectItem value="30days" className="hover:bg-secondary/80 focus:bg-secondary/80">{t('export.last_30_days')}</SelectItem>
+                  <SelectItem value="90days" className="hover:bg-secondary/80 focus:bg-secondary/80">{t('export.last_90_days')}</SelectItem>
+                  <SelectItem value="thisYear" className="hover:bg-secondary/80 focus:bg-secondary/80">{t('export.this_year')}</SelectItem>
+                  <SelectItem value="custom" className="hover:bg-secondary/80 focus:bg-secondary/80">{t('export.custom_range')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -144,12 +149,12 @@ const ExportButton = () => {
             {dateRange === 'custom' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label className="text-muted-foreground">Start Date</Label>
+                  <Label className="text-muted-foreground">{t('export.start_date')}</Label>
                   <Popover open={calendarOpen === 'start'} onOpenChange={(open) => open ? setCalendarOpen('start') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full justify-start text-left font-medium bg-secondary border-0 text-foreground hover:bg-secondary/80">
                         <Calendar className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, 'PP') : 'Pick a date'}
+                        {startDate ? format(startDate, 'PP') : t('export.pick_date')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-secondary border-0">
@@ -168,12 +173,12 @@ const ExportButton = () => {
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label className="text-muted-foreground">End Date</Label>
+                  <Label className="text-muted-foreground">{t('export.end_date')}</Label>
                   <Popover open={calendarOpen === 'end'} onOpenChange={(open) => open ? setCalendarOpen('end') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full justify-start text-left font-medium bg-secondary border-0 text-foreground hover:bg-secondary/80">
                         <Calendar className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, 'PP') : 'Pick a date'}
+                        {endDate ? format(endDate, 'PP') : t('export.pick_date')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-secondary border-0">
@@ -194,7 +199,7 @@ const ExportButton = () => {
             )}
             
             <div>
-              <Label className="text-muted-foreground">Data to Include</Label>
+              <Label className="text-muted-foreground">{t('export.data_to_include')}</Label>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -203,7 +208,7 @@ const ExportButton = () => {
                     onCheckedChange={(checked) => setOptions({...options, includeTransactions: !!checked})}
                     className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="transactions" className="cursor-pointer text-foreground">Transaction history</Label>
+                  <Label htmlFor="transactions" className="cursor-pointer text-foreground">{t('export.transaction_history')}</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -213,7 +218,7 @@ const ExportButton = () => {
                     onCheckedChange={(checked) => setOptions({...options, includeSummary: !!checked})}
                     className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="summary" className="cursor-pointer text-foreground">Summary statistics</Label>
+                  <Label htmlFor="summary" className="cursor-pointer text-foreground">{t('export.summary_statistics')}</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -223,7 +228,7 @@ const ExportButton = () => {
                     onCheckedChange={(checked) => setOptions({...options, includeBudgets: !!checked})}
                     className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="budgets" className="cursor-pointer text-foreground">Budget progress</Label>
+                  <Label htmlFor="budgets" className="cursor-pointer text-foreground">{t('export.budget_progress')}</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -233,7 +238,7 @@ const ExportButton = () => {
                     onCheckedChange={(checked) => setOptions({...options, includeWallets: !!checked})}
                     className="bg-secondary border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
-                  <Label htmlFor="wallets" className="cursor-pointer text-foreground">Wallet balances</Label>
+                  <Label htmlFor="wallets" className="cursor-pointer text-foreground">{t('export.wallet_balances')}</Label>
                 </div>
               </div>
             </div>
@@ -244,14 +249,14 @@ const ExportButton = () => {
               onClick={() => setOpen(false)} 
               className="bg-secondary text-foreground hover:bg-secondary/80 border-0"
             >
-              Cancel
+              {t('export.cancel')}
             </Button>
             <Button 
               onClick={handleExport} 
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold border-0 gap-2"
             >
               <FileSpreadsheet className="h-4 w-4" />
-              Export
+              {t('export.export')}
             </Button>
           </DialogFooter>
         </DialogContent>

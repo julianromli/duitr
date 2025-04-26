@@ -18,6 +18,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 // Zod schema for validation
 const pinjamanSchema = z.object({
@@ -152,13 +153,20 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
 
           <div className="space-y-2">
             <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              {...register('amount')}
-              className="bg-[#242425] border-0 text-white"
+            <Controller
+              name="amount"
+              control={control}
+              render={({ field }) => (
+                <FormattedInput
+                  id="amount"
+                  value={field.value.toString()}
+                  onChange={(value) => {
+                    field.onChange(value ? parseFloat(value.replace(/\./g, '')) : 0);
+                  }}
+                  className="bg-[#242425] border-0 text-white"
+                  placeholder="0"
+                />
+              )}
             />
             {errors.amount && <p className="text-xs text-red-500">{errors.amount.message}</p>}
           </div>

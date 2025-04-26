@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 interface TransactionDetailProps {
   transactionId: string | null;
@@ -142,11 +143,24 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   
   // Handle form field change
   const handleChange = (field: string, value: any) => {
-    if (field === 'date') {
-      // This will be handled by the DatePicker directly
-      return;
-    }
-    setEditedTransaction({ ...editedTransaction, [field]: value });
+    setEditedTransaction({
+      ...editedTransaction,
+      [field]: value
+    });
+  };
+
+  const handleAmountChange = (value: string) => {
+    setEditedTransaction({
+      ...editedTransaction,
+      amount: value.replace(/\./g, '')
+    });
+  };
+
+  const handleAmountValueChange = (numericValue: number) => {
+    setEditedTransaction({
+      ...editedTransaction,
+      amount: numericValue
+    });
   };
   
   // Handle cancel edit
@@ -232,12 +246,11 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
               <Label htmlFor="amount" className="text-[#868686] mb-1 block">
                 {t('transactions.amount')}
               </Label>
-              <Input 
+              <FormattedInput 
                 id="amount"
-                type="number"
-                step="0.01"
-                value={editedTransaction.amount}
-                onChange={(e) => handleChange('amount', e.target.value)}
+                value={editedTransaction.amount?.toString() || ''}
+                onChange={handleAmountChange}
+                onValueChange={handleAmountValueChange}
                 className="bg-[#242425] border-0 text-white"
               />
             </div>

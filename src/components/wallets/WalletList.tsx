@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, CreditCard, Landmark, TrendingUp, ArrowUpRight, ArrowDownRight, Edit, Trash, MoreVertical } from 'lucide-react';
+import { Wallet, CreditCard, Landmark, TrendingUp, ArrowUpRight, ArrowDownRight, Edit, Trash, MoreVertical, MoreHorizontal, Plus, Wallet as WalletIcon, Trash2, CreditCard as CreditCardIcon, Smartphone, Briefcase, DollarSign, Banknote, PiggyBank, Key } from 'lucide-react';
 import { useWallets } from '@/hooks/useWallets';
 import { cn } from '@/lib/utils';
 import { 
@@ -24,6 +24,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/context/AuthContext';
+import { formatCurrency } from '@/utils/currency';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 const WalletList: React.FC = () => {
   const { wallets, walletStats } = useWallets();
@@ -91,6 +94,14 @@ const WalletList: React.FC = () => {
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditWallet({ ...editWallet, [name]: value });
+  };
+
+  const handleBalanceChange = (value: string) => {
+    setEditWallet({ ...editWallet, balance: value });
+  };
+
+  const handleBalanceValueChange = (numericValue: number) => {
+    setEditWallet({ ...editWallet, balance: numericValue });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -332,14 +343,13 @@ const WalletList: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="balance" className="text-[#868686] dark:text-gray-400">{t('wallets.balance')}</Label>
-              <Input
+              <FormattedInput
                 id="balance"
                 name="balance"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={editWallet?.balance || ''}
-                onChange={handleEditChange}
+                placeholder="0"
+                value={editWallet?.balance?.toString() || ''}
+                onChange={handleBalanceChange}
+                onValueChange={handleBalanceValueChange}
                 required
                 className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200"
               />

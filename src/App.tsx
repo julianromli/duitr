@@ -10,6 +10,7 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import Navbar from "@/components/layout/Navbar";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import Transactions from "@/pages/Transactions";
 import Wallets from "@/pages/Wallets";
@@ -32,7 +33,7 @@ const queryClient = new QueryClient();
 
 // Main App component structure
 const AppContent = () => {
-  const { isLoading } = useAuth();
+  const { isLoading, user } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -64,6 +65,12 @@ const AppContent = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Root path now checks auth and shows either app or redirects to landing */}
+        <Route path="/" element={<RootRoute />} />
+        
+        {/* Move landing page to /landing */}
+        <Route path="/landing" element={<LandingPage />} />
+        
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
@@ -82,11 +89,7 @@ const AppContent = () => {
         {/* Test Route */}
         <Route path="/test-datepicker" element={<TestDatePicker />} />
 
-        {/* Protected App Routes */}
-        <Route
-          path="/"
-          element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>}
-        />
+        {/* Protected App Routes - Notice /app route is removed as it's now at root */}
         <Route
           path="/transactions"
           element={<ProtectedRoute><Layout><Transactions /></Layout></ProtectedRoute>}
@@ -132,6 +135,30 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Navbar />
   </div>
 );
+
+// Add a new component to handle root path routing
+const RootRoute = () => {
+  const { user, isLoading } = useAuth();
+  
+  // While checking auth status, show loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If user is logged in, show Dashboard, otherwise redirect to landing page
+  return user ? (
+    <Layout><Dashboard /></Layout>
+  ) : (
+    <Navigate to="/landing" replace />
+  );
+};
 
 // App wrapper providing all contexts
 const App = () => {
