@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
+import { FormattedInput } from '@/components/ui/formatted-input';
 
 interface TransferFormProps {
   open: boolean;
@@ -31,6 +33,14 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+  
+  const handleFormattedChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+  
+  const handleFormattedValueChange = (name: string, numericValue: number) => {
+    setFormData({ ...formData, [name]: String(numericValue) });
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -152,14 +162,13 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           
           <div className="space-y-2">
             <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
-            <Input
+            <FormattedInput
               id="amount"
               name="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
+              placeholder="0"
               value={formData.amount}
-              onChange={handleChange}
+              onChange={(value) => handleFormattedChange('amount', value)}
+              onValueChange={(numericValue) => handleFormattedValueChange('amount', numericValue)}
               required
               className="bg-[#242425] border-0 text-white"
             />
@@ -167,14 +176,13 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           
           <div className="space-y-2">
             <Label htmlFor="fee" className="text-[#868686]">{t('transactions.fee')}</Label>
-            <Input
+            <FormattedInput
               id="fee"
               name="fee"
-              type="number"
-              step="0.01"
               placeholder="0"
               value={formData.fee}
-              onChange={handleChange}
+              onChange={(value) => handleFormattedChange('fee', value)}
+              onValueChange={(numericValue) => handleFormattedValueChange('fee', numericValue)}
               className="bg-[#242425] border-0 text-white"
             />
           </div>

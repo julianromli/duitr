@@ -20,24 +20,24 @@ export function formatCurrency(amount: number): string {
  * @returns boolean indicating if the string is a valid format
  */
 export function isValidCurrency(value: string): boolean {
-  // Check for numeric content with possible commas
-  const numericPart = value.replace(/,/g, '');
+  // Check for numeric content with possible dots as thousand separators
+  const numericPart = value.replace(/\./g, '');
   return !isNaN(Number(numericPart));
 }
 
 /**
  * Parse a currency string back to a number
  * 
- * @param value - The formatted string (e.g., "1,500,000")
+ * @param value - The formatted string (e.g., "1.500.000")
  * @returns The numeric value of the string
  */
 export function parseCurrency(value: string): number {
   if (!isValidCurrency(value)) {
-    throw new Error('Invalid currency format. Expected format: 1,000,000');
+    throw new Error('Invalid currency format. Expected format: 1.000.000');
   }
   
-  // Remove commas, then convert to a number
-  const numericPart = value.replace(/,/g, '');
+  // Remove dots, then convert to a number
+  const numericPart = value.replace(/\./g, '');
   return Number(numericPart);
 }
 

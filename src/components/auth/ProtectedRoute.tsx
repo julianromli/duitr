@@ -24,9 +24,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    // Redirect to login page if not authenticated
-    // Pass the original location state so we can redirect back after login if needed
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to landing page instead of login when not authenticated
+    return <Navigate to="/landing" state={{ from: location }} replace />;
   }
 
   // Render children if authenticated

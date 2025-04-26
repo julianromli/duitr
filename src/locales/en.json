@@ -1,5 +1,7 @@
 {
   "common": {
+    "add": "Add",
+    "load_more": "Load More",
     "all": "All",
     "app_name": "Finance",
     "currency": "USD",
@@ -269,6 +271,7 @@
     "wallet_balances": "Wallet balances",
     "cancel": "Cancel",
     "export": "Export",
+    "export_to_excel": "Export to Excel",
     "successful": "Export Successful",
     "successful_description": "Your financial data has been exported to Excel",
     "failed": "Export Failed",
