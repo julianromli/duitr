@@ -373,34 +373,34 @@ export function legacyCategoryNameToId(
 // Add default categories as fallback when Supabase isn't available
 export const DEFAULT_CATEGORIES = {
   expense: [
-    { id: "1", name: "Groceries" },
-    { id: "2", name: "Dining" },
-    { id: "3", name: "Transportation" },
-    { id: "4", name: "Subscription" },
-    { id: "5", name: "Housing" },
-    { id: "6", name: "Entertainment" },
-    { id: "7", name: "Shopping" },
-    { id: "8", name: "Health" },
-    { id: "9", name: "Education" },
-    { id: "10", name: "Travel" },
-    { id: "11", name: "Personal" },
-    { id: "12", name: "Other" },
-    { id: "19", name: "Donate" }
+    { id: "1", name: "Groceries", icon: "ShoppingCart" },
+    { id: "2", name: "Dining", icon: "Utensils" },
+    { id: "3", name: "Transportation", icon: "Car" },
+    { id: "4", name: "Subscription", icon: "CreditCard" },
+    { id: "5", name: "Housing", icon: "Home" },
+    { id: "6", name: "Entertainment", icon: "Film" },
+    { id: "7", name: "Shopping", icon: "ShoppingBag" },
+    { id: "8", name: "Health", icon: "Heart" },
+    { id: "9", name: "Education", icon: "Book" },
+    { id: "10", name: "Travel", icon: "Plane" },
+    { id: "11", name: "Personal", icon: "User" },
+    { id: "12", name: "Other", icon: "HelpCircle" },
+    { id: "19", name: "Donate", icon: "Gift" } // Using Gift icon for Donate
   ],
   income: [
-    { id: "13", name: "Salary" },
-    { id: "14", name: "Business" },
-    { id: "15", name: "Investment" },
-    { id: "16", name: "Gift" },
-    { id: "17", name: "Other" }
+    { id: "13", name: "Salary", icon: "DollarSign" },
+    { id: "14", name: "Business", icon: "Building2" }, // Corrected icon for Business
+    { id: "15", name: "Investment", icon: "LineChart" },
+    { id: "16", name: "Gift", icon: "Gift" },
+    { id: "17", name: "Other", icon: "HelpCircle" }
   ],
   system: [
-    { id: "18", name: "Transfer" }
+    { id: "18", name: "Transfer", icon: "ArrowLeftRight" }
   ]
 };
 
 // Get default categories by type
-export function getDefaultCategories(type: CategoryType, language: string = 'en'): { id: string; name: string }[] {
+export function getDefaultCategories(type: CategoryType, language: string = 'en'): { id: string; name: string; icon?: string }[] {
   // Return translated default categories
   const categories = DEFAULT_CATEGORIES[type] || [];
   
@@ -435,7 +435,8 @@ export function getDefaultCategories(type: CategoryType, language: string = 'en'
       
       return {
         id: cat.id,
-        name: translations[cat.name] || cat.name
+        name: translations[cat.name] || cat.name,
+        icon: cat.icon
       };
     });
   }
