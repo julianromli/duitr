@@ -322,7 +322,7 @@ const WalletList: React.FC = () => {
 
       {/* Edit Wallet Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-[#1A1A1A] border-none text-white dark:bg-gray-800 dark:text-gray-200">
+        <DialogContent className="bg-[#1A1A1A] border-none text-white dark:text-gray-200">
           <DialogHeader>
             <DialogTitle>{t('wallets.edit')}</DialogTitle>
           </DialogHeader>
