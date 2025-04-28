@@ -30,7 +30,7 @@ interface PinjamanListProps {
 }
 
 const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
-  const { pinjamanItems, updatePinjamanItem, deletePinjamanItem } = useFinance();
+  const { pinjamanItems, updatePinjamanItem, deletePinjamanItem, formatCurrency } = useFinance();
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -138,6 +138,9 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
             <div className="flex items-center justify-between">
                 <span className={`font-medium truncate ${item.is_settled ? 'line-through text-gray-500 dark:text-gray-400' : 'text-white dark:text-gray-100'}`}>
                    {item.name}
+                </span>
+                <span className="text-sm font-semibold text-white dark:text-gray-200 ml-2 flex-shrink-0">
+                   {formatCurrency(item.amount)}
                 </span>
             </div>
             <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
