@@ -1,3 +1,5 @@
+// Type definitions for finance-related data structures.
+// Added 'created_at' field to Transaction type.
 export type Transaction = {
   id: string;
   amount: number;
@@ -5,6 +7,7 @@ export type Transaction = {
   category?: string;
   description: string;
   date: string;
+  created_at?: string; // Added for accurate timestamp sorting
   type: 'income' | 'expense' | 'transfer';
   walletId: string;
   userId?: string;
