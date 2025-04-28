@@ -32,8 +32,8 @@ const RecentTransactions: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Get the most recent 5 transactions
-  const recentTransactions = transactions.slice(0, 5);
+  // Get the most recent 10 transactions (already sorted by date descendingly from context)
+  const recentTransactions = transactions.slice(0, 10);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

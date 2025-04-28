@@ -33,16 +33,8 @@ const Dashboard: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Sort transactions by creation timestamp (newest first)
-  // Assuming 'transactions' array from useFinance includes 'created_at'
-  const recentTransactions = [...transactions]
-    .sort((a, b) => {
-      // Use created_at for accurate sorting, fall back to date if needed
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : new Date(a.date).getTime();
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : new Date(b.date).getTime();
-      return dateB - dateA;
-    })
-    .slice(0, 5);
+  // Get the first 5 transactions (already sorted by date descendingly from context)
+  const recentTransactions = transactions.slice(0, 5);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

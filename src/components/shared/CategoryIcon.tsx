@@ -139,6 +139,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           return <LineChart className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'Wallet':
           return <Wallet className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
+        case 'Building2':
+          return <Building2 className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         default:
           console.warn(`Icon not found: ${iconName}`);
           return <Circle className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;

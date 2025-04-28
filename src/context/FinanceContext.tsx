@@ -83,7 +83,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       try {
         const [walletsRes, transactionsRes, budgetsRes, wantToBuyRes, pinjamanRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', user.id),
-          supabase.from('transactions').select('*').eq('user_id', user.id),
+          supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }), // Order by creation time
           supabase.from('budgets').select('*').eq('user_id', user.id),
           supabase.from('want_to_buy_items').select('*').eq('user_id', user.id),
           supabase.from('pinjaman_items').select('*').eq('user_id', user.id)
