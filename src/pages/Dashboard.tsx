@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 
+// Dashboard component displaying summary info and recent transactions.
+// Updated recent transactions sorting to use 'created_at' for accuracy.
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { totalBalance, transactions, formatCurrency, monthlyExpense, monthlyIncome, getDisplayCategoryName } = useFinance();
@@ -31,9 +33,15 @@ const Dashboard: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Sort transactions by date (newest first)
+  // Sort transactions by creation timestamp (newest first)
+  // Assuming 'transactions' array from useFinance includes 'created_at'
   const recentTransactions = [...transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort((a, b) => {
+      // Use created_at for accurate sorting, fall back to date if needed
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : new Date(a.date).getTime();
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : new Date(b.date).getTime();
+      return dateB - dateA;
+    })
     .slice(0, 5);
   
   const formatDate = (dateString: string) => {

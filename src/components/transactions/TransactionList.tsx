@@ -113,8 +113,9 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       } else if (filterParams.sortOption === 'amount-lowest') {
         query = query.order('amount', { ascending: true });
       } else {
-        // Default to date sorting (newest or latest)
-        query = query.order('date', { ascending: filterParams.sortOption === 'date-latest' });
+        // Default to timestamp sorting (newest or latest)
+        // Use 'created_at' instead of 'date' for accurate sorting including time
+        query = query.order('created_at', { ascending: filterParams.sortOption === 'date-latest' });
       }
       
       // Apply type filter if not 'all'
