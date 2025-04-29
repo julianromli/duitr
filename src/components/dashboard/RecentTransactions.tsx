@@ -32,8 +32,42 @@ const RecentTransactions: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   
-  // Get the most recent 10 transactions (already sorted by date descendingly from context)
-  const recentTransactions = transactions.slice(0, 10);
+  // Sort transactions exactly like the "Newest" sort option in TransactionList
+  // This prioritizes created_at timestamp over date for more accurate sorting
+  const recentTransactions = [...transactions]
+    .sort((a, b) => {
+      // Ensure we parse ISO dates correctly
+      const dateA = a.date ? new Date(a.date.split('T')[0] + 'T12:00:00Z') : new Date(0);
+      const dateB = b.date ? new Date(b.date.split('T')[0] + 'T12:00:00Z') : new Date(0);
+      
+      // Log the dates being compared for debugging
+      console.log('Comparing transactions:', {
+        transactionA: {
+          id: a.id,
+          description: a.description,
+          rawDate: a.date,
+          parsedDate: dateA.toISOString(),
+        },
+        transactionB: {
+          id: b.id,
+          description: b.description,
+          rawDate: b.date,
+          parsedDate: dateB.toISOString(),
+        },
+        result: dateB.getTime() - dateA.getTime()
+      });
+
+      // Sort by date (newest first)
+      const dateComparison = dateB.getTime() - dateA.getTime();
+      
+      // If dates are the same, sort by amount as secondary criteria
+      if (dateComparison === 0) {
+        return b.amount - a.amount;
+      }
+      
+      return dateComparison;
+    })
+    .slice(0, 10);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

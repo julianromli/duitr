@@ -103,10 +103,11 @@
     -moz-osx-font-smoothing: grayscale;
     font-family: 'Space Grotesk', sans-serif !important;
     font-display: swap;
+    overflow-x: hidden;
   }
 
   html, body, #root {
-    @apply h-full overflow-x-hidden;
+    @apply h-full;
     font-family: 'Space Grotesk', sans-serif !important;
   }
 }

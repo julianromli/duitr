@@ -18,6 +18,36 @@ const isEqual = (a: any, b: any): boolean => {
   return keysA.every(key => isEqual(a[key], b[key]));
 };
 
+// Helper function to determine if a date is within the current week
+const isWithinCurrentWeek = (date: Date): boolean => {
+  const now = new Date();
+  const currentDay = now.getDay(); // 0 = Sunday, 6 = Saturday
+  
+  // Calculate the start of the current week (Sunday)
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - currentDay);
+  startOfWeek.setHours(0, 0, 0, 0);
+  
+  // Calculate the end of the current week (Saturday)
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+  
+  return date >= startOfWeek && date <= endOfWeek;
+};
+
+// Helper function to determine if a date is within the current month
+const isWithinCurrentMonth = (date: Date): boolean => {
+  const now = new Date();
+  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+};
+
+// Helper function to determine if a date is within the current year
+const isWithinCurrentYear = (date: Date): boolean => {
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear();
+};
+
 export const useBudgets = () => {
   const { budgets: originalBudgets, transactions: originalTransactions } = useFinance();
   
@@ -45,56 +75,6 @@ export const useBudgets = () => {
 
     // Konsistenkan tanggal
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-    
-    // Caching key untuk tracking valid transactions
-    const cacheKey = `${currentMonth}-${currentYear}`;
-    
-    // Filter dan cache transaksi untuk bulan ini
-    let validTransactions: Transaction[] = [];
-    
-    // Hanya filter ulang jika transactionRef berubah
-    if (!isEqual(transactionsRef.current, currentTransactions)) {
-      console.log("Recalculating transactions cache for", cacheKey);
-      
-      validTransactions = currentTransactions.filter(transaction => {
-        if (!transaction.date || !transaction.type) return false;
-        
-        try {
-          const transDate = new Date(transaction.date);
-          return (
-            transaction.type === 'expense' &&
-            transDate.getMonth() === currentMonth &&
-            transDate.getFullYear() === currentYear
-          );
-        } catch (e) {
-          return false;
-        }
-      });
-      
-      // Update cache
-      transactionsRef.current = currentTransactions;
-    } else {
-      // Gunakan cache jika tersedia
-      validTransactions = currentTransactions.filter(transaction => {
-        if (!transaction.date || !transaction.type) return false;
-        
-        try {
-          const transDate = new Date(transaction.date);
-          return (
-            transaction.type === 'expense' &&
-            transDate.getMonth() === currentMonth &&
-            transDate.getFullYear() === currentYear
-          );
-        } catch {
-          return false;
-        }
-      });
-    }
-    
-    // Buat map pengeluaran berdasarkan categoryId
-    const spendingByCategory: Record<string, number> = {};
     
     // Reset cache jika budgets berubah 
     if (!isEqual(budgetsRef.current, currentBudgets)) {
@@ -103,28 +83,73 @@ export const useBudgets = () => {
       cacheRef.current = {};
     }
     
-    // Proses transaksi
-    validTransactions.forEach(transaction => {
-      if (!transaction.categoryId) return;
-      
-      // Konversi ke format yang konsisten
+    // Buat map untuk menyimpan pengeluaran berdasarkan categoryId dan period
+    const spendingByCategory: Record<string, Record<string, number>> = {};
+    
+    // Inisialisasi map spending
+    currentBudgets.forEach(budget => {
       let catId: string;
       
-      if (typeof transaction.categoryId === 'number') {
-        catId = String(transaction.categoryId);
+      if (typeof budget.categoryId === 'number') {
+        catId = String(budget.categoryId);
+      } else if (budget.categoryId) {
+        catId = budget.categoryId;
       } else {
-        catId = transaction.categoryId;
+        return;
       }
       
-      // Akumulasi pengeluaran
       if (!spendingByCategory[catId]) {
-        spendingByCategory[catId] = 0;
+        spendingByCategory[catId] = {
+          'weekly': 0,
+          'monthly': 0,
+          'yearly': 0
+        };
       }
-      spendingByCategory[catId] += transaction.amount;
+    });
+    
+    // Filter transaksi hanya expense
+    const expenseTransactions = currentTransactions.filter(transaction => {
+      return transaction.type === 'expense' && transaction.date;
+    });
+    
+    // Proses setiap transaksi
+    expenseTransactions.forEach(transaction => {
+      if (!transaction.categoryId || !transaction.date) return;
+      
+      try {
+        const transDate = new Date(transaction.date);
+        
+        // Konversi ke format yang konsisten
+        let catId: string;
+        
+        if (typeof transaction.categoryId === 'number') {
+          catId = String(transaction.categoryId);
+        } else {
+          catId = transaction.categoryId;
+        }
+        
+        // Skip jika kategori tidak ada dalam budget
+        if (!spendingByCategory[catId]) return;
+        
+        // Akumulasi pengeluaran berdasarkan periode
+        if (isWithinCurrentWeek(transDate)) {
+          spendingByCategory[catId]['weekly'] += transaction.amount;
+        }
+        
+        if (isWithinCurrentMonth(transDate)) {
+          spendingByCategory[catId]['monthly'] += transaction.amount;
+        }
+        
+        if (isWithinCurrentYear(transDate)) {
+          spendingByCategory[catId]['yearly'] += transaction.amount;
+        }
+      } catch (e) {
+        console.error("Error processing transaction date", e);
+      }
     });
     
     // Log untuk debugging
-    console.log("Category spending:", spendingByCategory);
+    console.log("Category spending by period:", spendingByCategory);
     
     // Kembalikan budgets dengan spending yang diperbarui
     return currentBudgets.map(budget => {
@@ -139,15 +164,19 @@ export const useBudgets = () => {
         return { ...budget, spent: 0 };
       }
       
-      // Log to help debug category issues
+      // Log untuk debug category issues
       if (!budget.category) {
         console.warn(`Budget without category name found:`, budget.id, budget.categoryId);
       }
       
+      // Tetapkan spending berdasarkan periode budget
+      const period = budget.period || 'monthly';
+      const spent = spendingByCategory[catId] ? spendingByCategory[catId][period] || 0 : 0;
+      
       return {
         ...budget,
         category: budget.category,
-        spent: spendingByCategory[catId] || 0
+        spent: spent
       };
     });
   }, []);

@@ -135,7 +135,7 @@ const AppContent = () => {
 
 // Layout component for protected routes
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="max-w-md mx-auto bg-background min-h-screen overflow-hidden">
+  <div className="max-w-md mx-auto bg-background min-h-screen">
     <main className="pb-24">
       {children}
     </main>
