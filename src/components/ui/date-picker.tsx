@@ -42,6 +42,24 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
     _e(_event);
   };
 
+  // Helper function to set date with timezone correction
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      // Create date with the same year, month and day values, but at noon
+      // to avoid timezone issues shifting the day
+      const correctedDate = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        12, 0, 0
+      );
+      setDate(correctedDate);
+    } else {
+      setDate(undefined);
+    }
+    setIsPopoverOpen(false);
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -61,10 +79,7 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
           <Calendar
             mode="single"
             selected={date}
-            onSelect={(date) => {
-              setDate(date);
-              setIsPopoverOpen(false);
-            }}
+            onSelect={handleDateSelect}
             initialFocus
             className="rounded-md border-0"
             classNames={{
@@ -88,20 +103,14 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
             <Button 
               variant="ghost" 
               className="text-[#C6FE1E] hover:text-[#C6FE1E] hover:bg-[#242425]"
-              onClick={() => {
-                setDate(undefined);
-                setIsPopoverOpen(false);
-              }}
+              onClick={() => handleDateSelect(undefined)}
             >
               Clear
             </Button>
             <Button 
               variant="ghost" 
               className="text-[#C6FE1E] hover:text-[#C6FE1E] hover:bg-[#242425]"
-              onClick={() => {
-                setDate(new Date());
-                setIsPopoverOpen(false);
-              }}
+              onClick={() => handleDateSelect(new Date())}
             >
               Today
             </Button>

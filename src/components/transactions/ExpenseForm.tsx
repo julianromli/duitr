@@ -40,6 +40,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   const { toast } = useToast();
   const { t } = useTranslation();
   
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: '',
     categoryId: '',
@@ -104,6 +105,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedDate) {
+      toast({
+        title: t('common.error'),
+        description: t('transactions.errors.select_date'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Validation
     if (!formData.amount || !formData.categoryId || !formData.description || !formData.walletId) {
       toast({
@@ -114,12 +124,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
+    // Format date to ISO string
+    const dateString = selectedDate.toISOString();
+    
     // Add transaction with required parameters
     addTransaction({
       amount: parseFloat(formData.amount),
       categoryId: formData.categoryId,
       description: formData.description,
-      date: new Date().toISOString(),
+      date: dateString,
       type: 'expense',
       walletId: formData.walletId,
     });
@@ -131,6 +144,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       description: '',
       walletId: '',
     });
+    setSelectedDate(new Date());
     
     // Show success message
     toast({
@@ -226,6 +240,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
               required
               className="bg-[#242425] border-0 text-white"
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label className="text-[#868686]">{t('transactions.date')}</Label>
+            <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+              <DatePicker 
+                date={selectedDate}
+                setDate={setSelectedDate}
+              />
+            </div>
           </div>
           
           <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">

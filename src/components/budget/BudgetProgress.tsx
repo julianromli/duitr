@@ -1,19 +1,30 @@
 import React from 'react';
-import { PieChart, LineChart, BarChart3 } from 'lucide-react';
+import { PieChart, LineChart, BarChart3, Calendar } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useBudgets } from '@/hooks/useBudgets';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFinance } from '@/context/FinanceContext';
+import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
 
 const BudgetProgress: React.FC = () => {
   const { budgets, totalBudgeted, totalSpent, remainingBudget, overallProgress } = useBudgets();
   const { formatCurrency } = useFinance();
+  const { t } = useTranslation();
+  
+  // Count budgets by period for the summary
+  const budgetCounts = budgets.reduce((acc, budget) => {
+    const period = budget.period || 'monthly';
+    acc[period] = (acc[period] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
   
   // Prepare data for pie chart
   const pieData = budgets.map((budget) => ({
     name: budget.category,
     value: budget.spent,
+    period: budget.period || 'monthly'
   }));
   
   // Colors for pie chart
@@ -27,10 +38,23 @@ const BudgetProgress: React.FC = () => {
           <p className="text-xs" style={{ color: payload[0].color }}>
             {formatCurrency(payload[0].value)}
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t(`budgets.${payload[0].payload.period}`)}
+          </p>
         </div>
       );
     }
     return null;
+  };
+
+  // Function to get period labels
+  const getPeriodLabel = (period: string) => {
+    switch(period) {
+      case 'weekly': return t('budgets.weekly');
+      case 'monthly': return t('budgets.monthly');
+      case 'yearly': return t('budgets.yearly');
+      default: return t('budgets.monthly');
+    }
   };
 
   return (
@@ -38,7 +62,7 @@ const BudgetProgress: React.FC = () => {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <LineChart className="w-5 h-5" /> Budget Overview
+            <LineChart className="w-5 h-5" /> {t('budgets.overview')}
           </CardTitle>
         </CardHeader>
         
@@ -46,7 +70,7 @@ const BudgetProgress: React.FC = () => {
           <div className="space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Overall Budget</span>
+                <span className="text-sm text-muted-foreground">{t('budgets.overall_budget')}</span>
                 <span className="text-sm font-medium">
                   {formatCurrency(totalSpent)} / {formatCurrency(totalBudgeted)}
                 </span>
@@ -58,17 +82,27 @@ const BudgetProgress: React.FC = () => {
                 indicatorClassName={overallProgress >= 90 ? 'bg-finance-expense' : 'bg-finance-income'} 
               />
               
+              {/* Period badges */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {Object.entries(budgetCounts).map(([period, count]) => (
+                  <Badge key={period} variant="outline" className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{count}x {getPeriodLabel(period)}</span>
+                  </Badge>
+                ))}
+              </div>
+              
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Spent</p>
+                  <p className="text-xs text-muted-foreground">{t('budgets.spent')}</p>
                   <p className="text-lg font-semibold">{formatCurrency(totalSpent)}</p>
                 </div>
                 
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-xs text-muted-foreground">{t('budgets.overall_remaining')}</p>
                   <p className={`text-lg font-semibold ${remainingBudget < 0 ? 'text-finance-expense' : 'text-finance-income'}`}>
                     {formatCurrency(Math.abs(remainingBudget))}
-                    {remainingBudget < 0 ? ' over' : ''}
+                    {remainingBudget < 0 ? ` ${t('budgets.over')}` : ''}
                   </p>
                 </div>
               </div>
@@ -80,7 +114,7 @@ const BudgetProgress: React.FC = () => {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <PieChart className="w-5 h-5" /> Spending by Category
+            <PieChart className="w-5 h-5" /> {t('budgets.spending_by_category')}
           </CardTitle>
         </CardHeader>
         

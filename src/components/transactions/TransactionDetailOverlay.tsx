@@ -499,10 +499,26 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                       <div className="bg-card rounded-md border border-muted-foreground/20">
                         <DatePicker 
                           date={editedTransaction.date ? new Date(editedTransaction.date) : undefined}
-                          setDate={(date) => setEditedTransaction({ 
-                            ...editedTransaction, 
-                            date: date ? date.toISOString().split('T')[0] : '' 
-                          })}
+                          setDate={(date) => {
+                            if (date) {
+                              // Use the full ISO string to preserve timezone information
+                              const correctedDate = new Date(
+                                date.getFullYear(),
+                                date.getMonth(),
+                                date.getDate(),
+                                12, 0, 0
+                              ).toISOString();
+                              setEditedTransaction({ 
+                                ...editedTransaction, 
+                                date: correctedDate
+                              });
+                            } else {
+                              setEditedTransaction({
+                                ...editedTransaction,
+                                date: ''
+                              });
+                            }
+                          }}
                         />
                       </div>
                     </div>
