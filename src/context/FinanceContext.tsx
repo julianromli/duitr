@@ -66,6 +66,17 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [currency] = useState('IDR');
   const [currencySymbol] = useState('Rp');
 
+  // Cache for category names to avoid repeated database queries
+  const [categoryNameCache, setCategoryNameCache] = useState<Record<string, string>>({});
+  
+  // Current language (used for cache keys)
+  const currentLanguage = i18next.language;
+
+  // Clear category cache when language changes
+  useEffect(() => {
+    setCategoryNameCache({});
+  }, [currentLanguage]);
+
   useEffect(() => {
     const loadUserData = async () => {
       if (!user) {
@@ -81,13 +92,31 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       setIsLoading(true);
       
       try {
-        const [walletsRes, transactionsRes, budgetsRes, wantToBuyRes, pinjamanRes] = await Promise.all([
+        const [walletsRes, transactionsRes, budgetsRes, wantToBuyRes, pinjamanRes, categoriesRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', user.id),
           supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }), // Order by creation time
           supabase.from('budgets').select('*').eq('user_id', user.id),
           supabase.from('want_to_buy_items').select('*').eq('user_id', user.id),
-          supabase.from('pinjaman_items').select('*').eq('user_id', user.id)
+          supabase.from('pinjaman_items').select('*').eq('user_id', user.id),
+          supabase.from('categories').select('*').order('type').order('en_name') // Fetch all available categories
         ]);
+
+        // Store categories for mapping purposes
+        let categoryMap: Record<number, { en_name: string, id_name: string }> = {};
+        
+        if (categoriesRes.error) {
+          console.warn('Error loading categories:', categoriesRes.error.message);
+        } else if (categoriesRes.data) {
+          // Create a map of categoryId -> category names
+          categoriesRes.data.forEach(cat => {
+            if (cat.category_id) {
+              categoryMap[cat.category_id] = {
+                en_name: cat.en_name,
+                id_name: cat.id_name
+              };
+            }
+          });
+        }
 
         if (walletsRes.error) throw walletsRes.error;
         setWallets(walletsRes.data.map(w => ({
@@ -147,26 +176,33 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
             const numericId = Number(categoryId);
             
-            // Map of ID to localized category name
-            const idToName: Record<number, string> = {
-              // Expense categories
-              1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
-              2: i18next.language === 'id' ? 'Makanan' : 'Food',
-              3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
-              4: i18next.language === 'id' ? 'Langganan' : 'Subscription',
-              5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
-              6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
-              7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
-              8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
-              9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
-              10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
-              11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
-              12: i18next.language === 'id' ? 'Lainnya' : 'Other',
-              16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
-              19: i18next.language === 'id' ? 'Sedekah' : 'Donate'
-            };
-            
-            categoryDisplayName = idToName[numericId] || 'Other';
+            // Use the category map from Supabase instead of hardcoded values
+            if (categoryMap[numericId]) {
+              categoryDisplayName = i18next.language === 'id' ? 
+                categoryMap[numericId].id_name : 
+                categoryMap[numericId].en_name;
+            } else {
+              // Fallback to hardcoded mappings if category not in the map
+              const idToName: Record<number, string> = {
+                // Expense categories
+                1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
+                2: i18next.language === 'id' ? 'Makanan' : 'Food',
+                3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
+                4: i18next.language === 'id' ? 'Langganan' : 'Subscription',
+                5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
+                6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
+                7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
+                8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
+                9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
+                10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
+                11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
+                12: i18next.language === 'id' ? 'Lainnya' : 'Other',
+                16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
+                19: i18next.language === 'id' ? 'Sedekah' : 'Donate'
+              };
+              
+              categoryDisplayName = idToName[numericId] || 'Other';
+            }
           }
           
           return {
@@ -228,7 +264,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
     
     loadUserData();
-  }, [user, toast]);
+  }, [user, toast, currentLanguage]);
 
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
 
@@ -273,6 +309,25 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
         const numericId = Number(transaction.categoryId);
         
+        // Create a language-specific cache key
+        const cacheKey = `${currentLanguage}_${numericId}`;
+        
+        // Check if we have this category in our cache with current language
+        if (categoryNameCache[cacheKey]) {
+          return categoryNameCache[cacheKey];
+        }
+        
+        // If not in cache, fetch it from DB in background for future use
+        // but return synchronously for this call
+        getCategoryById(numericId).then(category => {
+          if (category) {
+            const name = i18next.language === 'id' ? category.id_name : category.en_name;
+            setCategoryNameCache(prev => ({...prev, [cacheKey]: name}));
+          }
+        }).catch(err => {
+          console.warn(`Error fetching category ${numericId} from database:`, err);
+        });
+        
         // Map of ID to localized category name
         const idToName: Record<number, string> = {
           // Expense categories
@@ -305,6 +360,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
         const displayName = idToName[numericId];
         if (displayName) {
+          // Add to cache for future use
+          setCategoryNameCache(prev => ({...prev, [cacheKey]: displayName}));
           return displayName;
         }
         
@@ -339,19 +396,26 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
               "Gift": "Hadiah", 
               "Transfer": "Transfer"
             };
-            return translations[defaultCategory.name] || defaultCategory.name;
+            const translatedName = translations[defaultCategory.name] || defaultCategory.name;
+            setCategoryNameCache(prev => ({...prev, [cacheKey]: translatedName}));
+            return translatedName;
           }
+          setCategoryNameCache(prev => ({...prev, [cacheKey]: defaultCategory.name}));
           return defaultCategory.name;
         }
         
         // For fallback, determine if it's expense or income based on the ID range
+        let fallbackName = '';
         if (numericId <= 12) {
-          return i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
+          fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
         } else if (numericId <= 17) {
-          return i18next.language === 'id' ? 'Lainnya' : 'Other Income';
+          fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Income';
         } else {
-          return 'Transfer';
+          fallbackName = 'Transfer';
         }
+        
+        setCategoryNameCache(prev => ({...prev, [cacheKey]: fallbackName}));
+        return fallbackName;
       }
     }
     
