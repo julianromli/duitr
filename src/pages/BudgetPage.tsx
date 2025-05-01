@@ -5,7 +5,7 @@
 // Redesigned header to match other pages and removed scrollbar.
 // Fixed container layout issues that caused double scrollbars.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,9 +27,12 @@ import { WantToBuyItem, PinjamanItem } from '@/types/finance';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import { supabase } from '@/integrations/supabase/client';
+import i18next from 'i18next';
+import AnimatedText from '@/components/ui/animated-text';
 
 const BudgetPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { addBudget } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -43,6 +46,19 @@ const BudgetPage: React.FC = () => {
     spent: 0
   });
 
+  // Categories state
+  const [categories, setCategories] = useState<Array<{
+    id: string;
+    category_id?: number;
+    category_key?: string;
+    en_name: string;
+    id_name: string;
+    type?: string;
+    icon?: string;
+    created_at?: string;
+  }>>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
   // Want to Buy state
   const [isWantToBuyFormOpen, setIsWantToBuyFormOpen] = useState(false);
   const [editingWantToBuyItem, setEditingWantToBuyItem] = useState<WantToBuyItem | null>(null);
@@ -50,6 +66,56 @@ const BudgetPage: React.FC = () => {
   // Pinjaman state
   const [isPinjamanFormOpen, setIsPinjamanFormOpen] = useState(false);
   const [editingPinjamanItem, setEditingPinjamanItem] = useState<PinjamanItem | null>(null);
+
+  // Add a language change watcher to ensure the component refreshes when language changes
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  
+  useEffect(() => {
+    // Update current language when it changes
+    const handleLanguageChange = () => {
+      setCurrentLanguage(i18n.language);
+      
+      // Re-fetch categories when language changes to update translations
+      fetchCategories();
+    };
+    
+    // Subscribe to language changes
+    i18n.on('languageChanged', handleLanguageChange);
+    
+    // Cleanup
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
+  
+  // Call fetchCategories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, [toast, t]);
+  
+  // Load categories from Supabase
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('type')
+        .order('en_name');
+      
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast({
+        title: t('common.error'),
+        description: t('categories.error.load', 'Failed to load categories'),
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   // Animation variants
   const containerVariants = {
@@ -72,67 +138,15 @@ const BudgetPage: React.FC = () => {
     }
   };
 
-  // Budget form handlers
-  // These are the internal category names (English) for mapping to IDs
-  const categoryKeys = [
-    'Groceries',
-    'Dining',
-    'Transportation',
-    'Entertainment',
-    'Utilities',
-    'Housing',
-    'Healthcare',
-    'Education',
-    'Shopping',
-    'Personal Care',
-    'Travel',
-    'Gifts',
-    'Other'
-  ];
-  
-  // These are the translated category names to display in the UI
-  const categoryOptions = categoryKeys.map(key => {
-    // Map the English key to the corresponding translation key
-    const translationMap: Record<string, string> = {
-      'Groceries': 'budgets.categories.groceries',
-      'Dining': 'budgets.categories.dining',
-      'Transportation': 'budgets.categories.transportation',
-      'Entertainment': 'budgets.categories.entertainment',
-      'Utilities': 'budgets.categories.utilities',
-      'Housing': 'budgets.categories.housing',
-      'Healthcare': 'budgets.categories.healthcare',
-      'Education': 'budgets.categories.education',
-      'Shopping': 'budgets.categories.shopping',
-      'Personal Care': 'budgets.categories.personal_care',
-      'Travel': 'budgets.categories.travel',
-      'Gifts': 'budgets.categories.gifts',
-      'Other': 'budgets.categories.other'
-    };
-    
-    // Return the translated value for display
-    return {
-      key: key,
-      label: t(translationMap[key])
-    };
-  });
-  
-  // Mapping of category names to IDs
-  const categoryNameToId: Record<string, number> = {
-    'Groceries': 1,
-    'Dining': 2,
-    'Transportation': 3,
-    'Entertainment': 6,
-    'Utilities': 4,
-    'Housing': 5,
-    'Healthcare': 8,
-    'Education': 9,
-    'Shopping': 7,
-    'Personal Care': 11,
-    'Travel': 10,
-    'Gifts': 16,
-    'Other': 12
-  };
+  // Get expense categories for budget creation
+  const expenseCategories = categories
+    .filter(cat => cat.type === 'expense')
+    .map(cat => ({
+      key: cat.category_id ? cat.category_id.toString() : cat.id,
+      label: i18next.language === 'id' ? cat.id_name : cat.en_name
+    }));
 
+  // Budget form handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewBudget({ ...newBudget, [name]: value });
@@ -173,17 +187,35 @@ const BudgetPage: React.FC = () => {
       return;
     }
 
-    // Get the corresponding numeric category ID
-    const categoryId = categoryNameToId[newBudget.category] || 12; // Default to "Other" (12) if not found
+    // Find the corresponding category from our fetched categories
+    const categoryId = Number(newBudget.category);
+    const selectedCategory = categories.find(cat => {
+      // Check if category has a category_id property that matches
+      if (cat.category_id !== undefined) {
+        return cat.category_id === categoryId;
+      }
+      // Fallback to using the id property directly
+      return cat.id === newBudget.category || Number(cat.id) === categoryId;
+    });
     
-    // Find the translated display name for the category
-    const categoryOption = categoryOptions.find(option => option.key === newBudget.category);
-    const displayCategoryName = categoryOption ? categoryOption.label : newBudget.category;
+    if (!selectedCategory) {
+      toast({
+        title: t('common.error'),
+        description: t('budgets.errors.invalid_category'),
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Use the display name based on current language
+    const displayCategoryName = i18next.language === 'id' 
+      ? selectedCategory.id_name 
+      : selectedCategory.en_name;
 
-    // Add the new budget
+    // Add the new budget with the correct category ID
     addBudget({
-      category: displayCategoryName, // Use the translated category name for display
-      categoryId: categoryId,  // Use the mapped numeric ID
+      category: displayCategoryName, // Use the correct display name for the category
+      categoryId: selectedCategory.category_id || Number(selectedCategory.id),  // Use the numeric ID
       amount: Number(newBudget.amount),
       period: newBudget.period,
       spent: 0
@@ -233,7 +265,13 @@ const BudgetPage: React.FC = () => {
             <button onClick={() => navigate('/')} className="mr-4">
               <ChevronLeft size={24} className="text-white" />
             </button>
-            <h1 className="text-xl font-bold">{t('budgets.title')}</h1>
+            <h1 className="text-xl font-bold">
+              <AnimatedText 
+                text={t('budgets.title')} 
+                animationType="slide" 
+                duration={0.3}
+              />
+            </h1>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -244,32 +282,53 @@ const BudgetPage: React.FC = () => {
             <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold text-white">
-                  {t('budgets.create_new_budget')}
+                  <AnimatedText 
+                    text={t('budgets.create_new_budget')}
+                    animationType="fade"
+                  />
                 </DialogTitle>
               </DialogHeader>
               
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="category" className="text-[#868686]">{t('transactions.category')}</Label>
+                  <Label htmlFor="category" className="text-[#868686]">
+                    <AnimatedText text={t('transactions.category')} />
+                  </Label>
                   <Select
                     value={newBudget.category}
                     onValueChange={(value) => handleSelectChange('category', value)}
                   >
                     <SelectTrigger className="bg-[#242425] border-0 text-white">
-                      <SelectValue placeholder={t('budgets.select_category')} />
+                      <SelectValue>
+                        <AnimatedText 
+                          text={newBudget.category ? 
+                            expenseCategories.find(c => c.key === newBudget.category)?.label || 
+                            t('budgets.select_category') : 
+                            t('budgets.select_category')
+                          }
+                        />
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-[#242425] border-0 text-white">
-                      {categoryOptions.map((option) => (
-                        <SelectItem key={option.key} value={option.key} className="hover:bg-[#333] focus:bg-[#333]">
-                          {option.label}
+                      {isLoadingCategories ? (
+                        <SelectItem value="loading" disabled>
+                          <AnimatedText text="Loading categories..." />
                         </SelectItem>
-                      ))}
+                      ) : (
+                        expenseCategories.map((option) => (
+                          <SelectItem key={option.key} value={option.key} className="hover:bg-[#333] focus:bg-[#333]">
+                            <AnimatedText text={option.label} animationType="fade" />
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
+                  <Label htmlFor="amount" className="text-[#868686]">
+                    <AnimatedText text={t('transactions.amount')} />
+                  </Label>
                   <FormattedInput
                     id="amount"
                     name="amount"
@@ -282,26 +341,47 @@ const BudgetPage: React.FC = () => {
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="period" className="text-[#868686]">{t('budgets.period')}</Label>
+                  <Label htmlFor="period" className="text-[#868686]">
+                    <AnimatedText text={t('budgets.period')} />
+                  </Label>
                   <Select
                     value={newBudget.period}
                     onValueChange={(value) => handleSelectChange('period', value as 'monthly' | 'weekly' | 'yearly')}
                   >
                     <SelectTrigger className="bg-[#242425] border-0 text-white">
-                      <SelectValue placeholder={t('budgets.select_period')} />
+                      <SelectValue>
+                        <AnimatedText 
+                          text={
+                            newBudget.period === 'weekly' ? t('budgets.weekly') :
+                            newBudget.period === 'monthly' ? t('budgets.monthly') :
+                            newBudget.period === 'yearly' ? t('budgets.yearly') :
+                            t('budgets.select_period')
+                          }
+                        />
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-[#242425] border-0 text-white">
-                      <SelectItem value="weekly" className="hover:bg-[#333] focus:bg-[#333]">{t('budgets.weekly')}</SelectItem>
-                      <SelectItem value="monthly" className="hover:bg-[#333] focus:bg-[#333]">{t('budgets.monthly')}</SelectItem>
-                      <SelectItem value="yearly" className="hover:bg-[#333] focus:bg-[#333]">{t('budgets.yearly')}</SelectItem>
+                      <SelectItem value="weekly" className="hover:bg-[#333] focus:bg-[#333]">
+                        <AnimatedText text={t('budgets.weekly')} />
+                      </SelectItem>
+                      <SelectItem value="monthly" className="hover:bg-[#333] focus:bg-[#333]">
+                        <AnimatedText text={t('budgets.monthly')} />
+                      </SelectItem>
+                      <SelectItem value="yearly" className="hover:bg-[#333] focus:bg-[#333]">
+                        <AnimatedText text={t('budgets.yearly')} />
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-[#333] hover:bg-[#333] text-white">{t('buttons.cancel')}</Button>
-                <Button onClick={handleCreateBudget} className="bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">{t('buttons.create')}</Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-[#333] hover:bg-[#333] text-white">
+                  <AnimatedText text={t('buttons.cancel')} />
+                </Button>
+                <Button onClick={handleCreateBudget} className="bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+                  <AnimatedText text={t('buttons.create')} />
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -319,7 +399,12 @@ const BudgetPage: React.FC = () => {
         {/* Want to Buy Section */}
         <motion.div variants={itemVariants} className="mt-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">{t('budget.wantToBuyTitle')}</h2>
+            <h2 className="text-lg font-semibold text-white">
+              <AnimatedText 
+                text={t('budget.wantToBuyTitle')}
+                animationType="fade"
+              />
+            </h2>
             <Button
               variant="ghost"
               size="icon"
@@ -327,7 +412,9 @@ const BudgetPage: React.FC = () => {
               onClick={() => handleOpenWantToBuyForm()}
             >
               <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">{t('budget.addWantToBuy')}</span>
+              <span className="sr-only">
+                <AnimatedText text={t('budget.addWantToBuy')} />
+              </span>
             </Button>
           </div>
           <WantToBuyList onEditItem={handleOpenWantToBuyForm} />
@@ -336,7 +423,12 @@ const BudgetPage: React.FC = () => {
         {/* Pinjaman Section */}
         <motion.div variants={itemVariants} className="mt-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">{t('budget.pinjamanTitle')}</h2>
+            <h2 className="text-lg font-semibold text-white">
+              <AnimatedText 
+                text={t('budget.pinjamanTitle')}
+                animationType="fade"
+              />
+            </h2>
             <Button
               variant="ghost"
               size="icon"
@@ -344,7 +436,9 @@ const BudgetPage: React.FC = () => {
               onClick={() => handleOpenPinjamanForm()}
             >
               <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">{t('budget.addPinjaman')}</span>
+              <span className="sr-only">
+                <AnimatedText text={t('budget.addPinjaman')} />
+              </span>
             </Button>
           </div>
           <PinjamanList onEditItem={handleOpenPinjamanForm} />

@@ -21,18 +21,34 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
+import AnimatedText from '@/components/ui/animated-text';
 
 const BudgetList: React.FC = () => {
   const { budgets } = useBudgets();
   const { formatCurrency, updateBudget, deleteBudget } = useFinance();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [editingBudget, setEditingBudget] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     category: '',
     amount: '',
     period: 'monthly' as 'weekly' | 'monthly' | 'yearly'
   });
+  
+  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setCurrentLanguage(i18n.language);
+    };
+    
+    i18n.on('languageChanged', handleLanguageChange);
+    
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
   
   useEffect(() => {
     if (editingBudget) {
@@ -124,7 +140,12 @@ const BudgetList: React.FC = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <PieChart className="w-5 h-5" /> {t('budgets.budget_categories')}
+            <PieChart className="w-5 h-5" /> 
+            <AnimatedText 
+              text={t('budgets.budget_categories')} 
+              animationType="fade" 
+              duration={0.3}
+            />
           </CardTitle>
         </CardHeader>
         
@@ -141,14 +162,20 @@ const BudgetList: React.FC = () => {
                     <div className="flex flex-col space-y-3 bg-gray-100 dark:bg-gray-800 p-3 rounded-md border">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium">{t('transactions.category')}:</label>
-                          <span className="text-sm">{budget.category || 'No Category'}</span>
+                          <label className="text-sm font-medium">
+                            <AnimatedText text={t('transactions.category')} animationType="slide" />:
+                          </label>
+                          <span className="text-sm">
+                            <AnimatedText text={budget.category || 'No Category'} animationType="scale" />
+                          </span>
                         </div>
                       </div>
                       
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium">{t('transactions.amount')}:</label>
+                          <label className="text-sm font-medium">
+                            <AnimatedText text={t('transactions.amount')} animationType="slide" />:
+                          </label>
                           <Input 
                             value={editForm.amount}
                             onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
@@ -161,7 +188,9 @@ const BudgetList: React.FC = () => {
                       
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium">{t('budgets.period')}:</label>
+                          <label className="text-sm font-medium">
+                            <AnimatedText text={t('budgets.period')} animationType="slide" />:
+                          </label>
                           <Select
                             value={editForm.period}
                             onValueChange={(value) => setEditForm({...editForm, period: value as 'weekly' | 'monthly' | 'yearly'})}
@@ -170,9 +199,15 @@ const BudgetList: React.FC = () => {
                               <SelectValue placeholder={t('budgets.select_period')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="weekly">{t('budgets.weekly')}</SelectItem>
-                              <SelectItem value="monthly">{t('budgets.monthly')}</SelectItem>
-                              <SelectItem value="yearly">{t('budgets.yearly')}</SelectItem>
+                              <SelectItem value="weekly">
+                                <AnimatedText text={t('budgets.weekly')} />
+                              </SelectItem>
+                              <SelectItem value="monthly">
+                                <AnimatedText text={t('budgets.monthly')} />
+                              </SelectItem>
+                              <SelectItem value="yearly">
+                                <AnimatedText text={t('budgets.yearly')} />
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -185,7 +220,8 @@ const BudgetList: React.FC = () => {
                           onClick={handleCancelEdit}
                           className="h-8"
                         >
-                          <X className="h-4 w-4 mr-1" /> {t('common.cancel')}
+                          <X className="h-4 w-4 mr-1" /> 
+                          <AnimatedText text={t('common.cancel')} />
                         </Button>
                         <Button 
                           variant="default" 
@@ -193,17 +229,28 @@ const BudgetList: React.FC = () => {
                           onClick={() => handleSaveEdit(budget)}
                           className="h-8 bg-finance-income text-black hover:bg-finance-income/90"
                         >
-                          <Check className="h-4 w-4 mr-1" /> {t('common.save')}
+                          <Check className="h-4 w-4 mr-1" /> 
+                          <AnimatedText text={t('common.save')} />
                         </Button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-medium">{budget.category}</h3>
+                        <h3 className="font-medium">
+                          <AnimatedText 
+                            text={budget.category}
+                            animationType="slide"
+                            duration={0.4}
+                          />
+                        </h3>
                         <div className="flex items-center text-xs text-muted-foreground mt-1">
                           <Calendar className="h-3 w-3 mr-1" />
-                          <span>{getPeriodLabel(budget.period || 'monthly')}</span>
+                          <AnimatedText 
+                            text={getPeriodLabel(budget.period || 'monthly')}
+                            className="text-xs"
+                            animationType="fade"
+                          />
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -223,13 +270,15 @@ const BudgetList: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(budget)}>
-                              <Edit className="mr-2 h-4 w-4" /> {t('common.edit')}
+                              <Edit className="mr-2 h-4 w-4" /> 
+                              <AnimatedText text={t('common.edit')} />
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDelete(budget.id)}
                               className="text-destructive"
                             >
-                              <Trash className="mr-2 h-4 w-4" /> {t('common.delete')}
+                              <Trash className="mr-2 h-4 w-4" /> 
+                              <AnimatedText text={t('common.delete')} />
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -244,12 +293,20 @@ const BudgetList: React.FC = () => {
                   />
                   
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{t('budgets.used', { percentage: Math.round(percentage) })}</span>
+                    <AnimatedText 
+                      text={t('budgets.used', { percentage: Math.round(percentage) })}
+                      className="text-xs"
+                      animationType="slide"
+                    />
                     <span className={remaining < 0 ? 'text-finance-expense' : ''}>
-                      {remaining < 0 
-                        ? t('budgets.over_by', { amount: formatCurrency(Math.abs(remaining)) })
-                        : t('budgets.remaining', { amount: formatCurrency(Math.abs(remaining)) })
-                      }
+                      <AnimatedText 
+                        text={remaining < 0 
+                          ? t('budgets.over_by', { amount: formatCurrency(Math.abs(remaining)) })
+                          : t('budgets.remaining', { amount: formatCurrency(Math.abs(remaining)) })
+                        }
+                        className="text-xs"
+                        animationType="slide"
+                      />
                     </span>
                   </div>
                 </div>
