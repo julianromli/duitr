@@ -1,3 +1,6 @@
+// Fixed issue with bottom navbar not showing on Transactions page
+// Ensured proper spacing for the navbar with pb-24 class on container
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from 'lucide-react';
