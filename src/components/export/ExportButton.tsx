@@ -115,10 +115,8 @@ const ExportButton = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg hover:bg-secondary/80 dark:hover:bg-secondary/70">
-            <Download size={18} className="text-primary" />
-            <span className="text-sm font-medium text-foreground">
-              {t('export.export_to_excel')}
-            </span>
+            <FileSpreadsheet className="h-4 w-4" />
+            {t('export.export')}
           </button>
         </DialogTrigger>
         

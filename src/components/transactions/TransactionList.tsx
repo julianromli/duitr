@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Calendar, Filter, Search, Trash2, ChevronDown, Loader, X } from 'lucide-react';
+import { Calendar, Filter, Search, Trash2, ChevronDown, Loader, X, Wallet } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +36,11 @@ interface TransactionListProps {
   onTransactionClick?: (id: string) => void;
 }
 
+interface WalletOption {
+  id: string;
+  name: string;
+}
+
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
   const { t, i18n } = useTranslation();
   const { formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
@@ -58,10 +63,13 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<'date-newest' | 'date-latest' | 'amount-highest' | 'amount-lowest'>('date-newest');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedWallet, setSelectedWallet] = useState<string>('all');
+  const [wallets, setWallets] = useState<WalletOption[]>([]);
   const [filterParams, setFilterParams] = useState({
     searchTerm: '',
     typeFilter: 'all',
     selectedCategory: 'all',
+    selectedWallet: 'all',
     sortOption: 'date-newest'
   });
   
@@ -77,6 +85,31 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   
   // Add a loading flag to prevent multiple loading states
   const isLoadingRef = useRef(false);
+  
+  // Fetch wallets on component mount
+  useEffect(() => {
+    const fetchWallets = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('wallets')
+          .select('id, name')
+          .order('name');
+        
+        if (error) {
+          console.error('Error fetching wallets:', error);
+          return;
+        }
+        
+        if (data) {
+          setWallets(data);
+        }
+      } catch (err) {
+        console.error('Error fetching wallets:', err);
+      }
+    };
+    
+    fetchWallets();
+  }, []);
   
   // Fetch transactions with pagination
   const fetchTransactions = async (pageNum: number, isInitialLoad = false) => {
@@ -100,7 +133,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       const start = pageNum * pageSize;
       const end = start + pageSize - 1;
       
-      console.log(`Fetching transactions: page ${pageNum}, sort: ${filterParams.sortOption}, type: ${filterParams.typeFilter}, category: ${filterParams.selectedCategory}`);
+      console.log(`Fetching transactions: page ${pageNum}, sort: ${filterParams.sortOption}, type: ${filterParams.typeFilter}, category: ${filterParams.selectedCategory}, wallet: ${filterParams.selectedWallet}`);
       
       // Build the query with filters
       let query = supabase
@@ -121,6 +154,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       // Apply type filter if not 'all'
       if (filterParams.typeFilter !== 'all') {
         query = query.eq('type', filterParams.typeFilter);
+      }
+      
+      // Apply wallet filter if not 'all'
+      if (filterParams.selectedWallet !== 'all') {
+        query = query.eq('wallet_id', filterParams.selectedWallet);
       }
       
       // Apply category filter if not 'all'
@@ -455,9 +493,15 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       searchTerm,
       typeFilter,
       selectedCategory,
+      selectedWallet,
       sortOption
     });
   };
+  
+  // Update the selectedWallet when changed and apply filters
+  useEffect(() => {
+    applyFilters();
+  }, [selectedWallet]);
   
   // Load more transactions
   const handleLoadMore = () => {
@@ -788,6 +832,39 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               </SelectContent>
             </Select>
             
+            {/* Wallet Filter Dropdown */}
+            <Select
+              value={selectedWallet}
+              onValueChange={setSelectedWallet}
+            >
+              <SelectTrigger 
+                className={`bg-[#242425] border-none text-white h-auto py-2 flex-1 transition-all duration-200 ease-in-out
+                  ${selectedWallet !== 'all' ? 'bg-[#242425] border-[#C6FE1E] shadow-[0_0_6px_rgba(198,254,30,0.6)]' : ''}
+                `}
+              >
+                <div className="flex items-center">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder={t('wallets.all')} />
+                </div>
+              </SelectTrigger>
+              <SelectContent 
+                className="bg-[#1A1A1A] border-[#333] text-white"
+                style={{
+                  animationName: 'fadeIn',
+                  animationDuration: '0.2s',
+                  animationTimingFunction: 'ease-in-out',
+                  animationFillMode: 'forwards'
+                }}
+              >
+                <SelectItem value="all">{t('wallets.all')}</SelectItem>
+                {wallets.map(wallet => (
+                  <SelectItem key={wallet.id} value={wallet.id}>
+                    {wallet.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
             <Select
               value={sortOption}
               onValueChange={(value: 'date-newest' | 'date-latest' | 'amount-highest' | 'amount-lowest') => setSortOption(value)}
@@ -833,7 +910,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               {/* Empty state - show filter notice if filters are applied */}
               {!error && transactions.length === 0 && (
                 <div className="text-center py-8 text-[#868686]">
-                  {(searchTerm || typeFilter !== 'all' || selectedCategory !== 'all') ? (
+                  {(searchTerm || typeFilter !== 'all' || selectedCategory !== 'all' || selectedWallet !== 'all') ? (
                     <>
                       <p className="mb-2">{t('transactions.no_transactions_filtered')}</p>
                       <Button 
@@ -841,10 +918,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
                           setSearchTerm('');
                           setTypeFilter('all');
                           setSelectedCategory('all');
+                          setSelectedWallet('all');
                           setFilterParams({
                             searchTerm: '',
                             typeFilter: 'all',
                             selectedCategory: 'all',
+                            selectedWallet: 'all',
                             sortOption
                           });
                         }}

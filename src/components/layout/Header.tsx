@@ -5,14 +5,25 @@ import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import AppLogo from '@/components/shared/Logo';
+import { Button } from '@/components/ui/button';
+import { Globe, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
+  
+  // Animation states
+  const [languageClicked, setLanguageClicked] = useState(false);
+  const [themeClicked, setThemeClicked] = useState(false);
+
+  const language = i18n.language.includes('id') ? 'ID' : 'EN';
+  const isDarkTheme = theme === 'dark';
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -110,6 +121,22 @@ const Header: React.FC = () => {
     navigate('/profile');
   };
 
+  const toggleLanguage = () => {
+    setLanguageClicked(true);
+    setTimeout(() => {
+      setLanguageClicked(false);
+      i18n.changeLanguage(language === 'ID' ? 'en' : 'id');
+    }, 300);
+  };
+
+  const toggleTheme = () => {
+    setThemeClicked(true);
+    setTimeout(() => {
+      setThemeClicked(false);
+      setTheme(isDarkTheme ? 'light' : 'dark');
+    }, 300);
+  };
+
   return (
     <header className="px-6 py-4 flex items-center justify-between border-b animate-fade-in">
       <div className="flex items-center gap-3">
@@ -118,20 +145,52 @@ const Header: React.FC = () => {
           {getPageTitle()}
         </h1>
       </div>
-      {user && (
-        <Avatar 
-          className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200 cursor-pointer"
-          onClick={handleProfileClick}
+      
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={toggleLanguage}
+          className="transition-all duration-200 ease-in-out hover:scale-110 rounded-full p-2"
+          style={{
+            transform: languageClicked ? 'scale(1.2)' : 'scale(1)',
+            transition: 'transform 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
+            boxShadow: language === 'ID' ? '0 0 6px rgba(198, 254, 30, 0.6)' : 'none'
+          }}
         >
-          {profileImage ? (
-            <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
-          ) : (
-            <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF] flex items-center justify-center">
-              {username ? username.substring(0, 2).toUpperCase() : 'U'}
-            </AvatarFallback>
-          )}
-        </Avatar>
-      )}
+          <Globe className="w-4 h-4 mr-1" />
+          <span className="text-xs">{language}</span>
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={toggleTheme}
+          className="transition-all duration-200 ease-in-out hover:scale-110 rounded-full p-2"
+          style={{
+            transform: themeClicked ? 'scale(1.2)' : 'scale(1)',
+            transition: 'transform 0.3s ease-in-out, box-shadow 0.2s ease-in-out',
+            boxShadow: isDarkTheme ? '0 0 6px rgba(198, 254, 30, 0.6)' : 'none'
+          }}
+        >
+          {isDarkTheme ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+        </Button>
+        
+        {user && (
+          <Avatar 
+            className="h-8 w-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-200 cursor-pointer"
+            onClick={handleProfileClick}
+          >
+            {profileImage ? (
+              <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" />
+            ) : (
+              <AvatarFallback className="bg-[#E6DDFF] text-[#7B61FF] flex items-center justify-center">
+                {username ? username.substring(0, 2).toUpperCase() : 'U'}
+              </AvatarFallback>
+            )}
+          </Avatar>
+        )}
+      </div>
     </header>
   );
 };

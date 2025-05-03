@@ -64,6 +64,7 @@
     "view_all": "Lihat Semua"
   },
   "wallets": {
+    "all": "Semua",
     "title": "Akun & Dompet",
     "addAccount": "Tambah Akun",
     "balance": "Saldo: {{amount}}",
