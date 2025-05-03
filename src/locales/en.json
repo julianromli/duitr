@@ -66,6 +66,7 @@
     "view_all": "View All"
   },
   "wallets": {
+    "all": "All",
     "title": "Accounts & Wallets",
     "addAccount": "Add Account",
     "balance": "Balance: {{amount}}",

@@ -23,7 +23,7 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
   className = '',
   as: Component = 'span',
   animationType = 'fade',
-  duration = 0.5
+  duration = 0.00001
 }) => {
   const [key, setKey] = useState(0);
 

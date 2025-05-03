@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { FinanceProvider } from "@/context/FinanceContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -30,13 +30,17 @@ import { TestDatePicker } from "@/components/ui/test-date-picker";
 import { InstallAppBanner } from "@/components/shared/InstallAppBanner";
 import EditCategoryPage from "@/pages/EditCategoryPage";
 import SupabaseTestPage from "@/pages/SupabaseTestPage";
+import { TransitionProvider } from "@/context/TransitionContext";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "@/components/layout/PageTransition";
 
 const queryClient = new QueryClient();
 
-// Main App component structure
-const AppContent = () => {
+// Main App content separated from router structure
+const AppRoutes = () => {
   const { isLoading, user } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const location = useLocation();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -64,106 +68,151 @@ const AppContent = () => {
     );
   }
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Root path now checks auth and shows either app or redirects to landing */}
-        <Route path="/" element={<RootRoute />} />
-        
-        {/* Move landing page to /landing */}
+  // If not logged in, redirect to landing
+  if (!user) {
+    return (
+      <Routes location={location} key={location.pathname}>
         <Route path="/landing" element={<LandingPage />} />
-        
-        {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-
-        {/* Redirects for potential 404 during auth flow */}
-        <Route path="/r5sms-*" element={<Navigate to="/auth/callback" replace />} />
-        <Route path="/sin1:*" element={<Navigate to="/auth/callback" replace />} />
-        <Route path="*NOT_FOUND*" element={<Navigate to="/auth/callback" replace />} />
-
-        {/* Offline page */}
-        <Route path="/offline" element={<Offline />} />
-        
-        {/* Test Routes */}
-        <Route path="/test-datepicker" element={<TestDatePicker />} />
-        <Route path="/test-supabase" element={<SupabaseTestPage />} />
-
-        {/* Protected App Routes - Notice /app route is removed as it's now at root */}
-        <Route
-          path="/transactions"
-          element={<ProtectedRoute><Layout><Transactions /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/transaction-detail"
-          element={<ProtectedRoute><Layout><TransactionDetailPage /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/editcategory"
-          element={<ProtectedRoute><Layout><EditCategoryPage /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/budget"
-          element={<ProtectedRoute><Layout><BudgetPage /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/statistics"
-          element={<ProtectedRoute><Layout><Statistics /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/wallets"
-          element={<ProtectedRoute><Layout><Wallets /></Layout></ProtectedRoute>}
-        />
-        <Route
-          path="/profile"
-          element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>}
-        />
-
-        {/* Fallback */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/landing" replace />} />
       </Routes>
+    );
+  }
 
+  return (
+    <div className="max-w-md mx-auto bg-background min-h-screen">
+      <main className="pb-24">
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            {/* Home route directly renders Dashboard */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <Dashboard />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgotpassword" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* Redirects for potential 404 during auth flow */}
+            <Route path="/r5sms-*" element={<Navigate to="/auth/callback" replace />} />
+            <Route path="/sin1:*" element={<Navigate to="/auth/callback" replace />} />
+            <Route path="*NOT_FOUND*" element={<Navigate to="/auth/callback" replace />} />
+
+            {/* Offline page */}
+            <Route path="/offline" element={<Offline />} />
+            
+            {/* Test Routes */}
+            <Route path="/test-datepicker" element={<TestDatePicker />} />
+            <Route path="/test-supabase" element={<SupabaseTestPage />} />
+
+            {/* Protected App Routes */}
+            <Route
+              path="/transactions"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <Transactions />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transaction-detail"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <TransactionDetailPage />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/editcategory"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <EditCategoryPage />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/budget"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <BudgetPage />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/statistics"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <Statistics />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wallets"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <Wallets />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <PageTransition>
+                    <ProfilePage />
+                  </PageTransition>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Landing page */}
+            <Route path="/landing" element={<LandingPage />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AnimatePresence>
+      </main>
+    </div>
+  );
+};
+
+// App content with navbar positioned outside the animated routes
+const AppContent = () => {
+  return (
+    <>
+      <AppRoutes />
+      <Navbar />
       <Toaster />
       <Sonner />
       <InstallAppBanner />
-    </BrowserRouter>
-  );
-}
-
-// Layout component for protected routes
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="max-w-md mx-auto bg-background min-h-screen">
-    <main className="pb-24">
-      {children}
-    </main>
-    <Navbar />
-  </div>
-);
-
-// Add a new component to handle root path routing
-const RootRoute = () => {
-  const { user, isLoading } = useAuth();
-  
-  // While checking auth status, show loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // If user is logged in, show Dashboard, otherwise redirect to landing page
-  return user ? (
-    <Layout><Dashboard /></Layout>
-  ) : (
-    <Navigate to="/landing" replace />
+    </>
   );
 };
 
@@ -176,7 +225,11 @@ const App = () => {
           <ThemeProvider>
             <AuthProvider>
               <FinanceProvider>
-                <AppContent />
+                <BrowserRouter>
+                  <TransitionProvider>
+                    <AppContent />
+                  </TransitionProvider>
+                </BrowserRouter>
               </FinanceProvider>
             </AuthProvider>
           </ThemeProvider>
