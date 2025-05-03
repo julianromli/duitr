@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BarChart3, CreditCard, User, FileText, Home, PiggyBank } from 'lucide-react';
@@ -9,6 +9,12 @@ const Navbar: React.FC = () => {
   const { pathname } = useLocation();
   const { t } = useTranslation();
   const navRef = useRef<HTMLDivElement>(null);
+  
+  // Debug log to confirm the navbar is mounted
+  useEffect(() => {
+    console.log('Navbar mounted, path:', pathname);
+    return () => console.log('Navbar unmounted');
+  }, [pathname]);
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -18,7 +24,7 @@ const Navbar: React.FC = () => {
 
   return (
     <motion.div 
-      className="fixed bottom-0 left-0 right-0 z-50 p-4 w-full max-w-md mx-auto"
+      className="fixed bottom-0 left-0 right-0 z-[999] p-4 w-full max-w-md mx-auto"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
