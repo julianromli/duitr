@@ -43,7 +43,8 @@ export const filterCategoriesByType = (categories: Category[], type: string): Ca
   return categories.filter(cat => cat.type === type);
 };
 
-export const getLocalizedCategoriesByType = (type: string) => {
+// Updated function signature to match usage
+export const getLocalizedCategoriesByType = async (type: string): Promise<{id: string | number; name: string}[]> => {
   return DEFAULT_CATEGORIES[type as keyof typeof DEFAULT_CATEGORIES] || [];
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
-import i18next from 'i18next';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 
 interface IncomeFormProps {
@@ -38,7 +38,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     const loadCategories = async () => {
       setIsLoadingCategories(true);
       try {
-        const fetchedCategories = await getLocalizedCategoriesByType('income', i18next);
+        const fetchedCategories = await getLocalizedCategoriesByType('income');
         
         // Sort categories by ID to maintain consistent order
         const sortedCategories = [...fetchedCategories].sort((a, b) => {
@@ -54,14 +54,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
         // Use default categories as fallback
         const defaultCategories = DEFAULT_CATEGORIES.income.map(cat => ({
           id: cat.id,
-          name: i18next.language === 'id' ? 
-            // Translate to Indonesian if needed
-            cat.name === 'Salary' ? 'Gaji' :
-            cat.name === 'Investment' ? 'Investasi' :
-            cat.name === 'Gift' ? 'Hadiah' :
-            cat.name === 'Side Hustle' ? 'Pekerjaan Sampingan' :
-            cat.name === 'Other' ? 'Lainnya' : cat.name
-            : cat.name
+          name: cat.name
         }));
         
         setCategories(defaultCategories);
@@ -77,7 +70,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     };
     
     loadCategories();
-  }, [t, i18next.language]);
+  }, [t]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -241,4 +234,4 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default IncomeForm; 
+export default IncomeForm;
