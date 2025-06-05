@@ -11,9 +11,9 @@ interface InsightDisplayProps {
 export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading }) => {
   if (isLoading) {
     return (
-      <Card className="mb-6">
+      <Card className="mb-6 bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white">
             <Brain className="w-5 h-5 text-blue-600" />
             Evaluasi AI
           </CardTitle>
@@ -21,7 +21,7 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-            <span className="ml-3 text-gray-600">AI sedang menganalisis data keuangan Anda...</span>
+            <span className="ml-3 text-gray-300">AI sedang menganalisis data keuangan Anda...</span>
           </div>
         </CardContent>
       </Card>
@@ -29,9 +29,9 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
   }
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-white">
           <Brain className="w-5 h-5 text-blue-600" />
           Evaluasi AI
         </CardTitle>
@@ -47,19 +47,19 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
             return (
               <p 
                 key={index} 
-                className="mb-3 text-gray-700 leading-relaxed"
+                className="mb-3 text-gray-300 leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: formattedText }}
               />
             );
           })}
         </div>
         
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-600">
-          <div className="flex items-center gap-2 text-blue-700 font-medium mb-1">
+        <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border-l-4 border-blue-600">
+          <div className="flex items-center gap-2 text-blue-400 font-medium mb-1">
             <TrendingUp className="w-4 h-4" />
             Tips
           </div>
-          <p className="text-sm text-blue-600">
+          <p className="text-sm text-blue-300">
             Gunakan chatbox di bawah untuk bertanya lebih detail tentang evaluasi ini.
           </p>
         </div>

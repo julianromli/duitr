@@ -1,5 +1,5 @@
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 const GEMINI_API_KEY = "AIzaSyC8ayF6x42UqiXAqlT3_FLFF6I-y5Q3t0w";
 
 import type { FinanceSummary } from '@/types/finance';
@@ -15,14 +15,34 @@ export async function getFinanceInsight(summary: FinanceSummary): Promise<string
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
       }),
     });
 
     if (!res.ok) {
+      console.error('API response not ok:', res.status, res.statusText);
+      const errorText = await res.text();
+      console.error('Error response:', errorText);
       throw new Error(`API request failed: ${res.status}`);
     }
 
     const data = await res.json();
+    console.log('API response:', data);
     return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "Gagal mendapatkan insight.";
   } catch (error) {
     console.error('Error getting finance insight:', error);
@@ -48,6 +68,12 @@ Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 512,
+        }
       }),
     });
 

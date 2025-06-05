@@ -53,6 +53,7 @@ export type WantToBuyItem = {
   purchase_date?: string | null;
   icon?: string | null;
   userId?: string;
+  user_id?: string; // For database compatibility
   created_at?: string;
 };
 
