@@ -56,10 +56,6 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
     }
   };
 
-  const handleQuestionSelect = (question: string) => {
-    setCurrentQuestion(question);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -142,6 +138,3 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
     </Card>
   );
 };
-
-// Export the handleQuestionSelect function for use in parent component
-export { ChatBox };
