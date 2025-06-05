@@ -59,3 +59,10 @@ export async function getCategoryById(categories: Category[], id: string | numbe
   const searchId = typeof id === 'string' ? id : id.toString();
   return categories.find(cat => cat.id === searchId || cat.category_id?.toString() === searchId);
 }
+
+// Updated function to match new signature
+export const getLocalizedCategoryNameById = (categories: Category[], categoryId: string | number): string => {
+  const searchId = typeof categoryId === 'string' ? categoryId : categoryId.toString();
+  const category = categories.find(cat => cat.id === searchId || cat.category_id?.toString() === searchId);
+  return category?.id_name || category?.en_name || 'Unknown';
+};

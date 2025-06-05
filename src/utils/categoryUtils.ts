@@ -92,3 +92,14 @@ export const legacyCategoryNameToId = (name: string): string => {
   );
   return category?.id || '12'; // Default to 'Other' expense
 };
+
+// Updated function signatures to match usage
+export const getLocalizedCategoryNameById = (categories: Category[], categoryId: string | number): string => {
+  const category = getCategoryById(categories, categoryId);
+  return getCategoryDisplayName(category);
+};
+
+// Single parameter version for backward compatibility
+export const getCategoryName = (categoryId: string | number): string => {
+  return getLocalizedCategoryName(categoryId.toString());
+};

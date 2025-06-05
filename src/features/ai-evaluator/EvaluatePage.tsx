@@ -25,6 +25,7 @@ export const EvaluatePage: React.FC = () => {
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
 
   // Get summary data from transactions
   const fetchSummary = (start: string, end: string): FinanceSummary => {
@@ -111,7 +112,7 @@ export const EvaluatePage: React.FC = () => {
   };
 
   const handleQuestionSelect = (question: string) => {
-    // This will be handled by the ChatBox component
+    setSelectedQuestion(question);
   };
 
   const containerVariants = {
@@ -232,7 +233,7 @@ export const EvaluatePage: React.FC = () => {
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg p-1">
-                  <ChatBox contextSummary={insight} />
+                  <ChatBox contextSummary={insight} suggestedQuestion={selectedQuestion} />
                 </div>
               </>
             )}

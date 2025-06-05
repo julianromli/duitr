@@ -19,9 +19,9 @@ const SUGGESTED_QUESTIONS = [
 
 export const SuggestedQuestions: React.FC<SuggestedQuestionsProps> = ({ onSelect }) => {
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2 text-base text-white">
           <MessageCircle className="w-4 h-4 text-green-600" />
           Pertanyaan yang Sering Ditanyakan
         </CardTitle>
@@ -33,7 +33,7 @@ export const SuggestedQuestions: React.FC<SuggestedQuestionsProps> = ({ onSelect
               key={index}
               variant="outline"
               size="sm"
-              className="text-left justify-start h-auto py-2 px-3 text-xs"
+              className="text-left justify-start h-auto py-2 px-3 text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
               onClick={() => onSelect(question)}
             >
               {question}

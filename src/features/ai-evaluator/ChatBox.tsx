@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,12 +9,20 @@ import type { ChatMessage } from '@/types/finance';
 
 interface ChatBoxProps {
   contextSummary: string;
+  suggestedQuestion?: string;
 }
 
-export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
+export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuestion }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle suggested question
+  useEffect(() => {
+    if (suggestedQuestion) {
+      setCurrentQuestion(suggestedQuestion);
+    }
+  }, [suggestedQuestion]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,9 +65,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
   };
 
   return (
-    <Card>
+    <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2 text-base text-white">
           <Bot className="w-4 h-4 text-purple-600" />
           Tanya AI Lebih Lanjut
         </CardTitle>
@@ -67,7 +75,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
       <CardContent>
         {/* Chat Messages */}
         {messages.length > 0 && (
-          <div className="mb-4 max-h-64 overflow-y-auto space-y-3 p-3 bg-gray-50 rounded-lg">
+          <div className="mb-4 max-h-64 overflow-y-auto space-y-3 p-3 bg-gray-800 rounded-lg">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -84,7 +92,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
                   <div className={`p-3 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white border'
+                      : 'bg-gray-700 border border-gray-600 text-gray-100'
                   }`}>
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     <p className={`text-xs mt-1 opacity-70`}>
@@ -101,10 +109,10 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
                   <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-purple-600 text-white">
                     <Bot className="w-3 h-3" />
                   </div>
-                  <div className="p-3 rounded-lg bg-white border">
+                  <div className="p-3 rounded-lg bg-gray-700 border border-gray-600">
                     <div className="flex items-center gap-2">
                       <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
-                      <span className="text-sm text-gray-600">AI sedang berpikir...</span>
+                      <span className="text-sm text-gray-300">AI sedang berpikir...</span>
                     </div>
                   </div>
                 </div>
@@ -119,7 +127,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
             value={currentQuestion}
             onChange={(e) => setCurrentQuestion(e.target.value)}
             placeholder="Tanyakan sesuatu tentang evaluasi keuangan Anda..."
-            className="min-h-[80px] resize-none"
+            className="min-h-[80px] resize-none bg-gray-800 border-gray-700 text-white placeholder-gray-400"
             disabled={isLoading}
           />
           <div className="flex justify-end">
@@ -127,7 +135,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary }) => {
               type="submit" 
               disabled={!currentQuestion.trim() || isLoading}
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-[#C6FE1E] text-black hover:bg-[#B5E619]"
             >
               <Send className="w-4 h-4" />
               Kirim
