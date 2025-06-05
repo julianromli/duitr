@@ -14,8 +14,11 @@ export async function fetchCategories(): Promise<Category[]> {
     throw error;
   }
 
-  // Transform database format to app format
-  return (data || []).map(transformCategory);
+  // Transform database format to app format and ensure id field exists
+  return (data || []).map(item => transformCategory({
+    ...item,
+    id: item.category_id?.toString() || item.id || ''
+  }));
 }
 
 export async function fetchCategoriesByType(type: string): Promise<Category[]> {
@@ -30,8 +33,11 @@ export async function fetchCategoriesByType(type: string): Promise<Category[]> {
     throw error;
   }
 
-  // Transform database format to app format
-  return (data || []).map(transformCategory);
+  // Transform database format to app format and ensure id field exists
+  return (data || []).map(item => transformCategory({
+    ...item,
+    id: item.category_id?.toString() || item.id || ''
+  }));
 }
 
 export async function updateCategoryIcon(categoryId: string, icon: string): Promise<void> {
