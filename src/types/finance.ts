@@ -1,3 +1,4 @@
+
 // Type definitions for finance-related data structures.
 // Added 'created_at' field to Transaction type.
 export type Transaction = {
@@ -40,34 +41,32 @@ export type Wallet = {
   userId?: string;
 };
 
-// Type for items users want to buy
+// Type for items users want to buy - updated to match database schema
 export type WantToBuyItem = {
   id: string;
   name: string;
-  amount: number;
-  reason: string;
-  priority: number;
-  target_date: string;
+  price: number; // renamed from amount
+  category: string;
+  priority: string; // changed from number to string
+  estimated_date: string; // renamed from target_date
   is_purchased: boolean;
   purchase_date?: string | null;
-  image_url?: string | null;
+  icon?: string | null;
   userId?: string;
   created_at?: string;
 };
 
-// Type for loan/credit items
+// Type for loan/credit items - updated to match database schema
 export type PinjamanItem = {
   id: string;
   name: string;
   amount: number;
-  description: string;
-  due_date: string | null;
+  category: string; // 'Utang' | 'Piutang'
+  due_date: string;
   is_settled: boolean;
   settlement_date?: string | null;
-  lender_name: string;
   userId?: string;
   created_at?: string;
-  category?: 'Utang' | 'Piutang';
   icon?: string | null;
 };
 
@@ -78,4 +77,22 @@ export interface ExportOptions {
   includeSummary?: boolean;
   includeBudgets?: boolean;
   includeWallets?: boolean;
-} 
+}
+
+// AI Evaluation types
+export type FinanceSummary = {
+  startDate: string;
+  endDate: string;
+  income: Array<{ category: string; amount: number }>;
+  expenses: Array<{ category: string; amount: number }>;
+  totalIncome: number;
+  totalExpenses: number;
+  netFlow: number;
+};
+
+export type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+};
