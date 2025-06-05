@@ -2,6 +2,34 @@
 // Utility functions for category operations
 import { Category } from '@/types/categories';
 
+export const DEFAULT_CATEGORIES = {
+  expense: [
+    { id: '1', name: 'Groceries', category_key: 'expense_groceries' },
+    { id: '2', name: 'Dining', category_key: 'expense_dining' },
+    { id: '3', name: 'Transportation', category_key: 'expense_transportation' },
+    { id: '4', name: 'Subscription', category_key: 'expense_subscription' },
+    { id: '5', name: 'Housing', category_key: 'expense_housing' },
+    { id: '6', name: 'Entertainment', category_key: 'expense_entertainment' },
+    { id: '7', name: 'Shopping', category_key: 'expense_shopping' },
+    { id: '8', name: 'Health', category_key: 'expense_health' },
+    { id: '9', name: 'Education', category_key: 'expense_education' },
+    { id: '10', name: 'Travel', category_key: 'expense_travel' },
+    { id: '11', name: 'Personal', category_key: 'expense_personal' },
+    { id: '12', name: 'Other', category_key: 'expense_other' },
+    { id: '13', name: 'Donate', category_key: 'expense_donate' }
+  ],
+  income: [
+    { id: '14', name: 'Salary', category_key: 'income_salary' },
+    { id: '15', name: 'Business', category_key: 'income_business' },
+    { id: '16', name: 'Investment', category_key: 'income_investment' },
+    { id: '17', name: 'Gift', category_key: 'income_gift' },
+    { id: '18', name: 'Other', category_key: 'income_other' }
+  ],
+  system: [
+    { id: '19', name: 'Transfer', category_key: 'system_transfer' }
+  ]
+};
+
 export const getCategoryById = (categories: Category[], id: string | number): Category | undefined => {
   const searchId = typeof id === 'string' ? id : id.toString();
   return categories.find(cat => cat.id === searchId || cat.category_id?.toString() === searchId);
@@ -15,50 +43,52 @@ export const filterCategoriesByType = (categories: Category[], type: string): Ca
   return categories.filter(cat => cat.type === type);
 };
 
-// Legacy utility functions for backwards compatibility
-export const DEFAULT_CATEGORIES = [
-  { id: '1', en_name: 'Food & Drinks', id_name: 'Makanan & Minuman', type: 'expense', category_key: 'expense_food' },
-  { id: '2', en_name: 'Transportation', id_name: 'Transportasi', type: 'expense', category_key: 'expense_transport' },
-  { id: '3', en_name: 'Shopping', id_name: 'Belanja', type: 'expense', category_key: 'expense_shopping' },
-  { id: '4', en_name: 'Entertainment', id_name: 'Hiburan', type: 'expense', category_key: 'expense_entertainment' },
-  { id: '5', en_name: 'Bills & Utilities', id_name: 'Tagihan & Utilitas', type: 'expense', category_key: 'expense_bills' },
-  { id: '6', en_name: 'Healthcare', id_name: 'Kesehatan', type: 'expense', category_key: 'expense_health' },
-  { id: '7', en_name: 'Education', id_name: 'Pendidikan', type: 'expense', category_key: 'expense_education' },
-  { id: '8', en_name: 'Other', id_name: 'Lainnya', type: 'expense', category_key: 'expense_other' },
-  { id: '9', en_name: 'Salary', id_name: 'Gaji', type: 'income', category_key: 'income_salary' },
-  { id: '10', en_name: 'Business', id_name: 'Bisnis', type: 'income', category_key: 'income_business' },
-  { id: '11', en_name: 'Investment', id_name: 'Investasi', type: 'income', category_key: 'income_investment' },
-  { id: '12', en_name: 'Other Income', id_name: 'Pendapatan Lain', type: 'income', category_key: 'income_other' },
-  { id: '13', en_name: 'Transfer', id_name: 'Transfer', type: 'system', category_key: 'system_transfer' }
-];
-
-export const getLocalizedCategoriesByType = (type: string): Category[] => {
-  return DEFAULT_CATEGORIES.filter(cat => cat.type === type);
+export const getLocalizedCategoriesByType = (type: string) => {
+  return DEFAULT_CATEGORIES[type as keyof typeof DEFAULT_CATEGORIES] || [];
 };
 
 export const getLocalizedCategoryName = (categoryId: string): string => {
-  const category = DEFAULT_CATEGORIES.find(cat => cat.id === categoryId);
-  return category?.id_name || category?.en_name || 'Unknown';
+  const allCategories = [
+    ...DEFAULT_CATEGORIES.expense,
+    ...DEFAULT_CATEGORIES.income,
+    ...DEFAULT_CATEGORIES.system
+  ];
+  const category = allCategories.find(cat => cat.id === categoryId);
+  return category?.name || 'Unknown';
 };
 
 export const getCategoryStringIdFromUuid = (uuid: string): string => {
-  // For backwards compatibility - just return the uuid as string
   return uuid;
 };
 
 export const getCategoryUuidFromStringId = (stringId: string): string => {
-  // For backwards compatibility - just return the stringId
   return stringId;
 };
 
 export const getDefaultCategories = (): Category[] => {
-  return DEFAULT_CATEGORIES;
+  const allCategories = [
+    ...DEFAULT_CATEGORIES.expense,
+    ...DEFAULT_CATEGORIES.income,
+    ...DEFAULT_CATEGORIES.system
+  ];
+  
+  return allCategories.map(cat => ({
+    id: cat.id,
+    en_name: cat.name,
+    id_name: cat.name,
+    type: cat.category_key.split('_')[0],
+    category_key: cat.category_key
+  }));
 };
 
 export const legacyCategoryNameToId = (name: string): string => {
-  const category = DEFAULT_CATEGORIES.find(cat => 
-    cat.en_name.toLowerCase() === name.toLowerCase() || 
-    cat.id_name.toLowerCase() === name.toLowerCase()
+  const allCategories = [
+    ...DEFAULT_CATEGORIES.expense,
+    ...DEFAULT_CATEGORIES.income,
+    ...DEFAULT_CATEGORIES.system
+  ];
+  const category = allCategories.find(cat => 
+    cat.name.toLowerCase() === name.toLowerCase()
   );
-  return category?.id || '8'; // Default to 'Other' expense
+  return category?.id || '12'; // Default to 'Other' expense
 };

@@ -20,7 +20,7 @@ export interface CategoryOption {
 
 // Fix for category mapping - transform database format to app format
 export const transformCategory = (dbCategory: any): Category => ({
-  id: dbCategory.category_id?.toString() || dbCategory.id,
+  id: dbCategory.id || dbCategory.category_id?.toString() || '',
   category_id: dbCategory.category_id,
   category_key: dbCategory.category_key,
   en_name: dbCategory.en_name,

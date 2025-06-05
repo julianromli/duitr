@@ -1,3 +1,4 @@
+
 // Type definitions for finance-related data structures.
 // Added 'created_at' field to Transaction type.
 export type Transaction = {
@@ -55,7 +56,7 @@ export type WantToBuyItem = {
   created_at?: string;
 };
 
-// Type for loan/credit items - updated to match database schema
+// Type for loan/credit items - updated to match database schema with consistent naming
 export interface PinjamanItem {
   id: string;
   name: string;
@@ -65,7 +66,7 @@ export interface PinjamanItem {
   icon?: string;
   is_settled?: boolean;
   created_at?: string;
-  user_id: string;
+  user_id: string; // Keep this as user_id to match database schema
   description?: string;
   lender_name?: string;
 }
