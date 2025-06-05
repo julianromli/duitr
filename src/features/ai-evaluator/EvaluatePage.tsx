@@ -4,6 +4,7 @@
 // Updated to match header pattern used across other pages (Budget, Wallets, Transactions)
 // Added back button, motion animations, and consistent styling
 // Fixed timezone issues in date handling to ensure accurate date range filtering
+// Fixed suggested questions integration to auto-populate ChatBox input field
 
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
@@ -33,6 +34,7 @@ const EvaluatePage: React.FC = () => {
   const [insight, setInsight] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
 
   // Calculate finance summary
   const calculateSummary = (): FinanceSummary => {
@@ -135,13 +137,13 @@ const EvaluatePage: React.FC = () => {
   };
 
   const handleQuestionSelect = (question: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: question,
-      timestamp: new Date(),
-    };
-    setChatMessages(prev => [...prev, newMessage]);
+    // Set the selected question to be auto-filled in ChatBox
+    setSelectedQuestion(question);
+  };
+
+  const handleQuestionUsed = () => {
+    // Reset selected question after it's been used
+    setSelectedQuestion('');
   };
 
   const summary = calculateSummary();
@@ -313,6 +315,8 @@ const EvaluatePage: React.FC = () => {
               messages={chatMessages}
               onSendMessage={setChatMessages}
               context={insight}
+              suggestedQuestion={selectedQuestion}
+              onQuestionUsed={handleQuestionUsed}
             />
           </motion.div>
         )}

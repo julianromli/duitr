@@ -1,4 +1,8 @@
 
+// Component: ChatBox
+// Description: AI chat interface with auto-fill functionality for suggested questions
+// Fixed suggested questions integration to automatically populate input field
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,12 +12,14 @@ import { askAI } from './api';
 import type { ChatMessage } from '@/types/finance';
 
 interface ChatBoxProps {
-  contextSummary: string;
+  messages: ChatMessage[];
+  onSendMessage: (messages: ChatMessage[]) => void;
+  context: string;
   suggestedQuestion?: string;
+  onQuestionUsed?: () => void;
 }
 
-export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuestion }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export const ChatBox: React.FC<ChatBoxProps> = ({ messages, onSendMessage, context, suggestedQuestion, onQuestionUsed }) => {
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,8 +27,12 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuest
   useEffect(() => {
     if (suggestedQuestion) {
       setCurrentQuestion(suggestedQuestion);
+      // Call callback to reset the suggested question in parent
+      if (onQuestionUsed) {
+        onQuestionUsed();
+      }
     }
-  }, [suggestedQuestion]);
+  }, [suggestedQuestion, onQuestionUsed]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,13 +46,14 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuest
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    onSendMessage(updatedMessages);
     setCurrentQuestion('');
     setIsLoading(true);
 
     try {
-      const response = await askAI(currentQuestion, contextSummary);
-      
+      const response = await askAI(currentQuestion, context);
+
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -50,7 +61,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuest
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      const finalMessages = [...updatedMessages, aiMessage];
+      onSendMessage(finalMessages);
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -58,7 +70,8 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuest
         content: 'Maaf, terjadi error saat memproses pertanyaan Anda. Silakan coba lagi.',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      const finalMessages = [...updatedMessages, errorMessage];
+      onSendMessage(finalMessages);
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,9 @@
+// Context: FinanceContext
+// Description: Main context for financial data management
+// Fixed category mapping for Investment (ID 21) and Baby Needs (ID 20) categories
+// Enhanced fallback logic to prevent incorrect categorization as Transfer
+// Fixed display name mapping in getDisplayCategoryName function
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { formatIDR } from '@/utils/currency';
 import { supabase } from '@/lib/supabase';
@@ -354,8 +360,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           // System
           18: i18next.language === 'id' ? 'Transfer' : 'Transfer',
           
-          // Other expense categories
-          19: i18next.language === 'id' ? 'Sedekah' : 'Donate'
+          // Additional expense categories
+          19: i18next.language === 'id' ? 'Sedekah' : 'Donate',
+          20: i18next.language === 'id' ? 'Kebutuhan Bayi' : 'Baby Needs',
+          21: i18next.language === 'id' ? 'Investasi' : 'Investment'
         };
         
         const displayName = idToName[numericId];
@@ -366,7 +374,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
         
         // If not in our standard mapping, check DEFAULT_CATEGORIES as fallback
-        const categoryType = numericId <= 12 ? 'expense' : 
+        const categoryType = (numericId <= 12 || numericId === 19 || numericId === 20 || numericId === 21) ? 'expense' :
                              numericId <= 17 ? 'income' : 'system';
                              
         const defaultCategory = DEFAULT_CATEGORIES[categoryType].find(
@@ -406,12 +414,15 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         
         // For fallback, determine if it's expense or income based on the ID range
         let fallbackName = '';
-        if (numericId <= 12) {
+        if (numericId <= 12 || numericId === 19 || numericId === 20 || numericId === 21) {
           fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
         } else if (numericId <= 17) {
           fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Income';
-        } else {
+        } else if (numericId === 18) {
           fallbackName = 'Transfer';
+        } else {
+          // For unknown IDs, default to expense
+          fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
         }
         
         setCategoryNameCache(prev => ({...prev, [cacheKey]: fallbackName}));
@@ -466,19 +477,21 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         10: 'expense_travel',
         11: 'expense_personal',
         12: 'expense_other',
-        
+
         // Income categories (IDs 13-17)
         13: 'income_salary',
         14: 'income_business',
         15: 'income_investment',
         16: 'income_gift',
         17: 'income_other',
-        
+
         // System category (ID 18)
         18: 'system_transfer',
-        
+
         // Additional expense categories
-        19: 'expense_donation'
+        19: 'expense_donation',
+        20: 'expense_baby_needs',
+        21: 'expense_investment'
       };
       
       // Return the mapped category key or a default based on range
@@ -487,12 +500,15 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       
       // Fallback based on ID ranges
-      if (numId <= 12) {
+      if (numId <= 12 || numId === 19 || numId === 20 || numId === 21) {
         return 'expense_other';
       } else if (numId <= 17) {
         return 'income_other';
-      } else {
+      } else if (numId === 18) {
         return 'system_transfer';
+      } else {
+        // For unknown IDs, default to expense_other
+        return 'expense_other';
       }
     }
     

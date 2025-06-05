@@ -1,5 +1,7 @@
 
-// Utility functions for category operations
+// Category utilities for handling category data and localization
+// Updated to load categories from Supabase database with fallback to defaults
+// Added Investment category to expense categories for proper form display
 import { Category } from '@/types/categories';
 
 export const DEFAULT_CATEGORIES = {
@@ -16,7 +18,8 @@ export const DEFAULT_CATEGORIES = {
     { id: '10', name: 'Travel', category_key: 'expense_travel' },
     { id: '11', name: 'Personal', category_key: 'expense_personal' },
     { id: '12', name: 'Other', category_key: 'expense_other' },
-    { id: '13', name: 'Donate', category_key: 'expense_donate' }
+    { id: '13', name: 'Donate', category_key: 'expense_donate' },
+    { id: '20', name: 'Investment', category_key: 'expense_investment' }
   ],
   income: [
     { id: '14', name: 'Salary', category_key: 'income_salary' },
@@ -45,6 +48,22 @@ export const filterCategoriesByType = (categories: Category[], type: string): Ca
 
 // Updated function signature to match usage
 export const getLocalizedCategoriesByType = async (type: string): Promise<{id: string | number; name: string}[]> => {
+  try {
+    // Try to load from Supabase first
+    const { fetchCategoriesByType } = await import('@/services/categoryService');
+    const categories = await fetchCategoriesByType(type);
+
+    if (categories && categories.length > 0) {
+      return categories.map(cat => ({
+        id: cat.id || cat.category_id?.toString() || '',
+        name: cat.id_name || cat.en_name || 'Unknown'
+      }));
+    }
+  } catch (error) {
+    console.warn('Failed to load categories from Supabase, using defaults:', error);
+  }
+
+  // Fallback to default categories
   return DEFAULT_CATEGORIES[type as keyof typeof DEFAULT_CATEGORIES] || [];
 };
 

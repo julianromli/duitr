@@ -1,10 +1,12 @@
 
-// Fixed issue with navbar not showing properly on all pages
-// Updated to 6 navigation items with icons only
+// Component: Navbar
+// Description: Bottom navigation bar with 7 main navigation items
+// Fixed missing Statistics page and updated to proper order:
+// 1. Home, 2. Transactions, 3. Wallets, 4. Statistics, 5. Budget, 6. AI, 7. Profile
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, CreditCard, Wallet, PieChart, User, Sparkles } from 'lucide-react';
+import { Home, CreditCard, Wallet, BarChart3, PieChart, User, Sparkles } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -14,6 +16,7 @@ const Navbar: React.FC = () => {
     { path: '/', icon: Home },
     { path: '/transactions', icon: CreditCard },
     { path: '/wallets', icon: Wallet },
+    { path: '/statistics', icon: BarChart3 },
     { path: '/budget', icon: PieChart },
     { path: '/ai', icon: Sparkles },
     { path: '/profile', icon: User },

@@ -1,4 +1,8 @@
 
+// Component: ExpenseForm
+// Description: Form for adding expense transactions
+// Fixed category loading to include Investment category from Supabase database
+
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';

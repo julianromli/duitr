@@ -1,3 +1,8 @@
+// Component: CategoryIcon
+// Description: Displays category icons with proper mapping for all categories
+// Fixed icon display for Baby Needs (ID 20) and Investment (ID 21) categories
+// Enhanced database icon loading with fallback to hardcoded mappings
+
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
@@ -180,13 +185,13 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           setDisplayName(i18n.language === 'id' ? categoryData.id_name : categoryData.en_name);
           // Store the category type to help with icon selection later
           setCategoryType(categoryData.type || '');
-          
+
           // If we have a category_key, use that for better icon matching
           if (categoryData.category_key) {
             setCategoryType(categoryData.category_key);
           }
-          
-          // Store icon if present
+
+          // Store icon if present - this should take priority
           if (categoryData.icon) {
             setCategoryIcon(categoryData.icon);
           }
@@ -275,7 +280,9 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
               16: 'income_gift',
               17: 'income_other',
               18: 'system_transfer',
-              19: 'expense_donation'
+              19: 'expense_donation',
+              20: 'expense_baby_needs',
+              21: 'expense_investment'
             };
             
             setCategoryType(categoryKeyMap[numericId] || `${categoryType}_other`);
@@ -427,7 +434,17 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'donate':
       Icon = DollarSign;
       break;
-    
+    case 'expense_baby_needs':
+    case 'baby_needs':
+    case 'baby':
+    case '20':
+      Icon = Baby;
+      break;
+    case 'expense_investment':
+    case '21':
+      Icon = LineChart;
+      break;
+
     // Income Categories
     case 'income_salary':
     case 'salary':
@@ -487,17 +504,17 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   // Handle special default case for numeric IDs from the category picker
   if (typeof category === 'string' && !isNaN(Number(category))) {
     console.log("Numeric category ID:", category);
-    
+
     // Hardcode icons based on common category IDs
     const numericId = Number(category);
     let DefaultIcon = HelpCircle;
-    
-    // Expense categories (1-12)
+
+    // Expense categories (1-12, 19-21)
     if (numericId === 1) DefaultIcon = ShoppingCart; // Groceries
     else if (numericId === 2) DefaultIcon = Utensils; // Dining
     else if (numericId === 3) DefaultIcon = Car; // Transportation
     else if (numericId === 4) DefaultIcon = Zap; // Subscription
-    else if (numericId === 5) DefaultIcon = Home; // Housing  
+    else if (numericId === 5) DefaultIcon = Home; // Housing
     else if (numericId === 6) DefaultIcon = Music; // Entertainment
     else if (numericId === 7) DefaultIcon = ShoppingBag; // Shopping
     else if (numericId === 8) DefaultIcon = Pill; // Healthcare
@@ -506,11 +523,13 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     else if (numericId === 11) DefaultIcon = User; // Personal
     else if (numericId === 12) DefaultIcon = Package; // Other expense
     else if (numericId === 19) DefaultIcon = DollarSign; // Donate
-    
+    else if (numericId === 20) DefaultIcon = Baby; // Baby Needs
+    else if (numericId === 21) DefaultIcon = LineChart; // Investment (expense)
+
     // Income categories (13-17)
     else if (numericId === 13) DefaultIcon = Briefcase; // Salary
     else if (numericId === 14) DefaultIcon = Building2; // Business
-    else if (numericId === 15) DefaultIcon = LineChart; // Investment
+    else if (numericId === 15) DefaultIcon = LineChart; // Investment (income)
     else if (numericId === 16) DefaultIcon = GiftIcon; // Gift
     else if (numericId === 17) DefaultIcon = Coins; // Other income
     
