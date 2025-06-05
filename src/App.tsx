@@ -1,4 +1,7 @@
 
+// Updated navigation structure and fixed provider hierarchy
+// Fixed issue with FinanceProvider not wrapping authenticated routes
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +37,7 @@ import SupabaseTestPage from "@/pages/SupabaseTestPage";
 import { TransitionProvider } from "@/context/TransitionContext";
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "@/components/layout/PageTransition";
+import { EvaluatePage } from "@/features/ai-evaluator/EvaluatePage";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +124,18 @@ const AppRoutes = () => {
               {/* Test Routes */}
               <Route path="/test-datepicker" element={<TestDatePicker />} />
               <Route path="/test-supabase" element={<SupabaseTestPage />} />
+
+              {/* AI Evaluation Route */}
+              <Route
+                path="/ai"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <EvaluatePage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Protected App Routes */}
               <Route
@@ -211,7 +227,7 @@ const AppContent = () => {
   const location = useLocation();
   
   // Better approach to check if navbar should be shown
-  const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics'];
+  const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics', '/ai'];
   
   // More robust path matching logic
   const shouldShowNavbar = () => {
