@@ -1,4 +1,3 @@
-
 // Type definitions for finance-related data structures.
 // Added 'created_at' field to Transaction type.
 export type Transaction = {
@@ -46,8 +45,8 @@ export type WantToBuyItem = {
   id: string;
   name: string;
   price: number; // renamed from amount
-  category: string;
-  priority: string; // changed from number to string
+  category: "Keinginan" | "Kebutuhan";
+  priority: "Tinggi" | "Sedang" | "Rendah";
   estimated_date: string; // renamed from target_date
   is_purchased: boolean;
   purchase_date?: string | null;
@@ -57,18 +56,19 @@ export type WantToBuyItem = {
 };
 
 // Type for loan/credit items - updated to match database schema
-export type PinjamanItem = {
+export interface PinjamanItem {
   id: string;
   name: string;
   amount: number;
-  category: string; // 'Utang' | 'Piutang'
   due_date: string;
-  is_settled: boolean;
-  settlement_date?: string | null;
-  userId?: string;
+  category: string;
+  icon?: string;
+  is_settled?: boolean;
   created_at?: string;
-  icon?: string | null;
-};
+  user_id: string;
+  description?: string;
+  lender_name?: string;
+}
 
 export interface ExportOptions {
   startDate?: Date;

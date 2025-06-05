@@ -48,3 +48,8 @@ export async function updateCategoryIcon(categoryId: string, icon: string): Prom
     throw error;
   }
 }
+
+export async function getCategoryById(categories: Category[], id: string | number): Promise<Category | undefined> {
+  const searchId = typeof id === 'string' ? id : id.toString();
+  return categories.find(cat => cat.id === searchId || cat.category_id?.toString() === searchId);
+}
