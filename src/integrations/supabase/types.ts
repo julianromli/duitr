@@ -12,62 +12,153 @@ export type Database = {
       budgets: {
         Row: {
           amount: number
-          category: string
-          category_id: string | null
+          category_id: number | null
           created_at: string | null
           id: string
-          period: string
+          period: string | null
           spent: number
           user_id: string
         }
         Insert: {
           amount: number
-          category: string
-          category_id?: string | null
+          category_id?: number | null
           created_at?: string | null
           id?: string
-          period: string
+          period?: string | null
           spent?: number
           user_id: string
         }
         Update: {
           amount?: number
-          category?: string
-          category_id?: string | null
+          category_id?: number | null
           created_at?: string | null
           id?: string
-          period?: string
+          period?: string | null
           spent?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "budgets_new_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["category_id"]
+          },
+        ]
       }
       categories: {
         Row: {
+          category_id: number
           category_key: string
           created_at: string | null
           en_name: string
           icon: string | null
-          id: string
           id_name: string
+          type: string
         }
         Insert: {
+          category_id?: number
           category_key: string
           created_at?: string | null
           en_name: string
           icon?: string | null
-          id?: string
           id_name: string
+          type: string
         }
         Update: {
+          category_id?: number
           category_key?: string
           created_at?: string | null
           en_name?: string
           icon?: string | null
-          id?: string
           id_name?: string
+          type?: string
         }
         Relationships: []
+      }
+      categories_backup: {
+        Row: {
+          category_key: string | null
+          created_at: string | null
+          en_name: string | null
+          icon: string | null
+          id: string | null
+          id_name: string | null
+          type: string | null
+        }
+        Insert: {
+          category_key?: string | null
+          created_at?: string | null
+          en_name?: string | null
+          icon?: string | null
+          id?: string | null
+          id_name?: string | null
+          type?: string | null
+        }
+        Update: {
+          category_key?: string | null
+          created_at?: string | null
+          en_name?: string | null
+          icon?: string | null
+          id?: string | null
+          id_name?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      categories_duplicate: {
+        Row: {
+          category_id: number
+          category_key: string
+          created_at: string | null
+          en_name: string
+          id_name: string
+          type: string
+        }
+        Insert: {
+          category_id?: number
+          category_key: string
+          created_at?: string | null
+          en_name: string
+          id_name: string
+          type: string
+        }
+        Update: {
+          category_id?: number
+          category_key?: string
+          created_at?: string | null
+          en_name?: string
+          id_name?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      category_id_mapping: {
+        Row: {
+          category_key: string | null
+          new_id: number | null
+          old_id: string
+        }
+        Insert: {
+          category_key?: string | null
+          new_id?: number | null
+          old_id: string
+        }
+        Update: {
+          category_key?: string | null
+          new_id?: number | null
+          old_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_id_mapping_new_id_fkey"
+            columns: ["new_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["category_id"]
+          },
+        ]
       }
       pinjaman_items: {
         Row: {
@@ -108,8 +199,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
-          category: string
-          category_id: string | null
+          category_id: number | null
           created_at: string | null
           date: string
           description: string | null
@@ -120,8 +210,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          category: string
-          category_id?: string | null
+          category_id?: number | null
           created_at?: string | null
           date: string
           description?: string | null
@@ -132,8 +221,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          category?: string
-          category_id?: string | null
+          category_id?: number | null
           created_at?: string | null
           date?: string
           description?: string | null
@@ -143,6 +231,13 @@ export type Database = {
           wallet_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_transaction_category"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["category_id"]
+          },
           {
             foreignKeyName: "transactions_wallet_id_fkey"
             columns: ["wallet_id"]
@@ -226,7 +321,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_transfer_transaction: {
+        Args: {
+          transaction_id: string
+          source_wallet_id: string
+          destination_wallet_id: string
+          transfer_amount: number
+        }
+        Returns: undefined
+      }
+      log_migration_error: {
+        Args: { step_name: string; err_message: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
