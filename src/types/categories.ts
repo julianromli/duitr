@@ -29,3 +29,32 @@ export const transformCategory = (dbCategory: any): Category => ({
   icon: dbCategory.icon,
   created_at: dbCategory.created_at
 });
+
+// Legacy type for PinjamanItem to fix missing properties
+export interface PinjamanItem {
+  id: string;
+  name: string;
+  amount: number;
+  due_date: string;
+  category: string;
+  icon?: string;
+  is_settled?: boolean;
+  created_at?: string;
+  user_id: string;
+  description?: string;
+  lender_name?: string;
+}
+
+// WantToBuyItem type with proper category and priority constraints
+export interface WantToBuyItem {
+  id: string;
+  name: string;
+  price: number;
+  estimated_date: string;
+  category: "Keinginan" | "Kebutuhan";
+  priority: "Tinggi" | "Sedang" | "Rendah";
+  icon?: string;
+  is_purchased?: boolean;
+  created_at?: string;
+  user_id: string;
+}
