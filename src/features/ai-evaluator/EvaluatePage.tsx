@@ -1,51 +1,57 @@
 
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Calendar, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Calendar, TrendingUp, BarChart3, PieChart, DollarSign } from 'lucide-react';
 import { getFinanceInsight } from './api';
 import { InsightDisplay } from './InsightDisplay';
-import { ChatBox } from './ChatBox';
 import { SuggestedQuestions } from './SuggestedQuestions';
-import type { FinanceSummary } from '@/types/finance';
+import { ChatBox } from './ChatBox';
+import type { FinanceSummary, ChatMessage } from '@/types/finance';
+import { useTranslation } from 'react-i18next';
 
-export const EvaluatePage: React.FC = () => {
+const EvaluatePage: React.FC = () => {
+  const { transactions, wallets } = useFinance();
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { transactions } = useFinance();
   
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [insight, setInsight] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [insight, setInsight] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
-  // Get summary data from transactions
-  const fetchSummary = (start: string, end: string): FinanceSummary => {
-    const startDateTime = new Date(start).getTime();
-    const endDateTime = new Date(end).getTime();
-    
+  // Calculate finance summary
+  const calculateSummary = (): FinanceSummary => {
+    if (!startDate || !endDate) {
+      return {
+        startDate: '',
+        endDate: '',
+        income: [],
+        expenses: [],
+        totalIncome: 0,
+        totalExpenses: 0,
+        netFlow: 0,
+      };
+    }
+
     const filteredTransactions = transactions.filter(t => {
-      const transactionDate = new Date(t.date).getTime();
-      return transactionDate >= startDateTime && transactionDate <= endDateTime;
+      const transactionDate = new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
     });
 
     const income = filteredTransactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => {
-        const category = t.category || 'Lainnya';
-        const existing = acc.find(item => item.category === category);
+        const existing = acc.find(item => item.category === (t.category || 'Unknown'));
         if (existing) {
           existing.amount += t.amount;
         } else {
-          acc.push({ category, amount: t.amount });
+          acc.push({ category: t.category || 'Unknown', amount: t.amount });
         }
         return acc;
       }, [] as Array<{ category: string; amount: number }>);
@@ -53,193 +59,182 @@ export const EvaluatePage: React.FC = () => {
     const expenses = filteredTransactions
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => {
-        const category = t.category || 'Lainnya';
-        const existing = acc.find(item => item.category === category);
+        const existing = acc.find(item => item.category === (t.category || 'Unknown'));
         if (existing) {
           existing.amount += t.amount;
         } else {
-          acc.push({ category, amount: t.amount });
+          acc.push({ category: t.category || 'Unknown', amount: t.amount });
         }
         return acc;
       }, [] as Array<{ category: string; amount: number }>);
 
     const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
     const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
-    const netFlow = totalIncome - totalExpenses;
 
     return {
-      startDate: start,
-      endDate: end,
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
       income,
       expenses,
       totalIncome,
       totalExpenses,
-      netFlow
+      netFlow: totalIncome - totalExpenses,
     };
   };
 
   const handleEvaluate = async () => {
-    if (!startDate || !endDate) {
-      setError('Silakan pilih tanggal mulai dan tanggal akhir');
+    const summary = calculateSummary();
+    
+    if (summary.totalIncome === 0 && summary.totalExpenses === 0) {
+      setInsight('Tidak ada data transaksi untuk periode yang dipilih. Silakan pilih periode lain atau tambahkan transaksi terlebih dahulu.');
       return;
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
-      setError('Tanggal mulai tidak boleh lebih besar dari tanggal akhir');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setInsight(null);
-
+    setIsLoading(true);
     try {
-      const summary = fetchSummary(startDate, endDate);
-      
-      if (summary.totalIncome === 0 && summary.totalExpenses === 0) {
-        setError('Tidak ada data transaksi dalam periode yang dipilih');
-        setLoading(false);
-        return;
-      }
-
-      const insightResult = await getFinanceInsight(summary);
-      setInsight(insightResult);
-    } catch (err) {
-      console.error('Error evaluating:', err);
-      setError('Gagal evaluasi. Coba lagi nanti.');
+      const result = await getFinanceInsight(summary);
+      setInsight(result);
+    } catch (error) {
+      console.error('Error getting insight:', error);
+      setInsight('Maaf, terjadi kesalahan saat menganalisis data keuangan Anda. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
     }
-    setLoading(false);
   };
 
   const handleQuestionSelect = (question: string) => {
-    setSelectedQuestion(question);
+    const newMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: question,
+      timestamp: new Date(),
+    };
+    setChatMessages(prev => [...prev, newMessage]);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
-    }
-  };
+  const summary = calculateSummary();
 
   return (
-    <motion.div 
-      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <div className="p-6 pt-12">
-        <motion.div 
-          className="flex items-center justify-between mb-6"
-          variants={itemVariants}
-        >
-          <div className="flex items-center">
-            <button onClick={() => navigate('/')} className="mr-4">
-              <ChevronLeft size={24} className="text-white" />
-            </button>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#C6FE1E]" />
-              Evaluate by AI
-            </h1>
+    <div className="container mx-auto p-4 pb-24 max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white mb-2">Evaluasi Keuangan AI</h1>
+        <p className="text-gray-400">Dapatkan insight mendalam tentang kondisi keuangan Anda</p>
+      </div>
+
+      {/* Date Selection */}
+      <Card className="mb-6 bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Calendar className="w-5 h-5 text-green-600" />
+            Pilih Periode Analisis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Tanggal Mulai</Label>
+              <DatePicker 
+                date={startDate}
+                setDate={setStartDate}
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Tanggal Selesai</Label>
+              <DatePicker 
+                date={endDate}
+                setDate={setEndDate}
+                className="w-full"
+              />
+            </div>
           </div>
-        </motion.div>
+          
+          <Button 
+            onClick={handleEvaluate}
+            disabled={!startDate || !endDate || isLoading}
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
+          >
+            {isLoading ? 'Menganalisis...' : 'Analisis Keuangan'}
+          </Button>
+        </CardContent>
+      </Card>
 
-        <motion.div variants={itemVariants}>
-          <Card className="mb-6 bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Calendar className="w-5 h-5 text-[#C6FE1E]" />
-                Pilih Periode Evaluasi
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate" className="text-gray-300">Tanggal Mulai</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate" className="text-gray-300">Tanggal Akhir</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
+      {/* Quick Stats */}
+      {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-green-500" />
+                <span className="text-xs text-gray-400">Pemasukan</span>
               </div>
-              
-              <Button
-                onClick={handleEvaluate}
-                disabled={loading || !startDate || !endDate}
-                className="w-full bg-[#C6FE1E] text-black hover:bg-[#B5E619] disabled:opacity-50"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full"></div>
-                    Evaluating...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Evaluate
-                  </div>
-                )}
-              </Button>
-
-              {error && (
-                <div className="p-3 bg-red-900 border border-red-700 rounded-lg">
-                  <p className="text-red-300 text-sm">{error}</p>
-                </div>
-              )}
+              <p className="text-lg font-bold text-green-500">
+                Rp{summary.totalIncome.toLocaleString('id-ID')}
+              </p>
             </CardContent>
           </Card>
-        </motion.div>
+          
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-red-500" />
+                <span className="text-xs text-gray-400">Pengeluaran</span>
+              </div>
+              <p className="text-lg font-bold text-red-500">
+                Rp{summary.totalExpenses.toLocaleString('id-ID')}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-blue-500" />
+                <span className="text-xs text-gray-400">Net Flow</span>
+              </div>
+              <p className={`text-lg font-bold ${summary.netFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                Rp{summary.netFlow.toLocaleString('id-ID')}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-900 border-gray-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-yellow-500" />
+                <span className="text-xs text-gray-400">Saving Rate</span>
+              </div>
+              <p className="text-lg font-bold text-yellow-500">
+                {summary.totalIncome > 0 
+                  ? `${((summary.netFlow / summary.totalIncome) * 100).toFixed(1)}%`
+                  : '0%'
+                }
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        {(loading || insight) && (
-          <motion.div 
-            variants={itemVariants}
-            className="space-y-6"
-          >
-            <div className="bg-gray-900 rounded-lg p-1">
-              <InsightDisplay text={insight || ''} isLoading={loading} />
-            </div>
-            
-            {insight && !loading && (
-              <>
-                <div className="bg-gray-900 rounded-lg p-1">
-                  <SuggestedQuestions onSelect={handleQuestionSelect} />
-                </div>
-                
-                <div className="bg-gray-900 rounded-lg p-1">
-                  <ChatBox contextSummary={insight} suggestedQuestion={selectedQuestion} />
-                </div>
-              </>
-            )}
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
+      {/* AI Insight Display */}
+      {(insight || isLoading) && (
+        <InsightDisplay text={insight} isLoading={isLoading} />
+      )}
+
+      {/* Suggested Questions */}
+      {insight && (
+        <SuggestedQuestions onSelect={handleQuestionSelect} />
+      )}
+
+      {/* Chat Box */}
+      {insight && (
+        <ChatBox 
+          messages={chatMessages}
+          onSendMessage={setChatMessages}
+          context={insight}
+        />
+      )}
+    </div>
   );
 };
+
+export default EvaluatePage;

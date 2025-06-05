@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
-import i18next from 'i18next';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { createClient } from '@supabase/supabase-js';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -57,29 +57,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       setIsLoadingCategories(true);
       try {
         // Use the utility function for loading categories that has better error handling
-        const loadedCategories = await getLocalizedCategoriesByType('expense', i18next);
+        const loadedCategories = await getLocalizedCategoriesByType('expense');
         setCategories(loadedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
         // Use default categories as fallback
         const defaultCategories = DEFAULT_CATEGORIES.expense.map(cat => ({
           id: cat.id,
-          name: i18next.language === 'id' ? 
-            // Translate to Indonesian if needed
-            cat.name === 'Groceries' ? 'Belanjaan' :
-            cat.name === 'Dining' ? 'Makanan' :
-            cat.name === 'Transportation' ? 'Transportasi' :
-            cat.name === 'Subscription' ? 'Langganan' :
-            cat.name === 'Housing' ? 'Perumahan' :
-            cat.name === 'Entertainment' ? 'Hiburan' :
-            cat.name === 'Shopping' ? 'Belanja' :
-            cat.name === 'Health' ? 'Kesehatan' :
-            cat.name === 'Education' ? 'Pendidikan' :
-            cat.name === 'Travel' ? 'Perjalanan' :
-            cat.name === 'Personal' ? 'Pribadi' :
-            cat.name === 'Donate' ? 'Sedekah' :
-            cat.name === 'Other' ? 'Lainnya' : cat.name
-            : cat.name
+          name: cat.name
         }));
         
         setCategories(defaultCategories);
@@ -95,7 +80,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     };
     
     loadCategories();
-  }, [t, i18next.language]);
+  }, [t]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -200,7 +185,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
                   >
                     <div className="flex items-center">
                       <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full mr-2">
-                        <CategoryIcon category={category.id} size="sm" />
+                        <CategoryIcon category={String(category.id)} size="sm" />
                       </div>
                       <span className="ml-2">{category.name}</span>
                     </div>
@@ -261,4 +246,4 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default ExpenseForm; 
+export default ExpenseForm;
