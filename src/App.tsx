@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -84,122 +85,124 @@ const AppRoutes = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-background min-h-screen">
-      <main className="pb-24">
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            {/* Home route directly renders Dashboard */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <Dashboard />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/forgotpassword" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
+    <FinanceProvider>
+      <div className="max-w-md mx-auto bg-background min-h-screen">
+        <main className="pb-24">
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              {/* Home route directly renders Dashboard */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <Dashboard />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgotpassword" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Redirects for potential 404 during auth flow */}
-            <Route path="/r5sms-*" element={<Navigate to="/auth/callback" replace />} />
-            <Route path="/sin1:*" element={<Navigate to="/auth/callback" replace />} />
-            <Route path="*NOT_FOUND*" element={<Navigate to="/auth/callback" replace />} />
+              {/* Redirects for potential 404 during auth flow */}
+              <Route path="/r5sms-*" element={<Navigate to="/auth/callback" replace />} />
+              <Route path="/sin1:*" element={<Navigate to="/auth/callback" replace />} />
+              <Route path="*NOT_FOUND*" element={<Navigate to="/auth/callback" replace />} />
 
-            {/* Offline page */}
-            <Route path="/offline" element={<Offline />} />
-            
-            {/* Test Routes */}
-            <Route path="/test-datepicker" element={<TestDatePicker />} />
-            <Route path="/test-supabase" element={<SupabaseTestPage />} />
+              {/* Offline page */}
+              <Route path="/offline" element={<Offline />} />
+              
+              {/* Test Routes */}
+              <Route path="/test-datepicker" element={<TestDatePicker />} />
+              <Route path="/test-supabase" element={<SupabaseTestPage />} />
 
-            {/* Protected App Routes */}
-            <Route
-              path="/transactions"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <Transactions />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/transaction-detail"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <TransactionDetailPage />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/editcategory"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <EditCategoryPage />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/budget"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <BudgetPage />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/statistics"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <Statistics />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/wallets"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <Wallets />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <PageTransition>
-                    <ProfilePage />
-                  </PageTransition>
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected App Routes */}
+              <Route
+                path="/transactions"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <Transactions />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/transaction-detail"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <TransactionDetailPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/editcategory"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <EditCategoryPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/budget"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <BudgetPage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/statistics"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <Statistics />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallets"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <Wallets />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <PageTransition>
+                      <ProfilePage />
+                    </PageTransition>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Landing page */}
-            <Route path="/landing" element={<LandingPage />} />
+              {/* Landing page */}
+              <Route path="/landing" element={<LandingPage />} />
 
-            {/* Fallback */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AnimatePresence>
-      </main>
-    </div>
+              {/* Fallback */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </main>
+      </div>
+    </FinanceProvider>
   );
 };
 
@@ -257,13 +260,11 @@ const App = () => {
         <I18nextProvider i18n={i18n}>
           <ThemeProvider>
             <AuthProvider>
-              <FinanceProvider>
-                <BrowserRouter>
-                  <TransitionProvider>
-                    <AppContent />
-                  </TransitionProvider>
-                </BrowserRouter>
-              </FinanceProvider>
+              <BrowserRouter>
+                <TransitionProvider>
+                  <AppContent />
+                </TransitionProvider>
+              </BrowserRouter>
             </AuthProvider>
           </ThemeProvider>
         </I18nextProvider>
