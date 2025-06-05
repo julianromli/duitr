@@ -1,5 +1,5 @@
 
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyC8ayF6x42UqiXAqlT3_FLFF6I-y5Q3t0w";
 const GEMINI_API_KEY = "AIzaSyC8ayF6x42UqiXAqlT3_FLFF6I-y5Q3t0w";
 
 import type { FinanceSummary } from '@/types/finance';
