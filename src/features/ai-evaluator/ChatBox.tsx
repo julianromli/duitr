@@ -65,7 +65,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({ contextSummary, suggestedQuest
   };
 
   return (
-    <Card className="bg-gray-900 border-gray-800">
+    <Card className="border-[#242425]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base text-white">
           <Bot className="w-4 h-4 text-purple-600" />

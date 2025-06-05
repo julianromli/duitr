@@ -14,7 +14,7 @@ import type { FinanceSummary, ChatMessage } from '@/types/finance';
 import { useTranslation } from 'react-i18next';
 
 const EvaluatePage: React.FC = () => {
-  const { transactions, wallets } = useFinance();
+  const { transactions, wallets, getDisplayCategoryName } = useFinance();
   const { t } = useTranslation();
   
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -44,26 +44,32 @@ const EvaluatePage: React.FC = () => {
       return transactionDate >= startDate && transactionDate <= endDate;
     });
 
+    // Process income transactions with proper category names
     const income = filteredTransactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => {
-        const existing = acc.find(item => item.category === (t.category || 'Unknown'));
+        // Use getDisplayCategoryName to get the proper category name
+        const categoryName = getDisplayCategoryName(t) || 'Pendapatan Lainnya';
+        const existing = acc.find(item => item.category === categoryName);
         if (existing) {
           existing.amount += t.amount;
         } else {
-          acc.push({ category: t.category || 'Unknown', amount: t.amount });
+          acc.push({ category: categoryName, amount: t.amount });
         }
         return acc;
       }, [] as Array<{ category: string; amount: number }>);
 
+    // Process expense transactions with proper category names
     const expenses = filteredTransactions
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => {
-        const existing = acc.find(item => item.category === (t.category || 'Unknown'));
+        // Use getDisplayCategoryName to get the proper category name
+        const categoryName = getDisplayCategoryName(t) || 'Pengeluaran Lainnya';
+        const existing = acc.find(item => item.category === categoryName);
         if (existing) {
           existing.amount += t.amount;
         } else {
-          acc.push({ category: t.category || 'Unknown', amount: t.amount });
+          acc.push({ category: categoryName, amount: t.amount });
         }
         return acc;
       }, [] as Array<{ category: string; amount: number }>);
@@ -122,7 +128,7 @@ const EvaluatePage: React.FC = () => {
       </div>
 
       {/* Date Selection */}
-      <Card className="mb-6 bg-gray-900 border-gray-800">
+      <Card className="mb-6 border-[#242425]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Calendar className="w-5 h-5 text-green-600" />
@@ -152,7 +158,7 @@ const EvaluatePage: React.FC = () => {
           <Button 
             onClick={handleEvaluate}
             disabled={!startDate || !endDate || isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-semibold py-6 rounded-full"
           >
             {isLoading ? 'Menganalisis...' : 'Analisis Keuangan'}
           </Button>
@@ -161,55 +167,63 @@ const EvaluatePage: React.FC = () => {
 
       {/* Quick Stats */}
       {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gray-900 border-gray-800">
+        <div className="space-y-3 mb-6 w-full">
+          <Card className="border-[#242425]">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className="text-xs text-gray-400">Pemasukan</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <span className="text-sm text-gray-400">Pemasukan</span>
+                </div>
+                <p className="text-base font-bold text-green-500">
+                  Rp{summary.totalIncome.toLocaleString('id-ID')}
+                </p>
               </div>
-              <p className="text-lg font-bold text-green-500">
-                Rp{summary.totalIncome.toLocaleString('id-ID')}
-              </p>
             </CardContent>
           </Card>
           
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="border-[#242425]">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-red-500" />
-                <span className="text-xs text-gray-400">Pengeluaran</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  <span className="text-sm text-gray-400">Pengeluaran</span>
+                </div>
+                <p className="text-base font-bold text-red-500">
+                  Rp{summary.totalExpenses.toLocaleString('id-ID')}
+                </p>
               </div>
-              <p className="text-lg font-bold text-red-500">
-                Rp{summary.totalExpenses.toLocaleString('id-ID')}
-              </p>
             </CardContent>
           </Card>
           
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="border-[#242425]">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-blue-500" />
-                <span className="text-xs text-gray-400">Net Flow</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                  <span className="text-sm text-gray-400">Net Flow</span>
+                </div>
+                <p className={`text-base font-bold ${summary.netFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  Rp{summary.netFlow.toLocaleString('id-ID')}
+                </p>
               </div>
-              <p className={`text-lg font-bold ${summary.netFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                Rp{summary.netFlow.toLocaleString('id-ID')}
-              </p>
             </CardContent>
           </Card>
           
-          <Card className="bg-gray-900 border-gray-800">
+          <Card className="border-[#242425]">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <PieChart className="w-4 h-4 text-yellow-500" />
-                <span className="text-xs text-gray-400">Saving Rate</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <PieChart className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                  <span className="text-sm text-gray-400">Saving Rate</span>
+                </div>
+                <p className="text-base font-bold text-yellow-500">
+                  {summary.totalIncome > 0 
+                    ? `${((summary.netFlow / summary.totalIncome) * 100).toFixed(1)}%`
+                    : '0%'
+                  }
+                </p>
               </div>
-              <p className="text-lg font-bold text-yellow-500">
-                {summary.totalIncome > 0 
-                  ? `${((summary.netFlow / summary.totalIncome) * 100).toFixed(1)}%`
-                  : '0%'
-                }
-              </p>
             </CardContent>
           </Card>
         </div>

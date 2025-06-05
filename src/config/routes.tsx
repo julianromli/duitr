@@ -22,7 +22,7 @@ import TransactionDetailPage from '@/pages/TransactionDetailPage';
 import EditCategoryPage from '@/pages/EditCategoryPage';
 import SupabaseTestPage from '@/pages/SupabaseTestPage';
 import { TestDatePicker } from '@/components/ui/test-date-picker';
-import { EvaluatePage } from '@/features/ai-evaluator/EvaluatePage';
+import EvaluatePage from '@/features/ai-evaluator/EvaluatePage';
 
 export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics', '/ai'];
 

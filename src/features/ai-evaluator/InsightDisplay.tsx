@@ -11,7 +11,7 @@ interface InsightDisplayProps {
 export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading }) => {
   if (isLoading) {
     return (
-      <Card className="mb-6 bg-gray-900 border-gray-800">
+      <Card className="mb-6 border-[#242425]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Brain className="w-5 h-5 text-blue-600" />
@@ -29,7 +29,7 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
   }
 
   return (
-    <Card className="mb-6 bg-gray-900 border-gray-800">
+    <Card className="mb-6 border-[#242425]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Brain className="w-5 h-5 text-blue-600" />

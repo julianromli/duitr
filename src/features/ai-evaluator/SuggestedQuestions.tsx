@@ -19,24 +19,34 @@ const SUGGESTED_QUESTIONS = [
 
 export const SuggestedQuestions: React.FC<SuggestedQuestionsProps> = ({ onSelect }) => {
   return (
-    <Card className="mb-6 bg-gray-900 border-gray-800">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base text-white">
-          <MessageCircle className="w-4 h-4 text-green-600" />
-          Pertanyaan yang Sering Ditanyakan
+    <Card className="w-full mb-6 border-[#242425] overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-medium text-white">
+          <MessageCircle className="w-4 h-4 text-green-500" />
+          <span className="text-sm font-medium text-gray-300">Pertanyaan yang Sering Ditanyakan</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {SUGGESTED_QUESTIONS.map((question, index) => (
             <Button
               key={index}
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="text-left justify-start h-auto py-2 px-3 text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
+              className={`
+                w-full h-auto min-h-10 py-2 px-3
+                text-left text-xs sm:text-sm text-gray-300
+                bg-gray-800/50 hover:bg-gray-700/70
+                border border-gray-700 hover:border-gray-600
+                transition-colors duration-200 ease-in-out
+                hover:scale-[1.02] active:scale-100
+                whitespace-normal break-words
+                hover:text-white
+                flex items-center
+              `}
               onClick={() => onSelect(question)}
             >
-              {question}
+              <span className="text-left">{question}</span>
             </Button>
           ))}
         </div>
