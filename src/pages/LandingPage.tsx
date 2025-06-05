@@ -96,13 +96,14 @@ const LandingPage: React.FC = () => {
 
         {/* Login button - positioned with higher z-index to stay above mockup */}
         <div className="relative z-30">
-          <button 
-            onClick={() => navigate('/')}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/login');
+            }}
             className={`bg-gradient-to-r from-lime-500 to-green-500 text-white text-lg font-bold py-3 px-8 md:py-4 md:px-10 rounded-full hover:from-lime-400 hover:to-green-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-lime-800/20 transform hover:-translate-y-1 transition-all duration-700 delay-300 ${isVisible ? 'opacity-100 transform-none' : 'opacity-0 transform -translate-y-8'}`}
           >
-            <a href="/login">
             <span className="text-black">Login</span> <span className="ml-1 text-black">→</span>
-            </a>
           </button>
         </div>
 

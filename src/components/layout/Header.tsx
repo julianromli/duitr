@@ -108,6 +108,8 @@ const Header: React.FC = () => {
         return t('navbar.budget');
       case '/wallets':
         return t('navbar.wallets');
+      case '/ai':
+        return 'Evaluasi Keuangan AI';
       case '/settings':
         return t('navbar.settings');
       case '/profile':
