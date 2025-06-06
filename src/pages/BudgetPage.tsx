@@ -1,9 +1,10 @@
-﻿// Add comment indicating changes made to the file
+// Add comment indicating changes made to the file
 // Combined budget management features with Want to Buy and Pinjaman features from the old BudgetPage.tsx.
 // Improved UI organization and made the page mobile responsive.
 // Reorganized layout to show Budget Categories after Overview and Spending sections.
 // Redesigned header to match other pages and removed scrollbar.
 // Fixed container layout issues that caused double scrollbars.
+// Fixed category data transformation to include id field mapping from category_id.
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -104,7 +105,20 @@ const BudgetPage: React.FC = () => {
         .order('en_name');
       
       if (error) throw error;
-      setCategories(data || []);
+      
+      // Transform data to match expected format with id field
+      const transformedData = (data || []).map(category => ({
+        id: category.category_id?.toString() || '',
+        category_id: category.category_id,
+        category_key: category.category_key,
+        en_name: category.en_name,
+        id_name: category.id_name,
+        type: category.type,
+        icon: category.icon,
+        created_at: category.created_at
+      }));
+      
+      setCategories(transformedData);
     } catch (error) {
       console.error('Error loading categories:', error);
       toast({
