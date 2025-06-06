@@ -37,7 +37,7 @@ interface FinanceContextType {
   formatAmount: (amount: number) => string;
   parseCurrency: (value: string) => number;
   getCategoryName: (categoryId: string | number) => string;
-  getDisplayCategoryName: (categoryId: string | number) => string;
+  getDisplayCategoryName: (categoryId: string | number | Transaction) => string;
   getCategoryKey: (categoryId: string | number) => string;
   fetchTransactions: () => Promise<void>;
   fetchBudgets: () => Promise<void>;
@@ -111,17 +111,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error) throw error;
 
-      // Transform data from snake_case to camelCase
-      const transformedTransactions = (data || []).map(item => ({
+      // Transform data from snake_case to camelCase with proper type casting
+      const transformedTransactions: Transaction[] = (data || []).map(item => ({
         id: item.id,
         amount: item.amount,
         categoryId: item.category_id,
         description: item.description,
         date: item.date,
-        type: item.type,
+        type: item.type as 'income' | 'expense' | 'transfer',
         walletId: item.wallet_id,
-        destinationWalletId: item.destination_wallet_id,
-        fee: item.fee,
+        destinationWalletId: item.destination_wallet_id || null,
+        fee: item.fee || null,
         created_at: item.created_at,
       }));
 
@@ -143,12 +143,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error) throw error;
 
-      // Transform data from snake_case to camelCase
-      const transformedBudgets = (data || []).map(item => ({
+      // Transform data from snake_case to camelCase with proper type casting
+      const transformedBudgets: Budget[] = (data || []).map(item => ({
         id: item.id,
         amount: item.amount,
         categoryId: item.category_id,
-        period: item.period,
+        period: (item.period || 'monthly') as 'monthly' | 'weekly' | 'yearly',
         spent: item.spent,
         created_at: item.created_at,
       }));
@@ -171,7 +171,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error) throw error;
 
-      setWallets(data || []);
+      // Transform data with proper type casting
+      const transformedWallets: Wallet[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        balance: item.balance,
+        color: item.color,
+        type: (item.type || 'cash') as 'cash' | 'bank' | 'e-wallet' | 'investment',
+      }));
+
+      setWallets(transformedWallets);
     } catch (error) {
       console.error('Error loading wallets:', error);
     }
@@ -190,7 +199,22 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error) throw error;
 
-      setWantToBuyItems(data || []);
+      // Transform data with proper type casting
+      const transformedItems: WantToBuyItem[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        category: item.category as "Keinginan" | "Kebutuhan",
+        priority: item.priority as "Tinggi" | "Sedang" | "Rendah",
+        estimated_date: item.estimated_date,
+        is_purchased: item.is_purchased,
+        purchase_date: item.purchase_date,
+        icon: item.icon,
+        user_id: item.user_id,
+        created_at: item.created_at,
+      }));
+
+      setWantToBuyItems(transformedItems);
     } catch (error) {
       console.error('Error loading want to buy items:', error);
     }
@@ -210,7 +234,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
       
       // Transform data to match PinjamanItem interface
-      const transformedData = (data || []).map(item => ({
+      const transformedData: PinjamanItem[] = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
         name: item.name,
@@ -248,7 +272,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .insert([
           {
             amount: transaction.amount,
-            category_id: transaction.categoryId,
+            category_id: Number(transaction.categoryId),
             description: transaction.description,
             date: transaction.date,
             type: transaction.type,
@@ -278,7 +302,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('transactions')
         .update({
           amount: transaction.amount,
-          category_id: transaction.categoryId,
+          category_id: Number(transaction.categoryId),
           description: transaction.description,
           date: transaction.date,
           type: transaction.type,
@@ -604,8 +628,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return i18next.language === 'id' ? category.id_name : category.en_name;
   };
 
-  // Get display category name (alias for getCategoryName)
-  const getDisplayCategoryName = (categoryId: string | number): string => {
+  // Get display category name - handles both direct category IDs and Transaction objects
+  const getDisplayCategoryName = (categoryId: string | number | Transaction): string => {
+    if (typeof categoryId === 'object' && categoryId !== null) {
+      // If it's a Transaction object, extract the categoryId
+      return getCategoryName(categoryId.categoryId);
+    }
     return getCategoryName(categoryId);
   };
 
