@@ -1,6 +1,7 @@
 
 // Main app content wrapper that handles routes and navbar positioning
 import React from 'react';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { InstallAppBanner } from '@/components/shared/InstallAppBanner';
@@ -12,12 +13,12 @@ export const AppContent: React.FC = () => {
   const shouldShowNavbar = useNavbarVisibility();
 
   return (
-    <>
+    <TooltipProvider>
       <AppRoutes />
       {shouldShowNavbar && <Navbar />}
       <Toaster />
       <Sonner />
       <InstallAppBanner />
-    </>
+    </TooltipProvider>
   );
 };
