@@ -68,7 +68,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
         
         // Transform data to match the expected format and ensure id field exists
         const formattedCategories = data.map(category => ({
-          id: category.category_id?.toString() || category.id || '',
+          id: category.category_id?.toString() || category.category_id || '',
           name: i18next.language === 'id' ? category.id_name : category.en_name
         }));
         
