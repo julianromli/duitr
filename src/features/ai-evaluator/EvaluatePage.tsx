@@ -1,10 +1,7 @@
 
 // Component: EvaluatePage
 // Description: AI Financial Evaluator page with consistent header design
-// Updated to match header pattern used across other pages (Budget, Wallets, Transactions)
-// Added back button, motion animations, and consistent styling
-// Fixed timezone issues in date handling to ensure accurate date range filtering
-// Fixed suggested questions integration to auto-populate ChatBox input field
+// Fixed type errors and ensured proper context passing to ChatBox
 
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
@@ -32,6 +29,7 @@ const EvaluatePage: React.FC = () => {
   );
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [insight, setInsight] = useState<string>('');
+  const [currentSummary, setCurrentSummary] = useState<FinanceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [selectedQuestion, setSelectedQuestion] = useState<string>('');
@@ -128,6 +126,9 @@ const EvaluatePage: React.FC = () => {
     try {
       const result = await getFinanceInsight(summary);
       setInsight(result);
+      setCurrentSummary(summary);
+      // Reset chat messages when new evaluation is done
+      setChatMessages([]);
     } catch (error) {
       console.error('Error getting insight:', error);
       setInsight('Maaf, terjadi kesalahan saat menganalisis data keuangan Anda. Silakan coba lagi.');
@@ -302,19 +303,19 @@ const EvaluatePage: React.FC = () => {
         )}
 
         {/* Suggested Questions */}
-        {insight && (
+        {insight && currentSummary && (
           <motion.div variants={itemVariants}>
             <SuggestedQuestions onSelect={handleQuestionSelect} />
           </motion.div>
         )}
 
         {/* Chat Box */}
-        {insight && (
+        {insight && currentSummary && (
           <motion.div variants={itemVariants}>
             <ChatBox
               messages={chatMessages}
               onSendMessage={setChatMessages}
-              context={insight}
+              context={currentSummary}
               suggestedQuestion={selectedQuestion}
               onQuestionUsed={handleQuestionUsed}
             />
