@@ -1,4 +1,3 @@
-
 // Route configuration for the application
 import React from 'react';
 import { Navigate } from 'react-router-dom';
