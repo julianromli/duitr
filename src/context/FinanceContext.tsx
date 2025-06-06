@@ -1,4 +1,3 @@
-
 // Updated FinanceContext.tsx to fix database field mappings, type issues, and missing dependencies
 // Added proper data transformation between database snake_case and TypeScript camelCase conventions
 // Fixed PinjamanItem interface consistency and missing properties
@@ -37,7 +36,7 @@ interface FinanceContextType {
   formatAmount: (amount: number) => string;
   parseCurrency: (value: string) => number;
   getCategoryName: (categoryId: string | number) => string;
-  getDisplayCategoryName: (categoryId: string | number | Transaction) => string;
+  getDisplayCategoryName: (categoryId: string | number) => string;
   getCategoryKey: (categoryId: string | number) => string;
   fetchTransactions: () => Promise<void>;
   fetchBudgets: () => Promise<void>;
@@ -623,12 +622,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return i18next.language === 'id' ? category.id_name : category.en_name;
   };
 
-  // Get display category name - handles both direct category IDs and Transaction objects
-  const getDisplayCategoryName = (categoryId: string | number | Transaction): string => {
-    if (typeof categoryId === 'object' && categoryId !== null) {
-      // If it's a Transaction object, extract the categoryId
-      return getCategoryName(categoryId.categoryId);
-    }
+  // Get display category name - fixed parameter type
+  const getDisplayCategoryName = (categoryId: string | number): string => {
     return getCategoryName(categoryId);
   };
 
