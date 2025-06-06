@@ -1,7 +1,7 @@
 
 // Component: ChatBox
 // Description: AI chat interface with auto-fill functionality for suggested questions
-// Fixed suggested questions integration to automatically populate input field
+// Fixed type errors and ensured proper context passing to AI
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -9,17 +9,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Bot, User } from 'lucide-react';
 import { askAI } from './api';
-import type { ChatMessage } from '@/types/finance';
+import type { ChatMessage, FinanceSummary } from '@/types/finance';
 
 interface ChatBoxProps {
   messages: ChatMessage[];
   onSendMessage: (messages: ChatMessage[]) => void;
-  context: string;
+  context: FinanceSummary;
   suggestedQuestion?: string;
   onQuestionUsed?: () => void;
 }
 
-export const ChatBox: React.FC<ChatBoxProps> = ({ messages, onSendMessage, context, suggestedQuestion, onQuestionUsed }) => {
+export const ChatBox: React.FC<ChatBoxProps> = ({ 
+  messages, 
+  onSendMessage, 
+  context, 
+  suggestedQuestion, 
+  onQuestionUsed 
+}) => {
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
