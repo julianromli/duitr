@@ -36,7 +36,7 @@ interface FinanceContextType {
   formatAmount: (amount: number) => string;
   parseCurrency: (value: string) => number;
   getCategoryName: (categoryId: string | number) => string;
-  getDisplayCategoryName: (categoryId: string | number) => string;
+  getDisplayCategoryName: (categoryId: string | number | Transaction) => string;
   getCategoryKey: (categoryId: string | number) => string;
   fetchTransactions: () => Promise<void>;
   fetchBudgets: () => Promise<void>;
@@ -622,8 +622,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return i18next.language === 'id' ? category.id_name : category.en_name;
   };
 
-  // Get display category name - fixed parameter type
-  const getDisplayCategoryName = (categoryId: string | number): string => {
+  // Get display category name - handles both direct category IDs and Transaction objects
+  const getDisplayCategoryName = (categoryId: string | number | Transaction): string => {
+    if (typeof categoryId === 'object' && categoryId !== null) {
+      // If it's a Transaction object, extract the categoryId
+      return getCategoryName(categoryId.categoryId);
+    }
     return getCategoryName(categoryId);
   };
 
