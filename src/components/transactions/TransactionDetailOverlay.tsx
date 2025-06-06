@@ -85,7 +85,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
       if (transaction && transaction.type !== 'transfer' && isEditing) {
         try {
           const type = transaction.type === 'income' ? 'income' : 'expense';
-          const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
+          const fetchedCategories = await getLocalizedCategoriesByType(type);
           
           // Sort categories by ID to maintain consistent order
           const sortedCategories = [...fetchedCategories].sort((a, b) => {
@@ -592,4 +592,4 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
   );
 };
 
-export default TransactionDetailOverlay; 
+export default TransactionDetailOverlay;

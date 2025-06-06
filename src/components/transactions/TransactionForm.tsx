@@ -1,3 +1,8 @@
+
+// Component: TransactionForm
+// Description: Form for creating new transactions
+// Fixed category data transformation to include id field and function call to match updated signatures
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
@@ -61,9 +66,9 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
         
         if (error) throw error;
         
-        // Transform data to match the expected format
+        // Transform data to match the expected format and ensure id field exists
         const formattedCategories = data.map(category => ({
-          id: category.id,
+          id: category.category_id?.toString() || category.id || '',
           name: i18next.language === 'id' ? category.id_name : category.en_name
         }));
         
