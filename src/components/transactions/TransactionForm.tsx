@@ -194,6 +194,12 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-[#C6FE1E] text-black hover:bg-[#B3EA0F] rounded-full w-12 h-12 p-0">
+          <Plus size={24} />
+        </Button>
+      </DialogTrigger>
+      
       <DialogContent className="bg-[#1A1A1A] border-none text-white max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
