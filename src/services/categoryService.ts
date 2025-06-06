@@ -1,7 +1,7 @@
 
 // Service: categoryService
 // Description: Handles category data operations with Supabase
-// Enhanced getCategoryById function with overloaded signatures for flexibility
+// Fixed function signatures to match usage throughout the app
 
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types/categories';
@@ -92,9 +92,15 @@ export async function getCategoryById(categoriesOrId: Category[] | string | numb
   }
 }
 
-// Updated function to match new signature
-export const getLocalizedCategoryNameById = (categories: Category[], categoryId: string | number): string => {
+// Updated function to match new signature - single parameter only
+export const getLocalizedCategoryNameById = (categoryId: string | number, categories?: Category[]): string => {
   const searchId = typeof categoryId === 'string' ? categoryId : categoryId.toString();
-  const category = categories.find(cat => cat.id === searchId || cat.category_id?.toString() === searchId);
-  return category?.id_name || category?.en_name || 'Unknown';
+  
+  if (categories) {
+    const category = categories.find(cat => cat.id === searchId || cat.category_id?.toString() === searchId);
+    return category?.id_name || category?.en_name || 'Unknown';
+  }
+  
+  // For backward compatibility when no categories array is provided
+  return 'Unknown';
 };
