@@ -1,3 +1,9 @@
+
+// Updated FinanceContext.tsx to fix database field mappings, type issues, and missing dependencies
+// Added proper data transformation between database snake_case and TypeScript camelCase conventions
+// Fixed PinjamanItem interface consistency and missing properties
+// Added missing utility functions for balance calculations and category display names
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Transaction, Budget, Wallet, WantToBuyItem, PinjamanItem } from '@/types/finance';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,7 +27,7 @@ interface FinanceContextType {
   addWallet: (wallet: Omit<Wallet, 'id'>) => Promise<void>;
   updateWallet: (wallet: Wallet) => Promise<void>;
   deleteWallet: (id: string) => Promise<void>;
-  addWantToBuyItem: (item: Omit<WantToBuyItem, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  addWantToBuyItem: (item: Omit<WantToBuyItem, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
   updateWantToBuyItem: (item: WantToBuyItem) => Promise<void>;
   deleteWantToBuyItem: (id: string) => Promise<void>;
   addPinjamanItem: (item: Omit<PinjamanItem, 'id' | 'created_at'>) => Promise<void>;
@@ -31,11 +37,16 @@ interface FinanceContextType {
   formatAmount: (amount: number) => string;
   parseCurrency: (value: string) => number;
   getCategoryName: (categoryId: string | number) => string;
+  getDisplayCategoryName: (categoryId: string | number) => string;
+  getCategoryKey: (categoryId: string | number) => string;
   fetchTransactions: () => Promise<void>;
   fetchBudgets: () => Promise<void>;
   fetchWallets: () => Promise<void>;
   fetchWantToBuyItems: () => Promise<void>;
   fetchPinjamanItems: () => Promise<void>;
+  totalBalance: number;
+  monthlyIncome: number;
+  monthlyExpense: number;
   categories: Array<{
     id: string;
     category_id?: number;
@@ -95,12 +106,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('userId', user.id)
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
       if (error) throw error;
 
-      setTransactions(data || []);
+      // Transform data from snake_case to camelCase
+      const transformedTransactions = (data || []).map(item => ({
+        id: item.id,
+        amount: item.amount,
+        categoryId: item.category_id,
+        description: item.description,
+        date: item.date,
+        type: item.type,
+        walletId: item.wallet_id,
+        destinationWalletId: item.destination_wallet_id,
+        fee: item.fee,
+        created_at: item.created_at,
+      }));
+
+      setTransactions(transformedTransactions);
     } catch (error) {
       console.error('Error loading transactions:', error);
     }
@@ -114,11 +139,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
-        .eq('userId', user.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
-      setBudgets(data || []);
+      // Transform data from snake_case to camelCase
+      const transformedBudgets = (data || []).map(item => ({
+        id: item.id,
+        amount: item.amount,
+        categoryId: item.category_id,
+        period: item.period,
+        spent: item.spent,
+        created_at: item.created_at,
+      }));
+
+      setBudgets(transformedBudgets);
     } catch (error) {
       console.error('Error loading budgets:', error);
     }
@@ -132,7 +167,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { data, error } = await supabase
         .from('wallets')
         .select('*')
-        .eq('userId', user.id);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -177,7 +212,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Transform data to match PinjamanItem interface
       const transformedData = (data || []).map(item => ({
         id: item.id,
-        user_id: item.user_id, // Use user_id consistently
+        user_id: item.user_id,
         name: item.name,
         icon: item.icon,
         category: item.category as "Utang" | "Piutang",
@@ -212,8 +247,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('transactions')
         .insert([
           {
-            ...transaction,
-            userId: user.id,
+            amount: transaction.amount,
+            category_id: transaction.categoryId,
+            description: transaction.description,
+            date: transaction.date,
+            type: transaction.type,
+            wallet_id: transaction.walletId,
+            destination_wallet_id: transaction.destinationWalletId,
+            fee: transaction.fee,
+            user_id: user.id,
           }
         ])
         .select();
@@ -236,12 +278,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('transactions')
         .update({
           amount: transaction.amount,
-          categoryId: transaction.categoryId,
+          category_id: transaction.categoryId,
           description: transaction.description,
           date: transaction.date,
           type: transaction.type,
-          walletId: transaction.walletId,
-          destinationWalletId: transaction.destinationWalletId,
+          wallet_id: transaction.walletId,
+          destination_wallet_id: transaction.destinationWalletId,
           fee: transaction.fee,
         })
         .eq('id', transaction.id);
@@ -302,8 +344,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('wallets')
         .insert([
           {
-            ...wallet,
-            userId: user.id,
+            name: wallet.name,
+            balance: wallet.balance,
+            color: wallet.color,
+            type: wallet.type,
+            user_id: user.id,
           }
         ])
         .select();
@@ -327,7 +372,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .update({
           name: wallet.name,
           balance: wallet.balance,
-          icon: wallet.icon,
           color: wallet.color,
           type: wallet.type,
         })
@@ -374,13 +418,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           {
             ...item,
             user_id: user.id,
+            is_purchased: false,
           }
         ])
         .select();
 
       if (error) throw error;
 
-      setWantToBuyItems(prev => [...prev, { ...item, id: uuidv4() }]);
+      setWantToBuyItems(prev => [...prev, { ...item, id: uuidv4(), user_id: user.id, is_purchased: false, created_at: new Date().toISOString() }]);
     } catch (error) {
       console.error('Error adding want to buy item:', error);
       throw error;
@@ -446,7 +491,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .insert([
           {
             ...item,
-            user_id: user.id, // Use user_id consistently
+            user_id: user.id,
           }
         ])
         .select();
@@ -456,7 +501,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (data && data[0]) {
         const newItem: PinjamanItem = {
           id: data[0].id,
-          user_id: data[0].user_id, // Use user_id consistently
+          user_id: data[0].user_id,
           name: data[0].name,
           amount: data[0].amount,
           due_date: data[0].due_date,
@@ -490,7 +535,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           is_settled: item.is_settled,
         })
         .eq('id', item.id)
-        .eq('user_id', item.user_id); // Use user_id consistently
+        .eq('user_id', item.user_id);
 
       if (error) throw error;
 
@@ -543,13 +588,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Get category name by ID
   const getCategoryName = (categoryId: string | number): string => {
-    // Ensure categoryId is treated as string for consistency
     const categoryIdStr = String(categoryId);
     if (!categoryIdStr || categoryIdStr.length === 0) {
       return 'Other';
     }
     
-    // Find category by category_id (numeric) or by string ID
     const category = categories.find(cat => 
       String(cat.category_id) === categoryIdStr || cat.id === categoryIdStr
     );
@@ -560,6 +603,38 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     return i18next.language === 'id' ? category.id_name : category.en_name;
   };
+
+  // Get display category name (alias for getCategoryName)
+  const getDisplayCategoryName = (categoryId: string | number): string => {
+    return getCategoryName(categoryId);
+  };
+
+  // Get category key by ID
+  const getCategoryKey = (categoryId: string | number): string => {
+    const categoryIdStr = String(categoryId);
+    if (!categoryIdStr || categoryIdStr.length === 0) {
+      return 'expense_other';
+    }
+    
+    const category = categories.find(cat => 
+      String(cat.category_id) === categoryIdStr || cat.id === categoryIdStr
+    );
+    
+    return category?.category_key || 'expense_other';
+  };
+
+  // Calculate total balance
+  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
+
+  // Calculate monthly income
+  const monthlyIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  // Calculate monthly expense
+  const monthlyExpense = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const value: FinanceContextType = {
     transactions,
@@ -586,11 +661,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     formatAmount,
     parseCurrency,
     getCategoryName,
+    getDisplayCategoryName,
+    getCategoryKey,
     fetchTransactions,
     fetchBudgets,
     fetchWallets,
     fetchWantToBuyItems,
     fetchPinjamanItems,
+    totalBalance,
+    monthlyIncome,
+    monthlyExpense,
     categories,
     setCategories
   };
