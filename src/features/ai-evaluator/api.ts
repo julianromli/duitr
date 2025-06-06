@@ -1,88 +1,42 @@
-
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 const GEMINI_API_KEY = "AIzaSyC8ayF6x42UqiXAqlT3_FLFF6I-y5Q3t0w";
 
+import { supabase } from '@/lib/supabase';
 import type { FinanceSummary } from '@/types/finance';
 
 export async function getFinanceInsight(summary: FinanceSummary): Promise<string> {
-  const prompt = buildPrompt(summary);
-
   try {
-    const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          }
-        ]
-      }),
+    const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
+      body: { summary }
     });
 
-    if (!res.ok) {
-      console.error('API response not ok:', res.status, res.statusText);
-      const errorText = await res.text();
-      console.error('Error response:', errorText);
-      throw new Error(`API request failed: ${res.status}`);
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(error.message || 'Gagal mendapatkan insight dari AI');
     }
 
-    const data = await res.json();
-    console.log('API response:', data);
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "Gagal mendapatkan insight.";
+    return data?.result ?? "Gagal mendapatkan insight.";
   } catch (error) {
     console.error('Error getting finance insight:', error);
     throw new Error('Gagal mendapatkan insight dari AI');
   }
 }
 
-export async function askAI(question: string, context: string): Promise<string> {
-  const prompt = `
-Berdasarkan evaluasi keuangan berikut:
-${context}
-
-User bertanya: "${question}"
-
-Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
-  `;
-
+export async function askAI(question: string, context: FinanceSummary): Promise<string> {
   try {
-    const res = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 512,
-        }
-      }),
+    const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
+      body: { 
+        summary: context,
+        question: question
+      }
     });
 
-    if (!res.ok) {
-      throw new Error(`API request failed: ${res.status}`);
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(error.message || 'Gagal mendapatkan jawaban dari AI');
     }
 
-    const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "Maaf, tidak bisa menjawab pertanyaan ini.";
+    return data?.result ?? "Maaf, tidak bisa menjawab pertanyaan ini.";
   } catch (error) {
     console.error('Error asking AI:', error);
     throw new Error('Gagal mendapatkan jawaban dari AI');
