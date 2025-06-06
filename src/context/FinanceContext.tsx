@@ -120,8 +120,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         date: item.date,
         type: item.type as 'income' | 'expense' | 'transfer',
         walletId: item.wallet_id,
-        destinationWalletId: item.destination_wallet_id || null,
-        fee: item.fee || null,
+        destinationWalletId: null, // Not available in current schema
+        fee: null, // Not available in current schema
         created_at: item.created_at,
       }));
 
@@ -208,7 +208,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         priority: item.priority as "Tinggi" | "Sedang" | "Rendah",
         estimated_date: item.estimated_date,
         is_purchased: item.is_purchased,
-        purchase_date: item.purchase_date,
+        purchase_date: null, // Not available in current schema
         icon: item.icon,
         user_id: item.user_id,
         created_at: item.created_at,
@@ -277,8 +277,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             date: transaction.date,
             type: transaction.type,
             wallet_id: transaction.walletId,
-            destination_wallet_id: transaction.destinationWalletId,
-            fee: transaction.fee,
             user_id: user.id,
           }
         ])
@@ -307,8 +305,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           date: transaction.date,
           type: transaction.type,
           wallet_id: transaction.walletId,
-          destination_wallet_id: transaction.destinationWalletId,
-          fee: transaction.fee,
         })
         .eq('id', transaction.id);
 
@@ -470,7 +466,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           priority: item.priority,
           estimated_date: item.estimated_date,
           is_purchased: item.is_purchased,
-          purchase_date: item.purchase_date,
           icon: item.icon,
         })
         .eq('id', item.id);
