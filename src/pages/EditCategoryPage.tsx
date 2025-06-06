@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -108,9 +109,10 @@ const iconMap: Record<string, React.ComponentType> = {
   Wallet
 };
 
-// Define a category interface
+// Define a category interface - updated to match database schema
 interface Category {
   id: string;
+  category_id?: number;
   category_key: string;
   en_name: string;
   id_name: string;
@@ -166,7 +168,18 @@ const EditCategoryPage: React.FC = () => {
       if (error) throw error;
       
       if (data) {
-        setCategories(data as Category[]);
+        // Transform the data to match our Category interface
+        const transformedData: Category[] = data.map(item => ({
+          id: item.category_id?.toString() || '',
+          category_id: item.category_id,
+          category_key: item.category_key,
+          en_name: item.en_name,
+          id_name: item.id_name,
+          type: item.type as 'expense' | 'income' | 'system',
+          icon: item.icon,
+          created_at: item.created_at
+        }));
+        setCategories(transformedData);
       } else {
         setCategories([]);
       }
@@ -280,7 +293,7 @@ const EditCategoryPage: React.FC = () => {
           description: t('categories.successAdd', 'Category added successfully')
         });
       } else if (currentCategory) {
-        // Update existing category
+        // Update existing category - use the original category_id from the database
         const { error } = await supabase
           .from('categories')
           .update({ 
@@ -290,7 +303,7 @@ const EditCategoryPage: React.FC = () => {
             type: formData.type,
             icon: formData.icon
           })
-          .eq('id', currentCategory.id);
+          .eq('category_id', currentCategory.category_id);
         
         if (error) throw error;
         
@@ -321,7 +334,7 @@ const EditCategoryPage: React.FC = () => {
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', currentCategory.id);
+        .eq('category_id', currentCategory.category_id);
       
       if (error) throw error;
       
@@ -575,4 +588,4 @@ const EditCategoryPage: React.FC = () => {
   );
 };
 
-export default EditCategoryPage; 
+export default EditCategoryPage;
