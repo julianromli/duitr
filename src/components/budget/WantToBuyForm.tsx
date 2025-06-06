@@ -1,261 +1,243 @@
+// Add comment indicating changes made to the file
+// Created WantToBuyForm component for adding/editing wishlist items.
+// Updated UI styling to match ExpenseForm.
 
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useFinance } from '@/context/FinanceContext';
+import { WantToBuyItem } from '@/types/finance';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useFinance } from '@/context/FinanceContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useToast } from '@/hooks/use-toast';
-import { WantToBuyItem } from '@/types/finance';
+import { useTranslation } from 'react-i18next';
+import { ShoppingBag, Calendar, Tag, AlertTriangle } from 'lucide-react'; // Removed X icon
 import { FormattedInput } from '@/components/ui/formatted-input';
-import AnimatedText from '@/components/ui/animated-text';
+
+// Zod schema for validation
+const wantToBuySchema = z.object({
+  name: z.string().min(1, { message: 'Item name is required' }),
+  price: z.coerce.number().positive({ message: 'Price must be positive' }),
+  category: z.enum(['Keinginan', 'Kebutuhan'], { required_error: 'Category is required' }),
+  priority: z.enum(['Tinggi', 'Sedang', 'Rendah'], { required_error: 'Priority is required' }),
+  estimated_date: z.date({ required_error: 'Estimated date is required' }),
+  icon: z.string().optional().nullable(),
+});
+
+type WantToBuyFormData = z.infer<typeof wantToBuySchema>;
 
 interface WantToBuyFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  itemToEdit?: WantToBuyItem | null;
+  itemToEdit?: WantToBuyItem | null; // Pass item for editing
 }
 
 const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemToEdit }) => {
-  const { t } = useTranslation();
   const { addWantToBuyItem, updateWantToBuyItem } = useFinance();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    category: '' as 'Keinginan' | 'Kebutuhan' | '',
-    priority: '' as 'Tinggi' | 'Sedang' | 'Rendah' | '',
-    estimated_date: '',
-    icon: '🛍️',
+  const { control, handleSubmit, register, reset, setValue, formState: { errors } } = useForm<WantToBuyFormData>({
+    resolver: zodResolver(wantToBuySchema),
+    defaultValues: {
+      name: '',
+      price: 0,
+      category: 'Keinginan',
+      priority: 'Sedang',
+      estimated_date: new Date(),
+      icon: null,
+    }
   });
 
-  const [date, setDate] = useState<Date>();
+  const isEditing = !!itemToEdit;
 
   useEffect(() => {
     if (itemToEdit) {
-      setFormData({
+      // Pre-fill form if editing
+      reset({
         name: itemToEdit.name,
-        price: itemToEdit.price.toString(),
+        price: itemToEdit.price,
         category: itemToEdit.category,
         priority: itemToEdit.priority,
-        estimated_date: itemToEdit.estimated_date,
-        icon: itemToEdit.icon || '🛍️',
+        estimated_date: new Date(itemToEdit.estimated_date), // Convert string back to Date
+        icon: itemToEdit.icon,
       });
-      setDate(new Date(itemToEdit.estimated_date));
     } else {
-      setFormData({
+      // Reset to defaults when adding or dialog closes
+      reset({
         name: '',
-        price: '',
-        category: '',
-        priority: '',
-        estimated_date: '',
-        icon: '🛍️',
+        price: 0,
+        category: 'Keinginan',
+        priority: 'Sedang',
+        estimated_date: new Date(),
+        icon: null,
       });
-      setDate(undefined);
     }
-  }, [itemToEdit]);
+  }, [itemToEdit, reset, open]); // Reset when itemToEdit changes or dialog opens/closes
 
-  const handleSubmit = async () => {
-    if (!formData.name || !formData.price || !formData.category || !formData.priority || !date) {
-      toast({
-        title: t('common.error'),
-        description: t('common.fillAllFields'),
-        variant: 'destructive',
-      });
-      return;
-    }
+  const onSubmit = (data: WantToBuyFormData) => {
+    // Construct payload explicitly for add operation
+    const addItemPayload = {
+      name: data.name,
+      price: data.price,
+      category: data.category,
+      priority: data.priority,
+      estimated_date: data.estimated_date.toISOString().split('T')[0],
+      icon: data.icon, // icon is optional
+    };
+
+    // Construct payload for update operation (includes all editable fields)
+    const updateItemPayload = {
+      ...addItemPayload, // Reuse common fields
+      // is_purchased is handled separately or in the updateWantToBuyItem function
+    };
 
     try {
-      const itemData = {
-        name: formData.name,
-        price: Number(formData.price),
-        category: formData.category as 'Keinginan' | 'Kebutuhan',
-        priority: formData.priority as 'Tinggi' | 'Sedang' | 'Rendah',
-        estimated_date: format(date, 'yyyy-MM-dd'),
-        icon: formData.icon,
-        is_purchased: false,
-      };
-
-      if (itemToEdit) {
-        await updateWantToBuyItem({
-          ...itemData,
-          id: itemToEdit.id,
-          user_id: itemToEdit.user_id,
-          created_at: itemToEdit.created_at,
-          purchase_date: itemToEdit.purchase_date,
+      if (isEditing && itemToEdit) {
+        updateWantToBuyItem({
+          ...itemToEdit, // Include id, userId, created_at, is_purchased from original item
+          ...updateItemPayload, // Apply validated & formatted changes
         });
+        
         toast({
           title: t('common.success'),
-          description: t('budget.wantToBuyUpdated'),
+          description: t('budget.wantToBuyUpdated')
         });
       } else {
-        await addWantToBuyItem(itemData);
+        // Ensure addItemPayload matches the expected type for addWantToBuyItem
+        addWantToBuyItem(addItemPayload);
+        
         toast({
           title: t('common.success'),
-          description: t('budget.wantToBuyAdded'),
+          description: t('budget.wantToBuyAdded')
         });
       }
-
-      onOpenChange(false);
+      onOpenChange(false); // Close dialog on success
     } catch (error) {
-      console.error('Error saving want to buy item:', error);
+      // Errors are handled within the context functions with toasts
+      console.error("Form submission error:", error);
+      
       toast({
         title: t('common.error'),
-        description: t('budget.wantToBuyError'),
-        variant: 'destructive',
+        description: t('common.error_occurred'),
+        variant: 'destructive'
       });
     }
-  };
-
-  const handlePriceChange = (value: string) => {
-    setFormData({ ...formData, price: value });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white">
-            <AnimatedText 
-              text={itemToEdit ? t('budget.editWantToBuy') : t('budget.addWantToBuy')}
-              animationType="fade"
-            />
-          </DialogTitle>
+      <DialogContent className="bg-[#1A1A1A] border-0 text-white">
+        <DialogHeader className="flex flex-row justify-between items-center">
+          <DialogTitle className="text-xl font-bold">{isEditing ? t('budget.editWantToBuy') : t('budget.addWantToBuy')}</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name" className="text-[#868686]">
-              <AnimatedText text={t('budget.itemName')} />
-            </Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          {/* Item Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-[#868686]">{t('budget.itemName')}</Label>
             <Input
               id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              {...register('name')}
               className="bg-[#242425] border-0 text-white"
-              placeholder={t('budget.enterItemName')}
+              placeholder={t('budget.itemNamePlaceholder')}
             />
+            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="price" className="text-[#868686]">
-              <AnimatedText text={t('budget.price')} />
-            </Label>
-            <FormattedInput
-              id="price"
-              value={formData.price}
-              onChange={handlePriceChange}
-              className="bg-[#242425] border-0 text-white"
-              placeholder={t('budget.enterPrice')}
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="category" className="text-[#868686]">
-              <AnimatedText text={t('budget.category')} />
-            </Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value as 'Keinginan' | 'Kebutuhan' })}
-            >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue>
-                  <AnimatedText 
-                    text={formData.category || t('budget.selectCategory')}
-                  />
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
-                <SelectItem value="Kebutuhan" className="hover:bg-[#333] focus:bg-[#333]">
-                  <AnimatedText text={t('budget.need')} />
-                </SelectItem>
-                <SelectItem value="Keinginan" className="hover:bg-[#333] focus:bg-[#333]">
-                  <AnimatedText text={t('budget.want')} />
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="priority" className="text-[#868686]">
-              <AnimatedText text={t('budget.priority')} />
-            </Label>
-            <Select
-              value={formData.priority}
-              onValueChange={(value) => setFormData({ ...formData, priority: value as 'Tinggi' | 'Sedang' | 'Rendah' })}
-            >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue>
-                  <AnimatedText 
-                    text={formData.priority ? t(`budget.${formData.priority.toLowerCase()}`) : t('budget.selectPriority')}
-                  />
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
-                <SelectItem value="Tinggi" className="hover:bg-[#333] focus:bg-[#333]">
-                  <AnimatedText text={t('budget.high')} />
-                </SelectItem>
-                <SelectItem value="Sedang" className="hover:bg-[#333] focus:bg-[#333]">
-                  <AnimatedText text={t('budget.medium')} />
-                </SelectItem>
-                <SelectItem value="Rendah" className="hover:bg-[#333] focus:bg-[#333]">
-                  <AnimatedText text={t('budget.low')} />
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid gap-2">
-            <Label className="text-[#868686]">
-              <AnimatedText text={t('budget.estimatedDate')} />
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "justify-start text-left font-normal bg-[#242425] border-0 text-white hover:bg-[#333]",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  <AnimatedText 
-                    text={date ? format(date, "PPP") : t('budget.selectDate')}
-                  />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-[#242425] border-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                  className="bg-[#242425] text-white"
+
+          {/* Price */}
+           <div className="space-y-2">
+            <Label htmlFor="price" className="text-[#868686]">{t('budget.itemPrice')}</Label>
+            <Controller
+              name="price"
+              control={control}
+              render={({ field }) => (
+                <FormattedInput
+                  id="price"
+                  value={field.value.toString()}
+                  onChange={(value) => {
+                    field.onChange(value ? parseFloat(value.replace(/\./g, '')) : 0);
+                  }}
+                  className="bg-[#242425] border-0 text-white"
+                  placeholder="0"
                 />
-              </PopoverContent>
-            </Popover>
+              )}
+            />
+             {errors.price && <p className="text-xs text-red-500">{errors.price.message}</p>}
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-[#333] hover:bg-[#333] text-white">
-            <AnimatedText text={t('buttons.cancel')} />
+
+           {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category" className="text-[#868686]">{t('budget.itemCategory')}</Label>
+             <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="bg-[#242425] border-0 text-white">
+                        <SelectValue placeholder={t('budget.selectCategory')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#242425] border-0 text-white">
+                        <SelectItem value="Keinginan" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.keinginan')}</SelectItem>
+                        <SelectItem value="Kebutuhan" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.kebutuhan')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                )}
+            />
+            {errors.category && <p className="text-xs text-red-500">{errors.category.message}</p>}
+          </div>
+
+          {/* Priority */}
+           <div className="space-y-2">
+            <Label htmlFor="priority" className="text-[#868686]">{t('budget.itemPriority')}</Label>
+             <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="bg-[#242425] border-0 text-white">
+                        <SelectValue placeholder={t('budget.selectPriority')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#242425] border-0 text-white">
+                        <SelectItem value="Tinggi" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.priorityHigh')}</SelectItem>
+                        <SelectItem value="Sedang" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.priorityMedium')}</SelectItem>
+                        <SelectItem value="Rendah" className="hover:bg-[#333] focus:bg-[#333]">{t('budget.priorityLow')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                )}
+             />
+             {errors.priority && <p className="text-xs text-red-500">{errors.priority.message}</p>}
+          </div>
+
+           {/* Estimated Date */}
+          <div className="space-y-2">
+             <Label htmlFor="estimated_date" className="text-[#868686]">{t('budget.estimatedDate')}</Label>
+             <Controller
+                name="estimated_date"
+                control={control}
+                render={({ field }) => (
+                    <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+                        <DatePicker
+                            date={field.value}
+                            setDate={field.onChange}
+                         />
+                     </div>
+                )}
+            />
+            {errors.estimated_date && <p className="text-xs text-red-500">{errors.estimated_date.message}</p>}
+          </div>
+
+          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+            {isEditing ? t('common.saveChanges') : t('common.addItem')}
           </Button>
-          <Button onClick={handleSubmit} className="bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
-            <AnimatedText text={itemToEdit ? t('buttons.update') : t('buttons.add')} />
-          </Button>
-        </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default WantToBuyForm;
+export default WantToBuyForm; 

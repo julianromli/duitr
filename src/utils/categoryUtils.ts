@@ -1,8 +1,7 @@
 
 // Category utilities for handling category data and localization
 // Updated to load categories from Supabase database with fallback to defaults
-// Fixed function signatures to match usage
-
+// Added Investment category to expense categories for proper form display
 import { Category } from '@/types/categories';
 
 export const DEFAULT_CATEGORIES = {
@@ -47,7 +46,7 @@ export const filterCategoriesByType = (categories: Category[], type: string): Ca
   return categories.filter(cat => cat.type === type);
 };
 
-// Updated function signature - single parameter only
+// Updated function signature to match usage
 export const getLocalizedCategoriesByType = async (type: string): Promise<{id: string | number; name: string}[]> => {
   try {
     // Try to load from Supabase first
@@ -114,9 +113,10 @@ export const legacyCategoryNameToId = (name: string): string => {
   return category?.id || '12'; // Default to 'Other' expense
 };
 
-// Updated function signatures to match usage - single parameter version
-export const getLocalizedCategoryNameById = (categoryId: string | number): string => {
-  return getLocalizedCategoryName(categoryId.toString());
+// Updated function signatures to match usage
+export const getLocalizedCategoryNameById = (categories: Category[], categoryId: string | number): string => {
+  const category = getCategoryById(categories, categoryId);
+  return getCategoryDisplayName(category);
 };
 
 // Single parameter version for backward compatibility

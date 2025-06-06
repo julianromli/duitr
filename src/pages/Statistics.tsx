@@ -1,89 +1,173 @@
-
-// Page: Statistics  
-// Description: Shows financial statistics and charts
-// Fixed categoryId type conversion and chart component props
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, PieChart, BarChart3, TrendingUp, Calendar } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useFinance } from '@/context/FinanceContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line, Pie } from 'recharts';
-import { motion } from 'framer-motion';
-import CategoryIcon from '@/components/shared/CategoryIcon';
-import { startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, format, parseISO } from 'date-fns';
+import { ChevronLeft, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from 'recharts';
+import { useTransactions } from '@/hooks/useTransactions';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { motion, AnimatePresence } from 'framer-motion';
+import { Transaction } from '@/types/finance';
+
+type TabType = 'income' | 'outcome';
+
+// Define interface for grouped category data
+interface CategoryTotal {
+  total: number;
+  categoryId: string | null;
+  displayName: string;
+}
+
+// Chart data format
+interface ChartDataItem {
+  name: string;
+  value: number;
+  percentage: number;
+  categoryId: string | null;
+}
+
+// Function to group transactions by categoryId
+function groupTransactionsByCategory(
+  transactions: Transaction[], 
+  getDisplayCategoryName: (transaction: Transaction) => string
+): CategoryTotal[] {
+  const categoryTotals: Record<string, CategoryTotal> = {};
+  
+  transactions.forEach(transaction => {
+    // Get the display name for the category
+    const categoryName = getDisplayCategoryName(transaction);
+    
+    // Use the categoryName as the key
+    const key = categoryName;
+    
+    // Initialize if this is the first transaction for this category
+    if (!categoryTotals[key]) {
+      categoryTotals[key] = {
+        total: 0,
+        categoryId: transaction.categoryId || null,
+        displayName: categoryName
+      };
+    }
+    
+    // Add the amount to the total
+    categoryTotals[key].total += transaction.amount;
+  });
+  
+  return Object.values(categoryTotals);
+}
 
 const Statistics: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { transactions, formatCurrency, getDisplayCategoryName } = useFinance();
   
-  const [timeFilter, setTimeFilter] = useState<'month' | 'year'>('month');
-  const [currentDate] = useState(new Date());
+  // State for date selection
+  const [dateRange, setDateRange] = useState<'7days' | '30days' | 'month' | 'custom'>('month');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   
+  // Currently selected tab
+  const [activeTab, setActiveTab] = useState<TabType>('outcome');
+  
+  // Current month and year for display
+  const currentDate = new Date();
+  const currentMonthYear = format(currentDate, 'MMMM yyyy');
+  
+  // Filter transactions based on selected date range and tab
   const getFilteredTransactions = () => {
-    const interval = timeFilter === 'month' 
-      ? { start: startOfMonth(currentDate), end: endOfMonth(currentDate) }
-      : { start: startOfYear(currentDate), end: endOfYear(currentDate) };
+    const now = new Date();
+    let startDate: Date;
     
-    return transactions.filter(transaction => {
-      const transactionDate = parseISO(transaction.date);
-      return isWithinInterval(transactionDate, interval);
-    });
-  };
-
-  const filteredTransactions = getFilteredTransactions();
-
-  const getCategoryStats = (type: 'income' | 'expense') => {
-    const typeTransactions = filteredTransactions.filter(t => t.type === type);
-    const categoryTotals = new Map();
-
-    typeTransactions.forEach(transaction => {
-      const categoryKey = String(transaction.categoryId); // Convert to string
-      const displayName = getDisplayCategoryName(transaction);
-      
-      if (categoryTotals.has(categoryKey)) {
-        categoryTotals.set(categoryKey, {
-          ...categoryTotals.get(categoryKey),
-          amount: categoryTotals.get(categoryKey).amount + transaction.amount
-        });
-      } else {
-        categoryTotals.set(categoryKey, {
-          name: displayName,
-          amount: transaction.amount,
-          categoryId: categoryKey
-        });
-      }
-    });
-
-    return Array.from(categoryTotals.values()).sort((a, b) => b.amount - a.amount);
-  };
-
-  const incomeStats = getCategoryStats('income');
-  const expenseStats = getCategoryStats('expense');
-
-  const totalIncome = incomeStats.reduce((sum, category) => sum + category.amount, 0);
-  const totalExpenses = expenseStats.reduce((sum, category) => sum + category.amount, 0);
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#9c6ade', '#8dd1e1', '#af826d'];
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 rounded-md shadow-md text-black">
-          <p className="font-semibold">{payload[0].payload.name}</p>
-          <p>{t('common.amount')}: {formatCurrency(payload[0].value)}</p>
-        </div>
-      );
+    // Determine start date based on selected range
+    if (dateRange === '7days') {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 7);
+    } else if (dateRange === '30days') {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 30);
+    } else if (dateRange === 'month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (dateRange === 'custom' && customStartDate && customEndDate) {
+      startDate = customStartDate;
+      // For custom range, use the selected end date instead of now
+      now.setHours(23, 59, 59, 999); // End of day
+      now.setTime(customEndDate.getTime());
+    } else {
+      // Default to current month
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
-    return null;
+    
+    // Filter transactions by date and type
+    return transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return (
+        transactionDate >= startDate && 
+        transactionDate <= now &&
+        transaction.type === (activeTab === 'income' ? 'income' : 'expense')
+      );
+    });
+  };
+  
+  const filteredTransactions = getFilteredTransactions();
+  
+  // Calculate total for current filter
+  const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
+  
+  // Group transactions by category with new category system
+  const groupedCategories = groupTransactionsByCategory(filteredTransactions, getDisplayCategoryName);
+  
+  // Convert to chart data format and calculate percentages
+  const chartData: ChartDataItem[] = groupedCategories.map(category => {
+    const percentage = totalAmount > 0 ? Math.round((category.total / totalAmount) * 100) : 0;
+    return {
+      name: category.displayName,
+      value: category.total,
+      percentage: percentage,
+      categoryId: category.categoryId
+    };
+  });
+  
+  // Sort data by value in descending order for better display
+  chartData.sort((a, b) => b.value - a.value);
+  
+  // Colors for pie chart - using a varied yet harmonious color palette
+  const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'];
+  
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+  };
+  
+  const getDateRangeLabel = () => {
+    switch (dateRange) {
+      case '7days':
+        return t('statistics.last7Days');
+      case '30days':
+        return t('statistics.last30Days');
+      case 'month':
+        return currentMonthYear;
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          return `${format(customStartDate, 'MMM d')} - ${format(customEndDate, 'MMM d, yyyy')}`;
+        }
+        return t('statistics.customRange');
+      default:
+        return currentMonthYear;
+    }
   };
 
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -103,7 +187,16 @@ const Statistics: React.FC = () => {
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
-  
+
+  const chartVariants = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: {
+      scale: 1, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 200, damping: 20, delay: 0.2 }
+    }
+  };
+
   return (
     <motion.div 
       className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
@@ -112,182 +205,229 @@ const Statistics: React.FC = () => {
       variants={containerVariants}
     >
       <div className="p-6 pt-12">
+        {/* Header */}
         <motion.div 
-          className="flex items-center justify-between mb-6"
+          className="mb-6 flex items-center justify-between"
           variants={itemVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate('/')} className="mr-4">
-              <ChevronLeft size={24} className="text-white" />
-            </button>
+            <Link to="/" className="mr-4 text-white">
+              <ChevronLeft size={24} />
+            </Link>
             <h1 className="text-xl font-bold">{t('statistics.title')}</h1>
           </div>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="bg-transparent">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-[#242424] data-[state=active]:text-white">{t('statistics.overview')}</TabsTrigger>
-              <TabsTrigger value="details" className="data-[state=active]:bg-[#242424] data-[state=active]:text-white">{t('statistics.details')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview" className="space-y-4">
-              <Card className="bg-[#1A1A1A]">
-                <CardHeader>
-                  <CardTitle>{t('statistics.period')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select 
-                    value={timeFilter} 
-                    onValueChange={(value: 'month' | 'year') => setTimeFilter(value)}
+          
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 rounded-full text-sm font-normal bg-[#242425] border-0 text-white hover:bg-[#333]"
+              >
+                {getDateRangeLabel()}
+                <ChevronDown size={16} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-4 bg-[#242425] border-0 text-white" align="end">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant={dateRange === '7days' ? 'default' : 'outline'} 
+                    className={dateRange === '7days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('7days');
+                      setIsCalendarOpen(false);
+                    }}
                   >
-                    <SelectTrigger className="bg-[#242424] border-0 text-white">
-                      <SelectValue placeholder={t('statistics.selectPeriod')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#242424] border-0 text-white">
-                      <SelectItem value="month">{t('statistics.thisMonth')}</SelectItem>
-                      <SelectItem value="year">{t('statistics.thisYear')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#1A1A1A]">
-                <CardHeader>
-                  <CardTitle>{t('statistics.summary')}</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-2">
-                  <div className="flex items-center gap-4">
-                    <Badge variant="secondary" className="bg-green-500 text-white rounded-full p-2">
-                      <TrendingUp className="h-4 w-4" />
-                    </Badge>
-                    <div>
-                      <p className="text-sm font-medium">{t('transactions.income')}</p>
-                      <p className="text-xl font-bold">{formatCurrency(totalIncome)}</p>
+                    {t('statistics.last7Days')}
+                  </Button>
+                  <Button 
+                    variant={dateRange === '30days' ? 'default' : 'outline'} 
+                    className={dateRange === '30days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('30days');
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    {t('statistics.last30Days')}
+                  </Button>
+                  <Button 
+                    variant={dateRange === 'month' ? 'default' : 'outline'} 
+                    className={dateRange === 'month' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('month');
+                      setIsCalendarOpen(false);
+                    }}
+                  >
+                    {t('statistics.thisMonth')}
+                  </Button>
+                  <Button 
+                    variant={dateRange === 'custom' ? 'default' : 'outline'} 
+                    className={dateRange === 'custom' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
+                    onClick={() => {
+                      setDateRange('custom');
+                      if (!customStartDate || !customEndDate) {
+                        const today = new Date();
+                        setCustomStartDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                        setCustomEndDate(today);
+                      }
+                    }}
+                  >
+                    {t('statistics.customRange')}
+                  </Button>
+                </div>
+                
+                {dateRange === 'custom' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-[#868686] mb-1">{t('statistics.startDate')}</p>
+                        <p className="text-sm">{customStartDate ? format(customStartDate, 'MMM d, yyyy') : '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#868686] mb-1">{t('statistics.endDate')}</p>
+                        <p className="text-sm">{customEndDate ? format(customEndDate, 'MMM d, yyyy') : '-'}</p>
+                      </div>
                     </div>
+                    
+                    <Calendar
+                      mode="range"
+                      selected={{
+                        from: customStartDate,
+                        to: customEndDate,
+                      }}
+                      onSelect={(range) => {
+                        setCustomStartDate(range?.from);
+                        setCustomEndDate(range?.to);
+                      }}
+                      className="rounded-md border-0 bg-[#1A1A1A]"
+                    />
+                    
+                    <Button 
+                      className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-medium"
+                      onClick={() => setIsCalendarOpen(false)}
+                    >
+                      {t('statistics.apply')}
+                    </Button>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant="secondary" className="bg-red-500 text-white rounded-full p-2">
-                      <TrendingUp className="h-4 w-4 rotate-180" />
-                    </Badge>
-                    <div>
-                      <p className="text-sm font-medium">{t('transactions.expense')}</p>
-                      <p className="text-xl font-bold">{formatCurrency(totalExpenses)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#1A1A1A]">
-                <CardHeader>
-                  <CardTitle>{t('statistics.netFlow')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(totalIncome - totalExpenses)}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="details">
-              <Card className="bg-[#1A1A1A]">
-                <CardHeader>
-                  <CardTitle>{t('statistics.incomeByCategory')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {incomeStats.length > 0 ? (
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPieChart>
-                          <Pie
-                            dataKey="amount"
-                            data={incomeStats}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            fill="#8884d8"
-                            label
-                          >
-                            {
-                              incomeStats.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))
-                            }
-                          </Pie>
-                          <Tooltip content={<CustomTooltip />} />
-                        </RechartsPieChart>
-                      </ResponsiveContainer>
-                      <ul className="mt-4">
-                        {incomeStats.map((category, index) => (
-                          <li key={category.categoryId} className="flex items-center justify-between py-2">
-                            <div className="flex items-center">
-                              <div className="mr-2">
-                                <CategoryIcon category={category.categoryId} size="sm" />
-                              </div>
-                              <span>{category.name}</span>
-                            </div>
-                            <span>{formatCurrency(category.amount)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p>{t('statistics.noIncome')}</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#1A1A1A]">
-                <CardHeader>
-                  <CardTitle>{t('statistics.expensesByCategory')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {expenseStats.length > 0 ? (
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPieChart>
-                          <Pie
-                            dataKey="amount"
-                            data={expenseStats}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            fill="#8884d8"
-                            label
-                          >
-                            {
-                              expenseStats.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))
-                            }
-                          </Pie>
-                          <Tooltip content={<CustomTooltip />} />
-                        </RechartsPieChart>
-                      </ResponsiveContainer>
-                      <ul className="mt-4">
-                        {expenseStats.map((category, index) => (
-                          <li key={category.categoryId} className="flex items-center justify-between py-2">
-                            <div className="flex items-center">
-                              <div className="mr-2">
-                                <CategoryIcon category={category.categoryId} size="sm" />
-                              </div>
-                              <span>{category.name}</span>
-                            </div>
-                            <span>{formatCurrency(category.amount)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p>{t('statistics.noExpenses')}</p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </motion.div>
+        
+        {/* Tab buttons for Income/Expense */}
+        <motion.div 
+          className="mb-6"
+          variants={itemVariants}
+        >
+          <div className="flex bg-[#242425] rounded-full p-1">
+            <motion.button
+              className={`flex-1 py-2 text-center rounded-full ${activeTab === 'outcome' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              onClick={() => handleTabChange('outcome')}
+              whileTap={{ scale: 0.98 }}
+            >
+              {t('statistics.expense')}
+            </motion.button>
+            <motion.button
+              className={`flex-1 py-2 text-center rounded-full ${activeTab === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              onClick={() => handleTabChange('income')}
+              whileTap={{ scale: 0.98 }}
+            >
+              {t('statistics.income')}
+            </motion.button>
+          </div>
+        </motion.div>
+        
+        {/* Chart Section */}
+        {filteredTransactions.length > 0 ? (
+          <>
+            <motion.div 
+              className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
+              variants={chartVariants}
+              key={`chart-${activeTab}`}
+            >
+              <div className="h-[220px] w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={90}
+                      paddingAngle={0}
+                      dataKey="value"
+                      strokeWidth={0}
+                      animationBegin={300}
+                      animationDuration={800}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}-${activeTab}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* Center Text */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                  <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
+                  <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              className="mt-8" 
+              variants={itemVariants}
+              key={`breakdown-${activeTab}`}
+            >
+              <h3 className="text-lg font-bold mb-4">
+                {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
+              </h3>
+              <div className="space-y-3">
+                {chartData.map((category, index) => (
+                  <motion.div 
+                    key={`${category.name}-${index}-${activeTab}`}
+                    className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + (index * 0.05) }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div>
+                      <span className="font-medium">{category.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium">{formatCurrency(category.value)}</span>
+                      <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
+                        backgroundColor: COLORS[index % COLORS.length]
+                      }}>
+                        {category.percentage}%
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        ) : (
+          <motion.div 
+            className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            key="no-data"
+          >
+            <p className="text-[#868686]">{t('statistics.noData')}</p>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
 };
 
-export default Statistics;
+export default Statistics; 

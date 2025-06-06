@@ -121,7 +121,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     const loadCategories = async () => {
       setIsLoadingCategories(true);
       try {
-        const fetchedCategories = await getLocalizedCategoriesByType('system');
+        const fetchedCategories = await getLocalizedCategoriesByType('system', i18next);
         
         // Sort categories by ID to maintain consistent order
         const sortedCategories = [...fetchedCategories].sort((a, b) => {
@@ -267,4 +267,4 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default TransferForm;
+export default TransferForm; 

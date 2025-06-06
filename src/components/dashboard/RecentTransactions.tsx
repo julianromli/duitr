@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Trash2 } from 'lucide-react';
@@ -126,7 +125,7 @@ const RecentTransactions: React.FC = () => {
                 <div className="flex items-center">
                   <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
                   <div className="ml-3">
-                    <p className="font-medium">{getDisplayCategoryName(transaction.categoryId || transaction.category)}</p>
+                    <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
                     <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
                   </div>
                 </div>

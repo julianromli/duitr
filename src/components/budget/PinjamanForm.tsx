@@ -1,7 +1,7 @@
-
 // Add comment indicating changes made to the file
-// Fixed TypeScript errors for PinjamanItem interface compatibility
-// Added user_id property to itemPayload to match database schema
+// Created PinjamanForm component for adding/editing debt/credit items.
+// Updated UI styling to match ExpenseForm.
+// Fixed date handling to prevent timezone shifts when saving dates.
 
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -19,7 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { FormattedInput } from '@/components/ui/formatted-input';
-import { useAuth } from '@/context/AuthContext';
 
 // Zod schema for validation
 const pinjamanSchema = z.object({
@@ -42,7 +41,6 @@ interface PinjamanFormProps {
 
 const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToEdit }) => {
   const { addPinjamanItem, updatePinjamanItem } = useFinance();
-  const { user } = useAuth();
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -102,7 +100,6 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
       icon: data.icon,
       description: data.description,
       lender_name: data.lender_name,
-      user_id: user?.id || '', // Add user_id to match PinjamanItem interface
     };
 
     try {
@@ -222,4 +219,4 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
   );
 };
 
-export default PinjamanForm;
+export default PinjamanForm; 
