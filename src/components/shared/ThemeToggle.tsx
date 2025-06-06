@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { motion } from 'framer-motion';
@@ -12,7 +11,7 @@ export const ThemeToggle: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="rounded-full w-7 h-7 flex items-center justify-center bg-accent/70 hover:bg-accent transition-colors notion-focus"
+      className="rounded-full w-7 h-7 flex items-center justify-center bg-[#3A3A3C]/70 dark:bg-[#2A2A2C]/70 hover:bg-[#4A4A4C] dark:hover:bg-[#3A3A3C] transition-colors"
       aria-label={theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')}
     >
       <div className="relative w-4 h-4 flex items-center justify-center overflow-hidden">
@@ -25,9 +24,9 @@ export const ThemeToggle: React.FC = () => {
           transition={{ duration: 0.5, ease: 'easeInOut' }}
         >
           {theme === 'dark' ? (
-            <Sun size={14} className="text-primary" />
+            <Sun size={14} className="text-white dark:text-[#C6FE1E]" />
           ) : (
-            <Moon size={14} className="text-primary" />
+            <Moon size={14} className="text-white dark:text-[#C6FE1E]" />
           )}
         </motion.div>
       </div>
@@ -35,4 +34,4 @@ export const ThemeToggle: React.FC = () => {
   );
 };
 
-export default ThemeToggle;
+export default ThemeToggle; 

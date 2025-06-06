@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light';
@@ -13,23 +12,23 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage first, default to light for Notion-style theme
+    // Check localStorage first
     const savedTheme = localStorage.getItem('theme') as Theme | null;
-    return savedTheme || 'light';
+    return savedTheme || 'dark'; // Default to dark if no saved preference
   });
 
   useEffect(() => {
     // Update localStorage when theme changes
     localStorage.setItem('theme', theme);
     
-    // Update document classes for proper theme application
+    // Update document classes
     const root = document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
     
-    // Update meta theme color for better mobile experience
+    // Update meta theme color
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    const themeColor = theme === 'dark' ? '#0D0D0D' : '#FAFAFA'; // Notion-style light background
+    const themeColor = theme === 'dark' ? '#0D0D0D' : '#FFFFFF';
     
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', themeColor);
@@ -58,4 +57,4 @@ export const useTheme = (): ThemeContextType => {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
-};
+}; 
