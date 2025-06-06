@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 @import 'react-day-picker/dist/style.css';
 
@@ -18,46 +17,45 @@
 
 @layer base {
   :root {
-    /* Notion-style Light Mode Color Palette */
-    --background: 0 0% 98%; /* Off-white, slightly beige like Notion */
-    --foreground: 0 0% 9%; /* Near-black for primary text */
+    /* Updated for requested light mode: green, white, black, dark grey */
+    --background: 0 0% 100%; /* White background */
+    --foreground: 0 0% 0%; /* Black text */
     
-    --card: 0 0% 98%; /* Cards should blend with the background */
-    --card-foreground: 0 0% 9%;
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 0 0% 0%; /* Black */
     
-    --popover: 0 0% 98%;
-    --popover-foreground: 0 0% 9%;
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 0 0% 0%; /* Black */
     
-    --primary: 0 0% 9%; /* Primary actions are subtle, using the text color */
-    --primary-foreground: 0 0% 98%;
+    --primary: 84 98% 56%; /* Green #C6FE1E */
+    --primary-foreground: 0 0% 0%; /* Black text on green */
     
-    --secondary: 0 0% 45%; /* Lighter gray for secondary text */
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 0 0% 96%; /* Lighter Grey */
+    --secondary-foreground: 0 0% 20%; /* Dark Grey */
     
-    --muted: 0 0% 65%; /* Muted text for placeholders or disabled states */
-    --muted-foreground: 0 0% 45%;
+    --muted: 0 0% 96%; /* Light Grey */
+    --muted-foreground: 0 0% 40%; /* Dark Grey for muted text */
     
-    --accent: 0 0% 90%; /* A subtle gray for subtle backgrounds or highlights */
-    --accent-foreground: 0 0% 9%;
+    --accent: 84 98% 56%; /* Green */
+    --accent-foreground: 0 0% 0%; /* Black */
     
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%; /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
     
-    --border: 0 0% 89%; /* Subtle borders */
-    --input: 0 0% 89%;
-    --ring: 0 0% 9%; /* Focus ring color */
+    --border: 0 0% 90%; /* Light Grey */
+    --input: 0 0% 90%; /* Light Grey */
+    --ring: 84 98% 56%; /* Green */
     
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    /* Finance-specific colors adjusted for light mode */
-    --finance-income: 142 76% 36%; /* Darker green for better contrast */
-    --finance-expense: 0 84% 45%; /* Darker red for better contrast */
-    --finance-saving: 200 98% 40%; /* Darker blue for better contrast */
-    --finance-investment: 250 60% 45%; /* Darker purple for better contrast */
+    --finance-income: 142 76% 60%;
+    --finance-expense: 0 84% 60%;
+    --finance-saving: 200 98% 60%;
+    --finance-investment: 250 60% 60%;
   }
   
   .dark {
-    /* Keep existing dark mode variables */
+    /* Updated for requested dark mode: black, green, white, light grey */
     --background: 0 0% 5%; /* Black background #0D0D0D */
     --foreground: 0 0% 100%; /* White text */
     
@@ -114,82 +112,82 @@
   }
 }
 
-/* Notion-style Light Mode Specific Overrides */
+/* Light mode specific overrides */
 .light .bg-\[\#0D0D0D\] {
-  background-color: hsl(var(--background));
+  background-color: #FFFFFF;
 }
 
 .light .text-white {
-  color: hsl(var(--foreground));
+  color: #222222;
 }
 
 .light .bg-\[\#1A1A1A\] {
-  background-color: hsl(var(--card));
+  background-color: #F3F4F6;
 }
 
 .light .bg-\[\#1A1A1A\]\/80 {
-  background-color: hsl(var(--card) / 0.9);
+  background-color: rgba(243, 244, 246, 0.9);
 }
 
 .light .bg-\[\#242425\] {
-  background-color: hsl(var(--accent));
+  background-color: #E5E7EB;
 }
 
 .light .bg-\[\#242425\]\/70 {
-  background-color: hsl(var(--accent) / 0.8);
+  background-color: rgba(229, 231, 235, 0.8);
 }
 
 .light .border-\[\#242425\] {
-  border-color: hsl(var(--border));
+  border-color: #D1D5DB;
 }
 
 .light .text-\[\#868686\] {
-  color: hsl(var(--muted-foreground));
+  color: #555555;
 }
 
-/* Enhanced Notion-style green accent for light mode */
+/* Fix green text on light backgrounds */
 .light .text-\[\#C6FE1E\] {
-  color: hsl(120 100% 25%); /* Rich green for better contrast */
+  color: #222222;
 }
 
 .light .bg-white .text-\[\#C6FE1E\], 
 .light .bg-gray-100 .text-\[\#C6FE1E\], 
 .light .bg-gray-200 .text-\[\#C6FE1E\] {
-  color: hsl(120 100% 25%);
+  color: #222222;
 }
 
-/* Enhanced contrast for interactive elements */
+/* Additional fixes for dark text on light background */
 .light .bg-\[\#242425\].text-white input,
 .light .bg-\[\#242425\].text-white button,
 .light .bg-\[\#242425\].text-white {
-  color: hsl(var(--foreground));
+  color: #222222;
 }
 
 .light .bg-background {
-  background-color: hsl(var(--background));
+  background-color: #F8F9FA;
 }
 
 /* Ensure proper contrast for transaction list in light mode */
 .light .space-y-3.text-white {
-  color: hsl(var(--foreground));
+  color: #222222;
 }
 
 .light .bg-\[\#242425\].p-4.rounded-xl {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--foreground));
+  background-color: #E5E7EB;
+  color: #222222;
 }
 
 @layer components {
   .glass-card {
-    @apply bg-card/70 backdrop-blur-lg border border-border/20;
+    @apply bg-white/70 dark:bg-black/50 backdrop-blur-lg border border-white/20 dark:border-white/10;
   }
   
   .nav-item {
-    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all duration-200;
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all duration-200;
   }
   
   .nav-item.active {
-    @apply text-foreground bg-accent;
+    @apply text-primary bg-primary/10;
   }
 
   .fade-mask {
@@ -204,16 +202,6 @@
   .scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-
-  /* Notion-style subtle hover effects */
-  .notion-hover {
-    @apply transition-colors duration-150 hover:bg-accent/50;
-  }
-
-  /* Enhanced focus states for accessibility */
-  .notion-focus {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
 }
 
