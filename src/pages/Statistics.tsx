@@ -1,6 +1,7 @@
+
 // Page: Statistics  
 // Description: Shows financial statistics and charts
-// Fixed categoryId type conversion
+// Fixed categoryId type conversion and chart component props
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line } from 'recharts';
+import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line, Pie } from 'recharts';
 import { motion } from 'framer-motion';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, format, parseISO } from 'date-fns';
@@ -135,7 +136,10 @@ const Statistics: React.FC = () => {
                   <CardTitle>{t('statistics.period')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <Select 
+                    value={timeFilter} 
+                    onValueChange={(value: 'month' | 'year') => setTimeFilter(value)}
+                  >
                     <SelectTrigger className="bg-[#242424] border-0 text-white">
                       <SelectValue placeholder={t('statistics.selectPeriod')} />
                     </SelectTrigger>
@@ -194,7 +198,7 @@ const Statistics: React.FC = () => {
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsPieChart>
-                          <RechartsPieChart
+                          <Pie
                             dataKey="amount"
                             data={incomeStats}
                             cx="50%"
@@ -208,7 +212,7 @@ const Statistics: React.FC = () => {
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))
                             }
-                          </RechartsPieChart>
+                          </Pie>
                           <Tooltip content={<CustomTooltip />} />
                         </RechartsPieChart>
                       </ResponsiveContainer>
@@ -241,7 +245,7 @@ const Statistics: React.FC = () => {
                     <div className="h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsPieChart>
-                          <RechartsPieChart
+                          <Pie
                             dataKey="amount"
                             data={expenseStats}
                             cx="50%"
@@ -255,7 +259,7 @@ const Statistics: React.FC = () => {
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))
                             }
-                          </RechartsPieChart>
+                          </Pie>
                           <Tooltip content={<CustomTooltip />} />
                         </RechartsPieChart>
                       </ResponsiveContainer>
