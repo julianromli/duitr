@@ -1,11 +1,9 @@
 // Component: CategoryIcon
 // Description: Displays category icons with proper mapping for all categories
-// Fixed icon display for Baby Needs (ID 20) and Investment (ID 21) categories
-// Enhanced database icon loading with fallback to hardcoded mappings
+// Fixed function calls to match updated signatures
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import i18next from 'i18next';
 import { getLocalizedCategoryName, getCategoryStringIdFromUuid, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
 import { useTheme } from '@/context/ThemeContext';
@@ -161,37 +159,29 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       try {
         let categoryData = null;
         
-        // Check if it's a UUID string
+        // Check if it's a UUID string or number ID
         if (typeof category === 'string' && category.includes('-')) {
-          // Get the category from the database
           try {
             categoryData = await getCategoryById(category);
           } catch (error) {
             console.warn(`Error getting category by UUID ${category}:`, error);
-            // Will continue to fallback mechanisms
           }
-        }
-        // Check if it's a number (integer ID from database)
-        else if (typeof category === 'number' || (typeof category === 'string' && !isNaN(Number(category)))) {
+        } else if (typeof category === 'number' || (typeof category === 'string' && !isNaN(Number(category)))) {
           try {
             categoryData = await getCategoryById(category);
           } catch (error) {
             console.warn(`Error getting category by ID ${category}:`, error);
-            // Will continue to fallback mechanisms
           }
         }
         
         if (categoryData) {
           setDisplayName(i18n.language === 'id' ? categoryData.id_name : categoryData.en_name);
-          // Store the category type to help with icon selection later
           setCategoryType(categoryData.type || '');
 
-          // If we have a category_key, use that for better icon matching
           if (categoryData.category_key) {
             setCategoryType(categoryData.category_key);
           }
 
-          // Store icon if present - this should take priority
           if (categoryData.icon) {
             setCategoryIcon(categoryData.icon);
           }
@@ -200,29 +190,25 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
         
         // For string keys (like 'expense_groceries')
         if (typeof category === 'string' && category.includes('_')) {
-          // For string category IDs, extract the type (expense/income) and name
           const parts = category.split('_');
           if (parts.length > 1) {
-            setCategoryType(category); // Store the full ID for icon selection
+            setCategoryType(category);
             
             try {
-              // Also try to get the localized name
-              const loadedName = await getLocalizedCategoryName(category, i18next);
+              const loadedName = getLocalizedCategoryName(category);
               setDisplayName(loadedName);
             } catch (error) {
               console.warn(`Could not get localized name for ${category}:`, error);
-              // Use the second part of the category ID as fallback name
               setDisplayName(parts[1].charAt(0).toUpperCase() + parts[1].slice(1));
             }
             return;
           }
         }
         
-        // For numeric IDs, try to use DEFAULT_CATEGORIES lookup
+        // For numeric IDs, use DEFAULT_CATEGORIES lookup
         if (typeof category === 'number' || (typeof category === 'string' && !isNaN(Number(category)))) {
           const numericId = Number(category);
           
-          // Determine category type based on ID range
           let categoryType: 'expense' | 'income' | 'system' = 'expense';
           if (numericId >= 13 && numericId <= 17) {
             categoryType = 'income';
@@ -230,10 +216,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
             categoryType = 'system';
           }
           
-          // Find the category in DEFAULT_CATEGORIES
           const defaultCategory = DEFAULT_CATEGORIES[categoryType].find(cat => cat.id === String(numericId));
           if (defaultCategory) {
-            // Return localized name from default categories
             if (i18n.language === 'id') {
               const translations: Record<string, string> = {
                 "Groceries": "Belanjaan",
@@ -260,7 +244,6 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
               setDisplayName(defaultCategory.name);
             }
             
-            // Set category type based on ID for icon matching
             const categoryKeyMap: Record<number, string> = {
               1: 'expense_groceries',
               2: 'expense_food',
@@ -290,11 +273,10 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           }
         }
         
-        // Fallback: for any other case, try to get localized name
+        // Fallback: try to get localized name
         try {
-          const loadedName = await getLocalizedCategoryName(
-            typeof category === 'string' ? category : String(category), 
-            i18next
+          const loadedName = getLocalizedCategoryName(
+            typeof category === 'string' ? category : String(category)
           );
           setDisplayName(loadedName || 'Other');
         } catch (error) {
@@ -323,16 +305,13 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   }
 
   if (categoryType) {
-    // If we've stored a category type/key, use that first
     categoryForIcon = categoryType.toLowerCase();
   } else if (typeof category === 'string' && category.includes('_')) {
-    // Extract name from category ID strings like "expense_groceries"
     const parts = category.split('_');
     if (parts.length > 1) {
       categoryForIcon = parts[1].toLowerCase();
     }
   } else {
-    // Default to the display name
     categoryForIcon = displayName.toLowerCase();
   }
 
@@ -501,53 +480,6 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     );
   }
 
-  // Handle special default case for numeric IDs from the category picker
-  if (typeof category === 'string' && !isNaN(Number(category))) {
-    console.log("Numeric category ID:", category);
-
-    // Hardcode icons based on common category IDs
-    const numericId = Number(category);
-    let DefaultIcon = HelpCircle;
-
-    // Expense categories (1-12, 19-21)
-    if (numericId === 1) DefaultIcon = ShoppingCart; // Groceries
-    else if (numericId === 2) DefaultIcon = Utensils; // Dining
-    else if (numericId === 3) DefaultIcon = Car; // Transportation
-    else if (numericId === 4) DefaultIcon = Zap; // Subscription
-    else if (numericId === 5) DefaultIcon = Home; // Housing
-    else if (numericId === 6) DefaultIcon = Music; // Entertainment
-    else if (numericId === 7) DefaultIcon = ShoppingBag; // Shopping
-    else if (numericId === 8) DefaultIcon = Pill; // Healthcare
-    else if (numericId === 9) DefaultIcon = Book; // Education
-    else if (numericId === 10) DefaultIcon = Plane; // Travel
-    else if (numericId === 11) DefaultIcon = User; // Personal
-    else if (numericId === 12) DefaultIcon = Package; // Other expense
-    else if (numericId === 19) DefaultIcon = DollarSign; // Donate
-    else if (numericId === 20) DefaultIcon = Baby; // Baby Needs
-    else if (numericId === 21) DefaultIcon = LineChart; // Investment (expense)
-
-    // Income categories (13-17)
-    else if (numericId === 13) DefaultIcon = Briefcase; // Salary
-    else if (numericId === 14) DefaultIcon = Building2; // Business
-    else if (numericId === 15) DefaultIcon = LineChart; // Investment (income)
-    else if (numericId === 16) DefaultIcon = GiftIcon; // Gift
-    else if (numericId === 17) DefaultIcon = Coins; // Other income
-    
-    return (
-      <div
-        className={`flex items-center justify-center rounded-full bg-primary ${className}`}
-        style={{ width: 34, height: 34 }}
-      >
-        <DefaultIcon
-          className={iconInnerSizes[size]}
-          stroke="black"
-          fill="none"
-          strokeWidth={2}
-        />
-      </div>
-    );
-  }
-
   return (
     <div
       className={`flex items-center justify-center rounded-full bg-primary ${className}`}
@@ -563,4 +495,4 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   );
 };
 
-export default CategoryIcon; 
+export default CategoryIcon;
