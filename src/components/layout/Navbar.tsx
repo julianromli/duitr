@@ -1,7 +1,7 @@
 
 // Component: Navbar
 // Description: Bottom navigation bar with spotlight effect and 7 main navigation items
-// Updated to use spotlight design with green accent color
+// Updated to fix active indicator positioning precision
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
           <div 
             className="absolute top-0 h-[2px] bg-[#C6FE1E] transition-all duration-400 ease-in-out"
             style={{
-              left: `${activeIndex >= 0 ? activeIndex * 56 + 12 : 0}px`,
+              left: `calc(${activeIndex >= 0 ? activeIndex * (100 / 7) : 0}% + ${8 + (activeIndex * 8)}px)`,
               width: '48px',
               transform: 'translateY(-1px)',
               opacity: activeIndex >= 0 ? 1 : 0,
