@@ -1,3 +1,7 @@
+
+// Fixed BudgetList to handle category property properly and correct function calls
+// Updated to match the updated FinanceContext interface
+
 import React, { useState, useEffect } from 'react';
 import { PieChart, Edit, Trash, X, Check, Calendar } from 'lucide-react';
 import { useBudgets } from '@/hooks/useBudgets';
@@ -26,7 +30,7 @@ import AnimatedText from '@/components/ui/animated-text';
 
 const BudgetList: React.FC = () => {
   const { budgets } = useBudgets();
-  const { formatCurrency, updateBudget, deleteBudget } = useFinance();
+  const { formatCurrency, updateBudget, deleteBudget, categories } = useFinance();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const [editingBudget, setEditingBudget] = useState<string | null>(null);
@@ -55,8 +59,13 @@ const BudgetList: React.FC = () => {
       const currentBudget = budgets.find(b => b.id === editingBudget);
       if (currentBudget) {
         console.log("Found budget for editing:", currentBudget);
+        // Get category name from categories array
+        const categoryName = categories.find(cat => 
+          String(cat.category_id) === String(currentBudget.category_id)
+        )?.en_name || currentBudget.category || '';
+        
         setEditForm({
-          category: currentBudget.category || '',
+          category: categoryName,
           amount: currentBudget.amount.toString(),
           period: currentBudget.period as 'weekly' | 'monthly' | 'yearly' || 'monthly'
         });
@@ -64,7 +73,7 @@ const BudgetList: React.FC = () => {
         console.warn("Could not find budget with ID:", editingBudget);
       }
     }
-  }, [budgets, editingBudget]);
+  }, [budgets, editingBudget, categories]);
 
   const getProgressColor = (percentage: number) => {
     if (percentage >= 90) return 'bg-finance-expense';
@@ -75,8 +84,12 @@ const BudgetList: React.FC = () => {
   const handleEdit = (budget: any) => {
     console.log("Editing budget:", budget);
     setEditingBudget(budget.id);
+    const categoryName = categories.find(cat => 
+      String(cat.category_id) === String(budget.category_id)
+    )?.en_name || budget.category || '';
+    
     setEditForm({
-      category: budget.category || '',
+      category: categoryName,
       amount: budget.amount.toString(),
       period: budget.period || 'monthly'
     });
@@ -86,7 +99,7 @@ const BudgetList: React.FC = () => {
     setEditingBudget(null);
   };
 
-  const handleSaveEdit = (budget: any) => {
+  const handleSaveEdit = async (budget: any) => {
     // Validate inputs
     if (!editForm.amount || isNaN(Number(editForm.amount)) || Number(editForm.amount) <= 0) {
       toast({
@@ -98,28 +111,24 @@ const BudgetList: React.FC = () => {
     }
 
     // Update the budget with amount and period changes, preserve category
-    updateBudget({
-      ...budget,
-      category: budget.category,
+    await updateBudget(budget.id, {
       amount: Number(editForm.amount),
       period: editForm.period
-    });
-
-    toast({
-      title: "Success",
-      description: "Budget updated successfully"
     });
 
     setEditingBudget(null);
   };
 
-  const handleDelete = (id: string) => {
-    deleteBudget(id);
-    
-    toast({
-      title: "Success",
-      description: "Budget deleted successfully"
-    });
+  const handleDelete = async (id: string) => {
+    await deleteBudget(id);
+  };
+
+  // Get category name helper
+  const getCategoryName = (budget: any) => {
+    const category = categories.find(cat => 
+      String(cat.category_id) === String(budget.category_id)
+    );
+    return category?.en_name || budget.category || 'Unknown Category';
   };
 
   // Fungsi untuk mendapatkan label periode yang diterjemahkan
@@ -155,6 +164,7 @@ const BudgetList: React.FC = () => {
               const percentage = (budget.spent / budget.amount) * 100;
               const remaining = budget.amount - budget.spent;
               const isEditing = editingBudget === budget.id;
+              const categoryName = getCategoryName(budget);
               
               return (
                 <div key={budget.id} className="space-y-2">
@@ -166,7 +176,7 @@ const BudgetList: React.FC = () => {
                             <AnimatedText text={t('transactions.category')} animationType="slide" />:
                           </label>
                           <span className="text-sm">
-                            <AnimatedText text={budget.category || 'No Category'} animationType="scale" />
+                            <AnimatedText text={categoryName} animationType="scale" />
                           </span>
                         </div>
                       </div>
@@ -239,7 +249,7 @@ const BudgetList: React.FC = () => {
                       <div>
                         <h3 className="font-medium">
                           <AnimatedText 
-                            text={budget.category}
+                            text={categoryName}
                             animationType="slide"
                             duration={0.4}
                           />
