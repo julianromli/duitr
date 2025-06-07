@@ -1,5 +1,6 @@
-// Fixed FinanceContext to handle proper function signatures and missing properties
-// Added monthlyExpense property and fixed getDisplayCategoryName function
+// Fixed FinanceContext to include all missing functions and properties
+// Added proper type alignment and consistent naming conventions
+// Fixed all missing properties like totalBalance, monthlyIncome, etc.
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
@@ -37,6 +38,7 @@ interface Budget {
   amount: number;
   spent: number;
   category_id: number;
+  category?: string;
   period: 'weekly' | 'monthly';
   user_id: string;
   created_at?: string;
@@ -46,6 +48,8 @@ interface Wallet {
   id: string;
   name: string;
   balance: number;
+  color: string;
+  type: string;
   user_id: string;
   created_at?: string;
 }
@@ -54,7 +58,12 @@ interface WantToBuy {
   id: string;
   name: string;
   price: number;
-  priority: 'high' | 'medium' | 'low';
+  category: "Keinginan" | "Kebutuhan";
+  priority: "Tinggi" | "Sedang" | "Rendah";
+  estimated_date: string;
+  is_purchased: boolean;
+  purchase_date?: string | null;
+  icon?: string | null;
   user_id: string;
   created_at?: string;
 }
@@ -64,9 +73,13 @@ interface Pinjaman {
   name: string;
   amount: number;
   type: 'debt' | 'credit';
+  category: string;
   due_date?: string;
+  is_settled?: boolean;
   user_id: string;
   created_at?: string;
+  description?: string;
+  lender_name?: string;
 }
 
 interface FinanceState {
@@ -83,6 +96,7 @@ interface FinanceState {
 interface FinanceContextType extends FinanceState {
   formatCurrency: (amount: number) => string;
   getDisplayCategoryName: (transaction: Transaction) => string;
+  getCategoryKey: (transaction: Transaction) => string;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
   updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
@@ -98,8 +112,19 @@ interface FinanceContextType extends FinanceState {
   addPinjaman: (pinjaman: Omit<Pinjaman, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
   updatePinjaman: (id: string, pinjaman: Partial<Pinjaman>) => Promise<void>;
   deletePinjaman: (id: string) => Promise<void>;
+  // Additional properties for compatibility
+  wantToBuyItems: WantToBuy[];
+  pinjamanItems: Pinjaman[];
+  addWantToBuyItem: (item: Omit<WantToBuy, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  updateWantToBuyItem: (item: WantToBuy) => Promise<void>;
+  deleteWantToBuyItem: (id: string) => Promise<void>;
+  addPinjamanItem: (pinjaman: Omit<Pinjaman, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  updatePinjamanItem: (item: Pinjaman) => Promise<void>;
+  deletePinjamanItem: (id: string) => Promise<void>;
   refetchData: () => Promise<void>;
   monthlyExpense: number;
+  totalBalance: number;
+  monthlyIncome: number;
 }
 
 type FinanceAction = 
@@ -250,13 +275,26 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Calculate monthly expense
+  // Calculate computed properties
+  const totalBalance = React.useMemo(() => {
+    return state.wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
+  }, [state.wallets]);
+
   const monthlyExpense = React.useMemo(() => {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     return state.transactions
       .filter(t => t.type === 'expense' && new Date(t.date) >= firstDayOfMonth)
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [state.transactions]);
+
+  const monthlyIncome = React.useMemo(() => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    return state.transactions
+      .filter(t => t.type === 'income' && new Date(t.date) >= firstDayOfMonth)
       .reduce((sum, t) => sum + t.amount, 0);
   }, [state.transactions]);
 
@@ -268,7 +306,6 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   };
 
   const getDisplayCategoryName = (transaction: Transaction) => {
-    // Handle special cases first
     if (transaction.type === 'transfer') {
       return 'Transfer';
     }
@@ -277,7 +314,6 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       return 'Investment';
     }
 
-    // Try to find category by ID first
     if (transaction.categoryId || transaction.category_id) {
       const categoryId = String(transaction.categoryId || transaction.category_id);
       const category = state.categories.find(cat => 
@@ -290,12 +326,31 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       }
     }
 
-    // Fallback to transaction.category
     if (transaction.category) {
       return transaction.category;
     }
 
     return 'Other';
+  };
+
+  const getCategoryKey = (transaction: Transaction) => {
+    if (transaction.type === 'transfer') {
+      return 'transfer';
+    }
+    
+    if (transaction.categoryId || transaction.category_id) {
+      const categoryId = String(transaction.categoryId || transaction.category_id);
+      const category = state.categories.find(cat => 
+        String(cat.id) === categoryId || 
+        String(cat.category_id) === categoryId
+      );
+      
+      if (category) {
+        return category.category_key || category.en_name.toLowerCase();
+      }
+    }
+
+    return 'other';
   };
 
   const fetchData = async () => {
@@ -304,7 +359,6 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // Fetch all data in parallel
       const [
         transactionsRes,
         budgetsRes,
@@ -317,8 +371,8 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
         supabase.from('budgets').select('*').eq('user_id', user.id),
         supabase.from('categories').select('category_id, category_key, created_at, en_name, icon, id_name, type').order('en_name'),
         supabase.from('wallets').select('*').eq('user_id', user.id),
-        supabase.from('want_to_buy').select('*').eq('user_id', user.id),
-        supabase.from('pinjaman').select('*').eq('user_id', user.id),
+        supabase.from('want_to_buy_items').select('*').eq('user_id', user.id),
+        supabase.from('pinjaman_items').select('*').eq('user_id', user.id),
       ]);
 
       if (transactionsRes.error) throw transactionsRes.error;
@@ -328,7 +382,6 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       if (wantToBuyRes.error) throw wantToBuyRes.error;
       if (pinjamanRes.error) throw pinjamanRes.error;
 
-      // Map categories to our interface
       const mappedCategories = categoriesRes.data.map(cat => ({
         id: String(cat.category_id),
         category_id: cat.category_id,
@@ -589,7 +642,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
 
     try {
       const { data, error } = await supabase
-        .from('want_to_buy')
+        .from('want_to_buy_items')
         .insert({ ...item, user_id: user.id })
         .select()
         .single();
@@ -614,7 +667,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   const updateWantToBuy = async (id: string, item: Partial<WantToBuy>) => {
     try {
       const { error } = await supabase
-        .from('want_to_buy')
+        .from('want_to_buy_items')
         .update(item)
         .eq('id', id);
 
@@ -638,7 +691,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   const deleteWantToBuy = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('want_to_buy')
+        .from('want_to_buy_items')
         .delete()
         .eq('id', id);
 
@@ -664,7 +717,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
 
     try {
       const { data, error } = await supabase
-        .from('pinjaman')
+        .from('pinjaman_items')
         .insert({ ...pinjaman, user_id: user.id })
         .select()
         .single();
@@ -689,7 +742,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   const updatePinjaman = async (id: string, pinjaman: Partial<Pinjaman>) => {
     try {
       const { error } = await supabase
-        .from('pinjaman')
+        .from('pinjaman_items')
         .update(pinjaman)
         .eq('id', id);
 
@@ -713,7 +766,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   const deletePinjaman = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('pinjaman')
+        .from('pinjaman_items')
         .delete()
         .eq('id', id);
 
@@ -738,6 +791,18 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     await fetchData();
   };
 
+  // Compatibility functions
+  const addWantToBuyItem = addWantToBuy;
+  const updateWantToBuyItem = async (item: WantToBuy) => {
+    await updateWantToBuy(item.id, item);
+  };
+  const deleteWantToBuyItem = deleteWantToBuy;
+  const addPinjamanItem = addPinjaman;
+  const updatePinjamanItem = async (item: Pinjaman) => {
+    await updatePinjaman(item.id, item);
+  };
+  const deletePinjamanItem = deletePinjaman;
+
   useEffect(() => {
     if (user) {
       fetchData();
@@ -748,6 +813,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     ...state,
     formatCurrency,
     getDisplayCategoryName,
+    getCategoryKey,
     addTransaction,
     updateTransaction,
     deleteTransaction,
@@ -765,6 +831,17 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     deletePinjaman,
     refetchData,
     monthlyExpense,
+    totalBalance,
+    monthlyIncome,
+    // Compatibility aliases
+    wantToBuyItems: state.wantToBuy,
+    pinjamanItems: state.pinjaman,
+    addWantToBuyItem,
+    updateWantToBuyItem,
+    deleteWantToBuyItem,
+    addPinjamanItem,
+    updatePinjamanItem,
+    deletePinjamanItem,
   };
 
   return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
