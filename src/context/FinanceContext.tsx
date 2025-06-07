@@ -1,52 +1,241 @@
+// Fixed FinanceContext to handle proper function signatures and missing properties
+// Added monthlyExpense property and fixed getDisplayCategoryName function
 
-// Fixed FinanceContext to resolve type mismatches and function signature errors
-// Corrected PinjamanItem type usage with user_id field
-// Fixed getLocalizedCategoryName function calls and category handling
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Transaction, Budget, Wallet, WantToBuyItem, PinjamanItem } from '@/types/finance';
 import { useToast } from '@/hooks/use-toast';
-import { getLocalizedCategoryName, getCategoryStringIdFromUuid } from '@/utils/categoryUtils';
-import i18next from 'i18next';
 
-interface FinanceContextType {
+interface Category {
+  id: string;
+  category_id?: number;
+  category_key?: string;
+  en_name: string;
+  id_name: string;
+  type?: string;
+  icon?: string;
+  created_at?: string;
+}
+
+interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  date: string;
+  type: 'income' | 'expense' | 'transfer';
+  categoryId?: string | number;
+  category?: string;
+  category_id?: number;
+  user_id: string;
+  wallet_id?: string;
+  to_wallet_id?: string;
+  created_at?: string;
+}
+
+interface Budget {
+  id: string;
+  amount: number;
+  spent: number;
+  category_id: number;
+  period: 'weekly' | 'monthly';
+  user_id: string;
+  created_at?: string;
+}
+
+interface Wallet {
+  id: string;
+  name: string;
+  balance: number;
+  user_id: string;
+  created_at?: string;
+}
+
+interface WantToBuy {
+  id: string;
+  name: string;
+  price: number;
+  priority: 'high' | 'medium' | 'low';
+  user_id: string;
+  created_at?: string;
+}
+
+interface Pinjaman {
+  id: string;
+  name: string;
+  amount: number;
+  type: 'debt' | 'credit';
+  due_date?: string;
+  user_id: string;
+  created_at?: string;
+}
+
+interface FinanceState {
   transactions: Transaction[];
   budgets: Budget[];
+  categories: Category[];
   wallets: Wallet[];
-  wantToBuyItems: WantToBuyItem[];
-  pinjamanItems: PinjamanItem[];
-  totalBalance: number;
-  monthlyIncome: number;
-  monthlyExpenses: number;
+  wantToBuy: WantToBuy[];
+  pinjaman: Pinjaman[];
   loading: boolean;
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'userId' | 'created_at'>) => Promise<void>;
+  error: string | null;
+}
+
+interface FinanceContextType extends FinanceState {
+  formatCurrency: (amount: number) => string;
+  getDisplayCategoryName: (transaction: Transaction) => string;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
   updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
-  addBudget: (budget: Omit<Budget, 'id' | 'userId' | 'spent'>) => Promise<void>;
+  addBudget: (budget: Omit<Budget, 'id' | 'user_id' | 'spent' | 'created_at'>) => Promise<void>;
   updateBudget: (id: string, budget: Partial<Budget>) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
-  addWallet: (wallet: Omit<Wallet, 'id' | 'userId'>) => Promise<void>;
+  addWallet: (wallet: Omit<Wallet, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
   updateWallet: (id: string, wallet: Partial<Wallet>) => Promise<void>;
   deleteWallet: (id: string) => Promise<void>;
-  addWantToBuyItem: (item: Omit<WantToBuyItem, 'id' | 'userId' | 'created_at' | 'is_purchased'>) => Promise<void>;
-  updateWantToBuyItem: (id: string, item: Partial<WantToBuyItem>) => Promise<void>;
-  deleteWantToBuyItem: (id: string) => Promise<void>;
-  addPinjamanItem: (item: Omit<PinjamanItem, 'id' | 'user_id' | 'created_at' | 'is_settled'>) => Promise<void>;
-  updatePinjamanItem: (id: string, item: Partial<PinjamanItem>) => Promise<void>;
-  deletePinjamanItem: (id: string) => Promise<void>;
-  formatCurrency: (amount: number) => string;
-  refreshData: () => Promise<void>;
-  getDisplayCategoryName: (transaction: Transaction) => string;
-  getCategoryKey: (categoryId: string | number) => string;
+  addWantToBuy: (item: Omit<WantToBuy, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  updateWantToBuy: (id: string, item: Partial<WantToBuy>) => Promise<void>;
+  deleteWantToBuy: (id: string) => Promise<void>;
+  addPinjaman: (pinjaman: Omit<Pinjaman, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  updatePinjaman: (id: string, pinjaman: Partial<Pinjaman>) => Promise<void>;
+  deletePinjaman: (id: string) => Promise<void>;
+  refetchData: () => Promise<void>;
+  monthlyExpense: number;
+}
+
+type FinanceAction = 
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_TRANSACTIONS'; payload: Transaction[] }
+  | { type: 'SET_BUDGETS'; payload: Budget[] }
+  | { type: 'SET_CATEGORIES'; payload: Category[] }
+  | { type: 'SET_WALLETS'; payload: Wallet[] }
+  | { type: 'SET_WANT_TO_BUY'; payload: WantToBuy[] }
+  | { type: 'SET_PINJAMAN'; payload: Pinjaman[] }
+  | { type: 'ADD_TRANSACTION'; payload: Transaction }
+  | { type: 'UPDATE_TRANSACTION'; payload: { id: string; transaction: Partial<Transaction> } }
+  | { type: 'DELETE_TRANSACTION'; payload: string }
+  | { type: 'ADD_BUDGET'; payload: Budget }
+  | { type: 'UPDATE_BUDGET'; payload: { id: string; budget: Partial<Budget> } }
+  | { type: 'DELETE_BUDGET'; payload: string }
+  | { type: 'ADD_WALLET'; payload: Wallet }
+  | { type: 'UPDATE_WALLET'; payload: { id: string; wallet: Partial<Wallet> } }
+  | { type: 'DELETE_WALLET'; payload: string }
+  | { type: 'ADD_WANT_TO_BUY'; payload: WantToBuy }
+  | { type: 'UPDATE_WANT_TO_BUY'; payload: { id: string; item: Partial<WantToBuy> } }
+  | { type: 'DELETE_WANT_TO_BUY'; payload: string }
+  | { type: 'ADD_PINJAMAN'; payload: Pinjaman }
+  | { type: 'UPDATE_PINJAMAN'; payload: { id: string; pinjaman: Partial<Pinjaman> } }
+  | { type: 'DELETE_PINJAMAN'; payload: string };
+
+const initialState: FinanceState = {
+  transactions: [],
+  budgets: [],
+  categories: [],
+  wallets: [],
+  wantToBuy: [],
+  pinjaman: [],
+  loading: false,
+  error: null,
+};
+
+function financeReducer(state: FinanceState, action: FinanceAction): FinanceState {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, loading: false };
+    case 'SET_TRANSACTIONS':
+      return { ...state, transactions: action.payload };
+    case 'SET_BUDGETS':
+      return { ...state, budgets: action.payload };
+    case 'SET_CATEGORIES':
+      return { ...state, categories: action.payload };
+    case 'SET_WALLETS':
+      return { ...state, wallets: action.payload };
+    case 'SET_WANT_TO_BUY':
+      return { ...state, wantToBuy: action.payload };
+    case 'SET_PINJAMAN':
+      return { ...state, pinjaman: action.payload };
+    case 'ADD_TRANSACTION':
+      return { ...state, transactions: [...state.transactions, action.payload] };
+    case 'UPDATE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.map(t =>
+          t.id === action.payload.id ? { ...t, ...action.payload.transaction } : t
+        ),
+      };
+    case 'DELETE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.filter(t => t.id !== action.payload),
+      };
+    case 'ADD_BUDGET':
+      return { ...state, budgets: [...state.budgets, action.payload] };
+    case 'UPDATE_BUDGET':
+      return {
+        ...state,
+        budgets: state.budgets.map(b =>
+          b.id === action.payload.id ? { ...b, ...action.payload.budget } : b
+        ),
+      };
+    case 'DELETE_BUDGET':
+      return {
+        ...state,
+        budgets: state.budgets.filter(b => b.id !== action.payload),
+      };
+    case 'ADD_WALLET':
+      return { ...state, wallets: [...state.wallets, action.payload] };
+    case 'UPDATE_WALLET':
+      return {
+        ...state,
+        wallets: state.wallets.map(w =>
+          w.id === action.payload.id ? { ...w, ...action.payload.wallet } : w
+        ),
+      };
+    case 'DELETE_WALLET':
+      return {
+        ...state,
+        wallets: state.wallets.filter(w => w.id !== action.payload),
+      };
+    case 'ADD_WANT_TO_BUY':
+      return { ...state, wantToBuy: [...state.wantToBuy, action.payload] };
+    case 'UPDATE_WANT_TO_BUY':
+      return {
+        ...state,
+        wantToBuy: state.wantToBuy.map(w =>
+          w.id === action.payload.id ? { ...w, ...action.payload.item } : w
+        ),
+      };
+    case 'DELETE_WANT_TO_BUY':
+      return {
+        ...state,
+        wantToBuy: state.wantToBuy.filter(w => w.id !== action.payload),
+      };
+    case 'ADD_PINJAMAN':
+      return { ...state, pinjaman: [...state.pinjaman, action.payload] };
+    case 'UPDATE_PINJAMAN':
+      return {
+        ...state,
+        pinjaman: state.pinjaman.map(p =>
+          p.id === action.payload.id ? { ...p, ...action.payload.pinjaman } : p
+        ),
+      };
+    case 'DELETE_PINJAMAN':
+      return {
+        ...state,
+        pinjaman: state.pinjaman.filter(p => p.id !== action.payload),
+      };
+    default:
+      return state;
+  }
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export const useFinance = () => {
   const context = useContext(FinanceContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useFinance must be used within a FinanceProvider');
   }
   return context;
@@ -57,181 +246,167 @@ interface FinanceProviderProps {
 }
 
 export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [wantToBuyItems, setWantToBuyItems] = useState<WantToBuyItem[]>([]);
-  const [pinjamanItems, setPinjamanItems] = useState<PinjamanItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [state, dispatch] = useReducer(financeReducer, initialState);
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { i18n } = useTranslation();
 
-  // Fetch user data
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+  // Calculate monthly expense
+  const monthlyExpense = React.useMemo(() => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    return state.transactions
+      .filter(t => t.type === 'expense' && new Date(t.date) >= firstDayOfMonth)
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [state.transactions]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    }).format(amount);
+  };
+
+  const getDisplayCategoryName = (transaction: Transaction) => {
+    // Handle special cases first
+    if (transaction.type === 'transfer') {
+      return 'Transfer';
+    }
+    
+    if (transaction.category === 'Investasi' || transaction.category === 'Investment') {
+      return 'Investment';
+    }
+
+    // Try to find category by ID first
+    if (transaction.categoryId || transaction.category_id) {
+      const categoryId = String(transaction.categoryId || transaction.category_id);
+      const category = state.categories.find(cat => 
+        String(cat.id) === categoryId || 
+        String(cat.category_id) === categoryId
+      );
       
-      if (!user) return;
-
-      // Fetch transactions
-      const { data: transactionData, error: transactionError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (transactionError) {
-        console.error('Error fetching transactions:', transactionError);
-      } else {
-        setTransactions(transactionData || []);
+      if (category) {
+        return category.en_name;
       }
+    }
 
-      // Fetch budgets
-      const { data: budgetData, error: budgetError } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', user.id);
+    // Fallback to transaction.category
+    if (transaction.category) {
+      return transaction.category;
+    }
 
-      if (budgetError) {
-        console.error('Error fetching budgets:', budgetError);
-      } else {
-        setBudgets(budgetData || []);
-      }
+    return 'Other';
+  };
 
-      // Fetch wallets
-      const { data: walletData, error: walletError } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', user.id);
+  const fetchData = async () => {
+    if (!user) return;
 
-      if (walletError) {
-        console.error('Error fetching wallets:', walletError);
-      } else {
-        setWallets(walletData || []);
-      }
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-      // Fetch want to buy items
-      const { data: wantToBuyData, error: wantToBuyError } = await supabase
-        .from('want_to_buy_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Fetch all data in parallel
+      const [
+        transactionsRes,
+        budgetsRes,
+        categoriesRes,
+        walletsRes,
+        wantToBuyRes,
+        pinjamanRes,
+      ] = await Promise.all([
+        supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+        supabase.from('budgets').select('*').eq('user_id', user.id),
+        supabase.from('categories').select('category_id, category_key, created_at, en_name, icon, id_name, type').order('en_name'),
+        supabase.from('wallets').select('*').eq('user_id', user.id),
+        supabase.from('want_to_buy').select('*').eq('user_id', user.id),
+        supabase.from('pinjaman').select('*').eq('user_id', user.id),
+      ]);
 
-      if (wantToBuyError) {
-        console.error('Error fetching want to buy items:', wantToBuyError);
-      } else {
-        setWantToBuyItems(wantToBuyData || []);
-      }
+      if (transactionsRes.error) throw transactionsRes.error;
+      if (budgetsRes.error) throw budgetsRes.error;
+      if (categoriesRes.error) throw categoriesRes.error;
+      if (walletsRes.error) throw walletsRes.error;
+      if (wantToBuyRes.error) throw wantToBuyRes.error;
+      if (pinjamanRes.error) throw pinjamanRes.error;
 
-      // Fetch pinjaman items
-      const { data: pinjamanData, error: pinjamanError } = await supabase
-        .from('pinjaman_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Map categories to our interface
+      const mappedCategories = categoriesRes.data.map(cat => ({
+        id: String(cat.category_id),
+        category_id: cat.category_id,
+        category_key: cat.category_key,
+        en_name: cat.en_name,
+        id_name: cat.id_name,
+        type: cat.type,
+        icon: cat.icon,
+        created_at: cat.created_at
+      }));
 
-      if (pinjamanError) {
-        console.error('Error fetching pinjaman items:', pinjamanError);
-      } else {
-        // Map the data to match our type structure
-        const mappedPinjamanData = pinjamanData?.map(item => ({
-          id: item.id,
-          user_id: item.user_id, // Use user_id consistently
-          name: item.name,
-          icon: item.icon,
-          category: item.category as "Utang" | "Piutang",
-          due_date: item.due_date,
-          amount: item.amount,
-          is_settled: item.is_settled,
-          created_at: item.created_at,
-        })) || [];
-        
-        setPinjamanItems(mappedPinjamanData);
-      }
-
+      dispatch({ type: 'SET_TRANSACTIONS', payload: transactionsRes.data || [] });
+      dispatch({ type: 'SET_BUDGETS', payload: budgetsRes.data || [] });
+      dispatch({ type: 'SET_CATEGORIES', payload: mappedCategories });
+      dispatch({ type: 'SET_WALLETS', payload: walletsRes.data || [] });
+      dispatch({ type: 'SET_WANT_TO_BUY', payload: wantToBuyRes.data || [] });
+      dispatch({ type: 'SET_PINJAMAN', payload: pinjamanRes.data || [] });
     } catch (error) {
       console.error('Error fetching data:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch data' });
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch data. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
+    if (!user) return;
 
-  // Calculate totals
-  const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
-  
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  
-  const monthlyIncome = transactions
-    .filter(t => {
-      const transactionDate = new Date(t.date);
-      return t.type === 'income' && 
-             transactionDate.getMonth() === currentMonth && 
-             transactionDate.getFullYear() === currentYear;
-    })
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const monthlyExpenses = transactions
-    .filter(t => {
-      const transactionDate = new Date(t.date);
-      return t.type === 'expense' && 
-             transactionDate.getMonth() === currentMonth && 
-             transactionDate.getFullYear() === currentYear;
-    })
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // Transaction operations
-  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'userId' | 'created_at'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
         .from('transactions')
-        .insert([{ ...transaction, user_id: user.id }])
+        .insert({ ...transaction, user_id: user.id })
         .select()
         .single();
 
       if (error) throw error;
 
-      setTransactions(prev => [data, ...prev]);
-
-      // Update wallet balance
-      if (transaction.type === 'income') {
-        await updateWalletBalance(transaction.walletId, transaction.amount);
-      } else if (transaction.type === 'expense') {
-        await updateWalletBalance(transaction.walletId, -transaction.amount);
-      } else if (transaction.type === 'transfer' && transaction.destinationWalletId) {
-        await updateWalletBalance(transaction.walletId, -transaction.amount);
-        await updateWalletBalance(transaction.destinationWalletId, transaction.amount);
-      }
-
+      dispatch({ type: 'ADD_TRANSACTION', payload: data });
+      toast({
+        title: 'Success',
+        description: 'Transaction added successfully',
+      });
     } catch (error) {
       console.error('Error adding transaction:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to add transaction',
+        variant: 'destructive',
+      });
     }
   };
 
   const updateTransaction = async (id: string, transaction: Partial<Transaction>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('transactions')
         .update(transaction)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) throw error;
 
-      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
+      dispatch({ type: 'UPDATE_TRANSACTION', payload: { id, transaction } });
+      toast({
+        title: 'Success',
+        description: 'Transaction updated successfully',
+      });
     } catch (error) {
       console.error('Error updating transaction:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to update transaction',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -244,49 +419,69 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
 
       if (error) throw error;
 
-      setTransactions(prev => prev.filter(t => t.id !== id));
+      dispatch({ type: 'DELETE_TRANSACTION', payload: id });
+      toast({
+        title: 'Success',
+        description: 'Transaction deleted successfully',
+      });
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to delete transaction',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Budget operations
-  const addBudget = async (budget: Omit<Budget, 'id' | 'userId' | 'spent'>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+  const addBudget = async (budget: Omit<Budget, 'id' | 'user_id' | 'spent' | 'created_at'>) => {
+    if (!user) return;
 
+    try {
       const { data, error } = await supabase
         .from('budgets')
-        .insert([{ ...budget, user_id: user.id, spent: 0 }])
+        .insert({ ...budget, user_id: user.id, spent: 0 })
         .select()
         .single();
 
       if (error) throw error;
 
-      setBudgets(prev => [...prev, data]);
+      dispatch({ type: 'ADD_BUDGET', payload: data });
+      toast({
+        title: 'Success',
+        description: 'Budget added successfully',
+      });
     } catch (error) {
       console.error('Error adding budget:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to add budget',
+        variant: 'destructive',
+      });
     }
   };
 
   const updateBudget = async (id: string, budget: Partial<Budget>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('budgets')
         .update(budget)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) throw error;
 
-      setBudgets(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
+      dispatch({ type: 'UPDATE_BUDGET', payload: { id, budget } });
+      toast({
+        title: 'Success',
+        description: 'Budget updated successfully',
+      });
     } catch (error) {
       console.error('Error updating budget:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to update budget',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -299,49 +494,69 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
 
       if (error) throw error;
 
-      setBudgets(prev => prev.filter(b => b.id !== id));
+      dispatch({ type: 'DELETE_BUDGET', payload: id });
+      toast({
+        title: 'Success',
+        description: 'Budget deleted successfully',
+      });
     } catch (error) {
       console.error('Error deleting budget:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to delete budget',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Wallet operations
-  const addWallet = async (wallet: Omit<Wallet, 'id' | 'userId'>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+  const addWallet = async (wallet: Omit<Wallet, 'id' | 'user_id' | 'created_at'>) => {
+    if (!user) return;
 
+    try {
       const { data, error } = await supabase
         .from('wallets')
-        .insert([{ ...wallet, user_id: user.id }])
+        .insert({ ...wallet, user_id: user.id })
         .select()
         .single();
 
       if (error) throw error;
 
-      setWallets(prev => [...prev, data]);
+      dispatch({ type: 'ADD_WALLET', payload: data });
+      toast({
+        title: 'Success',
+        description: 'Wallet added successfully',
+      });
     } catch (error) {
       console.error('Error adding wallet:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to add wallet',
+        variant: 'destructive',
+      });
     }
   };
 
   const updateWallet = async (id: string, wallet: Partial<Wallet>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('wallets')
         .update(wallet)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) throw error;
 
-      setWallets(prev => prev.map(w => w.id === id ? { ...w, ...data } : w));
+      dispatch({ type: 'UPDATE_WALLET', payload: { id, wallet } });
+      toast({
+        title: 'Success',
+        description: 'Wallet updated successfully',
+      });
     } catch (error) {
       console.error('Error updating wallet:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to update wallet',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -354,275 +569,185 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
 
       if (error) throw error;
 
-      setWallets(prev => prev.filter(w => w.id !== id));
+      dispatch({ type: 'DELETE_WALLET', payload: id });
+      toast({
+        title: 'Success',
+        description: 'Wallet deleted successfully',
+      });
     } catch (error) {
       console.error('Error deleting wallet:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to delete wallet',
+        variant: 'destructive',
+      });
     }
   };
 
-  const updateWalletBalance = async (walletId: string, amount: number) => {
+  const addWantToBuy = async (item: Omit<WantToBuy, 'id' | 'user_id' | 'created_at'>) => {
+    if (!user) return;
+
     try {
-      const wallet = wallets.find(w => w.id === walletId);
-      if (!wallet) throw new Error('Wallet not found');
-
-      const newBalance = wallet.balance + amount;
-      await updateWallet(walletId, { balance: newBalance });
-    } catch (error) {
-      console.error('Error updating wallet balance:', error);
-      throw error;
-    }
-  };
-
-  // Want to buy operations
-  const addWantToBuyItem = async (item: Omit<WantToBuyItem, 'id' | 'userId' | 'created_at' | 'is_purchased'>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
-        .from('want_to_buy_items')
-        .insert([{ ...item, user_id: user.id, is_purchased: false }])
+        .from('want_to_buy')
+        .insert({ ...item, user_id: user.id })
         .select()
         .single();
 
       if (error) throw error;
 
-      setWantToBuyItems(prev => [data, ...prev]);
+      dispatch({ type: 'ADD_WANT_TO_BUY', payload: data });
+      toast({
+        title: 'Success',
+        description: 'Item added to want to buy list',
+      });
     } catch (error) {
       console.error('Error adding want to buy item:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to add item',
+        variant: 'destructive',
+      });
     }
   };
 
-  const updateWantToBuyItem = async (id: string, item: Partial<WantToBuyItem>) => {
+  const updateWantToBuy = async (id: string, item: Partial<WantToBuy>) => {
     try {
-      const { data, error } = await supabase
-        .from('want_to_buy_items')
+      const { error } = await supabase
+        .from('want_to_buy')
         .update(item)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) throw error;
 
-      setWantToBuyItems(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+      dispatch({ type: 'UPDATE_WANT_TO_BUY', payload: { id, item } });
+      toast({
+        title: 'Success',
+        description: 'Item updated successfully',
+      });
     } catch (error) {
       console.error('Error updating want to buy item:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to update item',
+        variant: 'destructive',
+      });
     }
   };
 
-  const deleteWantToBuyItem = async (id: string) => {
+  const deleteWantToBuy = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('want_to_buy_items')
+        .from('want_to_buy')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
 
-      setWantToBuyItems(prev => prev.filter(i => i.id !== id));
+      dispatch({ type: 'DELETE_WANT_TO_BUY', payload: id });
+      toast({
+        title: 'Success',
+        description: 'Item deleted successfully',
+      });
     } catch (error) {
       console.error('Error deleting want to buy item:', error);
-      throw error;
+      toast({
+        title: 'Error',
+        description: 'Failed to delete item',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Pinjaman operations
-  const addPinjamanItem = async (item: Omit<PinjamanItem, 'id' | 'user_id' | 'created_at' | 'is_settled'>) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+  const addPinjaman = async (pinjaman: Omit<Pinjaman, 'id' | 'user_id' | 'created_at'>) => {
+    if (!user) return;
 
+    try {
       const { data, error } = await supabase
-        .from('pinjaman_items')
-        .insert([{ ...item, user_id: user.id, is_settled: false }])
+        .from('pinjaman')
+        .insert({ ...pinjaman, user_id: user.id })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Map to match our type structure
-      const mappedData = {
-        id: data.id,
-        user_id: data.user_id,
-        name: data.name,
-        icon: data.icon,
-        category: data.category as "Utang" | "Piutang",
-        due_date: data.due_date,
-        amount: data.amount,
-        is_settled: data.is_settled,
-        created_at: data.created_at,
-      };
-
-      setPinjamanItems(prev => [mappedData, ...prev]);
+      dispatch({ type: 'ADD_PINJAMAN', payload: data });
+      toast({
+        title: 'Success',
+        description: 'Loan added successfully',
+      });
     } catch (error) {
-      console.error('Error adding pinjaman item:', error);
-      throw error;
+      console.error('Error adding pinjaman:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add loan',
+        variant: 'destructive',
+      });
     }
   };
 
-  const updatePinjamanItem = async (id: string, item: Partial<PinjamanItem>) => {
-    try {
-      const { data, error } = await supabase
-        .from('pinjaman_items')
-        .update(item)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setPinjamanItems(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
-    } catch (error) {
-      console.error('Error updating pinjaman item:', error);
-      throw error;
-    }
-  };
-
-  const deletePinjamanItem = async (id: string) => {
+  const updatePinjaman = async (id: string, pinjaman: Partial<Pinjaman>) => {
     try {
       const { error } = await supabase
-        .from('pinjaman_items')
+        .from('pinjaman')
+        .update(pinjaman)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      dispatch({ type: 'UPDATE_PINJAMAN', payload: { id, pinjaman } });
+      toast({
+        title: 'Success',
+        description: 'Loan updated successfully',
+      });
+    } catch (error) {
+      console.error('Error updating pinjaman:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update loan',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const deletePinjaman = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('pinjaman')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
 
-      setPinjamanItems(prev => prev.filter(i => i.id !== id));
+      dispatch({ type: 'DELETE_PINJAMAN', payload: id });
+      toast({
+        title: 'Success',
+        description: 'Loan deleted successfully',
+      });
     } catch (error) {
-      console.error('Error deleting pinjaman item:', error);
-      throw error;
+      console.error('Error deleting pinjaman:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete loan',
+        variant: 'destructive',
+      });
     }
   };
 
-  // Utility functions
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const refreshData = async () => {
+  const refetchData = async () => {
     await fetchData();
   };
 
-  // Get display category name for transactions
-  const getDisplayCategoryName = (transaction: Transaction): string => {
-    try {
-      // Handle system transfers
-      if (transaction.type === 'transfer' || transaction.categoryId === 18 || transaction.categoryId === 'system_transfer') {
-        return i18n.language === 'id' ? 'Transfer' : 'Transfer';
-      }
-
-      // Handle numeric category IDs (from database)
-      if (typeof transaction.categoryId === 'number') {
-        // Map common category IDs to display names
-        const categoryMap: Record<number, { en: string; id: string }> = {
-          1: { en: 'Groceries', id: 'Belanjaan' },
-          2: { en: 'Dining', id: 'Makanan' },
-          3: { en: 'Transportation', id: 'Transportasi' },
-          4: { en: 'Subscription', id: 'Langganan' },
-          5: { en: 'Housing', id: 'Perumahan' },
-          6: { en: 'Entertainment', id: 'Hiburan' },
-          7: { en: 'Shopping', id: 'Belanja' },
-          8: { en: 'Health', id: 'Kesehatan' },
-          9: { en: 'Education', id: 'Pendidikan' },
-          10: { en: 'Travel', id: 'Perjalanan' },
-          11: { en: 'Personal', id: 'Pribadi' },
-          12: { en: 'Other', id: 'Lainnya' },
-          13: { en: 'Salary', id: 'Gaji' },
-          14: { en: 'Business', id: 'Bisnis' },
-          15: { en: 'Investment', id: 'Investasi' },
-          16: { en: 'Gift', id: 'Hadiah' },
-          17: { en: 'Other', id: 'Lainnya' },
-          18: { en: 'Transfer', id: 'Transfer' },
-          19: { en: 'Donate', id: 'Sedekah' },
-          20: { en: 'Baby Needs', id: 'Kebutuhan Bayi' },
-          21: { en: 'Investment', id: 'Investasi' }
-        };
-
-        const categoryInfo = categoryMap[transaction.categoryId];
-        if (categoryInfo) {
-          return i18n.language === 'id' ? categoryInfo.id : categoryInfo.en;
-        }
-      }
-
-      // Handle string category IDs (like 'expense_groceries')
-      if (typeof transaction.categoryId === 'string') {
-        // Try to get localized name using the utility function
-        return getLocalizedCategoryName(transaction.categoryId, i18next);
-      }
-
-      // Fallback to legacy category field
-      if (transaction.category) {
-        return transaction.category;
-      }
-
-      return 'Other';
-    } catch (error) {
-      console.error('Error getting display category name:', error);
-      return 'Other';
+  useEffect(() => {
+    if (user) {
+      fetchData();
     }
-  };
-
-  // Get category key for icon mapping
-  const getCategoryKey = (categoryId: string | number): string => {
-    try {
-      if (typeof categoryId === 'number') {
-        // Map numeric IDs to category keys for icon purposes
-        const keyMap: Record<number, string> = {
-          1: 'expense_groceries',
-          2: 'expense_dining', 
-          3: 'expense_transportation',
-          4: 'expense_subscription',
-          5: 'expense_housing',
-          6: 'expense_entertainment',
-          7: 'expense_shopping',
-          8: 'expense_health',
-          9: 'expense_education',
-          10: 'expense_travel',
-          11: 'expense_personal',
-          12: 'expense_other',
-          13: 'income_salary',
-          14: 'income_business',
-          15: 'income_investment',
-          16: 'income_gift',
-          17: 'income_other',
-          18: 'system_transfer',
-          19: 'expense_donation',
-          20: 'expense_baby_needs',
-          21: 'expense_investment'
-        };
-        
-        return keyMap[categoryId] || 'other';
-      }
-      
-      if (typeof categoryId === 'string') {
-        return categoryId;
-      }
-      
-      return 'other';
-    } catch (error) {
-      console.error('Error getting category key:', error);
-      return 'other';
-    }
-  };
+  }, [user]);
 
   const value: FinanceContextType = {
-    transactions,
-    budgets,
-    wallets,
-    wantToBuyItems,
-    pinjamanItems,
-    totalBalance,
-    monthlyIncome,
-    monthlyExpenses,
-    loading,
+    ...state,
+    formatCurrency,
+    getDisplayCategoryName,
     addTransaction,
     updateTransaction,
     deleteTransaction,
@@ -632,21 +757,15 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     addWallet,
     updateWallet,
     deleteWallet,
-    addWantToBuyItem,
-    updateWantToBuyItem,
-    deleteWantToBuyItem,
-    addPinjamanItem,
-    updatePinjamanItem,
-    deletePinjamanItem,
-    formatCurrency,
-    refreshData,
-    getDisplayCategoryName,
-    getCategoryKey,
+    addWantToBuy,
+    updateWantToBuy,
+    deleteWantToBuy,
+    addPinjaman,
+    updatePinjaman,
+    deletePinjaman,
+    refetchData,
+    monthlyExpense,
   };
 
-  return (
-    <FinanceContext.Provider value={value}>
-      {children}
-    </FinanceContext.Provider>
-  );
+  return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 };
