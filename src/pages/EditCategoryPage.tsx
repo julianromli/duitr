@@ -397,7 +397,7 @@ const EditCategoryPage: React.FC = () => {
                   <TableCell className="text-white">{category.en_name}</TableCell>
                   <TableCell className="text-white">{category.id_name}</TableCell>
                   <TableCell className="text-white capitalize">{category.type}</TableCell>
-                  <TableCell className="text-white">
+                  <TableCell className="text-black">
                     <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full">
                       {category.icon ? renderIcon(category.icon) : <Circle className="h-4 w-4" />}
                     </div>
