@@ -1,7 +1,7 @@
-
 // Component: CategoryIcon
-// Fixed icon display for Investment (ID 15, 21) and Transfer (ID 18) categories
-// Corrected function calls and enhanced category key mapping for proper icon display
+// Description: Displays category icons with proper mapping for all categories
+// Fixed icon display for Baby Needs (ID 20) and Investment (ID 21) categories
+// Enhanced database icon loading with fallback to hardcoded mappings
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -118,8 +118,6 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           return <Book className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'ArrowLeftRight':
           return <ArrowLeftRight className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'LineChart':
-          return <LineChart className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'Circle':
           return <Circle className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'Music':
@@ -142,6 +140,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           return <BusFront className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'Coins':
           return <Coins className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
+        case 'LineChart':
+          return <LineChart className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'Wallet':
           return <Wallet className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
         case 'Building2':
@@ -206,8 +206,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
             setCategoryType(category); // Store the full ID for icon selection
             
             try {
-              // Also try to get the localized name - fixed function call
-              const loadedName = getLocalizedCategoryName(category, i18next);
+              // Also try to get the localized name
+              const loadedName = await getLocalizedCategoryName(category, i18next);
               setDisplayName(loadedName);
             } catch (error) {
               console.warn(`Could not get localized name for ${category}:`, error);
@@ -292,7 +292,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
         
         // Fallback: for any other case, try to get localized name
         try {
-          const loadedName = getLocalizedCategoryName(
+          const loadedName = await getLocalizedCategoryName(
             typeof category === 'string' ? category : String(category), 
             i18next
           );
@@ -345,15 +345,15 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
 
   // Determine if this is an expense category
   const isExpenseCategory = 
-    (typeof category === 'number' && category >= 1 && category <= 12 || category === 19 || category === 20 || category === 21) || 
-    (typeof category === 'string' && !isNaN(Number(category)) && (Number(category) >= 1 && Number(category) <= 12 || Number(category) === 19 || Number(category) === 20 || Number(category) === 21)) ||
+    (typeof category === 'number' && category >= 1 && category <= 12 || category === 19) || 
+    (typeof category === 'string' && !isNaN(Number(category)) && (Number(category) >= 1 && Number(category) <= 12 || Number(category) === 19)) ||
     (typeof category === 'string' && category.startsWith('expense_')) ||
     categoryType === 'expense';
 
   // Default icon
   let Icon = HelpCircle;
   
-  // Set icon based on category - FIXED: Investment and Transfer icons
+  // Set icon based on category
   switch (categoryForIcon) {
     // Expense Categories
     case 'expense_food':
@@ -366,12 +366,14 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       break;
     case 'expense_entertainment':
     case 'entertainment':
+    case '3':
     case '6':
       Icon = Music;
       break;
     case 'expense_transportation':
     case 'transportation':
     case '3':
+    case '4':
       Icon = Car;
       break;
     case 'expense_housing':
@@ -381,28 +383,27 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       break;
     case 'expense_gift':
     case 'gift':
-    case '16':
+    case '6':
       Icon = GiftIcon;
       break;
     case 'expense_healthcare':
     case 'expense_health':
     case 'health':
     case 'healthcare':
+    case '7':
     case '8':
       Icon = Pill;
       break;
     case 'expense_children':
     case 'children':
-    case 'expense_baby_needs':
-    case 'baby_needs':
-    case 'baby':
-    case '20':
+    case '8':
       Icon = Baby;
       break;
     case 'expense_utility':
     case 'expense_subscription':
     case 'utility':
     case 'subscription':
+    case '9':
     case '4':
       Icon = Zap;
       break;
@@ -414,11 +415,13 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'expense_education':
     case 'education':
     case '9':
+    case '11':
       Icon = Book;
       break;
     case 'expense_shopping':
     case 'shopping':
     case '7':
+    case '12':
       Icon = ShoppingBag;
       break;
     case 'expense_groceries':
@@ -429,12 +432,17 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'expense_donation':
     case 'donation':
     case 'donate':
-    case '19':
       Icon = DollarSign;
+      break;
+    case 'expense_baby_needs':
+    case 'baby_needs':
+    case 'baby':
+    case '20':
+      Icon = Baby;
       break;
     case 'expense_investment':
     case '21':
-      Icon = LineChart; // FIXED: Investment icon
+      Icon = LineChart;
       break;
 
     // Income Categories
@@ -451,27 +459,26 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'income_investment':
     case 'investment':
     case '15':
-      Icon = LineChart; // FIXED: Investment icon
+      Icon = LineChart;
       break;
     case 'income_gift':
     case '16':
       Icon = GiftIcon;
       break;
     
-    // System Categories - FIXED: Transfer icon
+    // Other Categories
     case 'transfer':
     case 'system_transfer':
     case '18':
-      Icon = ArrowLeftRight; // FIXED: Transfer icon
+      Icon = ArrowUpDown;
       break;
     
     // Default & Other Category
     case 'expense_other':
     case 'income_other':
     case 'other':
-    case '11':
-    case '12':
     case '17':
+    case '19':
     default:
       Icon = isIncomeCategory ? Coins : (isExpenseCategory ? Package : HelpCircle);
       break;
@@ -517,17 +524,14 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     else if (numericId === 12) DefaultIcon = Package; // Other expense
     else if (numericId === 19) DefaultIcon = DollarSign; // Donate
     else if (numericId === 20) DefaultIcon = Baby; // Baby Needs
-    else if (numericId === 21) DefaultIcon = LineChart; // Investment (expense) - FIXED
+    else if (numericId === 21) DefaultIcon = LineChart; // Investment (expense)
 
     // Income categories (13-17)
     else if (numericId === 13) DefaultIcon = Briefcase; // Salary
     else if (numericId === 14) DefaultIcon = Building2; // Business
-    else if (numericId === 15) DefaultIcon = LineChart; // Investment (income) - FIXED
+    else if (numericId === 15) DefaultIcon = LineChart; // Investment (income)
     else if (numericId === 16) DefaultIcon = GiftIcon; // Gift
     else if (numericId === 17) DefaultIcon = Coins; // Other income
-    
-    // System categories - FIXED
-    else if (numericId === 18) DefaultIcon = ArrowLeftRight; // Transfer - FIXED
     
     return (
       <div
@@ -559,4 +563,4 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   );
 };
 
-export default CategoryIcon;
+export default CategoryIcon; 
