@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, CreditCard, Landmark, TrendingUp, ArrowUpRight, ArrowDownRight, Edit, Trash, MoreVertical, MoreHorizontal, Plus, Wallet as WalletIcon, Trash2, CreditCard as CreditCardIcon, Smartphone, Briefcase, DollarSign, Banknote, PiggyBank, Key } from 'lucide-react';
 import { useWallets } from '@/hooks/useWallets';
 import { cn } from '@/lib/utils';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFinance } from '@/context/FinanceContext';
 import { useToast } from '@/hooks/use-toast';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/utils/currency';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import ColorPicker from '@/components/ui/color-picker';
 
 const WalletList: React.FC = () => {
   const { wallets, walletStats } = useWallets();
@@ -377,24 +378,12 @@ const WalletList: React.FC = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-[#868686] dark:text-gray-400">{t('wallets.accountColor')}</Label>
-              <div className="flex flex-wrap gap-2">
-                {colors.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    onClick={() => setEditWallet({ ...editWallet, color: color.value })}
-                    className={cn(
-                      "w-8 h-8 rounded-full border-2",
-                      editWallet?.color === color.value ? "border-white dark:border-gray-200" : "border-transparent"
-                    )}
-                    style={{ backgroundColor: color.value }}
-                    aria-label={color.label}
-                  />
-                ))}
-              </div>
-            </div>
+            <ColorPicker
+              value={editWallet?.color || '#1364FF'}
+              onChange={(color) => setEditWallet({ ...editWallet, color })}
+              label={t('wallets.accountColor')}
+              presetColors={colors}
+            />
             
             <Button 
               type="submit" 
