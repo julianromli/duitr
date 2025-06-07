@@ -1,14 +1,14 @@
 // Component: CategoryIcon
 // Description: Displays category icons with proper mapping for all categories
-// Fixed icon display for Baby Needs (ID 20) and Investment (ID 21) categories
+// Fixed icon display for Personal (ID 11), Investment (ID 21), and Transfer (ID 18) categories
 // Enhanced database icon loading with fallback to hardcoded mappings
+// Fixed missing icons: Personal → User, Investment → LineChart, Transfer → ArrowLeftRight
+// Enhanced numeric ID handling to support both string and number category types
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import i18next from 'i18next';
-import { getLocalizedCategoryName, getCategoryStringIdFromUuid, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
+import { getLocalizedCategoryName, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
-import { useTheme } from '@/context/ThemeContext';
 import {
   Home,
   Coffee,
@@ -22,9 +22,7 @@ import {
   Heart,
   Plane,
   Film,
-  Settings,
   Book,
-  Monitor,
   Smartphone,
   CreditCard,
   ArrowLeftRight,
@@ -38,12 +36,9 @@ import {
   Pill,
   Baby,
   BusFront,
-  Shirt,
-  ArrowUpDown,
   Coins,
   Building2,
   LineChart,
-  Wallet as WalletIcon,
   Circle
 } from 'lucide-react';
 
@@ -54,17 +49,15 @@ interface CategoryIconProps {
   className?: string;
 }
 
-const CategoryIcon: React.FC<CategoryIconProps> = ({ 
-  category, 
+const CategoryIcon: React.FC<CategoryIconProps> = ({
+  category,
   size = 'md',
-  animate = true,
   className = ''
 }) => {
   const [displayName, setDisplayName] = useState<string>('');
   const [categoryType, setCategoryType] = useState<string>('');
   const [categoryIcon, setCategoryIcon] = useState<string | null>(null);
   const { i18n } = useTranslation();
-  const { theme } = useTheme();
   
   // Define size classes
   const iconSizes = {
@@ -207,7 +200,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
             
             try {
               // Also try to get the localized name
-              const loadedName = await getLocalizedCategoryName(category, i18next);
+              const loadedName = getLocalizedCategoryName(category);
               setDisplayName(loadedName);
             } catch (error) {
               console.warn(`Could not get localized name for ${category}:`, error);
@@ -292,9 +285,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
         
         // Fallback: for any other case, try to get localized name
         try {
-          const loadedName = await getLocalizedCategoryName(
-            typeof category === 'string' ? category : String(category), 
-            i18next
+          const loadedName = getLocalizedCategoryName(
+            typeof category === 'string' ? category : String(category)
           );
           setDisplayName(loadedName || 'Other');
         } catch (error) {
@@ -344,9 +336,9 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     categoryType === 'income';
 
   // Determine if this is an expense category
-  const isExpenseCategory = 
-    (typeof category === 'number' && category >= 1 && category <= 12 || category === 19) || 
-    (typeof category === 'string' && !isNaN(Number(category)) && (Number(category) >= 1 && Number(category) <= 12 || Number(category) === 19)) ||
+  const isExpenseCategory =
+    (typeof category === 'number' && (category >= 1 && category <= 12 || category === 19 || category === 20 || category === 21)) ||
+    (typeof category === 'string' && !isNaN(Number(category)) && (Number(category) >= 1 && Number(category) <= 12 || Number(category) === 19 || Number(category) === 20 || Number(category) === 21)) ||
     (typeof category === 'string' && category.startsWith('expense_')) ||
     categoryType === 'expense';
 
@@ -415,7 +407,6 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'expense_education':
     case 'education':
     case '9':
-    case '11':
       Icon = Book;
       break;
     case 'expense_shopping':
@@ -439,6 +430,11 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'baby':
     case '20':
       Icon = Baby;
+      break;
+    case 'expense_personal':
+    case 'personal':
+    case '11':
+      Icon = User;
       break;
     case 'expense_investment':
     case '21':
@@ -470,7 +466,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'transfer':
     case 'system_transfer':
     case '18':
-      Icon = ArrowUpDown;
+      Icon = ArrowLeftRight;
       break;
     
     // Default & Other Category
@@ -502,11 +498,11 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   }
 
   // Handle special default case for numeric IDs from the category picker
-  if (typeof category === 'string' && !isNaN(Number(category))) {
+  if ((typeof category === 'string' && !isNaN(Number(category))) || typeof category === 'number') {
     console.log("Numeric category ID:", category);
 
     // Hardcode icons based on common category IDs
-    const numericId = Number(category);
+    const numericId = typeof category === 'number' ? category : Number(category);
     let DefaultIcon = HelpCircle;
 
     // Expense categories (1-12, 19-21)
@@ -532,6 +528,9 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     else if (numericId === 15) DefaultIcon = LineChart; // Investment (income)
     else if (numericId === 16) DefaultIcon = GiftIcon; // Gift
     else if (numericId === 17) DefaultIcon = Coins; // Other income
+
+    // System categories
+    else if (numericId === 18) DefaultIcon = ArrowLeftRight; // Transfer
     
     return (
       <div
