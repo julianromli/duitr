@@ -12,18 +12,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { useFinance } from '@/context/FinanceContext';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import ColorPicker from '@/components/ui/color-picker';
 
 const Wallets: React.FC = () => {
   const { t } = useTranslation();
@@ -234,40 +235,12 @@ const Wallets: React.FC = () => {
                   </Select>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="color" className="text-[#868686]">{t('wallets.accountColor')}</Label>
-                  <Select 
-                    value={formData.color} 
-                    onValueChange={(value) => setFormData({ ...formData, color: value })}
-                  >
-                    <SelectTrigger className="bg-[#242425] border-none text-white">
-                      <SelectValue placeholder={t('wallets.selectColor')}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-4 h-4 rounded-full" 
-                            style={{ backgroundColor: formData.color }} 
-                          />
-                          <span>
-                            {colors.find(c => c.value === formData.color)?.label || t('wallets.selectColor')}
-                          </span>
-                        </div>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#242425] border-none text-white">
-                      {colors.map((color) => (
-                        <SelectItem key={color.value} value={color.value}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-4 h-4 rounded-full" 
-                              style={{ backgroundColor: color.value }} 
-                            />
-                            <span>{color.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <ColorPicker
+                  value={formData.color}
+                  onChange={(color) => setFormData({ ...formData, color })}
+                  label={t('wallets.accountColor')}
+                  presetColors={colors}
+                />
                 
                 <Button 
                   type="submit" 
