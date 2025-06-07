@@ -1,6 +1,7 @@
 
 // Type definitions for finance-related data structures.
 // Added 'created_at' field to Transaction type.
+// Fixed PinjamanItem to use consistent user_id field.
 export type Transaction = {
   id: string;
   amount: number;
@@ -67,7 +68,7 @@ export interface PinjamanItem {
   icon?: string;
   is_settled?: boolean;
   created_at?: string;
-  user_id: string; // Keep this as user_id to match database schema
+  user_id: string; // Keep this as user_id to match database schema - removed userId
   description?: string;
   lender_name?: string;
 }

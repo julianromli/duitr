@@ -1,7 +1,9 @@
+
 // Add comment indicating changes made to the file
 // Created PinjamanForm component for adding/editing debt/credit items.
 // Updated UI styling to match ExpenseForm.
 // Fixed date handling to prevent timezone shifts when saving dates.
+// Fixed user_id field to match PinjamanItem type definition.
 
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -40,7 +42,7 @@ interface PinjamanFormProps {
 }
 
 const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToEdit }) => {
-  const { addPinjamanItem, updatePinjamanItem } = useFinance();
+  const { addPinjamanItem, updatePinjamanItem, user } = useFinance();
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -100,6 +102,7 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
       icon: data.icon,
       description: data.description,
       lender_name: data.lender_name,
+      user_id: user?.id || '', // Add user_id field
     };
 
     try {
@@ -219,4 +222,4 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
   );
 };
 
-export default PinjamanForm; 
+export default PinjamanForm;
