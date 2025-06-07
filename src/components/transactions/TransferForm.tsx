@@ -1,7 +1,3 @@
-
-// Fixed TransferForm to use wallet_id instead of walletId for database compatibility
-// Updated transaction creation to match the database schema
-
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
@@ -89,14 +85,15 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     // Format date to ISO string
     const dateString = selectedDate.toISOString();
     
-    // Add transaction with correct field names for database
+    // Add transaction
     addTransaction({
       amount: parseFloat(formData.amount),
       date: dateString,
       description: formData.description || t('transactions.transfer'),
       type: 'transfer',
-      wallet_id: formData.fromWalletId, // Use wallet_id instead of walletId
-      to_wallet_id: formData.toWalletId,
+      walletId: formData.fromWalletId,
+      destinationWalletId: formData.toWalletId,
+      fee: parseFloat(formData.fee || '0'),
       categoryId: transferCategory.id
     });
     
@@ -270,4 +267,4 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default TransferForm;
+export default TransferForm; 

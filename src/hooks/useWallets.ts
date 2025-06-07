@@ -1,6 +1,4 @@
 
-// Fixed useWallets to use wallet_id instead of walletId for database compatibility
-
 import { useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
 
@@ -21,22 +19,22 @@ export const useWallets = () => {
       .filter(wallet => wallet.balance < 0)
       .reduce((sum, wallet) => sum + wallet.balance, 0);
     
-    // Transactions by wallet - use wallet_id instead of walletId
+    // Transactions by wallet
     const walletTransactions = wallets.map(wallet => {
-      const relatedTransactions = transactions.filter(t => t.wallet_id === wallet.id);
+      const relatedTransactions = transactions.filter(t => t.walletId === wallet.id);
       const income = relatedTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
       const expense = relatedTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+        
       return {
-        wallet,
+        ...wallet,
         transactions: relatedTransactions,
         income,
         expense,
-        net: income - expense
+        netFlow: income - expense
       };
     });
     
@@ -44,13 +42,12 @@ export const useWallets = () => {
       totalBalance,
       positiveBalance,
       negativeBalance,
-      walletTransactions,
-      walletCount: wallets.length
+      walletTransactions
     };
   }, [wallets, transactions]);
 
   return {
     wallets,
-    ...walletStats
+    walletStats
   };
 };
