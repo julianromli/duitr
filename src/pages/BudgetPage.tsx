@@ -1,6 +1,7 @@
 
 // Fixed BudgetPage to handle category data structure from database properly
 // Added proper type mapping for categories with id field
+// Removed categories prop from BudgetList and added missing props
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +34,7 @@ interface Category {
 const BudgetPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { budgets, loading } = useFinance();
+  const { budgets, loading, updateWantToBuy, updatePinjaman } = useFinance();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isWantToBuyFormOpen, setIsWantToBuyFormOpen] = useState(false);
   const [isPinjamanFormOpen, setIsPinjamanFormOpen] = useState(false);
@@ -75,6 +76,22 @@ const BudgetPage: React.FC = () => {
     
     fetchCategories();
   }, []);
+
+  const handleEditWantToBuyItem = async (id: string, updates: any) => {
+    try {
+      await updateWantToBuy(id, updates);
+    } catch (error) {
+      console.error('Error updating want to buy item:', error);
+    }
+  };
+
+  const handleEditPinjamanItem = async (id: string, updates: any) => {
+    try {
+      await updatePinjaman(id, updates);
+    } catch (error) {
+      console.error('Error updating pinjaman item:', error);
+    }
+  };
   
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -144,7 +161,7 @@ const BudgetPage: React.FC = () => {
             </motion.div>
             
             <motion.div variants={itemVariants}>
-              <BudgetList categories={categories} />
+              <BudgetList />
             </motion.div>
           </TabsContent>
           
@@ -163,7 +180,7 @@ const BudgetPage: React.FC = () => {
             </motion.div>
             
             <motion.div variants={itemVariants}>
-              <WantToBuyList />
+              <WantToBuyList onEditItem={handleEditWantToBuyItem} />
             </motion.div>
             
             <WantToBuyForm 
@@ -187,7 +204,7 @@ const BudgetPage: React.FC = () => {
             </motion.div>
             
             <motion.div variants={itemVariants}>
-              <PinjamanList />
+              <PinjamanList onEditItem={handleEditPinjamanItem} />
             </motion.div>
             
             <PinjamanForm 
