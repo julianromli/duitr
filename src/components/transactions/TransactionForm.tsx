@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
@@ -61,9 +62,9 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
         
         if (error) throw error;
         
-        // Transform data to match the expected format
+        // Transform data to match the expected format - use category_id as id
         const formattedCategories = data.map(category => ({
-          id: category.id,
+          id: category.category_id,
           name: i18next.language === 'id' ? category.id_name : category.en_name
         }));
         
