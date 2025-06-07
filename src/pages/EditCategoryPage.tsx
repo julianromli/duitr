@@ -1,578 +1,402 @@
+
+// Fixed EditCategoryPage to handle category data structure from database properly
+// Added proper type casting and mapping for categories
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { ChevronLeft, Save, Trash2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  ArrowLeftRight, 
-  ChevronLeft, 
-  Circle, 
-  Edit, 
-  ShoppingCart, 
-  Trash2,
-  Utensils,
-  Plus,
-  Check,
-  X,
-  Home, 
-  Coffee, 
-  Car, 
-  Briefcase, 
-  DollarSign,
-  Gift, 
-  Package, 
-  Heart, 
-  Plane, 
-  Film,
-  Settings, 
-  Book, 
-  Monitor, 
-  Smartphone, 
-  CreditCard,
-  HelpCircle, 
-  ShoppingBag, 
-  Zap, 
-  User, 
-  Music,
-  Pill, 
-  Baby, 
-  BusFront, 
-  Shirt, 
-  ArrowUpDown,
-  Coins, 
-  Building2, 
-  LineChart, 
-  Wallet
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import CategoryIcon from '@/components/shared/CategoryIcon';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-// Define a map for icons
-const iconMap: Record<string, React.ComponentType> = {
-  ShoppingCart,
-  Utensils,
-  ArrowLeftRight,
-  Circle,
-  Home, 
-  Coffee, 
-  Car, 
-  Briefcase, 
-  DollarSign,
-  Gift, 
-  Package, 
-  Heart, 
-  Plane, 
-  Film,
-  Settings, 
-  Book, 
-  Monitor, 
-  Smartphone, 
-  CreditCard,
-  HelpCircle, 
-  ShoppingBag, 
-  Zap, 
-  User, 
-  Music,
-  Pill, 
-  Baby, 
-  BusFront, 
-  Shirt, 
-  ArrowUpDown,
-  Coins, 
-  Building2, 
-  LineChart, 
-  Wallet
-};
-
-// Define a category interface
+// Define proper category type to match database structure
 interface Category {
   id: string;
-  category_key: string;
+  category_id?: number;
+  category_key?: string;
   en_name: string;
   id_name: string;
-  type: 'expense' | 'income' | 'system';
-  icon: string | null;
-  created_at: string | null;
+  type?: string;
+  icon?: string;
+  created_at?: string;
 }
 
 const EditCategoryPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
-  const [isNewCategory, setIsNewCategory] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    category_key: '',
-    en_name: '',
-    id_name: '',
-    type: 'expense' as 'expense' | 'income' | 'system',
-    icon: 'Circle'
-  });
-  
-  // Available icons for categories
-  const availableIcons = Object.keys(iconMap);
-  
-  // Function to render an icon by its name
-  const renderIcon = (iconName: string) => {
-    const IconComponent = iconMap[iconName] || Circle;
-    return <IconComponent className="h-5 w-5" />;
-  };
-  
-  // Fetch categories on component mount
+  const [category, setCategory] = useState<Category | null>(null);
+  const [enName, setEnName] = useState('');
+  const [idName, setIdName] = useState('');
+  const [icon, setIcon] = useState('');
+  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Available icons
+  const availableIcons = [
+    'ShoppingCart', 'Utensils', 'Car', 'Home', 'Briefcase', 'DollarSign',
+    'Gift', 'Package', 'Heart', 'Plane', 'Music', 'Book', 'ArrowLeftRight',
+    'LineChart', 'ShoppingBag', 'Zap', 'User', 'Pill', 'Baby', 'Coins',
+    'Building2', 'Wallet', 'Circle'
+  ];
+
   useEffect(() => {
-    fetchCategories();
-  }, []);
-  
-  // Fetch all categories from Supabase
-  const fetchCategories = async () => {
-    setIsLoading(true);
+    if (id) {
+      fetchCategory();
+    }
+  }, [id]);
+
+  const fetchCategory = async () => {
     try {
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('categories')
-        .select('*')
-        .order('type')
-        .order('en_name');
-      
-      if (error) throw error;
-      
-      if (data) {
-        setCategories(data as Category[]);
-      } else {
-        setCategories([]);
+        .select('category_id, category_key, created_at, en_name, icon, id_name, type')
+        .eq('category_id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching category:', error);
+        toast({
+          title: t('common.error'),
+          description: t('categories.fetch_error'),
+          variant: 'destructive',
+        });
+        navigate('/budget');
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
+
+      if (data) {
+        // Map the database structure to our Category interface
+        const mappedCategory: Category = {
+          id: String(data.category_id),
+          category_id: data.category_id,
+          category_key: data.category_key,
+          en_name: data.en_name,
+          id_name: data.id_name,
+          type: data.type,
+          icon: data.icon,
+          created_at: data.created_at
+        };
+        
+        setCategory(mappedCategory);
+        setEnName(mappedCategory.en_name);
+        setIdName(mappedCategory.id_name);
+        setIcon(mappedCategory.icon || '');
+        setType(mappedCategory.type as 'income' | 'expense' || 'expense');
+      }
+    } catch (err) {
+      console.error('Error fetching category:', err);
       toast({
         title: t('common.error'),
-        description: t('categories.error.load', 'Failed to load categories'),
-        variant: 'destructive'
+        description: t('categories.fetch_error'),
+        variant: 'destructive',
       });
+      navigate('/budget');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
-  // Handle adding a new category
-  const handleAddCategory = () => {
-    setIsNewCategory(true);
-    setCurrentCategory(null);
-    setFormData({
-      category_key: '',
-      en_name: '',
-      id_name: '',
-      type: 'expense',
-      icon: 'Circle'
-    });
-    setEditDialogOpen(true);
-  };
-  
-  // Handle editing an existing category
-  const handleEditCategory = (category: Category) => {
-    setIsNewCategory(false);
-    setCurrentCategory(category);
-    setFormData({
-      category_key: category.category_key,
-      en_name: category.en_name,
-      id_name: category.id_name,
-      type: category.type,
-      icon: category.icon || 'Circle'
-    });
-    setEditDialogOpen(true);
-  };
-  
-  // Handle deleting a category
-  const handleDeleteCategory = (category: Category) => {
-    setCurrentCategory(category);
-    setDeleteDialogOpen(true);
-  };
-  
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-  
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    if (name === 'type' && value === 'system') {
-      // Auto-populate for system type
-      setFormData({
-        ...formData,
-        [name]: value as any,
-        category_key: 'system_custom',
-        en_name: 'System',
-        id_name: 'Sistem'
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-  
-  // Save category (add or update)
-  const saveCategory = async () => {
-    // Validate form data
-    if (!formData.category_key || !formData.en_name || !formData.id_name || !formData.type) {
+
+  const handleSave = async () => {
+    if (!category || !enName.trim() || !idName.trim()) {
       toast({
         title: t('common.error'),
-        description: t('categories.error.requiredFields', 'All fields are required'),
-        variant: 'destructive'
+        description: t('categories.validation_error'),
+        variant: 'destructive',
       });
       return;
     }
-    
-    // Ensure category_key follows the pattern type_name (e.g., expense_groceries)
-    if (!formData.category_key.includes('_')) {
-      const prefix = formData.type === 'system' ? 'system_' : 
-                    formData.type === 'income' ? 'income_' : 'expense_';
-      setFormData({ ...formData, category_key: `${prefix}${formData.category_key}` });
-    }
-    
+
     try {
-      if (isNewCategory) {
-        // Add new category
-        const { data, error } = await supabase
-          .from('categories')
-          .insert([
-            { 
-              category_key: formData.category_key,
-              en_name: formData.en_name,
-              id_name: formData.id_name,
-              type: formData.type,
-              icon: formData.icon
-            }
-          ])
-          .select();
-        
-        if (error) throw error;
-        
-        toast({
-          title: t('common.success'),
-          description: t('categories.successAdd', 'Category added successfully')
-        });
-      } else if (currentCategory) {
-        // Update existing category
-        const { error } = await supabase
-          .from('categories')
-          .update({ 
-            category_key: formData.category_key,
-            en_name: formData.en_name,
-            id_name: formData.id_name,
-            type: formData.type,
-            icon: formData.icon
-          })
-          .eq('id', currentCategory.id);
-        
-        if (error) throw error;
-        
-        toast({
-          title: t('common.success'),
-          description: t('categories.successUpdate', 'Category updated successfully')
-        });
+      setSaving(true);
+
+      const { error } = await supabase
+        .from('categories')
+        .update({
+          en_name: enName.trim(),
+          id_name: idName.trim(),
+          icon: icon || null,
+          type: type,
+        })
+        .eq('category_id', category.category_id);
+
+      if (error) {
+        throw error;
       }
-      
-      // Refresh category list
-      fetchCategories();
-      setEditDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error saving category:', error);
+
+      toast({
+        title: t('common.success'),
+        description: t('categories.update_success'),
+      });
+
+      navigate('/budget');
+    } catch (err) {
+      console.error('Error updating category:', err);
       toast({
         title: t('common.error'),
-        description: error.message || t('categories.error.save', 'Failed to save category'),
-        variant: 'destructive'
+        description: t('categories.update_error'),
+        variant: 'destructive',
       });
+    } finally {
+      setSaving(false);
     }
   };
-  
-  // Delete category
-  const deleteCategory = async () => {
-    if (!currentCategory) return;
-    
+
+  const handleDelete = async () => {
+    if (!category) return;
+
     try {
+      // Check if category is used in transactions or budgets
+      const { data: transactions, error: transError } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('category_id', category.category_id)
+        .limit(1);
+
+      if (transError) {
+        throw transError;
+      }
+
+      if (transactions && transactions.length > 0) {
+        toast({
+          title: t('common.error'),
+          description: t('categories.delete_used_error'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data: budgets, error: budgetError } = await supabase
+        .from('budgets')
+        .select('id')
+        .eq('category_id', category.category_id)
+        .limit(1);
+
+      if (budgetError) {
+        throw budgetError;
+      }
+
+      if (budgets && budgets.length > 0) {
+        toast({
+          title: t('common.error'),
+          description: t('categories.delete_used_error'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Delete the category
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', currentCategory.id);
-      
-      if (error) throw error;
-      
+        .eq('category_id', category.category_id);
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: t('common.success'),
-        description: t('categories.successDelete', 'Category deleted successfully')
+        description: t('categories.delete_success'),
       });
-      
-      // Refresh category list
-      fetchCategories();
-      setDeleteDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error deleting category:', error);
+
+      navigate('/budget');
+    } catch (err) {
+      console.error('Error deleting category:', err);
       toast({
         title: t('common.error'),
-        description: error.message || t('categories.error.delete', 'Failed to delete category'),
-        variant: 'destructive'
+        description: t('categories.delete_error'),
+        variant: 'destructive',
       });
+    } finally {
+      setIsDeleteDialogOpen(false);
     }
   };
-  
+
+  if (loading) {
+    return (
+      <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen flex items-center justify-center text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C6FE1E] mx-auto mb-4"></div>
+          <p>{t('common.loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!category) {
+    return (
+      <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen flex items-center justify-center text-white">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{t('categories.not_found')}</p>
+          <Button onClick={() => navigate('/budget')} className="bg-[#C6FE1E] text-black">
+            {t('common.back')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 bg-[#1C2526] p-5 min-h-screen pb-24">
-      <div className="flex items-center mb-6">
-        <button onClick={() => navigate('/')} className="mr-4">
-          <ChevronLeft size={24} className="text-white" />
-        </button>
-        <h1 className="text-white text-xl font-bold">
-          {t('categories.management', 'Category Management')}
-        </h1>
-      </div>
-      
-      <div className="mb-4">
-        <Button 
-          onClick={handleAddCategory}
-          className="bg-[#C6FE1E] text-black hover:bg-[#B0E018]"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('categories.add', 'Add Category')}
-        </Button>
-      </div>
-      
-      {/* Categories Table */}
-      <div className="rounded-md border border-[#2A3435] overflow-hidden">
-        <Table>
-          <TableHeader className="bg-[#2A3435]">
-            <TableRow>
-              <TableHead className="text-white">Key</TableHead>
-              <TableHead className="text-white">English Name</TableHead>
-              <TableHead className="text-white">Indonesian Name</TableHead>
-              <TableHead className="text-white">Type</TableHead>
-              <TableHead className="text-white">Icon</TableHead>
-              <TableHead className="text-white">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-white py-4">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : categories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-white py-4">
-                  No categories found
-                </TableCell>
-              </TableRow>
-            ) : (
-              categories.map((category) => (
-                <TableRow key={category.id} className="border-b border-[#2A3435]">
-                  <TableCell className="text-white">{category.category_key}</TableCell>
-                  <TableCell className="text-white">{category.en_name}</TableCell>
-                  <TableCell className="text-white">{category.id_name}</TableCell>
-                  <TableCell className="text-white capitalize">{category.type}</TableCell>
-                  <TableCell className="text-white">
-                    <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full">
-                      {category.icon ? renderIcon(category.icon) : <Circle className="h-4 w-4" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleEditCategory(category)}
-                        className="text-white hover:bg-[#2A3435]"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleDeleteCategory(category)}
-                        className="text-red-500 hover:bg-[#2A3435] hover:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Edit/Add Category Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-[#1C2526] text-white border-[#2A3435]">
-          <DialogHeader>
-            <DialogTitle>
-              {isNewCategory 
-                ? t('categories.add', 'Add Category') 
-                : t('categories.edit', 'Edit Category')}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="category_key">Category Key</Label>
-              <Input
-                id="category_key"
-                name="category_key"
-                value={formData.category_key}
-                onChange={handleInputChange}
-                className="bg-[#2A3435] border-[#2A3435] text-white"
-                placeholder="expense_groceries"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="en_name">English Name</Label>
-              <Input
-                id="en_name"
-                name="en_name"
-                value={formData.en_name}
-                onChange={handleInputChange}
-                className="bg-[#2A3435] border-[#2A3435] text-white"
-                placeholder="Groceries"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="id_name">Indonesian Name</Label>
-              <Input
-                id="id_name"
-                name="id_name"
-                value={formData.id_name}
-                onChange={handleInputChange}
-                className="bg-[#2A3435] border-[#2A3435] text-white"
-                placeholder="Kebutuhan Rumah"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleSelectChange('type', value)}
-              >
-                <SelectTrigger className="bg-[#2A3435] border-[#2A3435] text-white">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#2A3435] border-[#2A3435] text-white">
-                  <SelectItem value="expense" className="text-white">Expense</SelectItem>
-                  <SelectItem value="income" className="text-white">Income</SelectItem>
-                  <SelectItem value="system" className="text-white">System</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="icon">Icon</Label>
-              <Select
-                value={formData.icon}
-                onValueChange={(value) => handleSelectChange('icon', value)}
-              >
-                <SelectTrigger className="bg-[#2A3435] border-[#2A3435] text-white">
-                  <SelectValue placeholder="Select icon">
-                    <div className="flex items-center">
-                      {renderIcon(formData.icon)}
-                      <span className="ml-2">{formData.icon}</span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-[#2A3435] border-[#2A3435] text-white max-h-[300px] overflow-y-auto">
-                  {availableIcons.map((icon) => (
-                    <SelectItem key={icon} value={icon} className="text-white">
-                      <div className="flex items-center">
-                        {renderIcon(icon)}
-                        <span className="ml-2">{icon}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="pt-2">
-                <div className="bg-[#C6FE1E] w-10 h-10 flex items-center justify-center rounded-full">
-                  {renderIcon(formData.icon)}
-                </div>
-              </div>
-            </div>
+    <motion.div 
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen text-white"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="p-6 pt-12">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <button onClick={() => navigate('/budget')} className="mr-4">
+              <ChevronLeft size={24} className="text-white" />
+            </button>
+            <h1 className="text-xl font-bold">{t('categories.edit_category')}</h1>
           </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditDialogOpen(false)}
-              className="border-[#2A3435] text-white hover:bg-[#2A3435]"
-            >
-              <X className="h-4 w-4 mr-2" />
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button
-              onClick={saveCategory}
-              className="bg-[#C6FE1E] text-black hover:bg-[#B0E018]"
-            >
-              <Check className="h-4 w-4 mr-2" />
-              {t('common.save', 'Save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#1C2526] text-white border-[#2A3435]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('categories.confirmDelete', 'Confirm Deletion')}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              {t('categories.deleteWarning', 'Are you sure you want to delete this category? This action cannot be undone.')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#2A3435] text-white border-[#2A3435] hover:bg-[#3A4445] hover:text-white">
-              {t('common.cancel', 'Cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={deleteCategory}
-            >
-              {t('common.delete', 'Delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+          <Button
+            onClick={() => setIsDeleteDialogOpen(true)}
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Icon Preview */}
+          <div className="flex items-center justify-center">
+            <CategoryIcon category={category.category_id || category.id} size="lg" />
+          </div>
+
+          {/* English Name */}
+          <div className="space-y-2">
+            <Label htmlFor="enName" className="text-white">
+              {t('categories.english_name')}
+            </Label>
+            <Input
+              id="enName"
+              value={enName}
+              onChange={(e) => setEnName(e.target.value)}
+              className="bg-[#242425] border-none text-white"
+              placeholder={t('categories.english_name_placeholder')}
+            />
+          </div>
+
+          {/* Indonesian Name */}
+          <div className="space-y-2">
+            <Label htmlFor="idName" className="text-white">
+              {t('categories.indonesian_name')}
+            </Label>
+            <Input
+              id="idName"
+              value={idName}
+              onChange={(e) => setIdName(e.target.value)}
+              className="bg-[#242425] border-none text-white"
+              placeholder={t('categories.indonesian_name_placeholder')}
+            />
+          </div>
+
+          {/* Icon Selection */}
+          <div className="space-y-2">
+            <Label className="text-white">{t('categories.icon')}</Label>
+            <Select value={icon} onValueChange={setIcon}>
+              <SelectTrigger className="bg-[#242425] border-none text-white">
+                <SelectValue placeholder={t('categories.select_icon')} />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1A1A] border-[#333] text-white">
+                {availableIcons.map((iconName) => (
+                  <SelectItem key={iconName} value={iconName}>
+                    <div className="flex items-center">
+                      <CategoryIcon category="question" size="sm" className="mr-2" />
+                      <span>{iconName}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Type Selection */}
+          <div className="space-y-2">
+            <Label className="text-white">{t('categories.type')}</Label>
+            <Select value={type} onValueChange={(value: 'income' | 'expense') => setType(value)}>
+              <SelectTrigger className="bg-[#242425] border-none text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1A1A1A] border-[#333] text-white">
+                <SelectItem value="expense">{t('expense.title')}</SelectItem>
+                <SelectItem value="income">{t('income.title')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Save Button */}
+          <Button
+            onClick={handleSave}
+            disabled={saving || !enName.trim() || !idName.trim()}
+            className="w-full bg-[#C6FE1E] text-black hover:bg-[#B5ED0D] transition-colors"
+          >
+            {saving ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>
+                {t('common.saving')}
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <Save size={16} className="mr-2" />
+                {t('common.save')}
+              </div>
+            )}
+          </Button>
+        </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#1A1A1A] border-0 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
+              <AlertDialogDescription className="text-[#868686]">
+                {t('categories.delete_confirmation')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#242425] border-0 text-white hover:bg-[#333]">
+                {t('common.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDelete}
+                className="bg-[#FF6B6B] text-white hover:bg-red-400"
+              >
+                {t('common.delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </motion.div>
   );
 };
 
-export default EditCategoryPage; 
+export default EditCategoryPage;
