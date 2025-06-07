@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -119,7 +120,7 @@ export default {
 				pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
 			},
 			fontFamily: {
-				sans: ['Space Grotesk', 'sans-serif'],
+				sans: ['Plus Jakarta Sans', 'sans-serif'],
 			},
 			backdropBlur: {
 				xs: '2px',
