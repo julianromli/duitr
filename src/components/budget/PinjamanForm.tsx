@@ -1,4 +1,5 @@
 
+
 // Add comment indicating changes made to the file
 // Created PinjamanForm component for adding/editing debt/credit items.
 // Updated UI styling to match ExpenseForm.
@@ -21,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { FormattedInput } from '@/components/ui/formatted-input';
+import { supabase } from '@/integrations/supabase/client';
 
 // Zod schema for validation
 const pinjamanSchema = z.object({
@@ -42,9 +44,19 @@ interface PinjamanFormProps {
 }
 
 const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToEdit }) => {
-  const { addPinjamanItem, updatePinjamanItem, user } = useFinance();
+  const { addPinjamanItem, updatePinjamanItem } = useFinance();
   const { t } = useTranslation();
   const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Get current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    getCurrentUser();
+  }, []);
 
   const { control, handleSubmit, register, reset, formState: { errors } } = useForm<PinjamanFormData>({
     resolver: zodResolver(pinjamanSchema),
@@ -102,7 +114,7 @@ const PinjamanForm: React.FC<PinjamanFormProps> = ({ open, onOpenChange, itemToE
       icon: data.icon,
       description: data.description,
       lender_name: data.lender_name,
-      user_id: user?.id || '', // Add user_id field
+      user_id: currentUser?.id || '', // Add user_id field
     };
 
     try {
