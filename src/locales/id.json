@@ -1,5 +1,7 @@
 {
   "common": {
+    "today": "Hari ini",
+    "yesterday": "Kemarin",
     "add": "Tambah",
     "load_more": "Muat Lebih Banyak",
     "all": "Semua",
@@ -10,7 +12,7 @@
     "info": "Informasi",
     "warning": "Peringatan",
     "loading": "Memuat...",
-    "save": "Simpan Perubahan",
+    "save": "Simpan",
     "saved": "Tersimpan",
     "apply": "Terapkan",
     "options": "Opsi",
@@ -23,6 +25,8 @@
     "cannotBeUndone": "Tindakan ini tidak dapat dibatalkan.",
     "comingSoon": "Segera Hadir...",
     "added_successfully": "berhasil ditambahkan",
+    "errorMessage": "Terjadi kesalahan. Silakan coba lagi nanti.",
+    "reset_filters": "Reset Filter",
     "clear_filters": "Hapus Filter"
   },
   "categories": {
@@ -210,16 +214,16 @@
     "yearly": "Tahunan",
     "spending_by_category": "Pengeluaran per Kategori",
     "categories": {
-      "groceries": "Kebutuhan Rumah",
-      "dining": "Makan di Luar",
+      "groceries": "Belanjaan",
+      "dining": "Makanan",
       "transportation": "Transportasi",
+      "utilities": "Langganan",
       "entertainment": "Hiburan",
-      "utilities": "Berlangganan",
       "housing": "Perumahan",
       "healthcare": "Kesehatan",
       "education": "Pendidikan",
       "shopping": "Belanja",
-      "personal_care": "Personal Care",
+      "personal_care": "Pribadi",
       "travel": "Perjalanan",
       "gifts": "Hadiah",
       "other": "Lainnya"

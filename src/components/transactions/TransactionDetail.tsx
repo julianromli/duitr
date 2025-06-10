@@ -120,14 +120,13 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
     return null;
   }
   
-  // Format date for display
+  // Format date and time for display
   const formatDate = (dateString: string) => {
     if (!dateString) return '-'; // Handle null/empty date
     try {
       const date = parseISO(dateString); // Parse the ISO string
-      const currentLocale = i18next.language.startsWith('id') ? idLocale : enUSLocale; // Get locale
-      // Format as "April 26, 2024, 11:15 AM" or similar based on locale
-      return format(date, 'PPP p', { locale: currentLocale }); 
+      // Format as MM/DD/YYYY, H:MM AM/PM
+      return format(date, 'MM/dd/yyyy, h:mm a');
     } catch (error) {
       console.error("Error formatting date:", dateString, error);
       return dateString; // Fallback to original string on error
@@ -358,9 +357,9 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
             </div>
           )}
           
-          {/* Date - Display Only (Not Editable) */}
+          {/* Time - Display Only (Not Editable) */}
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[#868686]">{t('transactions.date')}</span>
+            <span className="text-[#868686]">Waktu</span>
             <span>{formatDate(transaction.date)}</span>
           </div>
           

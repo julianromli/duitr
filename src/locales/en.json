@@ -1,5 +1,7 @@
 {
   "common": {
+    "today": "Today",
+    "yesterday": "Yesterday",
     "add": "Add",
     "load_more": "Load More",
     "all": "All",
