@@ -1,15 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import 'react-day-picker/dist/style.css';
-
-/* Ensure Plus Jakarta Sans is loaded and available as a local font */
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 300 800;
-  font-display: swap;
-  src: local('Plus Jakarta Sans'), url(https://fonts.gstatic.com/s/plusjakartasans/v8/LDIbaomQNQcsA88c7O9yZ4KMCoOg4IA6-91aHEjcWuA_KU50R4E.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
 
 @tailwind base;
 @tailwind components;
@@ -94,61 +84,43 @@
 @layer base {
   * {
     @apply border-border;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
   }
   
   body {
     @apply bg-background text-foreground;
+    font-family: 'Space Grotesk', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-display: swap;
     overflow-x: hidden;
   }
 
   html, body, #root {
     @apply h-full;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
   }
 
-  /* Typography Styles according to Duitr brand guidelines */
-  .page-title {
-    font-size: 40px;
-    font-weight: 800;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+  .h1 {
+    @apply text-4xl font-bold leading-tight;
   }
-  
-  .product-name {
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1.2;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+
+  .h2 {
+    @apply text-3xl font-semibold leading-snug;
   }
-  
-  .description-text {
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+
+  .h3 {
+    @apply text-2xl font-medium leading-snug;
   }
-  
-  .price-text {
-    font-size: 18px;
-    font-weight: 700;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+
+  .p {
+    @apply text-base font-normal leading-relaxed;
   }
-  
-  .button-text {
-    font-size: 14px;
-    font-weight: 600;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+
+  .button-primary {
+    @apply font-semibold;
   }
-  
-  .category-label {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+
+  .button-secondary {
+    @apply font-medium;
   }
 }
 
