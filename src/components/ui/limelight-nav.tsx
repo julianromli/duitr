@@ -90,7 +90,7 @@ export const LimelightNav = ({
             {cloneElement(icon, {
               className: `w-6 h-6 transition-all duration-200 ease-in-out ${
                 activeIndex === index 
-                  ? 'opacity-100 text-green-500' 
+                  ? 'opacity-100 text-lime-400' 
                   : 'opacity-40 text-gray-400 hover:text-gray-300'
               } ${icon.props.className || ''} ${iconClassName || ''}`,
               strokeWidth: activeIndex === index ? 2.5 : 2,
@@ -100,12 +100,12 @@ export const LimelightNav = ({
 
       <div
         ref={limelightRef}
-        className={`absolute top-0 z-10 w-11 h-[5px] rounded-full bg-green-500 shadow-[0_50px_15px_rgb(34_197_94)] ${
+        className={`absolute top-0 z-10 w-11 h-[5px] rounded-full bg-lime-400 shadow-[0_50px_15px_rgb(34_197_94)] ${
           isReady ? 'transition-[left] duration-400 ease-in-out' : ''
         } ${limelightClassName}`}
         style={{ left: '-999px' }}
       >
-        <div className="absolute left-[-30%] top-[5px] w-[160%] h-14 [clip-path:polygon(5%_100%,25%_0,75%_0,95%_100%)] bg-gradient-to-b from-green-500/30 to-transparent pointer-events-none" />
+        <div className="absolute left-[-30%] top-[5px] w-[160%] h-14 [clip-path:polygon(5%_100%,25%_0,75%_0,95%_100%)] bg-gradient-to-b from-lime-400/30 to-transparent pointer-events-none" />
       </div>
     </nav>
   );
