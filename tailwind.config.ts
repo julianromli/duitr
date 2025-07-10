@@ -107,6 +107,11 @@ export default {
 				pulse: {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.5' }
+				},
+				'border-beam': {
+					'100%': {
+						'offset-distance': '100%',
+					},
 				}
 			},
 			animation: {
@@ -117,7 +122,8 @@ export default {
 				'scale-in': 'scale-in 0.2s ease-out',
 				'slide-in': 'slide-in 0.3s ease-out',
 				'slide-up': 'slide-up 0.3s ease-out',
-				pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+				pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'border-beam': 'border-beam calc(var(--duration)*1s) infinite linear'
 			},
 			fontFamily: {
 				sans: ['Space Grotesk', 'sans-serif'],

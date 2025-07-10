@@ -46,12 +46,12 @@ export const filterCategoriesByType = (categories: Category[], type: string): Ca
   return categories.filter(cat => cat.type === type);
 };
 
-// Updated function signature to match usage
-export const getLocalizedCategoriesByType = async (type: string): Promise<{id: string | number; name: string}[]> => {
+// Updated function signature to include userId for custom categories
+export const getLocalizedCategoriesByType = async (type: string, userId?: string): Promise<{id: string | number; name: string}[]> => {
   try {
     // Try to load from Supabase first
     const { fetchCategoriesByType } = await import('@/services/categoryService');
-    const categories = await fetchCategoriesByType(type);
+    const categories = await fetchCategoriesByType(type, userId);
 
     if (categories && categories.length > 0) {
       return categories.map(cat => ({

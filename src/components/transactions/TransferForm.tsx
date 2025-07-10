@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { FormattedInput } from '@/components/ui/formatted-input';
 import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
-import i18next from 'i18next';
+import { useAuth } from '@/context/AuthContext';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { DatePicker } from '@/components/ui/date-picker';
 
@@ -22,6 +22,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { user } = useAuth();
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
@@ -121,7 +122,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     const loadCategories = async () => {
       setIsLoadingCategories(true);
       try {
-        const fetchedCategories = await getLocalizedCategoriesByType('system', i18next);
+        const fetchedCategories = await getLocalizedCategoriesByType('system', user?.id);
         
         // Sort categories by ID to maintain consistent order
         const sortedCategories = [...fetchedCategories].sort((a, b) => {
@@ -137,10 +138,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
         // Use default categories as fallback
         const defaultCategories = DEFAULT_CATEGORIES.system.map(cat => ({
           id: cat.id,
-          name: i18next.language === 'id' ? 
-            // Translate to Indonesian if needed
-            cat.name === 'Transfer' ? 'Transfer' : cat.name
-            : cat.name
+          name: cat.name
         }));
         
         setCategories(defaultCategories);
@@ -156,7 +154,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     };
     
     loadCategories();
-  }, [t, i18next.language]);
+  }, [t, user?.id]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -267,4 +265,4 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   );
 };
 
-export default TransferForm; 
+export default TransferForm;

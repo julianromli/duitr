@@ -7,11 +7,22 @@ import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types/categories';
 import { transformCategory } from '@/types/categories';
 
-export async function fetchCategories(): Promise<Category[]> {
-  const { data, error } = await supabase
+export async function fetchCategories(userId?: string): Promise<Category[]> {
+  let query = supabase
     .from('categories')
-    .select('*')
-    .order('id_name');
+    .select('*');
+
+  if (userId) {
+    // Fetch both default categories (user_id IS NULL) and user's custom categories
+    query = query.or(`user_id.is.null,user_id.eq.${userId}`);
+  } else {
+    // If no userId provided, fetch only default categories
+    query = query.is('user_id', null);
+  }
+
+  query = query.order('type').order('id_name');
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching categories:', error);
@@ -25,12 +36,23 @@ export async function fetchCategories(): Promise<Category[]> {
   }));
 }
 
-export async function fetchCategoriesByType(type: string): Promise<Category[]> {
-  const { data, error } = await supabase
+export async function fetchCategoriesByType(type: string, userId?: string): Promise<Category[]> {
+  let query = supabase
     .from('categories')
     .select('*')
-    .eq('type', type)
-    .order('id_name');
+    .eq('type', type);
+
+  if (userId) {
+    // Fetch both default categories (user_id IS NULL) and user's custom categories
+    query = query.or(`user_id.is.null,user_id.eq.${userId}`);
+  } else {
+    // If no userId provided, fetch only default categories
+    query = query.is('user_id', null);
+  }
+
+  query = query.order('id_name');
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching categories by type:', error);
@@ -44,14 +66,21 @@ export async function fetchCategoriesByType(type: string): Promise<Category[]> {
   }));
 }
 
-export async function updateCategoryIcon(categoryId: string, icon: string): Promise<void> {
+export async function updateCategoryIcon(categoryId: string, icon: string, userId?: string): Promise<void> {
   // Convert string ID back to number for database
   const numericId = parseInt(categoryId, 10);
   
-  const { error } = await supabase
+  let query = supabase
     .from('categories')
     .update({ icon })
     .eq('category_id', numericId);
+
+  // If userId is provided, ensure user can only update their own categories
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { error } = await query;
 
   if (error) {
     console.error('Error updating category icon:', error);

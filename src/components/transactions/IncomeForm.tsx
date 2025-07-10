@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
+import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
+import { useCategories } from '@/hooks/useCategories';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+
 
 interface IncomeFormProps {
   open: boolean;
@@ -30,47 +32,19 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     walletId: '',
   });
   
-  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const { categories: allCategories, isLoading: isLoadingCategories } = useCategories();
   
-  // Load income categories
-  useEffect(() => {
-    const loadCategories = async () => {
-      setIsLoadingCategories(true);
-      try {
-        const fetchedCategories = await getLocalizedCategoriesByType('income');
-        
-        // Sort categories by ID to maintain consistent order
-        const sortedCategories = [...fetchedCategories].sort((a, b) => {
-          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
-          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
-          return idA - idB;
-        });
-        
-        setCategories(sortedCategories);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        
-        // Use default categories as fallback
-        const defaultCategories = DEFAULT_CATEGORIES.income.map(cat => ({
-          id: cat.id,
-          name: cat.name
-        }));
-        
-        setCategories(defaultCategories);
-        
-        toast({
-          title: t('common.error'),
-          description: t('categories.error.load'),
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-    
-    loadCategories();
-  }, [t]);
+  // Filter income categories (both default and custom)
+  const categories = useMemo(() => {
+    return allCategories
+      .filter(cat => cat.type === 'income')
+      .map(cat => ({
+        id: cat.id || cat.category_id?.toString() || '',
+        name: cat.id_name || cat.en_name || 'Unknown',
+        icon: cat.icon || 'circle',
+        color: cat.color || '#6B7280'
+      }));
+  }, [allCategories]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -174,7 +148,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
                     className="hover:bg-[#333] focus:bg-[#333]"
                   >
                     <div className="flex items-center">
-                      <CategoryIcon category={String(category.id)} size="sm" />
+                      <CategoryIcon 
+                        category={category.id}
+                        size="sm"
+                        className="mr-2"
+                      />
                       <span className="ml-2">{category.name}</span>
                     </div>
                   </SelectItem>

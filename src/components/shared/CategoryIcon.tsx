@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedCategoryName, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
+import { getIconComponent } from '@/components/shared/IconSelector';
 import {
   Home,
   Coffee,
@@ -75,74 +76,31 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   
   const iconClasses = `${iconSizes[size]} rounded-full flex items-center justify-center`;
 
+  // Helper function to normalize icon names for compatibility
+  const normalizeIconName = (iconName: string): string => {
+    if (!iconName) return 'circle';
+    
+    // Convert PascalCase to kebab-case
+    const kebabCase = iconName
+      .replace(/([A-Z])/g, '-$1')
+      .toLowerCase()
+      .replace(/^-/, '');
+    
+    return kebabCase || 'circle';
+  };
+
+  const getCategoryIconComponent = (iconName: string) => {
+    return getIconComponent(normalizeIconName(iconName));
+  };
+
   // Function to render dynamic icons
   const renderDynamicIcon = (iconName: string) => {
     // Ensure we have a valid iconName
     if (!iconName) return <Circle className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
     
     try {
-      // Try to find the icon in lucide-react
-      switch (iconName) {
-        case 'ShoppingCart':
-          return <ShoppingCart className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Coffee':
-          return <Coffee className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Car':
-          return <Car className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Home':
-          return <Home className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Briefcase':
-          return <Briefcase className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'DollarSign':
-          return <DollarSign className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Gift':
-          return <Gift className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Utensils':
-          return <Utensils className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Package':
-          return <Package className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Heart':
-          return <Heart className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Plane':
-          return <Plane className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Film':
-          return <Film className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Book':
-          return <Book className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'ArrowLeftRight':
-          return <ArrowLeftRight className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Circle':
-          return <Circle className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Music':
-          return <Music className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Smartphone':
-          return <Smartphone className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'CreditCard':
-          return <CreditCard className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'ShoppingBag':
-          return <ShoppingBag className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Zap':
-          return <Zap className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'User':
-          return <User className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Pill':
-          return <Pill className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Baby':
-          return <Baby className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'BusFront':
-          return <BusFront className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Coins':
-          return <Coins className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'LineChart':
-          return <LineChart className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Wallet':
-          return <Wallet className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        case 'Building2':
-          return <Building2 className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-        default:
-          console.warn(`Icon not found: ${iconName}`);
-          return <Circle className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
-      }
+      const IconComponent = getCategoryIconComponent(iconName);
+      return <IconComponent className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
     } catch (error) {
       console.error('Error rendering icon:', error);
       return <Circle className={iconInnerSizes[size]} stroke="black" fill="none" strokeWidth={2} />;
@@ -352,20 +310,17 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'expense_dining':
     case 'food':
     case 'dining':
-    case '1':
     case '2':
       Icon = Utensils;
       break;
     case 'expense_entertainment':
     case 'entertainment':
-    case '3':
     case '6':
       Icon = Music;
       break;
     case 'expense_transportation':
     case 'transportation':
     case '3':
-    case '4':
       Icon = Car;
       break;
     case 'expense_housing':
@@ -375,27 +330,24 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       break;
     case 'expense_gift':
     case 'gift':
-    case '6':
       Icon = GiftIcon;
       break;
     case 'expense_healthcare':
     case 'expense_health':
     case 'health':
     case 'healthcare':
-    case '7':
     case '8':
       Icon = Pill;
       break;
     case 'expense_children':
     case 'children':
-    case '8':
+    case '20':
       Icon = Baby;
       break;
     case 'expense_utility':
     case 'expense_subscription':
     case 'utility':
     case 'subscription':
-    case '9':
     case '4':
       Icon = Zap;
       break;
@@ -412,7 +364,6 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'expense_shopping':
     case 'shopping':
     case '7':
-    case '12':
       Icon = ShoppingBag;
       break;
     case 'expense_groceries':
@@ -420,15 +371,13 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case '1':
       Icon = ShoppingCart;
       break;
-    case 'expense_donation':
-    case 'donation':
-    case 'donate':
-      Icon = DollarSign;
+    case 'expense_other':
+    case '12':
+      Icon = Package;
       break;
     case 'expense_baby_needs':
     case 'baby_needs':
     case 'baby':
-    case '20':
       Icon = Baby;
       break;
     case 'expense_personal':
@@ -469,12 +418,15 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       Icon = ArrowLeftRight;
       break;
     
-    // Default & Other Category
-    case 'expense_other':
+    case 'expense_donation':
+    case '19':
+      Icon = DollarSign;
+      break;
     case 'income_other':
     case 'other':
     case '17':
-    case '19':
+      Icon = Coins;
+      break;
     default:
       Icon = isIncomeCategory ? Coins : (isExpenseCategory ? Package : HelpCircle);
       break;
@@ -562,4 +514,4 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   );
 };
 
-export default CategoryIcon; 
+export default CategoryIcon;

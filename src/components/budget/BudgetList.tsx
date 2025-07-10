@@ -160,8 +160,8 @@ const BudgetList: React.FC = () => {
                 <div key={budget.id} className="space-y-2">
                   {isEditing ? (
                     <div className="flex flex-col space-y-3 bg-gray-100 dark:bg-gray-800 p-3 rounded-md border">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-3">
+                        <div className="flex flex-col space-y-1">
                           <label className="text-sm font-medium">
                             <AnimatedText text={t('transactions.category')} animationType="slide" />:
                           </label>
@@ -169,25 +169,21 @@ const BudgetList: React.FC = () => {
                             <AnimatedText text={budget.category || 'No Category'} animationType="scale" />
                           </span>
                         </div>
-                      </div>
                       
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col space-y-1">
                           <label className="text-sm font-medium">
                             <AnimatedText text={t('transactions.amount')} animationType="slide" />:
                           </label>
                           <Input 
                             value={editForm.amount}
                             onChange={(e) => setEditForm({...editForm, amount: e.target.value})}
-                            className="w-28 h-8"
+                            className="w-full h-8"
                             type="number"
                             min="0"
                           />
                         </div>
-                      </div>
                       
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col space-y-1">
                           <label className="text-sm font-medium">
                             <AnimatedText text={t('budgets.period')} animationType="slide" />:
                           </label>
@@ -195,7 +191,7 @@ const BudgetList: React.FC = () => {
                             value={editForm.period}
                             onValueChange={(value) => setEditForm({...editForm, period: value as 'weekly' | 'monthly' | 'yearly'})}
                           >
-                            <SelectTrigger className="w-28 h-8">
+                            <SelectTrigger className="w-full h-8">
                               <SelectValue placeholder={t('budgets.select_period')} />
                             </SelectTrigger>
                             <SelectContent>

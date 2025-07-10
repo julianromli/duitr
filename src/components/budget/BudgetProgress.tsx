@@ -58,7 +58,7 @@ const BudgetProgress: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -92,7 +92,7 @@ const BudgetProgress: React.FC = () => {
                 ))}
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="space-y-4 pt-4">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">{t('budgets.spent')}</p>
                   <p className="text-lg font-semibold">{formatCurrency(totalSpent)}</p>

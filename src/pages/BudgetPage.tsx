@@ -1,4 +1,4 @@
-﻿// Add comment indicating changes made to the file
+// Add comment indicating changes made to the file
 // Combined budget management features with Want to Buy and Pinjaman features from the old BudgetPage.tsx.
 // Improved UI organization and made the page mobile responsive.
 // Reorganized layout to show Budget Categories after Overview and Spending sections.
@@ -375,11 +375,11 @@ const BudgetPage: React.FC = () => {
                 </div>
               </div>
               
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-[#333] hover:bg-[#333] text-white">
+              <DialogFooter className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full border-[#333] hover:bg-[#333] text-white">
                   <AnimatedText text={t('buttons.cancel')} />
                 </Button>
-                <Button onClick={handleCreateBudget} className="bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
+                <Button onClick={handleCreateBudget} className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
                   <AnimatedText text={t('buttons.create')} />
                 </Button>
               </DialogFooter>

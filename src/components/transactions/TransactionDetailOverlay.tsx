@@ -27,6 +27,7 @@ import {
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
+import { useAuth } from '@/context/AuthContext';
 import { format, parseISO } from 'date-fns';
 
 interface TransactionDetailOverlayProps {
@@ -43,6 +44,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
   const { formatCurrency, wallets, getDisplayCategoryName, updateTransaction } = useFinance();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const contentRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const { theme } = useTheme();
@@ -85,7 +87,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
       if (transaction && transaction.type !== 'transfer' && isEditing) {
         try {
           const type = transaction.type === 'income' ? 'income' : 'expense';
-          const fetchedCategories = await getLocalizedCategoriesByType(type);
+          const fetchedCategories = await getLocalizedCategoriesByType(type, user?.id);
           
           // Sort categories by ID to maintain consistent order
           const sortedCategories = [...fetchedCategories].sort((a, b) => {
@@ -867,4 +869,4 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
   );
 };
 
-export default TransactionDetailOverlay; 
+export default TransactionDetailOverlay;

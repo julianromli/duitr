@@ -1,85 +1,151 @@
-# Welcome to your Lovable project
+# Duitr - Personal Finance Manager
 
-## Project info
+![Duitr Logo](public/duitr-logo.svg)
 
-**URL**: https://lovable.dev/projects/6305cbc4-c68a-4050-901f-8d9931f5828e
+**Duitr** adalah aplikasi manajemen keuangan pribadi yang modern dan intuitif, dibangun dengan teknologi web terdepan. Aplikasi ini membantu Anda melacak pengeluaran, mengelola anggaran, dan mencapai tujuan keuangan dengan mudah.
 
-## How can I edit this code?
+## 🚀 Fitur Utama
 
-There are several ways of editing your application.
+### 💰 Manajemen Transaksi
+- **Pencatatan Pengeluaran**: Catat semua pengeluaran dengan kategori yang dapat disesuaikan
+- **Pencatatan Pemasukan**: Kelola sumber pendapatan Anda
+- **Transfer Antar Dompet**: Pindahkan dana antar dompet dengan mudah
+- **Riwayat Transaksi**: Lihat semua transaksi dengan filter dan pencarian
+- **Detail Transaksi**: Informasi lengkap setiap transaksi
 
-**Use Lovable**
+### 📊 Dashboard & Analitik
+- **Ringkasan Saldo**: Lihat total saldo dari semua dompet
+- **Grafik Pengeluaran**: Visualisasi pengeluaran bulanan
+- **Transaksi Terbaru**: Akses cepat ke transaksi terkini
+- **Statistik Keuangan**: Analisis mendalam tentang pola keuangan
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6305cbc4-c68a-4050-901f-8d9931f5828e) and start prompting.
+### 🎯 Manajemen Anggaran
+- **Buat Anggaran**: Tetapkan anggaran untuk berbagai kategori
+- **Pelacakan Progress**: Monitor pencapaian anggaran secara real-time
+- **Peringatan Anggaran**: Notifikasi ketika mendekati batas anggaran
+- **Daftar Keinginan**: Kelola item yang ingin dibeli
+- **Manajemen Pinjaman**: Catat dan kelola pinjaman
 
-Changes made via Lovable will be committed automatically to this repo.
+### 💳 Manajemen Dompet
+- **Multi-Dompet**: Kelola berbagai jenis dompet (kas, bank, e-wallet)
+- **Saldo Real-time**: Pembaruan saldo otomatis
+- **Kategori Dompet**: Organisasi dompet berdasarkan jenis
 
-**Use your preferred IDE**
+### 🌐 Fitur Tambahan
+- **Multi-bahasa**: Dukungan Bahasa Indonesia dan Inggris
+- **Mode Gelap/Terang**: Tema yang dapat disesuaikan
+- **PWA (Progressive Web App)**: Dapat diinstal di perangkat mobile
+- **Offline Support**: Bekerja tanpa koneksi internet
+- **Export Data**: Ekspor data ke format Excel/CSV
+- **Responsive Design**: Optimal di desktop dan mobile
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Teknologi yang Digunakan
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Frontend
+- **React 18** - Library UI modern
+- **TypeScript** - Type safety dan developer experience
+- **Vite** - Build tool yang cepat
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Komponen UI yang dapat disesuaikan
+- **Framer Motion** - Animasi yang smooth
+- **React Router** - Routing aplikasi
+- **React Hook Form** - Manajemen form yang efisien
+- **Zod** - Validasi schema
 
-Follow these steps:
+### Backend & Database
+- **Supabase** - Backend-as-a-Service
+- **PostgreSQL** - Database relasional
+- **Row Level Security** - Keamanan data tingkat baris
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### State Management & Data Fetching
+- **React Query (TanStack Query)** - Server state management
+- **React Context** - Client state management
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Internationalization
+- **i18next** - Framework internasionalisasi
+- **react-i18next** - Integrasi React dengan i18next
 
-# Step 3: Install the necessary dependencies.
-npm i
+### PWA & Performance
+- **Vite PWA Plugin** - Progressive Web App capabilities
+- **Service Worker** - Caching dan offline support
+- **Web App Manifest** - Instalasi aplikasi
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 📱 Instalasi dan Setup
+
+### Prasyarat
+- Node.js (versi 18 atau lebih baru)
+- npm atau yarn
+- Akun Supabase
+
+### Langkah Instalasi
+
+1. **Clone repository**
+```bash
+git clone <repository-url>
+cd duitr
 ```
 
-**Edit a file directly in GitHub**
+2. **Install dependencies**
+```bash
+npm install
+# atau
+yarn install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. **Setup environment variables**
+```bash
+cp .env.example .env
+```
 
-**Use GitHub Codespaces**
+Edit file `.env` dan tambahkan konfigurasi Supabase:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. **Setup database**
+- Jalankan script SQL di folder `supabase/migrations/`
+- Import schema dari `supabase_schema.sql`
 
-## What technologies are used for this project?
+5. **Jalankan aplikasi**
+```bash
+npm run dev
+# atau
+yarn dev
+```
 
-This project is built with .
+Aplikasi akan berjalan di `http://localhost:5173`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🏗️ Struktur Proyek
 
-## How can I deploy this project?
+```
+src/
+├── components/          # Komponen React
+│   ├── app/            # Komponen aplikasi utama
+│   ├── auth/           # Komponen autentikasi
+│   ├── budget/         # Komponen anggaran
+│   ├── dashboard/      # Komponen dashboard
+│   ├── layout/         # Komponen layout
+│   ├── shared/         # Komponen yang dibagikan
+│   ├── transactions/   # Komponen transaksi
+│   ├── ui/            # Komponen UI dasar
+│   └── wallets/       # Komponen dompet
+├── context/            # React Context providers
+├── hooks/             # Custom React hooks
+├── lib/               # Utilities dan konfigurasi
+├── pages/             # Komponen halaman
+├── services/          # Service layer
+├── types/             # TypeScript type definitions
+└── utils/             # Utility functions
+```
 
-Simply open [Lovable](https://lovable.dev/projects/6305cbc4-c68a-4050-901f-8d9931f5828e) and click on Share -> Publish.
+## 🎨 Kustomisasi
 
-## I want to use a custom domain - is that possible?
+### Logo dan Branding
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Duitr menggunakan sistem logo terpusat yang memudahkan kustomisasi:
 
-# Duitr - Your Personal Finance Manager
-
-## Logo Customization
-
-Duitr menggunakan sistem logo terpusat yang memudahkan untuk mengubah branding aplikasi. Berikut cara menggunakan sistem logo:
-
-### Komponen Logo
-
-Duitr memiliki dua komponen logo utama:
-
-1. **Logo Dasar** (`src/components/ui/logo.tsx`): Komponen dasar yang mengambil SVG logo dari file utama.
-
+1. **Logo Dasar** (`src/components/ui/logo.tsx`)
 ```tsx
 import Logo from '@/components/ui/logo';
 
@@ -95,47 +161,116 @@ import Logo from '@/components/ui/logo';
 <Logo size={32} variant="text-only" />
 ```
 
-2. **AppLogo** (`src/components/shared/Logo.tsx`): Komponen tingkat lebih tinggi untuk penggunaan dalam UI.
-
+2. **AppLogo** (`src/components/shared/Logo.tsx`)
 ```tsx
 import AppLogo from '@/components/shared/Logo';
 
-// Logo dengan teks "Duitr"
+// Logo dengan teks
 <AppLogo size={32} withText={true} />
 
-// Hanya logo tanpa teks
+// Hanya logo
 <AppLogo size={32} withText={false} />
 
-// Logo dengan link ke halaman beranda
+// Logo dengan link
 <AppLogo linkTo="/" />
 ```
 
-### Kustomisasi Logo
-
-Untuk mengubah logo di seluruh aplikasi:
-
-1. Edit file `public/duitr-logo.svg` - ini adalah sumber master untuk logo.
-2. Gunakan `public/logo-generator.html` untuk menghasilkan semua aset logo yang diperlukan.
-3. Aset yang dihasilkan akan otomatis digunakan di seluruh aplikasi.
-
-### Generator Logo
-
-Untuk akses ke generator logo kunjungi `/logo-generator.html` di browser Anda.
+### Mengubah Logo
+1. Edit file `public/duitr-logo.svg`
+2. Gunakan `public/logo-generator.html` untuk generate aset
+3. Kunjungi `/logo-generator.html` di browser
 
 ### Favicon Customization
+1. Kunjungi `/favicon-customizer.html`
+2. Sesuaikan warna, ukuran, dan radius
+3. Preview dan download favicon baru
 
-Duitr juga memiliki alat untuk menyesuaikan favicon dengan mudah:
+## 🚀 Build dan Deploy
 
-1. Kunjungi `/favicon-customizer.html` di browser Anda
-2. Ubah warna, ukuran, dan radius sudut favicon
-3. Pratinjau perubahan dalam berbagai ukuran dan tampilan browser
-4. Unduh atau perbarui favicon SVG
+### Development Build
+```bash
+npm run build:dev
+```
 
-Favicon Duitr menggunakan format SVG modern yang didukung oleh sebagian besar browser terbaru, dengan fallback ke favicon.ico untuk browser lama.
+### Production Build
+```bash
+npm run build
+```
 
-### Caching Logo
+### PWA Build
+```bash
+npm run build:pwa
+```
 
-Logo dan favicon di-cache oleh service worker untuk penggunaan offline. Jika Anda mengubah logo master atau favicon, pastikan untuk:
+### Deploy ke Vercel
+```bash
+npm run vercel:deploy
+```
 
-1. Memperbarui versi cache di `public/sw.js`
-2. Mendeploykan semua aset logo yang baru
+## 📊 Database Schema
+
+Aplikasi menggunakan Supabase dengan schema berikut:
+
+- **users** - Data pengguna
+- **wallets** - Dompet pengguna
+- **categories** - Kategori transaksi
+- **transactions** - Transaksi keuangan
+- **budgets** - Anggaran pengguna
+- **want_to_buy** - Daftar keinginan
+- **pinjaman** - Data pinjaman
+
+## 🔒 Keamanan
+
+- **Row Level Security (RLS)** - Data pengguna terisolasi
+- **JWT Authentication** - Autentikasi yang aman
+- **Environment Variables** - Konfigurasi sensitif tersembunyi
+- **Input Validation** - Validasi data dengan Zod
+
+## 🌍 Internationalization
+
+Aplikasi mendukung multi-bahasa:
+- Bahasa Indonesia (default)
+- English
+
+File terjemahan tersimpan di `src/locales/`
+
+## 📱 PWA Features
+
+- **Installable** - Dapat diinstal di perangkat
+- **Offline Support** - Bekerja tanpa internet
+- **Push Notifications** - Notifikasi (coming soon)
+- **Background Sync** - Sinkronisasi data otomatis
+- **App Shortcuts** - Shortcut ke fitur utama
+
+## 🤝 Kontribusi
+
+1. Fork repository
+2. Buat feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+## 📄 Lisensi
+
+Project ini dilisensikan di bawah MIT License - lihat file [LICENSE](LICENSE) untuk detail.
+
+## 📞 Support
+
+Jika Anda mengalami masalah atau memiliki pertanyaan:
+- Buat issue di GitHub repository
+- Hubungi tim developer
+
+## 🔄 Changelog
+
+### v1.0.0
+- ✅ Manajemen transaksi lengkap
+- ✅ Dashboard dengan analitik
+- ✅ Sistem anggaran
+- ✅ Multi-dompet
+- ✅ PWA support
+- ✅ Multi-bahasa
+- ✅ Export data
+
+---
+
+**Duitr** - Kelola keuangan Anda dengan mudah dan efisien! 💰✨

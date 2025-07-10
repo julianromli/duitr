@@ -229,7 +229,7 @@ const Statistics: React.FC = () => {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-4 bg-[#242425] border-0 text-white" align="end">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button 
                     variant={dateRange === '7days' ? 'default' : 'outline'} 
                     className={dateRange === '7days' ? 'bg-[#C6FE1E] text-[#0D0D0D]' : 'bg-[#1A1A1A] text-white border-0'}
@@ -430,4 +430,4 @@ const Statistics: React.FC = () => {
   );
 };
 
-export default Statistics; 
+export default Statistics;

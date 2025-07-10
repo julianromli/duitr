@@ -27,12 +27,64 @@
     "added_successfully": "added successfully",
     "errorMessage": "An error occurred. Please try again later.",
     "reset_filters": "Reset Filters",
-    "clear_filters": "Clear Filters"
+    "clear_filters": "Clear Filters",
+    "creating": "Creating...",
+    "create": "Create",
+    "updating": "Updating...",
+    "update": "Update",
+    "deleting": "Deleting...",
+    "deleted_successfully": "deleted successfully",
+    "updated_successfully": "updated successfully",
+    "created_successfully": "created successfully",
+    "addNewWallet": "Add New Wallet",
+    "createNewWallet": "Create New Wallet",
+    "createWalletDescription": "Create a new wallet to manage your finances.",
+    "editWallet": "Edit Wallet",
+    "editWalletDescription": "Modify details of an existing wallet.",
+    "deleteWalletConfirmTitle": "Delete Wallet",
+    "deleteWalletConfirmDescription": "Are you sure you want to delete the wallet '{{name}}'? This action cannot be undone.",
+    "name": "Wallet Name",
+    "enterName": "Enter wallet name",
+    "balance": "Balance",
+    "enterBalance": "Enter wallet balance",
+    "addNewCategory": "Add New Category",
+    "addNewCategoryDescription": "Create custom categories to better organize your transactions.",
+    "addNewCategoryTitle": "Add New Category",
+    "editCategory": "Edit Category",
+    "created_successfully": "created successfully"
   },
   "categories": {
+    "all": "All",
+    "management": "Category Management",
+    "addNew": "Add New",
+    "createNew": "Create New Category",
+    "createDescription": "Create custom categories to better organize your transactions.",
+    "createNewCategory": "Create New Category",
+    "editCategory": "Edit Category",
+    "editDescription": "Modify details of an existing category.",
+    "deleteConfirmTitle": "Delete Category",
+    "deleteConfirmDescription": "Are you sure you want to delete the category '{{name}}'? This action cannot be undone.",
+    "name": "Category Name",
+    "enterName": "Enter category name",
+    "type": "Category Type",
+    "selectType": "Select category type",
+    "income": "Income",
+    "expense": "Expense",
+    "icon": "Icon",
+    "color": "Color",
+    "expenseCategories": "Expense Categories",
+    "incomeCategories": "Income Categories",
+    "noExpenseCategories": "No custom expense categories yet.",
+    "noIncomeCategories": "No custom income categories yet.",
+    "noCustomCategories": "No Custom Categories Yet",
+    "noCustomCategoriesDescription": "Create your first category to better organize your transactions.",
+    "createFirst": "Create First Category",
     "error": {
       "load": "Failed to load categories. Please restart the app or check your internet connection."
-    }
+    },
+    "createError": "Failed to create category",
+    "updateError": "Failed to update category",
+    "deleteError": "Failed to delete category"
   },
   "pages": {
     "dashboard": "Dashboard",
@@ -421,4 +473,4 @@
     "signed_out_title": "Signed Out",
     "signed_out_description": "You have been signed out."
   }
-} 
+}

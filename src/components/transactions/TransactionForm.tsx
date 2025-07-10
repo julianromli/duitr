@@ -14,6 +14,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
+import CategorySelector from '@/components/CategorySelector';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
@@ -38,56 +39,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
     fee: '0',
   });
   
-  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
-  
-  // Get categories for the current transaction type
-  useEffect(() => {
-    const loadCategories = async () => {
-      if (formData.type === 'transfer') {
-        setCategories([]);
-        return;
-      }
-      
-      setIsLoadingCategories(true);
-      try {
-        const type = formData.type === 'expense' ? 'expense' : 'income';
-        
-        // Fetch categories directly from Supabase
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('type', type)
-          .order('en_name');
-        
-        if (error) throw error;
-        
-        // Transform data to match the expected format - use category_id as id
-        const formattedCategories = data.map(category => ({
-          id: category.category_id,
-          name: i18next.language === 'id' ? category.id_name : category.en_name
-        }));
-        
-        // Sort categories alphabetically
-        const sortedCategories = [...formattedCategories].sort((a, b) => {
-          return a.name.localeCompare(b.name);
-        });
-        
-        setCategories(sortedCategories);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        toast({
-          title: t('common.error'),
-          description: t('categories.error.load'),
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-    
-    loadCategories();
-  }, [formData.type, t, i18next.language]);
+  // No need for local category state - CategorySelector handles this
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -273,34 +225,14 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
               <Label htmlFor="categoryId" className="text-[#868686] mb-1 block">
                 {t('transactions.category')}
               </Label>
-              <Select
-                value={formData.categoryId ? String(formData.categoryId) : ""}
+              <CategorySelector
+                type={formData.type}
+                value={formData.categoryId}
                 onValueChange={(value) => handleSelectChange('categoryId', value)}
-                disabled={isLoadingCategories}
-              >
-                <SelectTrigger className="bg-[#242425] border-0 text-white">
-                  <SelectValue placeholder={
-                    isLoadingCategories ? t('common.loading') : 
-                    formData.type === 'income' ? t('transactions.selectIncomeCategory') : t('transactions.selectExpenseCategory')
-                  } />
-                </SelectTrigger>
-                <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
-                  {categories.map((category) => (
-                    <SelectItem 
-                      key={category.id} 
-                      value={String(category.id)}
-                      className="hover:bg-[#333] focus:bg-[#333]"
-                    >
-                      <div className="flex items-center">
-                        <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full mr-2">
-                          <CategoryIcon category={String(category.id)} size="sm" />
-                        </div>
-                        <span className="ml-2">{category.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={
+                  formData.type === 'income' ? t('transactions.selectIncomeCategory') : t('transactions.selectExpenseCategory')
+                }
+              />
             </div>
           )}
           
