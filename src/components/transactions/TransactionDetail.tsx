@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
-import i18next from 'i18next';
+import { useAuth } from '@/context/AuthContext';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
 import { format, parseISO } from 'date-fns';
@@ -37,6 +37,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   const { t } = useTranslation();
   const { transactions, formatCurrency, wallets, updateTransaction, getDisplayCategoryName } = useFinance();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   
   // Find the transaction
@@ -53,7 +54,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
       if (transaction && transaction.type !== 'transfer' && isEditing) {
         try {
           const type = transaction.type === 'income' ? 'income' : 'expense';
-          const fetchedCategories = await getLocalizedCategoriesByType(type, i18next);
+          const fetchedCategories = await getLocalizedCategoriesByType(type, user?.id);
           
           // Sort categories by ID to maintain consistent order
           const sortedCategories = [...fetchedCategories].sort((a, b) => {
@@ -395,4 +396,4 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   );
 };
 
-export default TransactionDetail; 
+export default TransactionDetail;

@@ -229,26 +229,26 @@ const Dashboard: React.FC = () => {
               </div>}
           </motion.div>
 
-          {/* Action Buttons - Moved outside the card */}
-          <motion.div className="flex justify-between gap-4 mb-6" variants={itemVariants}>
+          {/* Action Buttons - Horizontal layout */}
+          <motion.div className="flex gap-3 mb-6" variants={itemVariants}>
             <motion.button whileHover={{
             scale: 1.05
           }} whileTap={{
             scale: 0.95
-          }} onClick={openTransferForm} className="w-1/2 text-white py-3 px-5 rounded-full flex items-center justify-center gap-2 bg-[#1364ff]">
+          }} onClick={openTransferForm} className="flex-1 text-white py-4 px-4 rounded-full flex items-center justify-center gap-2 bg-[#1364ff]">
               <ArrowLeftRight className="text-white" size={18} />
-              <span className="font-bold">{t('transactions.transfer')}</span>
+              <span className="font-bold text-base">{t('transactions.transfer')}</span>
             </motion.button>
             
             <Dialog open={isAddMoneyOpen} onOpenChange={setIsAddMoneyOpen}>
               <DialogTrigger asChild>
-                <motion.button className="w-1/2 bg-[#1364FF] text-white py-3 px-5 rounded-full flex items-center justify-center gap-2" whileHover={{
+                <motion.button className="flex-1 bg-[#1364FF] text-white py-4 px-4 rounded-full flex items-center justify-center gap-2" whileHover={{
                 scale: 1.05
               }} whileTap={{
                 scale: 0.95
               }}>
                   <Plus className="text-white" size={18} />
-                  <span className="font-bold">{t('transactions.add_money')}</span>
+                  <span className="font-bold text-base">{t('transactions.add_money')}</span>
                 </motion.button>
               </DialogTrigger>
               <DialogContent className="bg-[#1A1A1A] border-none text-white">

@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import CategoryManagement from '@/components/CategoryManagement';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
@@ -192,7 +193,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <motion.div
-      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
+      className="max-w-md mx-auto bg-background min-h-screen pb-24 text-foreground"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -204,7 +205,7 @@ const ProfilePage: React.FC = () => {
           variants={itemVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate(-1)} className="mr-4 text-white">
+            <button onClick={() => navigate(-1)} className="mr-4 text-foreground">
               <ChevronLeft size={24} />
             </button>
             <h1 className="text-xl font-bold">{t('settings.profile')}</h1>
@@ -222,11 +223,11 @@ const ProfilePage: React.FC = () => {
               onClick={handleProfileImageClick}
               title={profileImage ? t('settings.viewProfileImage') : ''}
             >
-              <Avatar className="h-24 w-24 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#C6FE1E]">
+              <Avatar className="h-24 w-24 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary">
                 {profileImage ? (
                   <AvatarImage src={profileImage} alt={userProfile.username} className="aspect-square object-cover w-full h-full" />
                 ) : (
-                  <AvatarFallback className="bg-[#242425] text-[#C6FE1E] text-2xl flex items-center justify-center">
+                  <AvatarFallback className="bg-card text-primary text-2xl flex items-center justify-center">
                     {userProfile.username ? userProfile.username.substring(0, 2).toUpperCase() : 'U'}
                   </AvatarFallback>
                 )}
@@ -238,7 +239,7 @@ const ProfilePage: React.FC = () => {
               )}
             </div>
             <motion.button
-              className="absolute bottom-0 right-0 bg-[#C6FE1E] text-[#0D0D0D] p-2 rounded-full shadow-md"
+              className="absolute bottom-0 right-0 bg-primary text-primary-foreground p-2 rounded-full shadow-md"
               onClick={triggerFileInput}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -257,12 +258,12 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <h2 className="text-xl font-bold">{userProfile.username}</h2>
-          <p className="text-[#868686]">{userProfile.email}</p>
+          <p className="text-muted-foreground">{userProfile.email}</p>
         </motion.div>
 
         {/* Profile Image View Modal */}
         <Dialog open={isImageViewOpen} onOpenChange={setIsImageViewOpen}>
-          <DialogContent className="bg-[#1A1A1A] border-0 p-0 overflow-hidden max-w-md w-full rounded-lg">
+          <DialogContent className="bg-popover border-0 p-0 overflow-hidden max-w-md w-full rounded-lg">
             <div className="relative">
               <DialogClose className="absolute right-3 top-3 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors">
                 <X size={18} />
@@ -280,41 +281,52 @@ const ProfilePage: React.FC = () => {
 
         {/* Profile Info Card */}
         <motion.div variants={itemVariants} className="space-y-6">
-          <Card className="bg-[#242425] border-none shadow-none text-white rounded-xl">
+          <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
             <CardContent className="p-5 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-[#868686]">{t('settings.username')}</Label>
+                <Label htmlFor="username" className="text-muted-foreground">{t('settings.username')}</Label>
                 <Input
                   id="username"
                   value={userProfile.username}
                   onChange={(e) => setUserProfile({...userProfile, username: e.target.value})}
-                  className="bg-[#1A1A1A] border-none text-white rounded-lg focus:ring-2 focus:ring-[#C6FE1E]"
+                  className="bg-input border-none text-foreground rounded-lg focus:ring-2 focus:ring-ring"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#868686]">{t('settings.email')}</Label>
+                <Label htmlFor="email" className="text-muted-foreground">{t('settings.email')}</Label>
                 <Input
                   id="email"
                   value={userProfile.email}
                   readOnly
-                  className="bg-[#1A1A1A] border-none text-white opacity-70 rounded-lg"
+                  className="bg-input border-none text-foreground opacity-70 rounded-lg"
                 />
               </div>
 
               <Button
                 onClick={handleProfileSave}
                 disabled={isSaving}
-                className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00] rounded-lg font-semibold"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold"
               >
                 {isSaving ? t('settings.saving') : t('settings.saveProfile')}
               </Button>
+            </CardContent>
+          </Card>
 
+          {/* Category Management Section */}
+          <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+            <CardContent className="p-5">
+              <CategoryManagement />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+            <CardContent className="p-5 space-y-4">
               {/* Logout Button */}
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="w-full bg-transparent border border-red-500 text-red-500 hover:bg-red-500/10 mt-4 rounded-lg font-semibold"
+                className="w-full bg-transparent border border-red-500 text-red-500 hover:bg-red-500/10 rounded-lg font-semibold"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('settings.logout')}
@@ -323,18 +335,18 @@ const ProfilePage: React.FC = () => {
               {/* Donate Button */}
               <Button
                 onClick={handleDonateClick}
-                className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#A6DD00] border border-black mt-4 rounded-lg font-semibold"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border border-border mt-4 rounded-lg font-semibold"
                 aria-label="Donate to Developer via Saweria"
               >
                 <Heart className="mr-2 h-4 w-4" />Support the Author<Heart className="ml-2 h-4 w-4" />
               </Button>
               
               {/* Copyright Text */}
-              <div className="text-center mt-4 text-xs text-[#CCCCCC] dark:text-[#CCCCCC]">
+              <div className="text-center mt-4 text-xs text-muted-foreground">
                 Made by{" "}
                 <button 
                   onClick={handleInstagramClick}
-                  className="text-[#CCCCCC] hover:text-[#A6DD00] dark:text-[#CCCCCC] underline focus:outline-none"
+                  className="text-muted-foreground hover:text-primary underline focus:outline-none"
                   aria-label="Visit Faiz Intifada's Instagram"
                 >
                   Faiz Intifada
@@ -348,4 +360,4 @@ const ProfilePage: React.FC = () => {
   );
 };
 
-export default ProfilePage; 
+export default ProfilePage;

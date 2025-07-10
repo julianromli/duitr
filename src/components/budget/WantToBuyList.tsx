@@ -90,24 +90,25 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
         <motion.div
           key={item.id}
           variants={itemVariants}
-          className={`flex items-center p-3 bg-[#242425] rounded-lg shadow-sm ${item.is_purchased ? 'opacity-60' : ''}`}
+          className={`flex flex-col sm:flex-row sm:items-center p-4 bg-[#242425] rounded-lg shadow-sm space-y-3 sm:space-y-0 ${item.is_purchased ? 'opacity-60' : ''}`}
         >
-          <Checkbox
-            id={`wtb-${item.id}`}
-            checked={item.is_purchased}
-            onCheckedChange={() => handleCheckChange(item)}
-            className="mr-3 border-gray-500 data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D] dark:border-gray-600 dark:data-[state=checked]:bg-blue-600 dark:data-[state=checked]:text-white"
-            aria-label={`Mark ${item.name} as purchased`}
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-                <span className={`font-medium truncate ${item.is_purchased ? 'line-through text-gray-500 dark:text-gray-400' : 'text-white dark:text-gray-100'}`}>
-                    {item.name}
-                </span>
-                 <span className="text-sm font-semibold text-white dark:text-gray-200 ml-2 flex-shrink-0">
-                    {formatCurrency(item.price)} {/* Use formatCurrency from context */}
-                 </span>
-            </div>
+          <div className="flex items-center space-x-3 w-full sm:w-auto">
+            <Checkbox
+              id={`wtb-${item.id}`}
+              checked={item.is_purchased}
+              onCheckedChange={() => handleCheckChange(item)}
+              className="border-gray-500 data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D] dark:border-gray-600 dark:data-[state=checked]:bg-blue-600 dark:data-[state=checked]:text-white"
+              aria-label={`Mark ${item.name} as purchased`}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1 sm:space-y-0">
+                  <span className={`font-medium ${item.is_purchased ? 'line-through text-gray-500 dark:text-gray-400' : 'text-white dark:text-gray-100'}`}>
+                      {item.name}
+                  </span>
+                   <span className="text-lg font-semibold text-white dark:text-gray-200">
+                      {formatCurrency(item.price)} {/* Use formatCurrency from context */}
+                   </span>
+              </div>
             <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
               <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category.toLowerCase()}`)}</span>
               <span className="flex items-center gap-1">
@@ -120,7 +121,8 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
               </span>
             </div>
           </div>
-          <div className="ml-2 flex items-center flex-shrink-0">
+          </div>
+          <div className="flex items-center justify-end space-x-2 w-full sm:w-auto sm:ml-3">
              <Button
                 variant="ghost"
                 size="icon"
@@ -167,4 +169,4 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
   );
 };
 
-export default WantToBuyList; 
+export default WantToBuyList;

@@ -70,6 +70,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import IconSelector, { getIconComponent, iconNameMap } from '@/components/shared/IconSelector';
 
 // Define a map for icons
 const iconMap: Record<string, React.ComponentType> = {
@@ -119,6 +120,12 @@ interface Category {
   created_at: string | null;
 }
 
+// Helper function to normalize icon names for compatibility
+const normalizeIconName = (iconName: string): string => {
+  // Convert PascalCase to kebab-case if needed
+  return iconNameMap[iconName] || iconName || 'circle';
+};
+
 const EditCategoryPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -144,8 +151,8 @@ const EditCategoryPage: React.FC = () => {
   
   // Function to render an icon by its name
   const renderIcon = (iconName: string) => {
-    const IconComponent = iconMap[iconName] || Circle;
-    return <IconComponent className="h-5 w-5" />;
+    const IconComponent = getIconComponent(normalizeIconName(iconName));
+    return <IconComponent className="h-4 w-4" />;
   };
   
   // Fetch categories on component mount
@@ -205,7 +212,7 @@ const EditCategoryPage: React.FC = () => {
       en_name: category.en_name,
       id_name: category.id_name,
       type: category.type,
-      icon: category.icon || 'Circle'
+      icon: normalizeIconName(category.icon || 'circle')
     });
     setEditDialogOpen(true);
   };
@@ -494,37 +501,12 @@ const EditCategoryPage: React.FC = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="icon">Icon</Label>
-              <Select
-                value={formData.icon}
-                onValueChange={(value) => handleSelectChange('icon', value)}
-              >
-                <SelectTrigger className="bg-[#2A3435] border-[#2A3435] text-white">
-                  <SelectValue placeholder="Select icon">
-                    <div className="flex items-center">
-                      {renderIcon(formData.icon)}
-                      <span className="ml-2">{formData.icon}</span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-[#2A3435] border-[#2A3435] text-white max-h-[300px] overflow-y-auto">
-                  {availableIcons.map((icon) => (
-                    <SelectItem key={icon} value={icon} className="text-white">
-                      <div className="flex items-center">
-                        {renderIcon(icon)}
-                        <span className="ml-2">{icon}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="pt-2">
-                <div className="bg-[#C6FE1E] w-10 h-10 flex items-center justify-center rounded-full">
-                  {renderIcon(formData.icon)}
-                </div>
-              </div>
-            </div>
+            <IconSelector
+              selectedIcon={normalizeIconName(formData.icon)}
+              onIconChange={(iconName) => setFormData({ ...formData, icon: iconName })}
+              variant="dropdown"
+              label="Icon"
+            />
           </div>
           
           <DialogFooter>
@@ -575,4 +557,4 @@ const EditCategoryPage: React.FC = () => {
   );
 };
 
-export default EditCategoryPage; 
+export default EditCategoryPage;

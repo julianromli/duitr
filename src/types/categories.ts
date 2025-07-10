@@ -8,6 +8,8 @@ export interface Category {
   id_name: string;
   type?: string;
   icon?: string;
+  color?: string;
+  user_id?: string;
   created_at?: string;
 }
 
@@ -27,6 +29,8 @@ export const transformCategory = (dbCategory: any): Category => ({
   id_name: dbCategory.id_name,
   type: dbCategory.type,
   icon: dbCategory.icon,
+  color: dbCategory.color,
+  user_id: dbCategory.user_id,
   created_at: dbCategory.created_at
 });
 

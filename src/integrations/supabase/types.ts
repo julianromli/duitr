@@ -51,29 +51,35 @@ export type Database = {
         Row: {
           category_id: number
           category_key: string
+          color: string | null
           created_at: string | null
           en_name: string
           icon: string | null
           id_name: string
           type: string
+          user_id: string | null
         }
         Insert: {
           category_id?: number
           category_key: string
+          color?: string | null
           created_at?: string | null
           en_name: string
           icon?: string | null
           id_name: string
           type: string
+          user_id?: string | null
         }
         Update: {
           category_id?: number
           category_key?: string
+          color?: string | null
           created_at?: string | null
           en_name?: string
           icon?: string | null
           id_name?: string
           type?: string
+          user_id?: string | null
         }
         Relationships: []
       }

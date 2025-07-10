@@ -27,12 +27,61 @@
     "added_successfully": "berhasil ditambahkan",
     "errorMessage": "Terjadi kesalahan. Silakan coba lagi nanti.",
     "reset_filters": "Reset Filter",
-    "clear_filters": "Hapus Filter"
+    "clear_filters": "Hapus Filter",
+    "creating": "Membuat...",
+    "create": "Buat",
+    "updating": "Memperbarui...",
+    "update": "Perbarui",
+    "deleting": "Menghapus...",
+    "deleted_successfully": "berhasil dihapus",
+    "updated_successfully": "berhasil diperbarui",
+    "created_successfully": "berhasil dibuat",
+    "addNewWallet": "Tambah Dompet Baru",
+    "createNewWallet": "Buat Dompet Baru",
+    "createWalletDescription": "Buat dompet untuk mengelola uang Anda dengan lebih baik.",
+    "editWallet": "Edit Dompet",
+    "editWalletDescription": "Ubah detail dompet yang sudah ada.",
+    "deleteWalletConfirmTitle": "Hapus Dompet",
+    "deleteWalletConfirmDescription": "Apakah Anda yakin ingin menghapus dompet '{{name}}'? Tindakan ini tidak dapat dibatalkan.",
+    "name": "Nama Dompet",
+    "enterName": "Masukkan nama dompet",
+    "balance": "Saldo",
+    "enterBalance": "Masukkan saldo dompet",
+    "addNewCategory": "Tambah Kategori Baru",
+    "addNewCategoryDescription": "Buat kategori kustom untuk mengorganisir transaksi Anda dengan lebih baik.",
+    "addNewCategoryTitle": "Tambah Kategori Baru"
   },
   "categories": {
+    "all": "Semua",
+    "management": "Manajemen Kategori",
+    "addNew": "Tambah Baru",
+    "createNew": "Buat Kategori Baru",
+    "createDescription": "Buat kategori kustom untuk mengorganisir transaksi Anda dengan lebih baik.",
+    "editCategory": "Edit Kategori",
+    "editDescription": "Ubah detail kategori yang sudah ada.",
+    "deleteConfirmTitle": "Hapus Kategori",
+    "deleteConfirmDescription": "Apakah Anda yakin ingin menghapus kategori '{{name}}'? Tindakan ini tidak dapat dibatalkan.",
+    "name": "Nama Kategori",
+    "enterName": "Masukkan nama kategori",
+    "type": "Jenis Kategori",
+    "selectType": "Pilih jenis kategori",
+    "income": "Pemasukan",
+    "expense": "Pengeluaran",
+    "icon": "Ikon",
+    "color": "Warna",
+    "expenseCategories": "Kategori Pengeluaran",
+    "incomeCategories": "Kategori Pemasukan",
+    "noExpenseCategories": "Belum ada kategori pengeluaran kustom.",
+    "noIncomeCategories": "Belum ada kategori pemasukan kustom.",
+    "noCustomCategories": "Belum Ada Kategori Kustom",
+    "noCustomCategoriesDescription": "Buat kategori pertama Anda untuk mengorganisir transaksi dengan lebih baik.",
+    "createFirst": "Buat Kategori Pertama",
     "error": {
       "load": "Gagal memuat kategori. Silakan restart aplikasi atau periksa koneksi internet Anda."
-    }
+    },
+    "createError": "Gagal membuat kategori",
+    "updateError": "Gagal memperbarui kategori",
+    "deleteError": "Gagal menghapus kategori"
   },
   "pages": {
     "dashboard": "Dasbor",
@@ -423,4 +472,4 @@
     "signed_out_title": "Keluar",
     "signed_out_description": "Anda telah berhasil keluar."
   }
-} 
+}

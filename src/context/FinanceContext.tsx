@@ -19,6 +19,7 @@ import {
   DEFAULT_CATEGORIES
 } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
+import { useCategories } from '@/hooks/useCategories';
 import i18next from 'i18next';
 import { useTranslation } from 'react-i18next';
 
@@ -61,6 +62,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { categories: userCategories } = useCategories();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -300,139 +302,41 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Get display category name based on categoryId and current language
   const getDisplayCategoryName = (transaction: Transaction): string => {
-    // If we have a categoryId, try to use that first
+    // If it's a transfer, always return "Transfer"
+    if (transaction.type === 'transfer') {
+      return t('transactions.transfer');
+    }
+
+    // If we have a categoryId, try to find it in the user's categories
     if (transaction.categoryId) {
-      // First check if it's a UUID from the database
-      if (typeof transaction.categoryId === 'string' && transaction.categoryId.includes('-')) {
-        // Try to get the category name from the id 
-        const categoryStringId = getCategoryStringIdFromUuid(transaction.categoryId);
-        return i18next.t(`categories.${categoryStringId}`, { defaultValue: 'Unknown' });
+      const categoryId = String(transaction.categoryId);
+      const category = userCategories.find(cat => 
+        cat.id === categoryId || 
+        cat.category_id?.toString() === categoryId
+      );
+      
+      if (category) {
+        // Return localized name based on current language
+        return i18next.language === 'id' ? category.id_name : category.en_name;
       }
       
-      // If it's already a number or string number (new system)
-      if (typeof transaction.categoryId === 'number' || 
-         (typeof transaction.categoryId === 'string' && !isNaN(Number(transaction.categoryId)))) {
-        
-        const numericId = Number(transaction.categoryId);
-        
-        // Create a language-specific cache key
-        const cacheKey = `${currentLanguage}_${numericId}`;
-        
-        // Check if we have this category in our cache with current language
-        if (categoryNameCache[cacheKey]) {
-          return categoryNameCache[cacheKey];
-        }
-        
-        // If not in cache, fetch it from DB in background for future use
-        // but return synchronously for this call
-        getCategoryById(numericId).then(category => {
+      // If not found in user categories, check cache
+      const cacheKey = `${currentLanguage}_${categoryId}`;
+      if (categoryNameCache[cacheKey]) {
+        return categoryNameCache[cacheKey];
+      }
+      
+      // Fetch from database in background for future use
+      if (typeof transaction.categoryId === 'number' || !isNaN(Number(transaction.categoryId))) {
+        getCategoryById(Number(transaction.categoryId)).then(category => {
           if (category) {
             const name = i18next.language === 'id' ? category.id_name : category.en_name;
             setCategoryNameCache(prev => ({...prev, [cacheKey]: name}));
           }
         }).catch(err => {
-          console.warn(`Error fetching category ${numericId} from database:`, err);
+          console.warn(`Error fetching category ${transaction.categoryId} from database:`, err);
         });
-        
-        // Map of ID to localized category name
-        const idToName: Record<number, string> = {
-          // Expense categories
-          1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
-          2: i18next.language === 'id' ? 'Makanan' : 'Food',
-          3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
-          4: i18next.language === 'id' ? 'Langganan' : 'Subscription',
-          5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
-          6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
-          7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
-          8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
-          9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
-          10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
-          11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
-          12: i18next.language === 'id' ? 'Lainnya' : 'Other',
-            
-          // Income categories
-          13: i18next.language === 'id' ? 'Gaji' : 'Salary',
-          14: i18next.language === 'id' ? 'Bisnis' : 'Business',
-          15: i18next.language === 'id' ? 'Investasi' : 'Investment',
-          16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
-          17: i18next.language === 'id' ? 'Lainnya' : 'Other',
-            
-          // System
-          18: i18next.language === 'id' ? 'Transfer' : 'Transfer',
-          
-          // Additional expense categories
-          19: i18next.language === 'id' ? 'Sedekah' : 'Donate',
-          20: i18next.language === 'id' ? 'Kebutuhan Bayi' : 'Baby Needs',
-          21: i18next.language === 'id' ? 'Investasi' : 'Investment'
-        };
-        
-        const displayName = idToName[numericId];
-        if (displayName) {
-          // Add to cache for future use
-          setCategoryNameCache(prev => ({...prev, [cacheKey]: displayName}));
-          return displayName;
-        }
-        
-        // If not in our standard mapping, check DEFAULT_CATEGORIES as fallback
-        const categoryType = (numericId <= 12 || numericId === 19 || numericId === 20 || numericId === 21) ? 'expense' :
-                             numericId <= 17 ? 'income' : 'system';
-                             
-        const defaultCategory = DEFAULT_CATEGORIES[categoryType].find(
-          cat => cat.id === String(numericId)
-        );
-        
-        if (defaultCategory) {
-          // Return localized name from default categories
-          if (i18next.language === 'id') {
-            const translations: Record<string, string> = {
-              "Groceries": "Belanjaan",
-              "Dining": "Makanan",
-              "Transportation": "Transportasi",
-              "Subscription": "Langganan", 
-              "Housing": "Perumahan",
-              "Entertainment": "Hiburan",
-              "Shopping": "Belanja",
-              "Health": "Kesehatan",
-              "Education": "Pendidikan",
-              "Travel": "Perjalanan",
-              "Personal": "Pribadi",
-              "Other": "Lainnya",
-              "Donate": "Sedekah",
-              "Salary": "Gaji",
-              "Business": "Bisnis",
-              "Investment": "Investasi",
-              "Gift": "Hadiah", 
-              "Transfer": "Transfer"
-            };
-            const translatedName = translations[defaultCategory.name] || defaultCategory.name;
-            setCategoryNameCache(prev => ({...prev, [cacheKey]: translatedName}));
-            return translatedName;
-          }
-          setCategoryNameCache(prev => ({...prev, [cacheKey]: defaultCategory.name}));
-          return defaultCategory.name;
-        }
-        
-        // For fallback, determine if it's expense or income based on the ID range
-        let fallbackName = '';
-        if (numericId <= 12 || numericId === 19 || numericId === 20 || numericId === 21) {
-          fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
-        } else if (numericId <= 17) {
-          fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Income';
-        } else if (numericId === 18) {
-          fallbackName = 'Transfer';
-        } else {
-          // For unknown IDs, default to expense
-          fallbackName = i18next.language === 'id' ? 'Lainnya' : 'Other Expense';
-        }
-        
-        setCategoryNameCache(prev => ({...prev, [cacheKey]: fallbackName}));
-        return fallbackName;
       }
-    }
-    
-    // If it's a transfer, always return "Transfer"
-    if (transaction.type === 'transfer') {
-      return t('transactions.transfer');
     }
     
     // Fallback: If we still have a category property (legacy), use that
@@ -1851,10 +1755,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       const sortedTransactions = [...transactions].map(t => {
         // Ensure categoryId is in string ID format for client-side use
         let categoryId = t.categoryId;
-        if (categoryId && categoryId.length > 30) {
+        if (categoryId && typeof categoryId === 'string' && categoryId.length > 30) {
           categoryId = getCategoryStringIdFromUuid(categoryId);
         } else if (!categoryId) {
-          categoryId = legacyCategoryNameToId(t.category || '', t.type, i18next);
+          categoryId = legacyCategoryNameToId(t.category || '', t.type);
         }
         
         return {

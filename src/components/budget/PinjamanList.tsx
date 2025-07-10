@@ -123,35 +123,37 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
         <motion.div
           key={item.id}
           variants={itemVariants}
-          className={`flex items-center p-3 rounded-md ${getDueDateStyling(item.due_date || '', item.is_settled)}`}
+          className={`flex flex-col sm:flex-row sm:items-center p-3 rounded-md space-y-3 sm:space-y-0 ${getDueDateStyling(item.due_date || '', item.is_settled)}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Checkbox
-            id={`pinjaman-${item.id}`}
-            checked={item.is_settled}
-            onCheckedChange={() => handleCheckChange(item)}
-            className="mr-3 border-gray-500 data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D] dark:border-gray-600 dark:data-[state=checked]:bg-blue-600 dark:data-[state=checked]:text-white"
-            aria-label={`Mark ${item.name} as settled`}
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-                <span className={`font-medium truncate ${item.is_settled ? 'line-through text-gray-500 dark:text-gray-400' : 'text-white dark:text-gray-100'}`}>
-                   {item.name}
+          <div className="flex items-center w-full sm:w-auto">
+            <Checkbox
+              id={`pinjaman-${item.id}`}
+              checked={item.is_settled}
+              onCheckedChange={() => handleCheckChange(item)}
+              className="mr-3 border-gray-500 data-[state=checked]:bg-[#C6FE1E] data-[state=checked]:text-[#0D0D0D] dark:border-gray-600 dark:data-[state=checked]:bg-blue-600 dark:data-[state=checked]:text-white"
+              aria-label={`Mark ${item.name} as settled`}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1 sm:space-y-0">
+                  <span className={`font-medium truncate ${item.is_settled ? 'line-through text-gray-500 dark:text-gray-400' : 'text-white dark:text-gray-100'}`}>
+                     {item.name}
+                  </span>
+                  <span className="text-sm font-semibold text-white dark:text-gray-200 sm:ml-2 flex-shrink-0">
+                     {formatCurrency(item.amount)}
+                  </span>
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
+                <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category?.toLowerCase() || 'utang'}`)}</span>
+                <span className="flex items-center gap-1">
+                   <Clock className="h-3 w-3 text-gray-400"/> 
+                   {formatDateString(item.due_date)}
                 </span>
-                <span className="text-sm font-semibold text-white dark:text-gray-200 ml-2 flex-shrink-0">
-                   {formatCurrency(item.amount)}
-                </span>
-            </div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1 items-center">
-              <span className="flex items-center gap-1">{getCategoryIcon(item.category)}{t(`budget.${item.category?.toLowerCase() || 'utang'}`)}</span>
-              <span className="flex items-center gap-1">
-                 <Clock className="h-3 w-3 text-gray-400"/> 
-                 {formatDateString(item.due_date)}
-              </span>
+              </div>
             </div>
           </div>
-          <div className="ml-2 flex items-center flex-shrink-0">
+          <div className="flex items-center justify-end w-full sm:w-auto sm:ml-2 flex-shrink-0">
              <Button
                 variant="ghost"
                 size="icon"
@@ -198,4 +200,4 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
   );
 };
 
-export default PinjamanList; 
+export default PinjamanList;
