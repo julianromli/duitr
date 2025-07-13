@@ -52,7 +52,7 @@ Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
       prompt = buildPrompt(summary);
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,10 +60,11 @@ Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.4,
-          topK: 32,
-          topP: 0.8,
-          maxOutputTokens: question ? 1024 : 2048,
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: question ? 2048 : 4096,
+          candidateCount: 1,
         },
         safetySettings: [
           {
@@ -72,6 +73,14 @@ Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
           },
           {
             category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
             threshold: "BLOCK_MEDIUM_AND_ABOVE"
           }
         ]
@@ -86,11 +95,34 @@ Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
     }
 
     const data = await response.json();
-    console.log('Gemini API response:', data);
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
     
-    const result = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "Gagal mendapatkan insight.";
+    // Better response validation
+    if (!data || !data.candidates || data.candidates.length === 0) {
+      console.error('No candidates in response:', data);
+      throw new Error('Tidak ada respons yang valid dari AI');
+    }
 
-    return new Response(JSON.stringify({ result }), {
+    const candidate = data.candidates[0];
+    if (!candidate || !candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+      console.error('Invalid candidate structure:', candidate);
+      throw new Error('Struktur respons AI tidak valid');
+    }
+
+    let result = candidate.content.parts[0].text;
+    
+    if (!result || result.trim().length === 0) {
+      console.error('Empty or null result from AI');
+      throw new Error('Respons AI kosong');
+    }
+
+    // Check if the response was blocked by safety filters
+    if (candidate.finishReason === 'SAFETY') {
+      console.error('Response blocked by safety filters');
+      result = "Maaf, tidak dapat memberikan analisis karena alasan keamanan. Silakan coba dengan data yang berbeda.";
+    }
+
+    return new Response(JSON.stringify({ result: result.trim() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

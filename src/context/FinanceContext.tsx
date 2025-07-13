@@ -252,7 +252,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         } else {
             setPinjamanItems(pinjamanRes.data.map(item => ({
                 id: item.id,
-                userId: item.user_id,
+                user_id: item.user_id,
                 name: item.name,
                 icon: item.icon,
                 category: item.category as 'Utang' | 'Piutang',
@@ -478,7 +478,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           finalCategoryId = 'system_transfer';
         } else if (transaction.category) {
           // Legacy fallback
-          finalCategoryId = legacyCategoryNameToId(transaction.category, transaction.type, i18next);
+          finalCategoryId = legacyCategoryNameToId(transaction.category);
         } else {
           // Default fallbacks
           finalCategoryId = transaction.type === 'income' ? 17 : 12; // Default to other
@@ -710,7 +710,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         const categoryId = updatedTransaction.categoryId || 
           (updatedTransaction.type === 'transfer' 
             ? 'system_transfer' 
-            : legacyCategoryNameToId(updatedTransaction.category || '', updatedTransaction.type, i18next));
+            : legacyCategoryNameToId(updatedTransaction.category || ''));
 
         // Convert string ID to integer for the database
         const dbCategoryId = getCategoryUuidFromStringId(typeof categoryId === 'string' ? categoryId : String(categoryId));
@@ -1540,7 +1540,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       const formattedItem: PinjamanItem = {
         id: data.id,
-        userId: data.user_id,
+        user_id: data.user_id,
         name: data.name,
         icon: data.icon,
         category: data.category,
@@ -1564,7 +1564,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       toast({ variant: 'destructive', title: 'Error', description: 'Authentication required.' });
       return;
     }
-    const { userId, created_at, ...updateData } = item;
+    const { user_id, created_at, ...updateData } = item;
 
     try {
       const { error } = await supabase
@@ -1758,7 +1758,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (categoryId && typeof categoryId === 'string' && categoryId.length > 30) {
           categoryId = getCategoryStringIdFromUuid(categoryId);
         } else if (!categoryId) {
-          categoryId = legacyCategoryNameToId(t.category || '', t.type);
+          categoryId = legacyCategoryNameToId(t.category || '');
         }
         
         return {
