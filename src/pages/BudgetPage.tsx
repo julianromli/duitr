@@ -259,55 +259,78 @@ const BudgetPage: React.FC = () => {
 
   return (
     <motion.div 
-      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-4"
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-2"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <div className="p-6 pt-12">
-        {/* Header with back button */}
+      <div className="p-4 pt-12">
+        {/* Enhanced Header with improved visual hierarchy */}
         <motion.div 
-          className="flex items-center justify-between mb-6"
+          className="flex items-center justify-between mb-8"
           variants={itemVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate('/')} className="mr-4">
+            <motion.button 
+              onClick={() => navigate('/')} 
+              className="mr-4 p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <ChevronLeft size={24} className="text-white" />
-            </button>
-            <h1 className="text-xl font-bold">
-              <AnimatedText 
-                text={t('budgets.title')} 
-                animationType="slide" 
-                duration={0.3}
-              />
-            </h1>
+            </motion.button>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                <AnimatedText 
+                  text={t('budgets.title')} 
+                  animationType="slide" 
+                  duration={0.3}
+                />
+              </h1>
+            </div>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] rounded-full h-10 w-10 p-0 flex items-center justify-center">
-                <PlusCircle size={20} />
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button className="bg-gradient-to-r from-[#C6FE1E] to-[#A8E016] hover:from-[#B0E018] hover:to-[#98D014] text-[#0D0D0D] rounded-full h-12 w-12 p-0 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-[#C6FE1E]/20">
+                  <PlusCircle size={22} className="drop-shadow-sm" />
+                </Button>
+              </motion.div>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-white">
+            <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-white/10 text-white backdrop-blur-xl shadow-2xl">
+              <DialogHeader className="pb-6">
+                <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
+                  <div className="p-2 bg-[#C6FE1E]/10 rounded-full">
+                    <PlusCircle className="h-6 w-6 text-[#C6FE1E]" />
+                  </div>
                   <AnimatedText 
                     text={t('budgets.create_new_budget')}
                     animationType="fade"
                   />
                 </DialogTitle>
+                <p className="text-sm text-gray-400 mt-2">
+                  <AnimatedText 
+                    text={t('budgets.create_description', 'Set spending limits for your categories')}
+                    animationType="fade"
+                    duration={0.4}
+                  />
+                </p>
               </DialogHeader>
               
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="category" className="text-[#868686]">
+              <div className="grid gap-6 py-4">
+                <div className="space-y-3">
+                  <Label htmlFor="category" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                    <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
                     <AnimatedText text={t('transactions.category')} />
                   </Label>
                   <Select
                     value={newBudget.category}
                     onValueChange={(value) => handleSelectChange('category', value)}
                   >
-                    <SelectTrigger className="bg-[#242425] border-0 text-white">
+                    <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
                       <SelectValue>
                         <AnimatedText 
                           text={newBudget.category ? 
@@ -318,14 +341,14 @@ const BudgetPage: React.FC = () => {
                         />
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-[#242425] border-0 text-white">
+                    <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
                       {isLoadingCategories ? (
                         <SelectItem value="loading" disabled>
                           <AnimatedText text="Loading categories..." />
                         </SelectItem>
                       ) : (
                         expenseCategories.map((option) => (
-                          <SelectItem key={option.key} value={option.key} className="hover:bg-[#333] focus:bg-[#333]">
+                          <SelectItem key={option.key} value={option.key} className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
                             <AnimatedText text={option.label} animationType="fade" />
                           </SelectItem>
                         ))
@@ -334,8 +357,9 @@ const BudgetPage: React.FC = () => {
                   </Select>
                 </div>
                 
-                <div className="grid gap-2">
-                  <Label htmlFor="amount" className="text-[#868686]">
+                <div className="space-y-3">
+                  <Label htmlFor="amount" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                    <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
                     <AnimatedText text={t('transactions.amount')} />
                   </Label>
                   <FormattedInput
@@ -345,19 +369,20 @@ const BudgetPage: React.FC = () => {
                     value={newBudget.amount}
                     onChange={handleAmountChange}
                     onValueChange={handleAmountValueChange}
-                    className="bg-[#242425] border-0 text-white"
+                    className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
                   />
                 </div>
                 
-                <div className="grid gap-2">
-                  <Label htmlFor="period" className="text-[#868686]">
+                <div className="space-y-3">
+                  <Label htmlFor="period" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                    <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
                     <AnimatedText text={t('budgets.period')} />
                   </Label>
                   <Select
                     value={newBudget.period}
                     onValueChange={(value) => handleSelectChange('period', value as 'monthly' | 'weekly' | 'yearly')}
                   >
-                    <SelectTrigger className="bg-[#242425] border-0 text-white">
+                    <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
                       <SelectValue>
                         <AnimatedText 
                           text={
@@ -369,14 +394,14 @@ const BudgetPage: React.FC = () => {
                         />
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-[#242425] border-0 text-white">
-                      <SelectItem value="weekly" className="hover:bg-[#333] focus:bg-[#333]">
+                    <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
+                      <SelectItem value="weekly" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
                         <AnimatedText text={t('budgets.weekly')} />
                       </SelectItem>
-                      <SelectItem value="monthly" className="hover:bg-[#333] focus:bg-[#333]">
+                      <SelectItem value="monthly" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
                         <AnimatedText text={t('budgets.monthly')} />
                       </SelectItem>
-                      <SelectItem value="yearly" className="hover:bg-[#333] focus:bg-[#333]">
+                      <SelectItem value="yearly" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
                         <AnimatedText text={t('budgets.yearly')} />
                       </SelectItem>
                     </SelectContent>
@@ -384,13 +409,32 @@ const BudgetPage: React.FC = () => {
                 </div>
               </div>
               
-              <DialogFooter className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full border-[#333] hover:bg-[#333] text-white">
-                  <AnimatedText text={t('buttons.cancel')} />
-                </Button>
-                <Button onClick={handleCreateBudget} className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
-                  <AnimatedText text={t('buttons.create')} />
-                </Button>
+              <DialogFooter className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-6">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full"
+                >
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(false)} 
+                    className="w-full h-12 border border-white/20 hover:bg-white/5 text-white rounded-xl transition-all duration-200 font-medium"
+                  >
+                    <AnimatedText text={t('buttons.cancel')} />
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full"
+                >
+                  <Button 
+                    onClick={handleCreateBudget} 
+                    className="w-full h-12 bg-gradient-to-r from-[#C6FE1E] to-[#A8E016] hover:from-[#B0E018] hover:to-[#98D014] text-[#0D0D0D] font-semibold border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <AnimatedText text={t('buttons.create')} />
+                  </Button>
+                </motion.div>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -407,48 +451,64 @@ const BudgetPage: React.FC = () => {
         
         {/* Want to Buy Section */}
         <motion.div variants={itemVariants} className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">
-              <AnimatedText 
-                text={t('budget.wantToBuyTitle')}
-                animationType="fade"
-              />
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#C6FE1E] hover:bg-gray-700/50"
-              onClick={() => handleOpenWantToBuyForm()}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-6 bg-gradient-to-b from-[#C6FE1E] to-[#A8E016] rounded-full"></div>
+              <h2 className="text-xl font-bold text-white">
+                <AnimatedText 
+                  text={t('budget.wantToBuyTitle')}
+                  animationType="fade"
+                />
+              </h2>
+            </div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">
-                <AnimatedText text={t('budget.addWantToBuy')} />
-              </span>
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-[#C6FE1E] hover:bg-[#C6FE1E]/10 rounded-full h-10 w-10 transition-all duration-200"
+                onClick={() => handleOpenWantToBuyForm()}
+              >
+                <PlusCircle className="h-5 w-5" />
+                <span className="sr-only">
+                  <AnimatedText text={t('budget.addWantToBuy')} />
+                </span>
+              </Button>
+            </motion.div>
           </div>
           <WantToBuyList onEditItem={handleOpenWantToBuyForm} />
         </motion.div>
 
         {/* Pinjaman Section */}
         <motion.div variants={itemVariants} className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">
-              <AnimatedText 
-                text={t('budget.pinjamanTitle')}
-                animationType="fade"
-              />
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#C6FE1E] hover:bg-gray-700/50"
-              onClick={() => handleOpenPinjamanForm()}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-6 bg-gradient-to-b from-[#C6FE1E] to-[#A8E016] rounded-full"></div>
+              <h2 className="text-xl font-bold text-white">
+                <AnimatedText 
+                  text={t('budget.pinjamanTitle')}
+                  animationType="fade"
+                />
+              </h2>
+            </div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">
-                <AnimatedText text={t('budget.addPinjaman')} />
-              </span>
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-[#C6FE1E] hover:bg-[#C6FE1E]/10 rounded-full h-10 w-10 transition-all duration-200"
+                onClick={() => handleOpenPinjamanForm()}
+              >
+                <PlusCircle className="h-5 w-5" />
+                <span className="sr-only">
+                  <AnimatedText text={t('budget.addPinjaman')} />
+                </span>
+              </Button>
+            </motion.div>
           </div>
           <PinjamanList onEditItem={handleOpenPinjamanForm} />
         </motion.div>

@@ -186,8 +186,8 @@ const Dashboard: React.FC = () => {
     }
   };
   return <>
-      <motion.div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-4" initial="hidden" animate="visible" variants={containerVariants}>
-        <div className="p-6 relative">
+      <motion.div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-2" initial="hidden" animate="visible" variants={containerVariants}>
+        <div className="p-4 relative">
 
           
           {/* Balance Card */}
