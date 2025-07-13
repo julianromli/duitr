@@ -23,18 +23,13 @@ import EditCategoryPage from '@/pages/EditCategoryPage';
 import SupabaseTestPage from '@/pages/SupabaseTestPage';
 import { TestDatePicker } from '@/components/ui/test-date-picker';
 import LoginButtonTest from '@/components/test/LoginButtonTest';
-import EvaluatePage from '@/features/ai-evaluator/EvaluatePage';
 
-export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics', '/ai'];
+export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics'];
 
 export const protectedRoutes = [
   {
     path: '/',
     element: <Dashboard />
-  },
-  {
-    path: '/ai',
-    element: <EvaluatePage />
   },
   {
     path: '/transactions',
