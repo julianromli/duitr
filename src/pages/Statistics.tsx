@@ -20,8 +20,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Transaction } from '@/types/finance';
+import EvaluateContent from '@/features/ai-evaluator/EvaluateContent';
 
-type TabType = 'income' | 'outcome';
+type TabType = 'income' | 'outcome' | 'analysis';
 
 // Define interface for grouped category data
 interface CategoryTotal {
@@ -199,7 +200,7 @@ const Statistics: React.FC = () => {
 
   return (
     <motion.div 
-      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-4"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -315,115 +316,133 @@ const Statistics: React.FC = () => {
           </Popover>
         </motion.div>
         
-        {/* Tab buttons for Income/Expense */}
+        {/* Tab buttons for Income/Expense/Analysis */}
         <motion.div 
           className="mb-6"
           variants={itemVariants}
         >
           <div className="flex bg-[#242425] rounded-full p-1">
             <motion.button
-              className={`flex-1 py-2 text-center rounded-full ${activeTab === 'outcome' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              className={`flex-1 py-2 text-center rounded-full text-sm ${activeTab === 'outcome' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
               onClick={() => handleTabChange('outcome')}
               whileTap={{ scale: 0.98 }}
             >
               {t('statistics.expense')}
             </motion.button>
             <motion.button
-              className={`flex-1 py-2 text-center rounded-full ${activeTab === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              className={`flex-1 py-2 text-center rounded-full text-sm ${activeTab === 'income' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
               onClick={() => handleTabChange('income')}
               whileTap={{ scale: 0.98 }}
             >
               {t('statistics.income')}
             </motion.button>
+            <motion.button
+              className={`flex-1 py-2 text-center rounded-full text-sm ${activeTab === 'analysis' ? 'bg-[#C6FE1E] text-[#0D0D0D] font-medium' : 'text-white'}`}
+              onClick={() => handleTabChange('analysis')}
+              whileTap={{ scale: 0.98 }}
+            >
+              Analisa
+            </motion.button>
           </div>
         </motion.div>
         
-        {/* Chart Section */}
-        {filteredTransactions.length > 0 ? (
-          <>
-            <motion.div 
-              className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
-              variants={chartVariants}
-              key={`chart-${activeTab}`}
-            >
-              <div className="h-[220px] w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={90}
-                      paddingAngle={0}
-                      dataKey="value"
-                      strokeWidth={0}
-                      animationBegin={300}
-                      animationDuration={800}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}-${activeTab}`} 
-                          fill={COLORS[index % COLORS.length]} 
-                        />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                
-                {/* Center Text */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                  <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
-                  <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="mt-8" 
-              variants={itemVariants}
-              key={`breakdown-${activeTab}`}
-            >
-              <h3 className="text-lg font-bold mb-4">
-                {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
-              </h3>
-              <div className="space-y-3">
-                {chartData.map((category, index) => (
-                  <motion.div 
-                    key={`${category.name}-${index}-${activeTab}`}
-                    className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 + (index * 0.05) }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div>
-                      <span className="font-medium">{category.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium">{formatCurrency(category.value)}</span>
-                      <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
-                        backgroundColor: COLORS[index % COLORS.length]
-                      }}>
-                        {category.percentage}%
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        ) : (
+        {/* Content Section */}
+        {activeTab === 'analysis' ? (
           <motion.div 
-            className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            key="no-data"
+            className="-mx-6 -mb-6"
+            variants={itemVariants}
+            key="analysis-content"
           >
-            <p className="text-[#868686]">{t('statistics.noData')}</p>
+            <EvaluateContent />
           </motion.div>
+        ) : (
+          /* Chart Section */
+          filteredTransactions.length > 0 ? (
+            <>
+              <motion.div 
+                className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
+                variants={chartVariants}
+                key={`chart-${activeTab}`}
+              >
+                <div className="h-[220px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={90}
+                        paddingAngle={0}
+                        dataKey="value"
+                        strokeWidth={0}
+                        animationBegin={300}
+                        animationDuration={800}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}-${activeTab}`} 
+                            fill={COLORS[index % COLORS.length]} 
+                          />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Center Text */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                    <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
+                    <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
+                  </div>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                className="mt-8" 
+                variants={itemVariants}
+                key={`breakdown-${activeTab}`}
+              >
+                <h3 className="text-lg font-bold mb-4">
+                  {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
+                </h3>
+                <div className="space-y-3">
+                  {chartData.map((category, index) => (
+                    <motion.div 
+                      key={`${category.name}-${index}-${activeTab}`}
+                      className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + (index * 0.05) }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div>
+                        <span className="font-medium">{category.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium">{formatCurrency(category.value)}</span>
+                        <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
+                          backgroundColor: COLORS[index % COLORS.length]
+                        }}>
+                          {category.percentage}%
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            <motion.div 
+              className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              key="no-data"
+            >
+              <p className="text-[#868686]">{t('statistics.noData')}</p>
+            </motion.div>
+          )
         )}
       </div>
     </motion.div>

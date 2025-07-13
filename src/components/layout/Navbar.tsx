@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, CreditCard, Wallet, BarChart3, PieChart, User, Sparkles } from 'lucide-react';
+import { Home, CreditCard, Wallet, BarChart3, PieChart, User } from 'lucide-react';
 import { LimelightNav, NavItem } from '@/components/ui/limelight-nav';
 
 const Navbar: React.FC = () => {
@@ -18,7 +18,6 @@ const Navbar: React.FC = () => {
     { id: 'wallets', icon: <Wallet />, label: 'Wallets', onClick: () => navigate('/wallets') },
     { id: 'statistics', icon: <BarChart3 />, label: 'Statistics', onClick: () => navigate('/statistics') },
     { id: 'budget', icon: <PieChart />, label: 'Budget', onClick: () => navigate('/budget') },
-    { id: 'ai', icon: <Sparkles />, label: 'AI', onClick: () => navigate('/ai') },
     { id: 'profile', icon: <User />, label: 'Profile', onClick: () => navigate('/profile') },
   ];
 
@@ -28,8 +27,7 @@ const Navbar: React.FC = () => {
     '/wallets': 2,
     '/statistics': 3,
     '/budget': 4,
-    '/ai': 5,
-    '/profile': 6,
+    '/profile': 5,
   };
 
   const activeIndex = pathToIndex[location.pathname as keyof typeof pathToIndex] ?? 0;
