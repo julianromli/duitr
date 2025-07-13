@@ -193,12 +193,12 @@ const ProfilePage: React.FC = () => {
 
   return (
     <motion.div
-      className="max-w-md mx-auto bg-background min-h-screen pb-24 text-foreground px-4"
+      className="max-w-md mx-auto bg-background min-h-screen pb-24 text-foreground px-2"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <div className="p-6 pt-12">
+      <div className="p-4 pt-12">
         {/* Header */}
         <motion.div 
           className="mb-6 flex items-center justify-between"

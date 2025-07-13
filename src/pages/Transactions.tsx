@@ -53,13 +53,13 @@ const Transactions: React.FC = () => {
   
   return (
     <motion.div 
-      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-4"
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-2"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
     
-    <div className="p-6 pt-12">
+    <div className="p-4 pt-12">
         <motion.div 
           className="flex items-center justify-between mb-6"
           variants={itemVariants}

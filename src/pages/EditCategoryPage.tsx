@@ -359,7 +359,8 @@ const EditCategoryPage: React.FC = () => {
   };
   
   return (
-    <div className="flex-1 bg-[#1C2526] p-5 min-h-screen pb-24">
+    <div className="max-w-md mx-auto bg-[#1C2526] min-h-screen pb-24 text-white px-2">
+      <div className="p-6 pt-12">
       <div className="flex items-center mb-6">
         <button onClick={() => navigate('/')} className="mr-4">
           <ChevronLeft size={24} className="text-white" />
@@ -561,6 +562,7 @@ const EditCategoryPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 };

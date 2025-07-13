@@ -157,7 +157,7 @@ const EvaluateContent: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-6">
       {/* Date Selection */}
       <motion.div variants={itemVariants}>
         <Card className="border-[#242425]">
