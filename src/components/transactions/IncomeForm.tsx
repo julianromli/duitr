@@ -189,7 +189,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               value={formData.description}
               onChange={handleChange}
               required
-              maxLength={200}
               className="bg-[#242425] border-0 text-white"
             />
           </div>

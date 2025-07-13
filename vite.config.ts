@@ -37,7 +37,7 @@ export default defineConfig(({ mode, command }) => ({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         sourcemap: true,
-        swDest: 'dist/sw.js',
+        swDest: mode === 'production' ? 'dist/sw.js' : undefined,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
