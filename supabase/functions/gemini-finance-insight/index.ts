@@ -60,10 +60,10 @@ Berikan jawaban yang helpful dan actionable dalam 1-2 paragraf:
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: question ? 512 : 1024,
+          temperature: 0.4,
+          topK: 32,
+          topP: 0.8,
+          maxOutputTokens: question ? 1024 : 2048,
         },
         safetySettings: [
           {
