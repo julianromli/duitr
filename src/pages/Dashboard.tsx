@@ -158,6 +158,7 @@ const Dashboard: React.FC = () => {
       window.removeEventListener('profileImageUpdated', handleProfileImageUpdate);
     };
   }, [user]);
+  // Enhanced animation variants for better reveal effects
   const containerVariants = {
     hidden: {
       opacity: 0
@@ -166,11 +167,32 @@ const Dashboard: React.FC = () => {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1
+        staggerChildren: 0.15,
+        delayChildren: 0.1
       }
     }
   };
-  const itemVariants = {
+
+  const balanceCardVariants = {
+    hidden: {
+      y: 30,
+      opacity: 0,
+      scale: 0.95
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+        duration: 0.6
+      }
+    }
+  };
+
+  const actionButtonsVariants = {
     hidden: {
       y: 20,
       opacity: 0
@@ -180,8 +202,65 @@ const Dashboard: React.FC = () => {
       opacity: 1,
       transition: {
         type: "spring",
-        stiffness: 300,
-        damping: 24
+        stiffness: 400,
+        damping: 30,
+        delay: 0.2
+      }
+    }
+  };
+
+  const transactionSectionVariants = {
+    hidden: {
+      y: 25,
+      opacity: 0
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 28,
+        delay: 0.3,
+        staggerChildren: 0.1,
+        delayChildren: 0.4
+      }
+    }
+  };
+
+  const transactionItemVariants = {
+    hidden: {
+      x: -20,
+      opacity: 0,
+      scale: 0.95
+    },
+    visible: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    }
+  };
+
+  const buttonHoverVariants = {
+    hover: {
+      scale: 1.05,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: {
+      scale: 0.95,
+      transition: {
+        type: "spring",
+        stiffness: 600,
+        damping: 15
       }
     }
   };
@@ -191,7 +270,7 @@ const Dashboard: React.FC = () => {
 
           
           {/* Balance Card */}
-          <motion.div className="bg-[#C6FE1E] rounded-3xl p-5 mb-6 mt-8 dark:bg-[#C6FE1E] light:bg-[#C6FE1E]" variants={itemVariants}>
+          <motion.div className="bg-[#C6FE1E] rounded-3xl p-5 mb-6 mt-8 dark:bg-[#C6FE1E] light:bg-[#C6FE1E]" variants={balanceCardVariants}>
             {/* Card Header with Profile */}
             <div className="flex justify-between items-center mb-3">
               <Link to="/profile" className="flex items-center gap-3 flex-grow group">
@@ -230,23 +309,15 @@ const Dashboard: React.FC = () => {
           </motion.div>
 
           {/* Action Buttons - Horizontal layout */}
-          <motion.div className="flex gap-3 mb-6" variants={itemVariants}>
-            <motion.button whileHover={{
-            scale: 1.05
-          }} whileTap={{
-            scale: 0.95
-          }} onClick={openTransferForm} className="flex-1 text-white py-4 px-4 rounded-full flex items-center justify-center gap-2 bg-[#1364ff]">
+          <motion.div className="flex gap-3 mb-6" variants={actionButtonsVariants}>
+            <motion.button variants={buttonHoverVariants} whileHover="hover" whileTap="tap" onClick={openTransferForm} className="flex-1 text-white py-4 px-4 rounded-full flex items-center justify-center gap-2 bg-[#1364ff]">
               <ArrowLeftRight className="text-white" size={18} />
               <span className="font-bold text-base">{t('transactions.transfer')}</span>
             </motion.button>
             
             <Dialog open={isAddMoneyOpen} onOpenChange={setIsAddMoneyOpen}>
               <DialogTrigger asChild>
-                <motion.button className="flex-1 bg-[#1364FF] text-white py-4 px-4 rounded-full flex items-center justify-center gap-2" whileHover={{
-                scale: 1.05
-              }} whileTap={{
-                scale: 0.95
-              }}>
+                <motion.button className="flex-1 bg-[#1364FF] text-white py-4 px-4 rounded-full flex items-center justify-center gap-2" variants={buttonHoverVariants} whileHover="hover" whileTap="tap">
                   <Plus className="text-white" size={18} />
                   <span className="font-bold text-base">{t('transactions.add_money')}</span>
                 </motion.button>
@@ -276,7 +347,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
 
           {/* Transactions Section */}
-          <motion.div variants={itemVariants} className="mb-6">
+          <motion.div variants={transactionSectionVariants} className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white text-lg font-semibold">{t('transactions.title')}</h3>
               <button className="text-[#C6FE1E] text-sm" onClick={navigateToTransactions}>
@@ -284,11 +355,20 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
             
-            <div className="space-y-3 text-white">
-              {recentTransactions.map(transaction => <motion.div key={transaction.id} className="flex items-center justify-between bg-[#242425] p-4 rounded-xl cursor-pointer" onClick={() => handleTransactionClick(transaction)} whileHover={{
-              scale: 1.02
+            <motion.div className="space-y-3 text-white" initial="hidden" animate="visible" variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.1,
+                  delayChildren: 0.2
+                }
+              }
+            }}>
+              {recentTransactions.map(transaction => <motion.div key={transaction.id} className="flex items-center justify-between bg-[#242425] p-4 rounded-xl cursor-pointer" onClick={() => handleTransactionClick(transaction)} variants={transactionItemVariants} whileHover={{
+              scale: 1.02,
+              transition: { type: "spring", stiffness: 400, damping: 10 }
             }} whileTap={{
-              scale: 0.98
+              scale: 0.98,
+              transition: { type: "spring", stiffness: 600, damping: 15 }
             }}>
                   <div className="flex items-center gap-4">
                     <CategoryIcon category={transaction.categoryId || transaction.category} size="md" />
@@ -303,10 +383,10 @@ const Dashboard: React.FC = () => {
                     {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
                   </p>
                 </motion.div>)}
-              {recentTransactions.length === 0 && <div className="text-center py-5 text-[#868686]">
+              {recentTransactions.length === 0 && <motion.div className="text-center py-5 text-[#868686]" variants={transactionItemVariants}>
                   {t('transactions.no_transactions')}
-                </div>}
-            </div>
+                </motion.div>}
+            </motion.div>
           </motion.div>
         </div>
         

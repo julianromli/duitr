@@ -179,15 +179,84 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Animation variants
+  // Enhanced Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { delay: 0.1, duration: 0.3 } }
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
   };
 
-  const itemVariants = {
+  const headerVariants = {
+    hidden: { y: -30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        duration: 0.6
+      }
+    }
+  };
+
+  const profileVariants = {
+    hidden: { scale: 0.8, opacity: 0, y: 30 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 20,
+        duration: 0.8
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { y: 40, opacity: 0, scale: 0.95 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+        duration: 0.7
+      }
+    }
+  };
+
+  const buttonVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        duration: 0.5
+      }
+    },
+    hover: {
+      scale: 1.02,
+      transition: { duration: 0.2 }
+    },
+    tap: {
+      scale: 0.98,
+      transition: { duration: 0.1 }
+    }
   };
 
 
@@ -202,26 +271,47 @@ const ProfilePage: React.FC = () => {
         {/* Header */}
         <motion.div 
           className="mb-6 flex items-center justify-between"
-          variants={itemVariants}
+          variants={headerVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate(-1)} className="mr-4 text-foreground">
+            <motion.button 
+              onClick={() => navigate(-1)} 
+              className="mr-4 text-foreground"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
               <ChevronLeft size={24} />
-            </button>
-            <h1 className="text-xl font-bold">{t('settings.profile')}</h1>
+            </motion.button>
+            <motion.h1 
+              className="text-xl font-bold"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              {t('settings.profile')}
+            </motion.h1>
           </div>
         </motion.div>
 
         {/* Profile Header */}
         <motion.div
           className="flex flex-col items-center justify-center mb-8"
-          variants={itemVariants}
+          variants={profileVariants}
         >
-          <div className="relative mb-4">
-            <div
+          <motion.div 
+            className="relative mb-4"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <motion.div
               className="relative cursor-pointer"
               onClick={handleProfileImageClick}
               title={profileImage ? t('settings.viewProfileImage') : ''}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
               <Avatar className="h-24 w-24 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary">
                 {profileImage ? (
@@ -233,18 +323,26 @@ const ProfilePage: React.FC = () => {
                 )}
               </Avatar>
               {profileImage && (
-                <div className="absolute bottom-0 left-0 bg-black/50 w-full p-1 flex justify-center rounded-b-full">
+                <motion.div 
+                  className="absolute bottom-0 left-0 bg-black/50 w-full p-1 flex justify-center rounded-b-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
                   <ZoomIn size={14} className="text-white" />
-                </div>
+                </motion.div>
               )}
-            </div>
+            </motion.div>
             <motion.button
               className="absolute bottom-0 right-0 bg-primary text-primary-foreground p-2 rounded-full shadow-md"
               onClick={triggerFileInput}
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.2, rotate: 15 }}
               whileTap={{ scale: 0.9 }}
               disabled={isUploadingImage}
               title={t('settings.changeProfileImage')}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.7, type: "spring", stiffness: 400, damping: 20 }}
             >
               <Camera size={16} />
             </motion.button>
@@ -255,10 +353,24 @@ const ProfilePage: React.FC = () => {
               className="hidden"
               accept="image/*"
             />
-          </div>
+          </motion.div>
 
-          <h2 className="text-xl font-bold">{userProfile.username}</h2>
-          <p className="text-muted-foreground">{userProfile.email}</p>
+          <motion.h2 
+            className="text-xl font-bold"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            {userProfile.username}
+          </motion.h2>
+          <motion.p 
+            className="text-muted-foreground"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            {userProfile.email}
+          </motion.p>
         </motion.div>
 
         {/* Profile Image View Modal */}
@@ -280,80 +392,148 @@ const ProfilePage: React.FC = () => {
         </Dialog>
 
         {/* Profile Info Card */}
-        <motion.div variants={itemVariants} className="space-y-6">
-          <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
-            <CardContent className="p-5 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-muted-foreground">{t('settings.username')}</Label>
-                <Input
-                  id="username"
-                  value={userProfile.username}
-                  onChange={(e) => setUserProfile({...userProfile, username: e.target.value})}
-                  className="bg-input border-none text-foreground rounded-lg focus:ring-2 focus:ring-ring"
-                />
-              </div>
+        <motion.div 
+          className="space-y-6"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.3
+              }
+            }
+          }}
+        >
+          <motion.div variants={cardVariants}>
+            <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+              <CardContent className="p-5 space-y-4">
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                >
+                  <Label htmlFor="username" className="text-muted-foreground">{t('settings.username')}</Label>
+                  <Input
+                    id="username"
+                    value={userProfile.username}
+                    onChange={(e) => setUserProfile({...userProfile, username: e.target.value})}
+                    className="bg-input border-none text-foreground rounded-lg focus:ring-2 focus:ring-ring"
+                  />
+                </motion.div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-muted-foreground">{t('settings.email')}</Label>
-                <Input
-                  id="email"
-                  value={userProfile.email}
-                  readOnly
-                  className="bg-input border-none text-foreground opacity-70 rounded-lg"
-                />
-              </div>
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.9, duration: 0.5 }}
+                >
+                  <Label htmlFor="email" className="text-muted-foreground">{t('settings.email')}</Label>
+                  <Input
+                    id="email"
+                    value={userProfile.email}
+                    readOnly
+                    className="bg-input border-none text-foreground opacity-70 rounded-lg"
+                  />
+                </motion.div>
 
-              <Button
-                onClick={handleProfileSave}
-                disabled={isSaving}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold"
-              >
-                {isSaving ? t('settings.saving') : t('settings.saveProfile')}
-              </Button>
-            </CardContent>
-          </Card>
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0, duration: 0.5 }}
+                >
+                  <Button
+                    onClick={handleProfileSave}
+                    disabled={isSaving}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold"
+                  >
+                    {isSaving ? t('settings.saving') : t('settings.saveProfile')}
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Category Management Section */}
-          <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
-            <CardContent className="p-5">
-              <CategoryManagement />
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
-            <CardContent className="p-5 space-y-4">
-              {/* Logout Button */}
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full bg-transparent border border-red-500 text-red-500 hover:bg-red-500/10 rounded-lg font-semibold"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                {t('settings.logout')}
-              </Button>
-              
-              {/* Donate Button */}
-              <Button
-                onClick={handleDonateClick}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border border-border mt-4 rounded-lg font-semibold"
-                aria-label="Donate to Developer via Saweria"
-              >
-                <Heart className="mr-2 h-4 w-4" />Support the Author<Heart className="ml-2 h-4 w-4" />
-              </Button>
-              
-              {/* Copyright Text */}
-              <div className="text-center mt-4 text-xs text-muted-foreground">
-                Made by{" "}
-                <button 
-                  onClick={handleInstagramClick}
-                  className="text-muted-foreground hover:text-primary underline focus:outline-none"
-                  aria-label="Visit Faiz Intifada's Instagram"
+          <motion.div variants={cardVariants}>
+            <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+              <CardContent className="p-5">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.1, duration: 0.6 }}
                 >
-                  Faiz Intifada
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+                  <CategoryManagement />
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={cardVariants}>
+            <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+              <CardContent className="p-5 space-y-4">
+                {/* Logout Button */}
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2, duration: 0.5 }}
+                >
+                  <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    className="w-full bg-transparent border border-red-500 text-red-500 hover:bg-red-500/10 rounded-lg font-semibold"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('settings.logout')}
+                  </Button>
+                </motion.div>
+                
+                {/* Donate Button */}
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.3, duration: 0.5 }}
+                >
+                  <Button
+                    onClick={handleDonateClick}
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border border-border mt-4 rounded-lg font-semibold"
+                    aria-label="Donate to Developer via Saweria"
+                  >
+                    <Heart className="mr-2 h-4 w-4" />Support the Author<Heart className="ml-2 h-4 w-4" />
+                  </Button>
+                </motion.div>
+                
+                {/* Copyright Text */}
+                <motion.div 
+                  className="text-center mt-4 text-xs text-muted-foreground"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.4, duration: 0.5 }}
+                >
+                  Made by{" "}
+                  <motion.button 
+                    onClick={handleInstagramClick}
+                    className="text-muted-foreground hover:text-primary underline focus:outline-none"
+                    aria-label="Visit Faiz Intifada's Instagram"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Faiz Intifada
+                  </motion.button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       </div>
     </motion.div>

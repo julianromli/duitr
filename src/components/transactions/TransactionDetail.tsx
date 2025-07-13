@@ -224,28 +224,104 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
     }
   };
   
+  // Animation variants for reveal effects
+  const containerVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.95
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25,
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: {
+      y: 20,
+      opacity: 0
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    }
+  };
+
+  const buttonVariants = {
+    hidden: {
+      y: 10,
+      opacity: 0
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 30
+      }
+    },
+    hover: {
+      scale: 1.02,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: {
+      scale: 0.98,
+      transition: {
+        type: "spring",
+        stiffness: 600,
+        damping: 15
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md bg-[#1A1A1A] border-none text-white">
-        <DialogHeader className="pb-3">
-          <DialogTitle className="text-xl font-bold">
-            {t('transactions.details') || "Transaction Details"}
-          </DialogTitle>
-          {!isEditing && (
-            <button 
-              onClick={() => setIsEditing(true)} 
-              className="absolute right-14 top-6 rounded-full p-2 bg-[#242425] text-[#868686] hover:text-[#C6FE1E] transition-colors"
-              aria-label={t('common.edit')}
-            >
-              <Pencil size={20} />
-            </button>
-          )}
-        </DialogHeader>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+        <motion.div variants={itemVariants}>
+          <DialogHeader className="pb-3">
+            <DialogTitle className="text-xl font-bold">
+              {t('transactions.details') || "Transaction Details"}
+            </DialogTitle>
+            {!isEditing && (
+              <motion.button 
+                onClick={() => setIsEditing(true)} 
+                className="absolute right-14 top-6 rounded-full p-2 bg-[#242425] text-[#868686] hover:text-[#C6FE1E] transition-colors"
+                aria-label={t('common.edit')}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Pencil size={20} />
+              </motion.button>
+            )}
+          </DialogHeader>
+        </motion.div>
         
-        <div className="mt-4">
+        <motion.div className="mt-4" variants={itemVariants}>
           {/* Amount */}
           {isEditing ? (
-            <div className="mb-4">
+            <motion.div className="mb-4" variants={itemVariants}>
               <Label htmlFor="amount" className="text-[#868686] mb-1 block">
                 {t('transactions.amount')}
               </Label>
@@ -256,19 +332,19 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                 onValueChange={handleAmountValueChange}
                 className="bg-[#242425] border-0 text-white"
               />
-            </div>
+            </motion.div>
           ) : (
-            <div className="flex items-center justify-between mb-4">
+            <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
               <span className="text-[#868686]">{t('transactions.amount')}</span>
               <span className={`text-xl font-bold ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
                 {formatCurrency(transaction.amount)}
               </span>
-            </div>
+            </motion.div>
           )}
           
           {/* Category */}
           {isEditing && transaction.type !== 'transfer' ? (
-            <div className="mb-4">
+            <motion.div className="mb-4" variants={itemVariants}>
               <Label htmlFor="category" className="text-[#868686] mb-1 block">
                 {t('transactions.category')}
               </Label>
@@ -289,25 +365,25 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                       <div className="flex items-center">
                         <CategoryIcon category={String(category.id)} size="sm" />
                         <span className="ml-2">{category.name}</span>
-                      </div>
+                      </motion.div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </motion.div>
           ) : (
-            <div className="flex items-center justify-between mb-4">
+            <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
               <span className="text-[#868686]">{t('transactions.category')}</span>
               <div className="flex items-center">
                 <CategoryIcon category={transaction.categoryId} size="sm" />
                 <span className="ml-2">{getDisplayCategoryName(transaction)}</span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
           
           {/* Wallet */}
           {isEditing ? (
-            <div className="mb-4">
+            <motion.div className="mb-4" variants={itemVariants}>
               <Label htmlFor="wallet" className="text-[#868686] mb-1 block">
                 {t('transactions.wallet')}
               </Label>
@@ -330,17 +406,17 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </motion.div>
           ) : (
-            <div className="flex items-center justify-between mb-4">
+            <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
               <span className="text-[#868686]">{t('transactions.wallet')}</span>
               <span>{getWalletName(transaction.walletId)}</span>
-            </div>
+            </motion.div>
           )}
           
           {/* Description */}
           {isEditing ? (
-            <div className="mb-4">
+            <motion.div className="mb-4" variants={itemVariants}>
               <Label htmlFor="description" className="text-[#868686] mb-1 block">
                 {t('transactions.description')}
               </Label>
@@ -350,22 +426,22 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                 onChange={(e) => handleChange('description', e.target.value)}
                 className="bg-[#242425] border-0 text-white"
               />
-            </div>
+            </motion.div>
           ) : (
-            <div className="flex items-center justify-between mb-4">
+            <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
               <span className="text-[#868686]">{t('transactions.description')}</span>
               <span>{transaction.description || '-'}</span>
-            </div>
+            </motion.div>
           )}
           
           {/* Time - Display Only (Not Editable) */}
-          <div className="flex items-center justify-between mb-4">
+          <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
             <span className="text-[#868686]">Waktu</span>
             <span>{formatDate(transaction.date)}</span>
           </div>
           
           {/* Type - non-editable */}
-          <div className="flex items-center justify-between mb-4">
+          <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
             <span className="text-[#868686]">{t('transactions.type')}</span>
             <div className="flex items-center">
               {getTypeIcon()}
@@ -375,22 +451,27 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
           
           {/* Save button at the bottom for editing mode */}
           {isEditing && (
-            <div className="mt-6">
-              <Button 
-                onClick={handleSave}
-                className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0"
-              >
-                {t('common.save')}
-              </Button>
-              <Button 
-                onClick={handleCancelEdit}
-                className="w-full mt-3 bg-[#242425] text-white hover:bg-[#333] border-0"
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
+            <motion.div className="mt-6" variants={itemVariants}>
+              <motion.div variants={buttonVariants}>
+                <Button 
+                  onClick={handleSave}
+                  className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0"
+                >
+                  {t('common.save')}
+                </Button>
+              </motion.div>
+              <motion.div variants={buttonVariants}>
+                <Button 
+                  onClick={handleCancelEdit}
+                  className="w-full mt-3 bg-[#242425] text-white hover:bg-[#333] border-0"
+                >
+                  {t('common.cancel')}
+                </Button>
+              </motion.div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
