@@ -31,23 +31,45 @@ const Transactions: React.FC = () => {
     }
   };
   
+  // Enhanced animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1
+        staggerChildren: 0.15,
+        delayChildren: 0.1
       }
     }
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+  const headerVariants = {
+    hidden: { y: -20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        delay: 0.1
+      }
+    }
+  };
+
+  const transactionListVariants = {
+    hidden: { y: 30, opacity: 0, scale: 0.95 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.2
+      }
     }
   };
   
@@ -62,7 +84,7 @@ const Transactions: React.FC = () => {
     <div className="p-4 pt-12">
         <motion.div 
           className="flex items-center justify-between mb-6"
-          variants={itemVariants}
+          variants={headerVariants}
         >
           <div className="flex items-center">
             <button onClick={() => navigate('/')} className="mr-4">
@@ -76,7 +98,9 @@ const Transactions: React.FC = () => {
           </div>
         </motion.div>
         
-        <TransactionList onTransactionClick={handleTransactionClick} />
+        <motion.div variants={transactionListVariants}>
+          <TransactionList onTransactionClick={handleTransactionClick} />
+        </motion.div>
       </div>
       
       {/* Transaction Detail Overlay */}

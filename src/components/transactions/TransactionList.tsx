@@ -699,24 +699,110 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     }
   };
   
-  // Animation variants
+  // Enhanced animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
+    }
+  };
+  
+  const searchSectionVariants = {
+    hidden: { y: -20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        delay: 0.1
+      }
+    }
+  };
+  
+  const filterButtonsVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.2
+      }
+    }
+  };
+  
+  const sortingFiltersVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.3
+      }
+    }
+  };
+  
+  const transactionListVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.05,
+        delayChildren: 0.4
       }
     }
   };
   
   const itemVariants = {
+    hidden: { y: 20, opacity: 0, scale: 0.95 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    }
+  };
+  
+  const dateHeaderVariants = {
+    hidden: { x: -20, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25
+      }
+    }
+  };
+  
+  const loadMoreButtonVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25
+      }
     }
   };
   
@@ -770,10 +856,14 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   }, [i18n.language]);
   
   return (
-    <>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       <div className="space-y-6">
         {/* Search and filter section */}
-        <div className="space-y-4">
+        <motion.div className="space-y-4" variants={searchSectionVariants}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#868686]" size={18} />
             <Input
@@ -793,7 +883,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
           </div>
           
           {/* Filter buttons */}
-          <div className="flex bg-[#242425] rounded-full overflow-hidden">
+          <motion.div className="flex bg-[#242425] rounded-full overflow-hidden" variants={filterButtonsVariants}>
             <button
               className={`flex-1 py-2 px-4 text-sm ${typeFilter === 'all' ? 'bg-[#C6FE1E] text-black font-medium' : 'text-[#868686]'}`}
               onClick={() => setTypeFilter('all')}
@@ -812,10 +902,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
             >
               {t('expense.title')}
             </button>
-          </div>
+          </motion.div>
           
           {/* Sorting and additional filters row */}
-          <div className="flex gap-3">
+          <motion.div className="flex gap-3" variants={sortingFiltersVariants}>
             <Select
               value={selectedCategory}
               onValueChange={setSelectedCategory}
@@ -879,14 +969,12 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
                 <SelectItem value="amount-lowest">{t('sort.amount_lowest')}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         
         <motion.div
           className="space-y-4"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+          variants={transactionListVariants}
         >
           {isLoading ? (
             <div className="flex justify-center items-center py-20">
@@ -940,25 +1028,25 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               
               {/* Transaction list */}
               {groupedTransactions.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-2">
+                <motion.div key={groupIndex} className="space-y-2" variants={itemVariants}>
                   {/* Date header - Only show if we're grouping by date */}
                   {group.date && (
-                    <div className="flex items-center gap-1.5 text-[#A0A0A0] text-sm mb-2">
+                    <motion.div className="flex items-center gap-1.5 text-[#A0A0A0] text-sm mb-2" variants={dateHeaderVariants}>
                       <Calendar size={14} />
                       <span>{new Date(group.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                    </div>
+                    </motion.div>
                   )}
                   
                   {/* Transactions */}
                   {group.transactions.map((transaction: any) => (
                     renderTransactionItem(transaction)
                   ))}
-                </div>
+                </motion.div>
               ))}
               
               {/* Load more button */}
               {hasMore && (
-                <div className="text-center py-4">
+                <motion.div className="text-center py-4" variants={loadMoreButtonVariants}>
                   <Button 
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
@@ -969,7 +1057,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
                     ) : null}
                     {t('common.load_more')}
                   </Button>
-                </div>
+                </motion.div>
               )}
             </>
           )}
@@ -1007,7 +1095,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
           onOpenChange={setIsDetailOpen}
         />
       )}
-    </>
+    </motion.div>
   );
 };
 

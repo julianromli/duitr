@@ -126,24 +126,88 @@ const BudgetPage: React.FC = () => {
     }
   };
 
-  // Animation variants
+  // Enhanced animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1
+        staggerChildren: 0.1,
+        delayChildren: 0.1
       }
     }
   };
 
-  const itemVariants = {
+  const headerVariants = {
+    hidden: { y: -20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        delay: 0.1
+      }
+    }
+  };
+
+  const budgetSectionVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.2
+      }
+    }
+  };
+
+  const wantToBuySectionVariants = {
+    hidden: { y: 20, opacity: 0, scale: 0.95 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.3
+      }
+    }
+  };
+
+  const pinjamanSectionVariants = {
+    hidden: { y: 20, opacity: 0, scale: 0.95 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.4
+      }
+    }
+  };
+
+  const buttonHoverVariants = {
+    hover: {
+      scale: 1.05,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    tap: {
+      scale: 0.95
     }
   };
 
@@ -268,7 +332,7 @@ const BudgetPage: React.FC = () => {
         {/* Enhanced Header with improved visual hierarchy */}
         <motion.div 
           className="flex items-center justify-between mb-8"
-          variants={itemVariants}
+          variants={headerVariants}
         >
           <div className="flex items-center">
             <motion.button 
@@ -292,8 +356,9 @@ const BudgetPage: React.FC = () => {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                variants={buttonHoverVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
                 <Button className="bg-gradient-to-r from-[#C6FE1E] to-[#A8E016] hover:from-[#B0E018] hover:to-[#98D014] text-[#0D0D0D] rounded-full h-12 w-12 p-0 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-[#C6FE1E]/20">
                   <PlusCircle size={22} className="drop-shadow-sm" />
@@ -441,7 +506,7 @@ const BudgetPage: React.FC = () => {
         </motion.div>
         
         {/* Budget Sections */}
-        <motion.div variants={itemVariants} className="space-y-6">
+        <motion.div variants={budgetSectionVariants} className="space-y-6">
           {/* Budget Overview */}
           <BudgetProgress />
           
@@ -450,7 +515,7 @@ const BudgetPage: React.FC = () => {
         </motion.div>
         
         {/* Want to Buy Section */}
-        <motion.div variants={itemVariants} className="mt-8">
+        <motion.div variants={wantToBuySectionVariants} className="mt-8">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
               <div className="w-1 h-6 bg-gradient-to-b from-[#C6FE1E] to-[#A8E016] rounded-full"></div>
@@ -462,8 +527,9 @@ const BudgetPage: React.FC = () => {
               </h2>
             </div>
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variants={buttonHoverVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               <Button
                 variant="ghost"
@@ -482,7 +548,7 @@ const BudgetPage: React.FC = () => {
         </motion.div>
 
         {/* Pinjaman Section */}
-        <motion.div variants={itemVariants} className="mt-8">
+        <motion.div variants={pinjamanSectionVariants} className="mt-8">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
               <div className="w-1 h-6 bg-gradient-to-b from-[#C6FE1E] to-[#A8E016] rounded-full"></div>
@@ -494,8 +560,9 @@ const BudgetPage: React.FC = () => {
               </h2>
             </div>
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variants={buttonHoverVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               <Button
                 variant="ghost"

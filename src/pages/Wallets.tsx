@@ -115,24 +115,73 @@ const Wallets: React.FC = () => {
     }
   };
 
-  // Animation variants
+  // Enhanced animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1
+        staggerChildren: 0.1,
+        delayChildren: 0.1
       }
     }
   };
 
-  const itemVariants = {
+  const headerVariants = {
+    hidden: { y: -20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        delay: 0.1
+      }
+    }
+  };
+
+  const walletListVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.2
+      }
+    }
+  };
+
+  const emptyStateVariants = {
+    hidden: { y: 20, opacity: 0, scale: 0.95 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 350,
+        damping: 25,
+        delay: 0.3
+      }
+    }
+  };
+
+  const buttonHoverVariants = {
+    hover: {
+      scale: 1.05,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    tap: {
+      scale: 0.95
     }
   };
 
@@ -165,11 +214,11 @@ const Wallets: React.FC = () => {
       animate="visible"
       variants={containerVariants}
     >
-      <div className="p-4 pt-12">
+      <div className="p-6 pt-12">
         {/* Header with back button */}
         <motion.div 
           className="flex items-center justify-between mb-6"
-          variants={itemVariants}
+          variants={headerVariants}
         >
           <div className="flex items-center">
             <button onClick={() => navigate('/')} className="mr-4">
@@ -179,9 +228,15 @@ const Wallets: React.FC = () => {
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] rounded-full h-10 w-10 p-0 flex items-center justify-center">
-                <PlusCircle size={20} />
-              </Button>
+              <motion.div
+                variants={buttonHoverVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Button className="bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] rounded-full h-10 w-10 p-0 flex items-center justify-center">
+                  <PlusCircle size={20} />
+                </Button>
+              </motion.div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
               <DialogHeader>
@@ -257,13 +312,13 @@ const Wallets: React.FC = () => {
         </motion.div>
         
         {/* Wrap WalletList in an error boundary */}
-        <div className="wallet-list-container">
+        <motion.div className="wallet-list-container" variants={walletListVariants}>
           {wallets.length > 0 ? (
             <WalletList />
           ) : (
             <motion.div 
               className="bg-[#242425] rounded-xl p-6 text-center mt-4"
-              variants={itemVariants}
+              variants={emptyStateVariants}
             >
               <div className="mx-auto w-12 h-12 mb-3 bg-[#333] rounded-full flex items-center justify-center">
                 <Wallet size={24} className="text-[#868686]" />
@@ -272,7 +327,7 @@ const Wallets: React.FC = () => {
               <p className="text-xs text-[#868686] mt-1">{t('wallets.addAccount')}</p>
             </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
