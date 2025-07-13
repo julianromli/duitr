@@ -146,18 +146,90 @@ const EvaluateContent: React.FC = () => {
 
   const summary = calculateSummary();
 
-  // Animation variants
+  // Enhanced animation variants for smooth reveal effects
+  const containerVariants = {
+    hidden: {
+      opacity: 0
+    },
+    visible: {
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        staggerChildren: 0.15,
+        delayChildren: 0.1
+      }
+    }
+  };
+
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { 
+      y: 30, 
+      opacity: 0,
+      scale: 0.95
+    },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
+      scale: 1,
+      transition: { 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 25,
+        duration: 0.6
+      }
+    }
+  };
+
+  const statsVariants = {
+    hidden: {
+      opacity: 0,
+      scale: 0.9
+    },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 20,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: {
+      x: -20,
+      opacity: 0
+    },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    hover: {
+      scale: 1.02,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
     }
   };
 
   return (
-    <div className="space-y-6 px-6">
+    <motion.div 
+      className="space-y-6 px-6"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       {/* Date Selection */}
       <motion.div variants={itemVariants}>
         <Card className="border-[#242425]">
@@ -200,65 +272,78 @@ const EvaluateContent: React.FC = () => {
 
       {/* Quick Stats */}
       {(summary.totalIncome > 0 || summary.totalExpenses > 0) && (
-        <motion.div className="space-y-3 w-full" variants={itemVariants}>
-          <Card className="border-[#242425]">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span className="text-sm text-gray-400">Pemasukan</span>
+        <motion.div 
+          className="space-y-3 w-full" 
+          variants={statsVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={cardVariants} whileHover="hover">
+            <Card className="border-[#242425]">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-400">Pemasukan</span>
+                  </div>
+                  <p className="text-base font-bold text-green-500">
+                    Rp{summary.totalIncome.toLocaleString('id-ID')}
+                  </p>
                 </div>
-                <p className="text-base font-bold text-green-500">
-                  Rp{summary.totalIncome.toLocaleString('id-ID')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="border-[#242425]">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  <span className="text-sm text-gray-400">Pengeluaran</span>
+          <motion.div variants={cardVariants} whileHover="hover">
+            <Card className="border-[#242425]">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-400">Pengeluaran</span>
+                  </div>
+                  <p className="text-base font-bold text-red-500">
+                    Rp{summary.totalExpenses.toLocaleString('id-ID')}
+                  </p>
                 </div>
-                <p className="text-base font-bold text-red-500">
-                  Rp{summary.totalExpenses.toLocaleString('id-ID')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="border-[#242425]">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                  <span className="text-sm text-gray-400">Net Flow</span>
+          <motion.div variants={cardVariants} whileHover="hover">
+            <Card className="border-[#242425]">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-400">Net Flow</span>
+                  </div>
+                  <p className={`text-base font-bold ${summary.netFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    Rp{summary.netFlow.toLocaleString('id-ID')}
+                  </p>
                 </div>
-                <p className={`text-base font-bold ${summary.netFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  Rp{summary.netFlow.toLocaleString('id-ID')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          <Card className="border-[#242425]">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                  <span className="text-sm text-gray-400">Saving Rate</span>
+          <motion.div variants={cardVariants} whileHover="hover">
+            <Card className="border-[#242425]">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PieChart className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                    <span className="text-sm text-gray-400">Saving Rate</span>
+                  </div>
+                  <p className="text-base font-bold text-yellow-500">
+                    {summary.totalIncome > 0
+                      ? `${((summary.netFlow / summary.totalIncome) * 100).toFixed(1)}%`
+                      : '0%'
+                    }
+                  </p>
                 </div>
-                <p className="text-base font-bold text-yellow-500">
-                  {summary.totalIncome > 0
-                    ? `${((summary.netFlow / summary.totalIncome) * 100).toFixed(1)}%`
-                    : '0%'
-                  }
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       )}
 
@@ -288,7 +373,7 @@ const EvaluateContent: React.FC = () => {
           />
         </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

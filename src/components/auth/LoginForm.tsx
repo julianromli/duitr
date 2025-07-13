@@ -18,6 +18,57 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils"; // Assuming cn is needed, adding just in case, though not used in demo
 import { useId } from "react";
+import { motion } from "framer-motion";
+
+// Animation variants for smooth form reveal
+const containerVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 30,
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: {
+    opacity: 0,
+    y: 20
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 25
+    }
+  }
+};
+
+const buttonVariants = {
+  hover: {
+    scale: 1.02,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 10
+    }
+  },
+  tap: {
+    scale: 0.98
+  }
+};
 
 // Note: This component renders a DialogTrigger and the DialogContent.
 // It's designed to be placed where you want the "Sign in" button to appear.
@@ -30,31 +81,44 @@ function LoginForm() {
         <Button variant="outline">Sign in</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]"> {/* Explicit width from demo */}
-        <div className="flex flex-col items-center gap-2">
+        <motion.div 
+          className="flex flex-col items-center gap-2"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
           {/* Replaced placeholder SVG with App Logo */}
-          <div
+          <motion.div
             className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-background"
             aria-hidden="true"
+            variants={itemVariants}
           >
              {/* Ensure duitr-logo.svg is in the public folder */}
             <img src="/pwa-icons/new/192.png" alt="Duitr Logo" className="h-8 w-8" />
-          </div>
-          <DialogHeader>
-            <DialogTitle className="text-center sm:text-center">Welcome back</DialogTitle> {/* Centered as per demo */}
-            <DialogDescription className="text-center sm:text-center">
-              Enter your credentials to login to your account.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <DialogHeader>
+              <DialogTitle className="text-center sm:text-center">Welcome back</DialogTitle> {/* Centered as per demo */}
+              <DialogDescription className="text-center sm:text-center">
+                Enter your credentials to login to your account.
+              </DialogDescription>
+            </DialogHeader>
+          </motion.div>
+        </motion.div>
 
         {/* Consider wrapping with <Form> from react-hook-form for validation */}
-        <form className="space-y-5">
-          <div className="space-y-4">
-            <div className="space-y-2">
+        <motion.form 
+          className="space-y-5"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          <motion.div className="space-y-4" variants={itemVariants}>
+            <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-email`}>Email</Label>
               <Input id={`${id}-email`} placeholder="hi@yourcompany.com" type="email" required />
-            </div>
-            <div className="space-y-2">
+            </motion.div>
+            <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-password`}>Password</Label>
               <Input
                 id={`${id}-password`}
@@ -62,9 +126,9 @@ function LoginForm() {
                 type="password"
                 required
               />
-            </div>
-          </div>
-          <div className="flex items-center justify-between gap-2">
+            </motion.div>
+          </motion.div>
+          <motion.div className="flex items-center justify-between gap-2" variants={itemVariants}>
             <div className="flex items-center gap-2">
               <Checkbox id={`${id}-remember`} />
               <Label htmlFor={`${id}-remember`} className="text-sm font-normal text-muted-foreground"> {/* Adjusted class from demo */}
@@ -75,20 +139,53 @@ function LoginForm() {
             <a href="#" className="text-sm text-primary underline hover:no-underline"> {/* Added text-primary */}
               Forgot password?
             </a>
-          </div>
+          </motion.div>
            {/* Add onSubmit handler to the form and change type="submit" */}
-          <Button type="button" className="w-full">
-            Sign in
-          </Button>
-        </form>
+          <motion.div variants={itemVariants}>
+            <Button 
+              type="button" 
+              className="w-full"
+              asChild
+            >
+              <motion.button
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                Sign in
+              </motion.button>
+            </Button>
+          </motion.div>
+        </motion.form>
 
-        <div className="flex items-center gap-3 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+        <motion.div 
+          className="flex items-center gap-3 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border"
+          initial="hidden"
+          animate="visible"
+          variants={itemVariants}
+        >
           <span className="text-xs text-muted-foreground">Or</span>
-        </div>
+        </motion.div>
         {/* Add onClick handler for Google login */}
-        <Button variant="outline" className="w-full"> {/* Added w-full */} 
-          Login with Google
-        </Button>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={itemVariants}
+        >
+          <Button 
+            variant="outline" 
+            className="w-full"
+            asChild
+          >
+            <motion.button
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
+            >
+              Login with Google
+            </motion.button>
+          </Button>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
@@ -97,4 +194,4 @@ function LoginForm() {
 // Exporting as default or named, adjust as per your convention
 // Default export is often used for page components
 // Named export is common for reusable components
-export { LoginForm }; // Using named export as it's a reusable component 
+export { LoginForm }; // Using named export as it's a reusable component
