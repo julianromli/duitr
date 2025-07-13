@@ -139,7 +139,8 @@ const Wallets: React.FC = () => {
   // Error fallback
   if (error) {
     return (
-      <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white p-6">
+      <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-4">
+        <div className="p-6">
         <div className="flex items-center mb-6">
           <button onClick={() => navigate('/')} className="mr-4">
             <ChevronLeft size={24} className="text-white" />
@@ -152,13 +153,14 @@ const Wallets: React.FC = () => {
             Coba Lagi
           </Button>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
     <motion.div 
-      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white"
+      className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-4"
       initial="hidden"
       animate="visible"
       variants={containerVariants}

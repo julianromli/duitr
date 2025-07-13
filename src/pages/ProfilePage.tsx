@@ -193,7 +193,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <motion.div
-      className="max-w-md mx-auto bg-background min-h-screen pb-24 text-foreground"
+      className="max-w-md mx-auto bg-background min-h-screen pb-24 text-foreground px-4"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
