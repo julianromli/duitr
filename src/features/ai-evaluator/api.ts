@@ -1,5 +1,4 @@
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-const GEMINI_API_KEY = "AIzaSyC8ayF6x42UqiXAqlT3_FLFF6I-y5Q3t0w";
+// Remove hardcoded API credentials - now handled by edge function
 
 import { supabase } from '@/lib/supabase';
 import type { FinanceSummary } from '@/types/finance';

@@ -104,7 +104,16 @@ const BudgetPage: React.FC = () => {
         .order('en_name');
       
       if (error) throw error;
-      setCategories(data || []);
+      setCategories((data || []).map(cat => ({
+        id: cat.category_id.toString(),
+        category_id: cat.category_id,
+        category_key: cat.category_key,
+        en_name: cat.en_name,
+        id_name: cat.id_name,
+        type: cat.type,
+        icon: cat.icon,
+        created_at: cat.created_at
+      })));
     } catch (error) {
       console.error('Error loading categories:', error);
       toast({

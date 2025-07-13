@@ -173,7 +173,15 @@ const EditCategoryPage: React.FC = () => {
       if (error) throw error;
       
       if (data) {
-        setCategories(data as Category[]);
+        setCategories(data.map(cat => ({
+          id: cat.category_id.toString(),
+          category_key: cat.category_key,
+          en_name: cat.en_name,
+          id_name: cat.id_name,
+          type: cat.type as 'expense' | 'income' | 'system',
+          icon: cat.icon,
+          created_at: cat.created_at
+        })));
       } else {
         setCategories([]);
       }
@@ -297,7 +305,7 @@ const EditCategoryPage: React.FC = () => {
             type: formData.type,
             icon: formData.icon
           })
-          .eq('id', currentCategory.id);
+          .eq('category_id', parseInt(currentCategory.id));
         
         if (error) throw error;
         
@@ -328,7 +336,7 @@ const EditCategoryPage: React.FC = () => {
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', currentCategory.id);
+        .eq('category_id', parseInt(currentCategory.id));
       
       if (error) throw error;
       

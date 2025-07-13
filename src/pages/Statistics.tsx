@@ -56,7 +56,7 @@ function groupTransactionsByCategory(
     if (!categoryTotals[key]) {
       categoryTotals[key] = {
         total: 0,
-        categoryId: transaction.categoryId || null,
+        categoryId: transaction.categoryId?.toString() || null,
         displayName: categoryName
       };
     }
