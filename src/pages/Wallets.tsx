@@ -115,23 +115,119 @@ const Wallets: React.FC = () => {
     }
   };
 
-  // Enhanced animation variants
+  // Enhanced animation variants with reveal effects
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1,
-        delayChildren: 0.1
+        staggerChildren: 0.12,
+        delayChildren: 0.15,
+        duration: 0.6
       }
     }
   };
 
   const headerVariants = {
-    hidden: { y: -20, opacity: 0 },
+    hidden: { 
+      y: -30, 
+      opacity: 0,
+      scale: 0.95
+    },
     visible: {
       y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+        mass: 0.8
+      }
+    }
+  };
+
+  const addButtonVariants = {
+    hidden: {
+      scale: 0,
+      rotate: -180,
+      opacity: 0
+    },
+    visible: {
+      scale: 1,
+      rotate: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 600,
+        damping: 25,
+        delay: 0.3
+      }
+    },
+    hover: {
+      scale: 1.1,
+      rotate: 90,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    tap: {
+      scale: 0.9,
+      rotate: 45
+    }
+  };
+
+  const walletListVariants = {
+    hidden: { 
+      y: 40, 
+      opacity: 0,
+      scale: 0.95
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        mass: 0.8,
+        delay: 0.2
+      }
+    }
+  };
+
+  const emptyStateVariants = {
+    hidden: { 
+      y: 30, 
+      opacity: 0, 
+      scale: 0.9,
+      rotateX: -15
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+        delay: 0.4
+      }
+    }
+  };
+
+  const titleVariants = {
+    hidden: {
+      x: -20,
+      opacity: 0
+    },
+    visible: {
+      x: 0,
       opacity: 1,
       transition: {
         type: "spring",
@@ -142,46 +238,29 @@ const Wallets: React.FC = () => {
     }
   };
 
-  const walletListVariants = {
-    hidden: { y: 20, opacity: 0 },
+  const backButtonVariants = {
+    hidden: {
+      x: -30,
+      opacity: 0,
+      rotate: -90
+    },
     visible: {
-      y: 0,
+      x: 0,
       opacity: 1,
+      rotate: 0,
       transition: {
         type: "spring",
-        stiffness: 350,
-        damping: 25,
-        delay: 0.2
+        stiffness: 500,
+        damping: 25
       }
-    }
-  };
-
-  const emptyStateVariants = {
-    hidden: { y: 20, opacity: 0, scale: 0.95 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 350,
-        damping: 25,
-        delay: 0.3
-      }
-    }
-  };
-
-  const buttonHoverVariants = {
+    },
     hover: {
-      scale: 1.05,
+      x: -5,
       transition: {
         type: "spring",
         stiffness: 400,
         damping: 25
       }
-    },
-    tap: {
-      scale: 0.95
     }
   };
 
@@ -221,15 +300,26 @@ const Wallets: React.FC = () => {
           variants={headerVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate('/')} className="mr-4">
+            <motion.button 
+              onClick={() => navigate('/')} 
+              className="mr-4"
+              variants={backButtonVariants}
+              whileHover="hover"
+              whileTap={{ scale: 0.9 }}
+            >
               <ChevronLeft size={24} className="text-white" />
-            </button>
-            <h1 className="text-xl font-bold">{t('wallets.title')}</h1>
+            </motion.button>
+            <motion.h1 
+              className="text-xl font-bold"
+              variants={titleVariants}
+            >
+              {t('wallets.title')}
+            </motion.h1>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <motion.div
-                variants={buttonHoverVariants}
+                variants={addButtonVariants}
                 whileHover="hover"
                 whileTap="tap"
               >
@@ -239,10 +329,16 @@ const Wallets: React.FC = () => {
               </motion.div>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-[#1A1A1A] border-none text-white">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold">{t('wallets.addAccount')}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">{t('wallets.addAccount')}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-[#868686]">{t('wallets.accountName')}</Label>
                   <Input
@@ -300,14 +396,15 @@ const Wallets: React.FC = () => {
                 />
                 
                 <Button 
-                  type="submit" 
-                  className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium rounded-xl"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Loading...' : t('wallets.addAccount')}
-                </Button>
-              </form>
-            </DialogContent>
+                    type="submit" 
+                    className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] mt-4 font-medium rounded-xl"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Loading...' : t('wallets.addAccount')}
+                  </Button>
+                </form>
+              </motion.div>
+              </DialogContent>
           </Dialog>
         </motion.div>
         

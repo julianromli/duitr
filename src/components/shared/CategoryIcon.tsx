@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { getLocalizedCategoryName, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
 import { getIconComponent } from '@/components/shared/IconSelector';
+import { motion } from 'framer-motion';
 import {
   Home,
   Coffee,
@@ -49,12 +50,55 @@ interface CategoryIconProps {
   size?: 'sm' | 'md' | 'lg';
   animate?: boolean;
   className?: string;
+  delay?: number;
 }
+
+// Animation variants for smooth reveal effects
+const iconVariants = {
+  hidden: {
+    scale: 0,
+    opacity: 0,
+    rotate: -180
+  },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    rotate: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20,
+      duration: 0.6
+    }
+  }
+};
+
+const hoverVariants = {
+  hover: {
+    scale: 1.1,
+    rotate: 5,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 10
+    }
+  },
+  tap: {
+    scale: 0.95,
+    transition: {
+      type: "spring",
+      stiffness: 600,
+      damping: 15
+    }
+  }
+};
 
 const CategoryIcon: React.FC<CategoryIconProps> = ({
   category,
   size = 'md',
-  className = ''
+  className = '',
+  animate = true,
+  delay = 0
 }) => {
   const [displayName, setDisplayName] = useState<string>('');
   const [categoryType, setCategoryType] = useState<string>('');
@@ -436,17 +480,25 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   // Handle default icon for numeric categories in the picker
   if (category === "question" || category === "?") {
     return (
-      <div
+      <motion.div
         className={`flex items-center justify-center rounded-full bg-primary ${className}`}
         style={{ width: 34, height: 34 }}
+        initial={animate ? "hidden" : "visible"}
+        animate="visible"
+        variants={animate ? iconVariants : {}}
+        whileHover={animate ? "hover" : {}}
+        whileTap={animate ? "tap" : {}}
+        transition={animate ? { delay } : {}}
       >
-        <HelpCircle
-          className={iconInnerSizes[size]}
-          stroke="black"
-          fill="none"
-          strokeWidth={2}
-        />
-      </div>
+        <motion.div variants={animate ? hoverVariants : {}}>
+          <HelpCircle
+            className={iconInnerSizes[size]}
+            stroke="black"
+            fill="none"
+            strokeWidth={2}
+          />
+        </motion.div>
+      </motion.div>
     );
   }
 
@@ -486,32 +538,48 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     else if (numericId === 18) DefaultIcon = ArrowLeftRight; // Transfer
     
     return (
-      <div
+      <motion.div
         className={`flex items-center justify-center rounded-full bg-primary ${className}`}
         style={{ width: 34, height: 34 }}
+        initial={animate ? "hidden" : "visible"}
+        animate="visible"
+        variants={animate ? iconVariants : {}}
+        whileHover={animate ? "hover" : {}}
+        whileTap={animate ? "tap" : {}}
+        transition={animate ? { delay } : {}}
       >
-        <DefaultIcon
+        <motion.div variants={animate ? hoverVariants : {}}>
+          <DefaultIcon
+            className={iconInnerSizes[size]}
+            stroke="black"
+            fill="none"
+            strokeWidth={2}
+          />
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      className={`flex items-center justify-center rounded-full bg-primary ${className}`}
+      style={{ width: 34, height: 34 }}
+      initial={animate ? "hidden" : "visible"}
+      animate="visible"
+      variants={animate ? iconVariants : {}}
+      whileHover={animate ? "hover" : {}}
+      whileTap={animate ? "tap" : {}}
+      transition={animate ? { delay } : {}}
+    >
+      <motion.div variants={animate ? hoverVariants : {}}>
+        <Icon
           className={iconInnerSizes[size]}
           stroke="black"
           fill="none"
           strokeWidth={2}
         />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`flex items-center justify-center rounded-full bg-primary ${className}`}
-      style={{ width: 34, height: 34 }}
-    >
-      <Icon
-        className={iconInnerSizes[size]}
-        stroke="black"
-        fill="none"
-        strokeWidth={2}
-      />
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

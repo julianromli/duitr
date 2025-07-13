@@ -160,23 +160,120 @@ const WalletList: React.FC = () => {
     }
   };
   
-  // Animation variants
+  // Enhanced Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05
+        when: "beforeChildren",
+        staggerChildren: 0.08,
+        delayChildren: 0.1
       }
     }
   };
   
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { 
+      y: 30, 
+      opacity: 0,
+      scale: 0.95
+    },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 300, damping: 24 }
+      scale: 1,
+      transition: { 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 25,
+        mass: 0.8
+      }
+    }
+  };
+
+  const totalBalanceVariants = {
+    hidden: { 
+      y: -20, 
+      opacity: 0,
+      scale: 0.9
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: { 
+        type: "spring", 
+        stiffness: 500, 
+        damping: 30,
+        delay: 0.1
+      }
+    }
+  };
+
+  const walletCardVariants = {
+    hidden: { 
+      x: -20,
+      y: 20, 
+      opacity: 0,
+      scale: 0.95,
+      rotateY: -10
+    },
+    visible: {
+      x: 0,
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      rotateY: 0,
+      transition: { 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 25,
+        mass: 0.8
+      }
+    },
+    hover: {
+      scale: 1.02,
+      y: -2,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    },
+    tap: {
+      scale: 0.98
+    }
+  };
+
+  const statsVariants = {
+    hidden: { 
+      opacity: 0,
+      y: 10
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 0.2,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const statItemVariants = {
+    hidden: { 
+      opacity: 0,
+      x: -10
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 20
+      }
     }
   };
 
@@ -215,7 +312,9 @@ const WalletList: React.FC = () => {
       {/* Total Balance Card */}
       <motion.div 
         className="bg-[#1364FF] rounded-xl p-5 text-white"
-        variants={itemVariants}
+        variants={totalBalanceVariants}
+        whileHover={{ scale: 1.02, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+        whileTap={{ scale: 0.98 }}
       >
         <p className="text-sm opacity-80 mb-1">{t('dashboard.total_balance')}</p>
         <h3 className="text-2xl font-bold">{formatCurrency(getTotalBalance())}</h3>
@@ -229,9 +328,9 @@ const WalletList: React.FC = () => {
             <motion.div 
               key={wallet.id} 
               className="bg-[#242425] rounded-xl overflow-hidden"
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              variants={walletCardVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               <div className="p-4">
                 <div className="flex justify-between items-center mb-3">
@@ -278,8 +377,13 @@ const WalletList: React.FC = () => {
                     {formatCurrency(wallet.balance)}
                   </p>
                   
-                  <div className="flex mt-3 gap-6">
-                    <div className="space-y-0.5">
+                  <motion.div 
+                    className="flex mt-3 gap-6"
+                    variants={statsVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <motion.div className="space-y-0.5" variants={statItemVariants}>
                       <div className="flex items-center text-xs text-[#C6FE1E] dark:text-green-400">
                         <ArrowUpRight className="w-3 h-3 mr-1" /> {t('transactions.income')}
                       </div>
@@ -289,9 +393,9 @@ const WalletList: React.FC = () => {
                             ?.find(w => w.id === wallet.id)?.income || 0
                         )}
                       </p>
-                    </div>
+                    </motion.div>
                     
-                    <div className="space-y-0.5">
+                    <motion.div className="space-y-0.5" variants={statItemVariants}>
                       <div className="flex items-center text-xs text-red-400 dark:text-red-400">
                         <ArrowDownRight className="w-3 h-3 mr-1" /> {t('transactions.expense')}
                       </div>
@@ -301,8 +405,8 @@ const WalletList: React.FC = () => {
                             ?.find(w => w.id === wallet.id)?.expense || 0
                         )}
                       </p>
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
