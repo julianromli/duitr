@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, TrendingUp } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface InsightDisplayProps {
   text: string;
@@ -41,14 +42,18 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
           {text.split('\n').map((paragraph, index) => {
             if (paragraph.trim() === '') return null;
             
-            // Handle bold text with **
+            // Sanitize and format text safely
             const formattedText = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            const sanitizedText = DOMPurify.sanitize(formattedText, {
+              ALLOWED_TAGS: ['strong', 'b', 'em', 'i'],
+              ALLOWED_ATTR: []
+            });
             
             return (
               <p 
                 key={index} 
                 className="mb-3 text-gray-300 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: formattedText }}
+                dangerouslySetInnerHTML={{ __html: sanitizedText }}
               />
             );
           })}

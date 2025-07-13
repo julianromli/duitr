@@ -320,6 +320,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
               placeholder={t('transactions.descriptionPlaceholder')}
               value={formData.description}
               onChange={handleChange}
+              maxLength={200}
               className="bg-[#242425] border-0 text-white"
             />
           </div>
