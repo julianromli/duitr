@@ -40,7 +40,8 @@ import {
   Coins,
   Building2,
   LineChart,
-  Circle
+  Circle,
+  BusFrontIcon
 } from 'lucide-react';
 
 interface CategoryIconProps {
@@ -196,7 +197,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
                 "Shopping": "Belanja",
                 "Health": "Kesehatan",
                 "Education": "Pendidikan",
-                "Travel": "Perjalanan",
+                "Vehicle": "Kendaraan",
                 "Personal": "Pribadi",
                 "Other": "Lainnya",
                 "Donate": "Sedekah",
@@ -222,7 +223,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
               7: 'expense_shopping',
               8: 'expense_health',
               9: 'expense_education',
-              10: 'expense_travel',
+              10: 'expense_vehicle',
               11: 'expense_personal',
               12: 'expense_other',
               13: 'income_salary',
@@ -321,7 +322,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case 'expense_transportation':
     case 'transportation':
     case '3':
-      Icon = Car;
+      Icon = BusFrontIcon;
       break;
     case 'expense_housing':
     case 'housing':
@@ -351,10 +352,10 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     case '4':
       Icon = Zap;
       break;
-    case 'expense_travel':
-    case 'travel':
+    case 'expense_vehicle':
+    case 'vehicle':
     case '10':
-      Icon = Plane;
+      Icon = Car;
       break;
     case 'expense_education':
     case 'education':
@@ -460,14 +461,14 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
     // Expense categories (1-12, 19-21)
     if (numericId === 1) DefaultIcon = ShoppingCart; // Groceries
     else if (numericId === 2) DefaultIcon = Utensils; // Dining
-    else if (numericId === 3) DefaultIcon = Car; // Transportation
+    else if (numericId === 3) DefaultIcon = BusFrontIcon; // Transportation
     else if (numericId === 4) DefaultIcon = Zap; // Subscription
     else if (numericId === 5) DefaultIcon = Home; // Housing
     else if (numericId === 6) DefaultIcon = Music; // Entertainment
     else if (numericId === 7) DefaultIcon = ShoppingBag; // Shopping
     else if (numericId === 8) DefaultIcon = Pill; // Healthcare
     else if (numericId === 9) DefaultIcon = Book; // Education
-    else if (numericId === 10) DefaultIcon = Plane; // Travel
+    else if (numericId === 10) DefaultIcon = Car; // Vehicle
     else if (numericId === 11) DefaultIcon = User; // Personal
     else if (numericId === 12) DefaultIcon = Package; // Other expense
     else if (numericId === 19) DefaultIcon = DollarSign; // Donate
