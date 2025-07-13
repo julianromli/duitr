@@ -122,9 +122,9 @@ const Wallets: React.FC = () => {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.12,
-        delayChildren: 0.15,
-        duration: 0.6
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+        duration: 0.3
       }
     }
   };
@@ -182,20 +182,13 @@ const Wallets: React.FC = () => {
 
   const walletListVariants = {
     hidden: { 
-      y: 40, 
-      opacity: 0,
-      scale: 0.95
+      opacity: 0
     },
     visible: {
-      y: 0,
       opacity: 1,
-      scale: 1,
       transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25,
-        mass: 0.8,
-        delay: 0.2
+        duration: 0.3,
+        delay: 0.4
       }
     }
   };

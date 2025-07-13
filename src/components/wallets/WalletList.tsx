@@ -167,34 +167,16 @@ const WalletList: React.FC = () => {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.08,
-        delayChildren: 0.1
+        staggerChildren: 0.15,
+        delayChildren: 0.2,
+        duration: 0.3
       }
     }
   };
   
   const itemVariants = {
     hidden: { 
-      y: 30, 
-      opacity: 0,
-      scale: 0.95
-    },
-    visible: {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 400, 
-        damping: 25,
-        mass: 0.8
-      }
-    }
-  };
-
-  const totalBalanceVariants = {
-    hidden: { 
-      y: -20, 
+      y: 40, 
       opacity: 0,
       scale: 0.9
     },
@@ -204,32 +186,47 @@ const WalletList: React.FC = () => {
       scale: 1,
       transition: { 
         type: "spring", 
-        stiffness: 500, 
+        stiffness: 300, 
         damping: 30,
-        delay: 0.1
+        mass: 1
+      }
+    }
+  };
+
+  const totalBalanceVariants = {
+    hidden: { 
+      y: -30, 
+      opacity: 0,
+      scale: 0.8
+    },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: { 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 30,
+        mass: 0.8
       }
     }
   };
 
   const walletCardVariants = {
     hidden: { 
-      x: -20,
-      y: 20, 
+      y: 30, 
       opacity: 0,
-      scale: 0.95,
-      rotateY: -10
+      scale: 0.9
     },
     visible: {
-      x: 0,
       y: 0,
       opacity: 1,
       scale: 1,
-      rotateY: 0,
       transition: { 
         type: "spring", 
-        stiffness: 400, 
-        damping: 25,
-        mass: 0.8
+        stiffness: 300, 
+        damping: 30,
+        mass: 1
       }
     },
     hover: {
@@ -248,31 +245,25 @@ const WalletList: React.FC = () => {
 
   const statsVariants = {
     hidden: { 
-      opacity: 0,
-      y: 10
+      opacity: 0
     },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
-        delay: 0.2,
-        staggerChildren: 0.1
+        delay: 0.3,
+        duration: 0.3
       }
     }
   };
 
   const statItemVariants = {
     hidden: { 
-      opacity: 0,
-      x: -10
+      opacity: 0
     },
     visible: {
       opacity: 1,
-      x: 0,
       transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 20
+        duration: 0.2
       }
     }
   };
@@ -322,15 +313,35 @@ const WalletList: React.FC = () => {
       </motion.div>
       
       {/* Wallets */}
-      <div className="space-y-3">
+      <motion.div 
+        className="space-y-3"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.1,
+              delayChildren: 0.3
+            }
+          }
+        }}
+      >
         {Array.isArray(wallets) && wallets.length > 0 ? (
-          wallets.map((wallet) => (
+          wallets.map((wallet, index) => (
             <motion.div 
               key={wallet.id} 
               className="bg-[#242425] rounded-xl overflow-hidden"
-              variants={walletCardVariants}
-              whileHover="hover"
-              whileTap="tap"
+              variants={itemVariants}
+              whileHover={{
+                scale: 1.02,
+                y: -2,
+                transition: {
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25
+                }
+              }}
+              whileTap={{ scale: 0.98 }}
             >
               <div className="p-4">
                 <div className="flex justify-between items-center mb-3">
@@ -423,7 +434,7 @@ const WalletList: React.FC = () => {
             <p className="text-xs text-[#868686] mt-1">{t('wallets.addAccount')}</p>
           </motion.div>
         )}
-      </div>
+      </motion.div>
 
       {/* Edit Wallet Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
