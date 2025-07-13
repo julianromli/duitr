@@ -355,7 +355,7 @@ const CategoryManagement: React.FC = () => {
       <div className="space-y-8">
         {/* Expense Categories */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-foreground">Kategori Pengeluaran</h3>
+          <h3 className="text-xl font-semibold text-foreground">Pengeluaran</h3>
           {expenseCategories.length > 0 ? (
             <div className="space-y-2">
               {expenseCategories.map((category) => {
@@ -397,13 +397,13 @@ const CategoryManagement: React.FC = () => {
               })}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">{t('categories.noExpenseCategories')}</p>
+            <p className="text-muted-foreground text-sm">Belum ada kategori pengeluaran kustom.</p>
           )}
         </div>
 
         {/* Income Categories */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-foreground">Kategori Pemasukan</h3>
+          <h3 className="text-xl font-semibold text-foreground">Pemasukan</h3>
           {incomeCategories.length > 0 ? (
             <div className="space-y-2">
               {incomeCategories.map((category) => {
