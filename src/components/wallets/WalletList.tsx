@@ -330,7 +330,7 @@ const WalletList: React.FC = () => {
           wallets.map((wallet, index) => (
             <motion.div 
               key={wallet.id} 
-              className="bg-[#242425] rounded-xl overflow-hidden"
+              className="border bg-card rounded-xl overflow-hidden"
               variants={itemVariants}
               whileHover={{
                 scale: 1.02,
@@ -364,7 +364,7 @@ const WalletList: React.FC = () => {
                     <DropdownMenuTrigger className="focus:outline-none">
                       <MoreVertical size={18} className="text-[#868686] dark:text-gray-400" />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-[#1A1A1A] border-none text-white dark:bg-gray-700 dark:text-gray-200">
+                    <DropdownMenuContent className="bg-[#1A1A1A] border text-white dark:bg-card dark:text-gray-200">
                       <DropdownMenuLabel>{t('common.options')}</DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-[#333] dark:bg-gray-600" />
                       <DropdownMenuItem 
@@ -453,7 +453,7 @@ const WalletList: React.FC = () => {
                 value={editWallet?.name || ''}
                 onChange={handleEditChange}
                 required
-                className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200"
+                className="bg-[#242425] border-0 text-white"
               />
             </div>
             
@@ -467,7 +467,7 @@ const WalletList: React.FC = () => {
                 onChange={handleBalanceChange}
                 onValueChange={handleBalanceValueChange}
                 required
-                className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200"
+                className="bg-[#242425] border-0 text-white"
               />
             </div>
             
@@ -477,10 +477,10 @@ const WalletList: React.FC = () => {
                 value={editWallet?.type || ''} 
                 onValueChange={(value) => setEditWallet({ ...editWallet, type: value })}
               >
-                <SelectTrigger className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200">
+                <SelectTrigger className="bg-[#242425] border-0 text-white">
                   <SelectValue placeholder={t('wallets.selectAccountType')} />
                 </SelectTrigger>
-                <SelectContent className="bg-[#242425] border-none text-white dark:bg-gray-700 dark:text-gray-200">
+                <SelectContent className="bg-[#242425] border-0 text-white">
                   {walletTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value} className="hover:bg-[#333] focus:bg-[#333] dark:hover:bg-gray-600 dark:focus:bg-gray-600">
                       <div className="flex items-center gap-2">
@@ -502,7 +502,7 @@ const WalletList: React.FC = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0 mt-4 dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+              className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0"
               disabled={isLoading}
             >
               {isLoading ? t('common.loading') : t('common.save')}

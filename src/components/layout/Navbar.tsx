@@ -71,7 +71,7 @@ const Navbar: React.FC = () => {
 
   return (
     <motion.nav 
-      className="fixed bottom-0 left-0 right-0 bg-[#0D0D0D] border-t border-gray-800 z-50"
+      className="fixed bottom-0 left-0 right-0 bg-[#0D0D0D] border-t border z-50"
       initial="hidden"
       animate="visible"
       variants={navbarVariants}

@@ -810,7 +810,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   const renderTransactionItem = (transaction: any) => (
     <motion.div
       key={transaction.id}
-      className="bg-[#242425] p-4 rounded-xl cursor-pointer mb-2"
+      className="border bg-card p-4 rounded-xl cursor-pointer mb-2"
       onClick={() => handleClick(transaction)}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}

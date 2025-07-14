@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { PieChart, Edit, Trash, X, Check, Calendar } from 'lucide-react';
 import { useBudgets } from '@/hooks/useBudgets';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFinance } from '@/context/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -137,29 +136,27 @@ const BudgetList: React.FC = () => {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <PieChart className="w-5 h-5" /> 
-            <AnimatedText 
-              text={t('budgets.budget_categories')} 
-              animationType="fade" 
-              duration={0.3}
-            />
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="space-y-6">
-            {budgets.map((budget) => {
+      <div className="space-y-1 mb-4">
+        <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+          <PieChart className="w-5 h-5" /> 
+          <AnimatedText 
+            text={t('budgets.budget_categories')} 
+            animationType="fade" 
+            duration={0.3}
+          />
+        </h2>
+      </div>
+      
+      <div className="space-y-4">
+        {budgets.map((budget) => {
               const percentage = (budget.spent / budget.amount) * 100;
               const remaining = budget.amount - budget.spent;
               const isEditing = editingBudget === budget.id;
               
               return (
-                <div key={budget.id} className="space-y-2">
+                <div key={budget.id} className="border bg-card rounded-xl p-4 space-y-3 hover:bg-[#2a2a2b] transition-colors duration-200">
                   {isEditing ? (
-                    <div className="flex flex-col space-y-3 bg-gray-100 dark:bg-gray-800 p-3 rounded-md border">
+                    <div className="space-y-4">
                       <div className="space-y-3">
                         <div className="flex flex-col space-y-1">
                           <label className="text-sm font-medium">
@@ -231,36 +228,30 @@ const BudgetList: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium">
-                          <AnimatedText 
-                            text={budget.category}
-                            animationType="slide"
-                            duration={0.4}
-                          />
-                        </h3>
-                        <div className="flex items-center text-xs text-muted-foreground mt-1">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          <AnimatedText 
-                            text={getPeriodLabel(budget.period || 'monthly')}
-                            className="text-xs"
-                            animationType="fade"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-sm font-medium">
-                          <span className={remaining < 0 ? 'text-finance-expense' : ''}>
-                            {formatCurrency(budget.spent)}
-                          </span>
-                          <span className="text-muted-foreground"> / </span>
-                          <span className="text-muted-foreground">{formatCurrency(budget.amount)}</span>
+                    <>
+                      {/* Card Header - Category Name and Edit Button */}
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base text-gray-900 dark:text-white truncate">
+                            <AnimatedText 
+                              text={budget.category}
+                              animationType="slide"
+                              duration={0.4}
+                            />
+                          </h3>
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            <AnimatedText 
+                              text={getPeriodLabel(budget.period || 'monthly')}
+                              className="text-xs"
+                              animationType="fade"
+                            />
+                          </div>
                         </div>
                         
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                               <Edit className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -279,38 +270,54 @@ const BudgetList: React.FC = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                    </div>
+                      
+                      {/* Prominent Progress Bar */}
+                      <div className="space-y-2">
+                        <Progress 
+                          value={Math.min(percentage, 100)} 
+                          className="h-3 w-full" 
+                          indicatorClassName={getProgressColor(percentage)} 
+                        />
+                      </div>
+                      
+                      {/* Consolidated Financial Details */}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm">
+                          <span className={`font-semibold ${remaining < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                            {formatCurrency(budget.spent)}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          dari {formatCurrency(budget.amount)}
+                        </div>
+                      </div>
+                      
+                      {/* Clear Status Readout */}
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          <AnimatedText 
+                            text={`${Math.round(percentage)}% digunakan`}
+                            className="text-xs"
+                            animationType="slide"
+                          />
+                        </span>
+                        <span className={remaining < 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-green-600 dark:text-green-400'}>
+                          <AnimatedText 
+                            text={remaining < 0 
+                              ? `Kelebihan ${formatCurrency(Math.abs(remaining))}`
+                              : `Sisa ${formatCurrency(Math.abs(remaining))}`
+                            }
+                            className="text-xs"
+                            animationType="slide"
+                          />
+                        </span>
+                      </div>
+                    </>
                   )}
-                  
-                  <Progress 
-                    value={Math.min(percentage, 100)} 
-                    className="h-2" 
-                    indicatorClassName={getProgressColor(percentage)} 
-                  />
-                  
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <AnimatedText 
-                      text={t('budgets.used', { percentage: Math.round(percentage) })}
-                      className="text-xs"
-                      animationType="slide"
-                    />
-                    <span className={remaining < 0 ? 'text-finance-expense' : ''}>
-                      <AnimatedText 
-                        text={remaining < 0 
-                          ? t('budgets.over_by', { amount: formatCurrency(Math.abs(remaining)) })
-                          : t('budgets.remaining', { amount: formatCurrency(Math.abs(remaining)) })
-                        }
-                        className="text-xs"
-                        animationType="slide"
-                      />
-                    </span>
-                  </div>
                 </div>
               );
             })}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
     </div>
   );
 };
