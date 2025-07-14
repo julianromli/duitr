@@ -172,13 +172,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               animationType="fade"
             />
           </DialogTitle>
-          <p className="text-sm text-gray-400 mt-2">
-            <AnimatedText 
-              text={t('transactions.transfer_description', 'Transfer money between accounts')}
-              animationType="fade"
-              duration={0.4}
-            />
-          </p>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="grid gap-6 py-0">
