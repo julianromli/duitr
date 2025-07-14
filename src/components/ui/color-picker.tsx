@@ -79,7 +79,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           <Button
             variant="outline"
             disabled={disabled}
-            className="w-full justify-start bg-[#242425] border-none text-white hover:bg-[#333] dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+            className="w-full justify-start bg-[#242425] border-0 text-white"
           >
             <div className="flex items-center gap-2">
               <div

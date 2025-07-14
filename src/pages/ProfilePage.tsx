@@ -406,7 +406,7 @@ const ProfilePage: React.FC = () => {
           }}
         >
           <motion.div variants={cardVariants}>
-            <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+            <Card className="bg-card border shadow-none text-card-foreground rounded-xl">
               <CardContent className="p-5 space-y-4">
                 <motion.div 
                   className="space-y-2"
@@ -460,7 +460,7 @@ const ProfilePage: React.FC = () => {
 
           {/* Category Management Section */}
           <motion.div variants={cardVariants}>
-            <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+            <Card className="bg-card border shadow-none text-card-foreground rounded-xl">
               <CardContent className="p-5">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -474,7 +474,7 @@ const ProfilePage: React.FC = () => {
           </motion.div>
 
           <motion.div variants={cardVariants}>
-            <Card className="bg-card border-none shadow-none text-card-foreground rounded-xl">
+            <Card className="bg-card border shadow-none text-card-foreground rounded-xl">
               <CardContent className="p-5 space-y-4">
                 {/* Logout Button */}
                 <motion.div

@@ -232,7 +232,7 @@ const EvaluateContent: React.FC = () => {
     >
       {/* Date Selection */}
       <motion.div variants={itemVariants}>
-        <Card className="border-[#242425]">
+        <Card className="border bg-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <Calendar className="w-5 h-5 text-green-600" />
@@ -262,7 +262,7 @@ const EvaluateContent: React.FC = () => {
             <Button
               onClick={handleEvaluate}
               disabled={!startDate || !endDate || isLoading}
-              className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-semibold py-6 rounded-full"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold"
             >
               {isLoading ? 'Menganalisis...' : 'Analisis Keuangan'}
             </Button>
@@ -279,7 +279,7 @@ const EvaluateContent: React.FC = () => {
           animate="visible"
         >
           <motion.div variants={cardVariants} whileHover="hover">
-            <Card className="border-[#242425]">
+            <Card className="border bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ const EvaluateContent: React.FC = () => {
           </motion.div>
 
           <motion.div variants={cardVariants} whileHover="hover">
-            <Card className="border-[#242425]">
+            <Card className="border bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -311,7 +311,7 @@ const EvaluateContent: React.FC = () => {
           </motion.div>
 
           <motion.div variants={cardVariants} whileHover="hover">
-            <Card className="border-[#242425]">
+            <Card className="border bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -327,7 +327,7 @@ const EvaluateContent: React.FC = () => {
           </motion.div>
 
           <motion.div variants={cardVariants} whileHover="hover">
-            <Card className="border-[#242425]">
+            <Card className="border bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

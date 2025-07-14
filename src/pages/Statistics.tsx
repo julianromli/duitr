@@ -360,7 +360,7 @@ const Statistics: React.FC = () => {
           filteredTransactions.length > 0 ? (
             <>
               <motion.div 
-                className="flex justify-center items-center mb-8 bg-[#242425] p-6 rounded-xl"
+                className="flex justify-center items-center mb-8 border bg-card p-6 rounded-xl"
                 variants={chartVariants}
                 key={`chart-${activeTab}`}
               >
@@ -409,7 +409,7 @@ const Statistics: React.FC = () => {
                   {chartData.map((category, index) => (
                     <motion.div 
                       key={`${category.name}-${index}-${activeTab}`}
-                      className="flex justify-between items-center p-4 bg-[#242425] rounded-xl"
+                      className="flex justify-between items-center p-4 border bg-card rounded-xl"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 + (index * 0.05) }}
