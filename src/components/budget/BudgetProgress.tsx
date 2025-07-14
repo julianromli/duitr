@@ -60,52 +60,49 @@ const BudgetProgress: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <LineChart className="w-5 h-5" /> {t('budgets.overview')}
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <LineChart className="w-5 h-5" /> {t('budgets.overview')}
+            </CardTitle>
+            {/* Period badges moved to header */}
+            <div className="flex flex-wrap gap-1">
+              {Object.entries(budgetCounts).map(([period, count]) => (
+                <Badge key={period} variant="secondary" className="text-xs px-2 py-1">
+                  {count}x {getPeriodLabel(period)}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         
-        <CardContent>
-          <div className="space-y-6">
+        <CardContent className="pt-0">
+          <div className="space-y-4">
+            {/* Hero Metric - Remaining Budget */}
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground font-medium">
+                {remainingBudget < 0 ? t('budgets.over_budget') : t('budgets.remaining_this_period')}
+              </p>
+              <p className={`text-3xl font-bold ${remainingBudget < 0 ? 'text-finance-expense' : 'text-finance-income'}`}>
+                {formatCurrency(Math.abs(remainingBudget))}
+              </p>
+            </div>
+            
+            {/* Progress Bar */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">{t('budgets.overall_budget')}</span>
-                <span className="text-sm font-medium">
-                  {formatCurrency(totalSpent)} / {formatCurrency(totalBudgeted)}
-                </span>
-              </div>
-              
               <Progress 
                 value={overallProgress} 
                 className="h-3" 
                 indicatorClassName={overallProgress >= 90 ? 'bg-finance-expense' : 'bg-finance-income'} 
               />
               
-              {/* Period badges */}
-              <div className="flex flex-wrap gap-2 mt-2">
-                {Object.entries(budgetCounts).map(([period, count]) => (
-                  <Badge key={period} variant="outline" className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>{count}x {getPeriodLabel(period)}</span>
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="space-y-4 pt-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">{t('budgets.spent')}</p>
-                  <p className="text-lg font-semibold">{formatCurrency(totalSpent)}</p>
-                </div>
-                
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">{t('budgets.overall_remaining')}</p>
-                  <p className={`text-lg font-semibold ${remainingBudget < 0 ? 'text-finance-expense' : 'text-finance-income'}`}>
-                    {formatCurrency(Math.abs(remainingBudget))}
-                    {remainingBudget < 0 ? ` ${t('budgets.over')}` : ''}
-                  </p>
-                </div>
-              </div>
+              {/* Consolidated Supporting Details */}
+               <div className="text-center">
+                 <p className="text-sm text-muted-foreground">
+                   <span className="font-medium text-foreground">{formatCurrency(totalSpent)}</span> /{' '}
+                   <span className="font-medium text-foreground">{formatCurrency(totalBudgeted)}</span>
+                 </p>
+               </div>
             </div>
           </div>
         </CardContent>

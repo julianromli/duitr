@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,9 @@ import { useTranslation } from 'react-i18next';
 import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { useCategories } from '@/hooks/useCategories';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import { motion } from 'framer-motion';
+import { PlusCircle } from 'lucide-react';
+import AnimatedText from '@/components/ui/animated-text';
 
 
 interface IncomeFormProps {
@@ -107,14 +110,32 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1A1A1A] border-none text-white">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{t('transactions.add_income')}</DialogTitle>
+      <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-white/10 text-white backdrop-blur-xl shadow-2xl">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
+            <div className="p-2 bg-[#C6FE1E]/10 rounded-full">
+              <PlusCircle className="h-6 w-6 text-[#C6FE1E]" />
+            </div>
+            <AnimatedText 
+              text={t('transactions.add_income')}
+              animationType="fade"
+            />
+          </DialogTitle>
+          <p className="text-sm text-gray-400 mt-2">
+            <AnimatedText 
+              text={t('transactions.add_income_description', 'Add a new income transaction')}
+              animationType="fade"
+              duration={0.4}
+            />
+          </p>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
+        <form onSubmit={handleSubmit} className="grid gap-6 py-0">
+          <div className="space-y-3">
+            <Label htmlFor="amount" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.amount')} />
+            </Label>
             <Input
               id="amount"
               name="amount"
@@ -124,64 +145,94 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               value={formData.amount}
               onChange={handleChange}
               required
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="categoryId" className="text-[#868686]">{t('transactions.category')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="categoryId" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.category')} />
+            </Label>
             <Select
               value={formData.categoryId ? String(formData.categoryId) : ""}
               onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
               disabled={isLoadingCategories}
             >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder={
-                  isLoadingCategories ? t('common.loading') : t('transactions.categoryform')
-                } />
+              <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                <SelectValue>
+                  <AnimatedText 
+                    text={isLoadingCategories ? t('common.loading') : 
+                      formData.categoryId ? 
+                        categories.find(c => c.id === formData.categoryId)?.name || t('transactions.categoryform') :
+                        t('transactions.categoryform')
+                    }
+                  />
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white max-h-[300px]">
-                {categories.map((category) => (
-                  <SelectItem 
-                    key={category.id} 
-                    value={String(category.id)}
-                    className="hover:bg-[#333] focus:bg-[#333]"
-                  >
-                    <div className="flex items-center">
-                      <CategoryIcon 
-                        category={category.id}
-                        size="sm"
-                        className="mr-2"
-                      />
-                      <span className="ml-2">{category.name}</span>
-                    </div>
+              <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl max-h-[300px]">
+                {isLoadingCategories ? (
+                  <SelectItem value="loading" disabled>
+                    <AnimatedText text={t('common.loading')} />
                   </SelectItem>
-                ))}
+                ) : (
+                  categories.map((category) => (
+                    <SelectItem 
+                      key={category.id} 
+                      value={String(category.id)}
+                      className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200"
+                    >
+                      <div className="flex items-center">
+                        <CategoryIcon 
+                          category={category.id}
+                          size="sm"
+                          className="mr-2"
+                        />
+                        <span className="ml-2">
+                          <AnimatedText text={category.name} animationType="fade" />
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="walletId" className="text-[#868686]">{t('transactions.wallet')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="walletId" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.wallet')} />
+            </Label>
             <Select
               value={formData.walletId}
               onValueChange={(value) => setFormData({ ...formData, walletId: value })}
             >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder={t('wallets.select_wallet')} />
+              <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                <SelectValue>
+                  <AnimatedText 
+                    text={formData.walletId ? 
+                      wallets.find(w => w.id === formData.walletId)?.name || t('wallets.select_wallet') :
+                      t('wallets.select_wallet')
+                    }
+                  />
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
+              <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
                 {wallets.map((wallet) => (
-                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
-                    {wallet.name}
+                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                    <AnimatedText text={wallet.name} />
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.description')} />
+            </Label>
             <Input
               id="description"
               name="description"
@@ -189,13 +240,16 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               value={formData.description}
               onChange={handleChange}
               required
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label className="text-[#868686]">{t('transactions.date')}</Label>
-            <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.date')} />
+            </Label>
+            <div className="bg-[#242425]/80 border border-white/10 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus-within:ring-2 focus-within:ring-[#C6FE1E]/50">
               <DatePicker 
                 date={selectedDate}
                 setDate={setSelectedDate}
@@ -203,10 +257,36 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
             </div>
           </div>
           
-          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
-            {t('transactions.add_income')}
-          </Button>
         </form>
+        
+        <DialogFooter className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-6">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)} 
+              className="w-full h-12 border border-white/20 hover:bg-white/5 text-white rounded-xl transition-all duration-200 font-medium"
+            >
+              <AnimatedText text={t('buttons.cancel')} />
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Button 
+              type="submit"
+              onClick={handleSubmit}
+              className="w-full h-12 bg-gradient-to-r from-[#C6FE1E] to-[#A8E016] hover:from-[#B0E018] hover:to-[#98D014] text-[#0D0D0D] font-semibold border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <AnimatedText text={t('transactions.add_income')} />
+            </Button>
+          </motion.div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
