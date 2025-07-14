@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,9 @@ import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/catego
 import { useAuth } from '@/context/AuthContext';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { DatePicker } from '@/components/ui/date-picker';
+import { motion } from 'framer-motion';
+import { ArrowRightLeft } from 'lucide-react';
+import AnimatedText from '@/components/ui/animated-text';
 
 interface TransferFormProps {
   open: boolean;
@@ -158,57 +161,95 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1A1A1A] border-none text-white">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{t('transactions.transfer')}</DialogTitle>
+      <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-white/10 text-white backdrop-blur-xl shadow-2xl">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-3">
+            <div className="p-2 bg-[#C6FE1E]/10 rounded-full">
+              <ArrowRightLeft className="h-6 w-6 text-[#C6FE1E]" />
+            </div>
+            <AnimatedText 
+              text={t('transactions.transfer')}
+              animationType="fade"
+            />
+          </DialogTitle>
+          <p className="text-sm text-gray-400 mt-2">
+            <AnimatedText 
+              text={t('transactions.transfer_description', 'Transfer money between accounts')}
+              animationType="fade"
+              duration={0.4}
+            />
+          </p>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="fromWalletId" className="text-[#868686]">{t('transactions.from_account')}</Label>
+        <form onSubmit={handleSubmit} className="grid gap-6 py-0">
+          <div className="space-y-3">
+            <Label htmlFor="fromWalletId" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.from_account')} />
+            </Label>
             <Select
               value={formData.fromWalletId}
               onValueChange={(value) => setFormData({ ...formData, fromWalletId: value })}
             >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder={t('transactions.select_source')} />
+              <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                <SelectValue>
+                  <AnimatedText 
+                    text={formData.fromWalletId ? 
+                      wallets.find(w => w.id === formData.fromWalletId)?.name || t('transactions.select_source') :
+                      t('transactions.select_source')
+                    }
+                  />
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
+              <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
                 {wallets.map((wallet) => (
-                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333] focus:bg-[#333]">
-                    {wallet.name}
+                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                    <AnimatedText text={wallet.name} />
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="toWalletId" className="text-[#868686]">{t('transactions.to_account')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="toWalletId" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.to_account')} />
+            </Label>
             <Select
               value={formData.toWalletId}
               onValueChange={(value) => setFormData({ ...formData, toWalletId: value })}
             >
-              <SelectTrigger className="bg-[#242425] border-0 text-white">
-                <SelectValue placeholder={t('transactions.select_destination')} />
+              <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                <SelectValue>
+                  <AnimatedText 
+                    text={formData.toWalletId ? 
+                      wallets.find(w => w.id === formData.toWalletId)?.name || t('transactions.select_destination') :
+                      t('transactions.select_destination')
+                    }
+                  />
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-[#242425] border-0 text-white">
+              <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
                 {wallets.map((wallet) => (
                   <SelectItem 
                     key={wallet.id} 
                     value={wallet.id}
                     disabled={wallet.id === formData.fromWalletId}
-                    className="hover:bg-[#333] focus:bg-[#333]"
+                    className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200 disabled:opacity-50"
                   >
-                    {wallet.name}
+                    <AnimatedText text={wallet.name} />
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="amount" className="text-[#868686]">{t('transactions.amount')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="amount" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.amount')} />
+            </Label>
             <FormattedInput
               id="amount"
               name="amount"
@@ -217,12 +258,15 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               onChange={(value) => handleFormattedChange('amount', value)}
               onValueChange={(numericValue) => handleFormattedValueChange('amount', numericValue)}
               required
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="fee" className="text-[#868686]">{t('transactions.fee')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="fee" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.fee')} />
+            </Label>
             <FormattedInput
               id="fee"
               name="fee"
@@ -230,25 +274,31 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               value={formData.fee}
               onChange={(value) => handleFormattedChange('fee', value)}
               onValueChange={(numericValue) => handleFormattedValueChange('fee', numericValue)}
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#868686]">{t('transactions.description')}</Label>
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.description')} />
+            </Label>
             <Input
               id="description"
               name="description"
               placeholder={t('transactions.enter_description')}
               value={formData.description}
               onChange={handleChange}
-              className="bg-[#242425] border-0 text-white"
+              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
             />
           </div>
           
-          <div className="space-y-2">
-            <Label className="text-[#868686]">{t('transactions.date')}</Label>
-            <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
+              <AnimatedText text={t('transactions.date')} />
+            </Label>
+            <div className="bg-[#242425]/80 border border-white/10 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus-within:ring-2 focus-within:ring-[#C6FE1E]/50">
               <DatePicker 
                 date={selectedDate}
                 setDate={setSelectedDate}
@@ -256,10 +306,36 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
             </div>
           </div>
           
-          <Button type="submit" className="w-full bg-[#C6FE1E] text-[#0D0D0D] hover:bg-[#B0E018] font-semibold border-0">
-            {t('transactions.transfer')}
-          </Button>
         </form>
+        
+        <DialogFooter className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-6">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)} 
+              className="w-full h-12 border border-white/20 hover:bg-white/5 text-white rounded-xl transition-all duration-200 font-medium"
+            >
+              <AnimatedText text={t('buttons.cancel')} />
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full"
+          >
+            <Button 
+              type="submit"
+              onClick={handleSubmit}
+              className="w-full h-12 bg-gradient-to-r from-[#C6FE1E] to-[#A8E016] hover:from-[#B0E018] hover:to-[#98D014] text-[#0D0D0D] font-semibold border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <AnimatedText text={t('transactions.transfer')} />
+            </Button>
+          </motion.div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
