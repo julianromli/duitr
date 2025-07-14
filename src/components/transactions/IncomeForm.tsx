@@ -121,13 +121,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               animationType="fade"
             />
           </DialogTitle>
-          <p className="text-sm text-gray-400 mt-2">
-            <AnimatedText 
-              text={t('transactions.add_income_description', 'Add a new income transaction')}
-              animationType="fade"
-              duration={0.4}
-            />
-          </p>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="grid gap-6 py-0">
