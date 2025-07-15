@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { TracingBeam } from "@/components/ui/tracing-beam";
+import { Typewriter } from "@/components/ui/typewriter-text";
 import { ArrowRight, CheckCircle, Star, Users, TrendingUp, Shield, Zap, Globe } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Hero195 = () => {
   return (
@@ -17,7 +19,12 @@ const Hero195 = () => {
         
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-8 flex justify-center">
+            <motion.div 
+              className="mb-8 flex justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
               <div className="relative rounded-full px-4 py-2 text-sm leading-6 text-gray-300 ring-1 ring-white/10 hover:ring-white/20 bg-white/5 backdrop-blur-sm">
                 Get started to the future of financial management with Duitr.{" "}
                 <a href="/login" className="font-semibold text-lime-400 hover:text-lime-300">
@@ -25,20 +32,42 @@ const Hero195 = () => {
                   Start now <span aria-hidden="true">&rarr;</span>
                 </a>
               </div>
-            </div>
+            </motion.div>
             
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+            <motion.h1 
+              className="text-4xl font-bold tracking-tight text-white sm:text-6xl"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
               Take Control of Your{" "}
+              <br></br>
               <span className="bg-gradient-to-r from-lime-400 to-green-400 bg-clip-text text-transparent">
-                Financial Future
+                <Typewriter 
+                  text={["Financial Future", "Money Management", "Smart Budgeting"]}
+                  speed={120}
+                  loop={true}
+                  delay={2000}
+                  className="inline"
+                />
               </span>
-            </h1>
+            </motion.h1>
             
-            <p className="mt-6 text-lg leading-8 text-gray-300">
+            <motion.p 
+              className="mt-6 text-lg leading-8 text-gray-300"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               Meet your smart finance assistant. Analyze spending, manage debts, and budget effortlessly – all powered by AI in one beautiful app.
-            </p>
+            </motion.p>
             
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+            <motion.div 
+              className="mt-10 flex items-center justify-center gap-x-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
               <Button 
                 size="lg" 
                 className="bg-lime-400 hover:bg-lime-500 text-black font-semibold shadow-lg shadow-lime-400/25"
@@ -47,10 +76,15 @@ const Hero195 = () => {
                 Get started for free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </div>
+            </motion.div>
           </div>
           {/* Hero Image/Demo */}
-          <div className="mt-16 flow-root sm:mt-24">
+          <motion.div 
+            className="mt-16 flow-root sm:mt-24"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+          >
             <div className="-m-2 rounded-xl bg-white/5 p-2 ring-1 ring-inset ring-white/10 lg:-m-4 lg:rounded-2xl lg:p-4 backdrop-blur-sm">
               <Card className="relative overflow-hidden bg-black border-white/10">
                 <BorderBeam size={250} duration={12} delay={9} colorFrom="#a3e635" colorTo="#22c55e" />
@@ -63,7 +97,7 @@ const Hero195 = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -71,7 +105,13 @@ const Hero195 = () => {
       <TracingBeam className="px-6">
         <section className="py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
+            <motion.div 
+              className="mx-auto max-w-2xl text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
               <h2 className="text-base font-semibold leading-7 text-lime-400">
                 Everything you need
               </h2>
@@ -81,11 +121,23 @@ const Hero195 = () => {
               <p className="mt-6 text-lg leading-8 text-gray-300">
                 From AI-powered insights to comprehensive tracking, Duitr provides all the tools you need to master your finances.
               </p>
-            </div>
+            </motion.div>
             
-            <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <motion.div 
+              className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
               <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-                <div className="flex flex-col">
+                <motion.div 
+                  className="flex flex-col"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                >
                   <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
                     <TrendingUp className="h-5 w-5 flex-none text-lime-400" />
                     Smart Analytics
@@ -95,9 +147,15 @@ const Hero195 = () => {
                       AI-powered insights that help you understand your spending patterns and optimize your financial decisions.
                     </p>
                   </dd>
-                </div>
+                </motion.div>
                 
-                <div className="flex flex-col">
+                <motion.div 
+                  className="flex flex-col"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                >
                   <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
                     <Shield className="h-5 w-5 flex-none text-lime-400" />
                     Secure & Private
@@ -107,9 +165,15 @@ const Hero195 = () => {
                       Bank-level security with end-to-end encryption. Your financial data is always protected and private.
                     </p>
                   </dd>
-                </div>
+                </motion.div>
                 
-                <div className="flex flex-col">
+                <motion.div 
+                  className="flex flex-col"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                >
                   <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
                     <Zap className="h-5 w-5 flex-none text-lime-400" />
                     Real-time Sync
@@ -119,21 +183,27 @@ const Hero195 = () => {
                       Instant synchronization across all your devices. Access your financial data anywhere, anytime.
                     </p>
                   </dd>
-                </div>
+                </motion.div>
               </dl>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* Tabs Section */}
         <section className="py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <Tabs defaultValue="analytics" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-white/5 border-white/10">
-                <TabsTrigger value="analytics" className="data-[state=active]:bg-lime-400 data-[state=active]:text-black text-gray-300">Analytics</TabsTrigger>
-                <TabsTrigger value="budgeting" className="data-[state=active]:bg-lime-400 data-[state=active]:text-black text-gray-300">Budgeting</TabsTrigger>
-                <TabsTrigger value="tracking" className="data-[state=active]:bg-lime-400 data-[state=active]:text-black text-gray-300">Tracking</TabsTrigger>
-              </TabsList>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <Tabs defaultValue="analytics" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 bg-white/5 border-white/10">
+                  <TabsTrigger value="analytics" className="data-[state=active]:bg-lime-400 data-[state=active]:text-black text-gray-300">Analytics</TabsTrigger>
+                  <TabsTrigger value="budgeting" className="data-[state=active]:bg-lime-400 data-[state=active]:text-black text-gray-300">Budgeting</TabsTrigger>
+                  <TabsTrigger value="tracking" className="data-[state=active]:bg-lime-400 data-[state=active]:text-black text-gray-300">Tracking</TabsTrigger>
+                </TabsList>
               
               <TabsContent value="analytics" className="mt-8">
                 <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
@@ -215,21 +285,46 @@ const Hero195 = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
+              </Tabs>
+            </motion.div>
           </div>
         </section>
 
         {/* CTA Section */}
         <section className="py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <motion.div 
+              className="mx-auto max-w-2xl text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <motion.h2 
+                className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                viewport={{ once: true }}
+              >
                 Ready to transform your finances?
-              </h2>
-              <p className="mt-6 text-lg leading-8 text-gray-300">
+              </motion.h2>
+              <motion.p 
+                className="mt-6 text-lg leading-8 text-gray-300"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
                 Join thousands of users who have taken control of their financial future with Duitr.
-              </p>
-              <div className="mt-10 flex items-center justify-center gap-x-6">
+              </motion.p>
+              <motion.div 
+                className="mt-10 flex items-center justify-center gap-x-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                viewport={{ once: true }}
+              >
                 <Button 
                   size="lg" 
                   className="bg-lime-400 hover:bg-lime-500 text-black font-semibold shadow-lg shadow-lime-400/25"
@@ -237,8 +332,8 @@ const Hero195 = () => {
                 >
                   Start your free trial
                 </Button>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </section>
       </TracingBeam>

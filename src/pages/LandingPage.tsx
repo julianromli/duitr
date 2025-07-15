@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Hero195 } from '@/components/ui/hero-195';
+import { motion } from 'framer-motion';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -8,12 +9,22 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <header className="absolute top-0 left-0 right-0 z-50 py-4 px-6 md:px-10 lg:px-20">
+      <motion.header 
+        className="absolute top-0 left-0 right-0 z-50 py-4 px-6 md:px-10 lg:px-20"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center">
+          <motion.div 
+            className="flex items-center"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             <h1 className="text-2xl font-bold text-lime-400">Duitr</h1>
-          </div>
+          </motion.div>
           
           {/* Navigation Links - Desktop */}
           {/* <nav className="hidden md:flex items-center space-x-8">
@@ -25,7 +36,12 @@ const LandingPage: React.FC = () => {
           </nav> */}
           
           {/* Auth Buttons */}
-          <div className="flex items-center space-x-4">
+          <motion.div 
+            className="flex items-center space-x-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <button 
               onClick={() => navigate('/login')} 
               className="hidden md:block text-sm font-medium px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
@@ -38,17 +54,29 @@ const LandingPage: React.FC = () => {
             >
               Sign up
             </button>
-          </div>
+          </motion.div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero195 Component */}
       <Hero195 />
 
       {/* Footer */}
-      <footer className="py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black">
+      <motion.footer 
+        className="py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true, margin: "-50px" }}
+      >
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <motion.div 
+            className="flex flex-col md:flex-row justify-between items-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            viewport={{ once: true }}
+          >
             <div className="mb-4 md:mb-0">
               <h1 className="text-xl font-bold text-lime-400">Duitr</h1>
               <p className="text-sm text-gray-300 mt-1">Your AI-powered financial assistant</p>
@@ -70,17 +98,23 @@ const LandingPage: React.FC = () => {
                 </svg>
               </a>
             </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">
+          </motion.div>
+          <motion.div 
+            className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
             <p className="text-sm text-gray-300">© 2023 Duitr. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-sm text-gray-300 hover:text-lime-400 transition-colors">Privacy Policy</a>
               <a href="#" className="text-sm text-gray-300 hover:text-lime-400 transition-colors">Terms of Service</a>
               <a href="#" className="text-sm text-gray-300 hover:text-lime-400 transition-colors">Contact Us</a>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 };
