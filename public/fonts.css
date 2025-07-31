@@ -1,8 +1,0 @@
-
-/* Space Grotesk Font Configuration - Self-hosted via Fontsource */
-/* Fonts are now loaded via @fontsource/space-grotesk imports in CSS */
-
-/* Force font-family on all elements */
-html, body, #root, * {
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
-}

@@ -14,6 +14,62 @@ export default defineConfig(({ mode, command }) => ({
     host: '0.0.0.0',
     port: 4173
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui';
+            }
+            if (id.includes('framer-motion')) {
+              return 'motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'icons';
+            }
+            if (id.includes('i18next') || id.includes('react-i18next')) {
+              return 'i18n';
+            }
+            // Removed chunks for dependencies that are no longer used
+            // recharts, xlsx, react-icons have been removed
+            return 'vendor';
+          }
+          if (id.includes('src/components/ui')) {
+            return 'ui-components';
+          }
+          if (id.includes('src/components/magicui')) {
+            return 'magic-ui';
+          }
+          if (id.includes('src/pages')) {
+            return 'pages';
+          }
+        },
+      },
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+    sourcemap: mode !== 'production',
+    target: 'es2020',
+    cssCodeSplit: true,
+  },
   plugins: [
     react(),
     mode === 'development' &&

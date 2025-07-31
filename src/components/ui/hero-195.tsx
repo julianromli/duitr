@@ -1,14 +1,16 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TracingBeam } from "@/components/ui/tracing-beam";
-import { WordRotate } from "@/components/magicui/word-rotate";
-import { Squares } from "@/components/ui/squares-background";
-import { IphoneCarousel } from "@/components/ui/iphone-carousel";
 import { ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { OptimizedWordRotate } from "@/components/ui/optimized-word-rotate";
+
+// Lazy load heavy components
+const TracingBeam = lazy(() => import("@/components/ui/tracing-beam").then(module => ({ default: module.TracingBeam })));
+const Squares = lazy(() => import("@/components/ui/squares-background").then(module => ({ default: module.Squares })));
+const IphoneCarousel = lazy(() => import("@/components/ui/iphone-carousel").then(module => ({ default: module.IphoneCarousel })));
 
 const Hero195 = () => {
   const { t } = useTranslation();
@@ -17,16 +19,18 @@ const Hero195 = () => {
     <div className="w-full relative">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
-        {/* Animated Grid Background */}
-        <Squares
-          direction="diagonal"
-          speed={0.5}
-          borderColor="rgba(34, 197, 94, 0.3)"
-          squareSize={40}
-          hoverFillColor="rgba(163, 230, 53, 0.2)"
-          className="absolute inset-0 -z-10 opacity-60"
-        />
-        <div className="absolute inset-0 bg-grid-white/[0.02] [mask-image:linear-gradient(0deg,transparent,rgba(255,255,255,0.1))]" />
+        {/* Simplified Background */}
+        <Suspense fallback={<div className="absolute inset-0 bg-gradient-to-br from-green-900/20 to-lime-900/20 -z-10" />}>
+          <Squares
+            direction="diagonal"
+            speed={0.3}
+            borderColor="rgba(34, 197, 94, 0.2)"
+            squareSize={60}
+            hoverFillColor="rgba(163, 230, 53, 0.1)"
+            className="absolute inset-0 -z-10 opacity-40"
+          />
+        </Suspense>
+        <div className="absolute inset-0 bg-grid-white/[0.01] [mask-image:linear-gradient(0deg,transparent,rgba(255,255,255,0.05))]" />
         
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
@@ -47,15 +51,15 @@ const Hero195 = () => {
             
             <motion.h1 
               className="text-5xl font-bold tracking-tight text-white sm:text-7xl"
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               {t('landing.hero.title')}{" "}
               <br></br>
-              <WordRotate 
+              <OptimizedWordRotate 
                 words={t('landing.hero.titleHighlight', { returnObjects: true }) as string[]}
-                duration={2500}
+                duration={3000}
                 className="inline"
               />
             </motion.h1>
@@ -88,20 +92,25 @@ const Hero195 = () => {
           {/* Hero Image/Demo */}
           <motion.div
             className="mt-16 flow-root sm:mt-24"
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
           >
             <div className="flex justify-center">
-              <IphoneCarousel className="" />
+              <Suspense fallback={
+                <div className="w-[300px] h-[600px] bg-gradient-to-b from-gray-800 to-gray-900 rounded-[55px] border border-gray-700 animate-pulse" />
+              }>
+                <IphoneCarousel className="" />
+              </Suspense>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <TracingBeam className="px-6">
-        <section className="py-16 sm:py-20">
+      <Suspense fallback={<div className="px-6"><section className="py-16 sm:py-20"></section></div>}>
+        <TracingBeam className="px-6">
+          <section className="py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <motion.div 
               className="mx-auto max-w-2xl text-center"
@@ -343,7 +352,8 @@ const Hero195 = () => {
             </motion.div>
           </div>
         </section>
-      </TracingBeam>
+        </TracingBeam>
+      </Suspense>
     </div>
   );
 };

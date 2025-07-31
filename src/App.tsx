@@ -9,6 +9,10 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { TransitionProvider } from '@/context/TransitionContext';
 import { AppContent } from '@/components/app/AppContent';
+import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
+import { useWebVitals } from '@/hooks/useWebVitals';
+import ResourceOptimizer from '@/components/ui/resource-optimizer';
+import CriticalCSS from '@/components/ui/critical-css';
 import i18n from './i18n';
 
 const queryClient = new QueryClient();
@@ -29,6 +33,20 @@ const AppLoadingScreen: React.FC = () => {
 const AppWrapper: React.FC = () => {
   const { ready, i18n: i18nInstance } = useTranslation();
   const [isI18nReady, setIsI18nReady] = React.useState(false);
+  
+  // Initialize performance optimizations
+  usePerformanceOptimization();
+  
+  // Monitor Web Vitals
+  useWebVitals({
+    debug: process.env.NODE_ENV === 'development',
+    reportCallback: (metric) => {
+      // You can send metrics to analytics service here
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Web Vitals:', metric);
+      }
+    }
+  });
   
   React.useEffect(() => {
     const checkI18nReady = () => {
@@ -65,6 +83,17 @@ const AppWrapper: React.FC = () => {
       <AuthProvider>
         <BrowserRouter>
           <TransitionProvider>
+            <ResourceOptimizer 
+              preconnectDomains={[
+                'https://fonts.googleapis.com',
+                'https://fonts.gstatic.com',
+                'https://trae-api-sg.mchost.guru'
+              ]}
+              dnsPrefetchDomains={[
+                '//www.duitr.my.id'
+              ]}
+            />
+            <CriticalCSS />
             <AppContent />
           </TransitionProvider>
         </BrowserRouter>
