@@ -11,6 +11,8 @@
     <meta name="keywords" content="duitr, personal finance, money management, expense tracker, budgeting" />
 
     <!-- Resource Hints for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://trae-api-sg.mchost.guru" crossorigin>
     <link rel="dns-prefetch" href="//www.duitr.my.id">
     
@@ -51,7 +53,11 @@
     <meta name="twitter:description" content="Manage your finances, track expenses, and reach your financial goals." />
     <meta name="twitter:image" content="https://www.duitr.my.id/screenshots/duitr_thumbnail.jpg" />
     
-    <!-- Font loading handled by @fontsource/space-grotesk in CSS imports -->
+    <!-- Optimized font loading with font-display: swap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"></noscript>
     
     <style>
       /* Force font-family to be applied everywhere */
