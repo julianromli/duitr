@@ -9,10 +9,17 @@ const PrivacyPolicy: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen w-full relative text-white">
+      {/* Emerald Void */}
+      <div 
+        className="absolute inset-0 z-0" 
+        style={{ 
+          background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #072607 100%)", 
+        }} 
+      />
       {/* Header */}
       <motion.header 
-        className="py-6 px-6 md:px-10 lg:px-20 border-b border-white/10"
+        className="py-6 px-6 md:px-10 lg:px-20 border-b border-white/10 relative z-10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -31,7 +38,7 @@ const PrivacyPolicy: React.FC = () => {
 
       {/* Main Content */}
       <motion.main 
-        className="py-12 px-6 md:px-10 lg:px-20"
+        className="py-12 px-6 md:px-10 lg:px-20 relative z-10"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
@@ -60,9 +67,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
               <h2 className="text-2xl font-semibold mb-4 flex items-center">
                 <Eye className="h-6 w-6 text-lime-400 mr-3" />
@@ -77,9 +83,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
             >
               <h2 className="text-2xl font-semibold mb-6 flex items-center">
                 <Database className="h-6 w-6 text-lime-400 mr-3" />
@@ -119,9 +124,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
             >
               <h2 className="text-2xl font-semibold mb-6">How We Use Your Information</h2>
               <div className="grid md:grid-cols-2 gap-6">
@@ -150,9 +154,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
             >
               <h2 className="text-2xl font-semibold mb-6 flex items-center">
                 <Lock className="h-6 w-6 text-lime-400 mr-3" />
@@ -179,9 +182,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
             >
               <h2 className="text-2xl font-semibold mb-6 flex items-center">
                 <Smartphone className="h-6 w-6 text-lime-400 mr-3" />
@@ -204,9 +206,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.9 }}
             >
               <h2 className="text-2xl font-semibold mb-6 flex items-center">
                 <Globe className="h-6 w-6 text-lime-400 mr-3" />
@@ -228,9 +229,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
             >
               <h2 className="text-2xl font-semibold mb-6">Your Rights & Controls</h2>
               <div className="grid md:grid-cols-2 gap-6">
@@ -257,9 +257,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-white/5 border border-white/10 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.1 }}
             >
               <h2 className="text-2xl font-semibold mb-6">International Users</h2>
               <div className="space-y-4">
@@ -273,9 +272,8 @@ const PrivacyPolicy: React.FC = () => {
             <motion.section 
               className="bg-lime-400/10 border border-lime-400/20 rounded-lg p-8"
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
             >
               <h2 className="text-2xl font-semibold mb-6 text-lime-400">Contact Us</h2>
               <div className="space-y-4">
@@ -295,19 +293,17 @@ const PrivacyPolicy: React.FC = () => {
 
       {/* Footer */}
       <motion.footer 
-        className="py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black"
+        className="py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black relative z-10"
         initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true, margin: "-50px" }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 1.3 }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div 
             className="flex flex-col md:flex-row justify-between items-center"
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.3 }}
           >
             <div className="mb-4 md:mb-0">
               <h1 className="text-xl font-bold text-lime-400">Duitr</h1>
@@ -335,9 +331,8 @@ const PrivacyPolicy: React.FC = () => {
           <motion.div 
             className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.4 }}
           >
             <p className="text-sm text-gray-300">© {new Date().getFullYear()} Duitr. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">

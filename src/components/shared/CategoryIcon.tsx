@@ -103,7 +103,7 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
   const [displayName, setDisplayName] = useState<string>('');
   const [categoryType, setCategoryType] = useState<string>('');
   const [categoryIcon, setCategoryIcon] = useState<string | null>(null);
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   
   // Define size classes
   const iconSizes = {
@@ -229,32 +229,21 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           // Find the category in DEFAULT_CATEGORIES
           const defaultCategory = DEFAULT_CATEGORIES[categoryType].find(cat => cat.id === String(numericId));
           if (defaultCategory) {
-            // Return localized name from default categories
-            if (i18n.language === 'id') {
-              const translations: Record<string, string> = {
-                "Groceries": "Belanjaan",
-                "Dining": "Makanan",
-                "Transportation": "Transportasi",
-                "Subscription": "Langganan", 
-                "Housing": "Perumahan",
-                "Entertainment": "Hiburan",
-                "Shopping": "Belanja",
-                "Health": "Kesehatan",
-                "Education": "Pendidikan",
-                "Vehicle": "Kendaraan",
-                "Personal": "Pribadi",
-                "Other": "Lainnya",
-                "Donate": "Sedekah",
-                "Salary": "Gaji",
-                "Business": "Bisnis",
-                "Investment": "Investasi",
-                "Gift": "Hadiah", 
-                "Transfer": "Transfer"
-              };
-              setDisplayName(translations[defaultCategory.name] || defaultCategory.name);
+            // Use translation keys for category names
+            const categoryKey = defaultCategory.name.toLowerCase().replace(/\s+/g, '_');
+            let translationKey = '';
+            
+            if (categoryType === 'expense') {
+              translationKey = `transactions.categories.${categoryKey}`;
+            } else if (categoryType === 'income') {
+              translationKey = `income.categories.${categoryKey}`;
             } else {
-              setDisplayName(defaultCategory.name);
+              translationKey = `transactions.${categoryKey}`;
             }
+            
+            // Use translation with fallback to original name
+            const translatedName = t(translationKey, defaultCategory.name);
+            setDisplayName(translatedName);
             
             // Set category type based on ID for icon matching
             const categoryKeyMap: Record<number, string> = {

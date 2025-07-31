@@ -132,7 +132,7 @@ const WalletList: React.FC = () => {
       setIsEditOpen(false);
     } catch (err) {
       console.error('Error updating wallet:', err);
-      setError('Gagal mengubah wallet. Silakan coba lagi.');
+      setError(t('wallets.updateError'));
       toast({
         title: t('common.error'),
         description: t('wallets.updateError'),
@@ -287,7 +287,7 @@ const WalletList: React.FC = () => {
           onClick={() => setError(null)} 
           className="bg-[#C6FE1E] text-[#0D0D0D]"
         >
-          Coba Lagi
+          {t('common.tryAgain')}
         </Button>
       </div>
     );

@@ -82,31 +82,31 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name" className="text-foreground">Nama Kategori</Label>
+        <Label htmlFor="name" className="text-foreground">{t('categories.name')}</Label>
         <Input
           id="name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="Masukkan nama kategori"
+          placeholder={t('categories.enterName')}
           className="bg-input text-foreground border-border"
         />
       </div>
 
       <div className="space-y-2">
-        <Label className="text-foreground">Jenis Kategori</Label>
+        <Label className="text-foreground">{t('categories.type')}</Label>
         <Select
           value={formData.type}
           onValueChange={(value: 'income' | 'expense') => setFormData({ ...formData, type: value })}
         >
           <SelectTrigger className="bg-input text-foreground border-border">
-            <SelectValue placeholder="Pilih jenis kategori" />
+            <SelectValue placeholder={t('categories.selectType')} />
           </SelectTrigger>
           <SelectContent className="bg-popover border-border">
             <SelectItem value="income" className="text-base py-3">
-              Pemasukan
+              {t('categories.income')}
             </SelectItem>
             <SelectItem value="expense" className="text-base py-3">
-              Pengeluaran
+              {t('categories.expense')}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -116,11 +116,11 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         selectedIcon={normalizeIconName(formData.icon)}
         onIconChange={(iconName) => setFormData({ ...formData, icon: iconName })}
         variant="grid"
-        label="Ikon"
+        label={t('categories.icon')}
       />
 
       <div className="space-y-2">
-        <Label className="text-foreground">Warna</Label>
+        <Label className="text-foreground">{t('categories.color')}</Label>
         <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
           {availableColors.map((color) => (
             <Button
@@ -269,10 +269,10 @@ const CategoryManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 mb-6">
-        <h2 className="text-2xl font-bold text-foreground">Manajemen Kategori</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('categories.management')}</h2>
         <Button onClick={() => setIsCreateDialogOpen(true)} className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90">
           <Plus className="h-4 w-4 mr-2" />
-          Tambah Baru
+          {t('categories.addNew')}
         </Button>
       </div>
 
@@ -280,9 +280,9 @@ const CategoryManagement: React.FC = () => {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="bg-card text-card-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Buat Kategori Baru</DialogTitle>
+            <DialogTitle className="text-foreground">{t('categories.createNew')}</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Buat kategori kustom untuk mengorganisir transaksi Anda dengan lebih baik.
+              {t('categories.createDescription')}
             </DialogDescription>
           </DialogHeader>
           <CategoryForm
@@ -308,9 +308,9 @@ const CategoryManagement: React.FC = () => {
       }}>
         <DialogContent className="bg-card text-card-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Edit Kategori</DialogTitle>
+            <DialogTitle className="text-foreground">{t('categories.editCategory')}</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Ubah detail kategori yang sudah ada.
+              {t('categories.editDescription')}
             </DialogDescription>
           </DialogHeader>
           <CategoryForm
@@ -331,9 +331,9 @@ const CategoryManagement: React.FC = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-card text-card-foreground border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Hapus Kategori</AlertDialogTitle>
+            <AlertDialogTitle className="text-foreground">{t('categories.deleteConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-                Apakah Anda yakin ingin menghapus kategori "{categoryToDelete?.en_name || ''}"? Tindakan ini tidak dapat dibatalkan.
+                {t('categories.deleteConfirmDescription', { name: categoryToDelete?.en_name || '' })}
               </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -355,7 +355,7 @@ const CategoryManagement: React.FC = () => {
       <div className="space-y-8">
         {/* Expense Categories */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-foreground">Pengeluaran</h3>
+          <h3 className="text-xl font-semibold text-foreground">{t('categories.expense')}</h3>
           {expenseCategories.length > 0 ? (
             <div className="space-y-2">
               {expenseCategories.map((category) => {
@@ -397,13 +397,13 @@ const CategoryManagement: React.FC = () => {
               })}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">Belum ada kategori pengeluaran kustom.</p>
+            <p className="text-muted-foreground text-sm">{t('categories.noExpenseCategories')}</p>
           )}
         </div>
 
         {/* Income Categories */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-foreground">Pemasukan</h3>
+          <h3 className="text-xl font-semibold text-foreground">{t('categories.income')}</h3>
           {incomeCategories.length > 0 ? (
             <div className="space-y-2">
               {incomeCategories.map((category) => {
@@ -445,7 +445,7 @@ const CategoryManagement: React.FC = () => {
               })}
             </div>
           ) : (
-            <p className="text-muted-foreground text-sm">Belum ada kategori pemasukan kustom.</p>
+            <p className="text-muted-foreground text-sm">{t('categories.noIncomeCategories')}</p>
           )}
         </div>
       </div>
@@ -456,10 +456,10 @@ const CategoryManagement: React.FC = () => {
           <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
             <Plus className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Belum Ada Kategori Kustom</h3>
-          <p className="text-muted-foreground mb-4">Anda belum membuat kategori kustom. Buat kategori pertama Anda untuk mengorganisir transaksi dengan lebih baik.</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">{t('categories.noCustomCategories')}</h3>
+          <p className="text-muted-foreground mb-4">{t('categories.noCustomCategoriesDescription')}</p>
           <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Buat Kategori Pertama
+            {t('categories.createFirst')}
           </Button>
         </div>
       )}

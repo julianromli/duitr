@@ -676,14 +676,14 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                   {isEditing && transaction.type !== 'transfer' ? (
                     <div className="space-y-2">
                       <Label htmlFor="category" className="text-muted-foreground">
-                        Kategori
+                        {t('transactions.category')}
                       </Label>
                       <Select 
                         value={String(editedTransaction.categoryId)} 
                         onValueChange={(value) => handleChange('categoryId', value)}
                       >
                         <SelectTrigger className="bg-card border-muted-foreground/20 text-foreground">
-                          <SelectValue placeholder="Pilih kategori" />
+                          <SelectValue placeholder={t('transactions.categoryform')} />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-muted-foreground/20 text-foreground max-h-[300px]">
                           {categories.map((category) => (
@@ -703,7 +703,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Kategori</span>
+                      <span className="text-muted-foreground">{t('transactions.category')}</span>
                       <div className="flex items-center gap-2">
                         <CategoryIcon 
                           category={transaction.categoryId} 
@@ -718,14 +718,14 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                   {isEditing ? (
                     <div className="space-y-2">
                       <Label htmlFor="wallet" className="text-muted-foreground">
-                        Dompet
+                        {t('transactions.wallet')}
                       </Label>
                       <Select 
                         value={editedTransaction.walletId} 
                         onValueChange={(value) => handleChange('walletId', value)}
                       >
                         <SelectTrigger className="bg-card border-muted-foreground/20 text-foreground">
-                          <SelectValue placeholder="Pilih dompet" />
+                          <SelectValue placeholder={t('wallets.select_wallet')} />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-muted-foreground/20 text-foreground">
                           {wallets.map((wallet) => (
@@ -742,7 +742,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Dompet</span>
+                      <span className="text-muted-foreground">{t('transactions.wallet')}</span>
                       <span className="font-medium">{getWalletName(walletId)}</span>
                     </div>
                   )}
@@ -751,7 +751,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                   {isEditing ? (
                     <div className="space-y-2">
                       <Label htmlFor="description" className="text-muted-foreground">
-                        Deskripsi
+                        {t('transactions.description')}
                       </Label>
                       <Input 
                         id="description"
@@ -762,7 +762,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Deskripsi</span>
+                      <span className="text-muted-foreground">{t('transactions.description')}</span>
                       <span className="text-right font-medium">{description || '-'}</span>
                     </div>
                   )}
@@ -771,7 +771,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                   {isEditing ? (
                     <div className="space-y-2">
                       <Label htmlFor="date" className="text-muted-foreground">
-                        Waktu
+                        {t('transactions.time')}
                       </Label>
                       <div className="bg-card rounded-md border border-muted-foreground/20">
                         <DatePicker 
@@ -801,19 +801,19 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Waktu</span>
+                      <span className="text-muted-foreground">{t('transactions.time')}</span>
                       <span className="font-medium">{formatDate(date)}</span>
                     </div>
                   )}
                   
                   {/* Jenis Transaksi - non-editable */}
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Jenis Transaksi</span>
+                    <span className="text-muted-foreground">{t('transactions.type')}</span>
                     <div className="flex items-center gap-2">
                       {getTypeIcon()}
                       <span className="font-medium">
-                        {type === 'income' ? 'Pemasukan' : 
-                         type === 'expense' ? 'Pengeluaran' : 'Transfer'}
+                        {type === 'income' ? t('transactions.income') : 
+                         type === 'expense' ? t('transactions.expense') : t('transactions.transfer')}
                       </span>
                     </div>
                   </div>
@@ -830,7 +830,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     onClick={handleSave}
                     aria-label="Save transaction changes"
                   >
-                    Simpan Perubahan
+                    {t('common.saveChanges')}
                   </Button>
                   
                   <Button 
@@ -838,7 +838,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     onClick={handleCancelEdit}
                     aria-label="Cancel editing"
                   >
-                    Batal
+                    {t('common.cancel')}
                   </Button>
                 </>
               ) : (
@@ -849,7 +849,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     disabled={isDownloading}
                     aria-label="Download transaction receipt"
                   >
-                    {isDownloading ? 'Processing...' : 'Download Bukti'}
+                    {isDownloading ? t('common.loading') : t('transactions.download_receipt')}
                   </Button>
                   
                   <Button 
@@ -857,7 +857,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     onClick={handleClose}
                     aria-label="Go back to previous page"
                   >
-                    Kembali
+                    {t('common.back')}
                   </Button>
                 </>
               )}

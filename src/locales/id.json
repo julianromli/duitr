@@ -37,6 +37,9 @@
     "deleted_successfully": "berhasil dihapus",
     "updated_successfully": "berhasil diperbarui",
     "created_successfully": "berhasil dibuat",
+    "startDate": "Tanggal Mulai",
+    "endDate": "Tanggal Akhir",
+    "deleting": "Menghapus...",
     "addNewWallet": "Tambah Dompet Baru",
     "createNewWallet": "Buat Dompet Baru",
     "createWalletDescription": "Buat dompet untuk mengelola uang Anda dengan lebih baik.",
@@ -58,6 +61,7 @@
     "addNew": "Tambah Baru",
     "createNew": "Buat Kategori Baru",
     "createDescription": "Buat kategori kustom untuk mengorganisir transaksi Anda dengan lebih baik.",
+    "createNewCategory": "Buat Kategori Baru",
     "editCategory": "Edit Kategori",
     "editDescription": "Ubah detail kategori yang sudah ada.",
     "deleteConfirmTitle": "Hapus Kategori",
@@ -225,11 +229,11 @@
     "eWallet": "E-Wallet",
     "investment": "Investasi",
     "fillAllFields": "Silakan isi semua kolom yang diperlukan",
-    "accountAdded": "Akun berhasil ditambahkan"
+    "accountAdded": "Akun berhasil ditambahkan",
+    "addError": "Gagal menambahkan wallet. Silakan coba lagi.",
+    "updateError": "Gagal mengubah wallet. Silakan coba lagi."
   },
-  "categories": {
-    "all": "Semua"
-  },
+
 
   "transactions": {
     "title": "Transaksi",
@@ -279,7 +283,10 @@
     "history": "Riwayat Transaksi",
     "view_all": "Lihat Semua",
     "details": "Detail Transaksi",
-    "update_success": "Transaksi berhasil diperbarui",
+     "type": "Jenis",
+     "time": "Waktu",
+     "download_receipt": "Download Bukti",
+     "update_success": "Transaksi berhasil diperbarui",
     "update_error": "Gagal memperbarui transaksi"
 
   },
@@ -339,7 +346,7 @@
     "weekly": "Mingguan",
     "monthly": "Bulanan",
     "yearly": "Tahunan",
-    "spending_by_category": "Pengeluaran per Kategori",
+    "spending_by_category": "Pengeluaran berdasarkan Kategori",
     "categories": {
       "groceries": "Belanjaan",
       "dining": "Makanan",
@@ -466,7 +473,9 @@
     "delete": "Hapus",
     "edit": "Edit",
     "add": "Tambah",
-    "create": "Buat"
+    "create": "Buat",
+    "back": "Kembali",
+    "tryAgain": "Coba Lagi"
   },
   "hello": "Halo",
   "welcomeBack": "Selamat Datang Kembali",
@@ -549,5 +558,25 @@
     "verification_sent": "Email verifikasi terkirim! Silakan periksa kotak masuk Anda.",
     "signed_out_title": "Keluar",
     "signed_out_description": "Anda telah berhasil keluar."
+  },
+  "ai": {
+    "financialEvaluation": "Evaluasi Keuangan AI",
+    "selectAnalysisPeriod": "Pilih Periode Analisis",
+    "analyzing": "Menganalisis...",
+    "analyzeFinance": "Analisis Keuangan",
+    "noDataMessage": "Tidak ada data transaksi untuk periode yang dipilih. Silakan pilih periode lain atau tambahkan transaksi terlebih dahulu.",
+    "errorMessage": "Maaf, terjadi kesalahan saat menganalisis data keuangan Anda. Silakan coba lagi.",
+    "failedToGetInsight": "Gagal mendapatkan insight dari AI",
+    "failedToGetAnswer": "Gagal mendapatkan jawaban dari AI",
+    "cannotAnswerQuestion": "Maaf, tidak bisa menjawab pertanyaan ini.",
+    "frequentlyAskedQuestions": "Pertanyaan yang Sering Ditanyakan",
+    "suggestedQuestions": {
+      "reduceExpenses": "Bagaimana cara mengurangi pengeluaran terbesar saya?",
+      "savingPercentage": "Berapa persen ideal untuk ditabung dari penghasilan?",
+      "limitCategories": "Kategori mana yang perlu saya batasi bulan depan?",
+      "cashFlowHealth": "Apakah cash flow saya sudah sehat?",
+      "savingTips": "Tips praktis untuk meningkatkan saving rate?",
+      "realisticBudget": "Bagaimana cara membuat budget yang realistis?"
+    }
   }
 }

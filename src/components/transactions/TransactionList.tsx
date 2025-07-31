@@ -608,55 +608,25 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     
     // Generate expense category options
     const expenseOptions = DEFAULT_CATEGORIES.expense.map(cat => {
-      const isIdLanguage = i18n.language === 'id';
-      let label = cat.name;
-      
-      // Handle Indonesian translation if needed
-      if (isIdLanguage) {
-        const translations: Record<string, string> = {
-          "Groceries": "Belanjaan",
-          "Dining": "Makanan",
-          "Transportation": "Transportasi",
-          "Subscription": "Langganan",
-          "Housing": "Perumahan",
-          "Entertainment": "Hiburan",
-          "Shopping": "Belanja",
-          "Health": "Kesehatan",
-          "Education": "Pendidikan",
-          "Travel": "Perjalanan",
-          "Personal": "Pribadi",
-          "Other": "Lainnya",
-          "Donate": "Sedekah"
-        };
-        label = translations[cat.name] || cat.name;
-      }
+      // Use translation keys instead of hardcoded translations
+      const categoryKey = cat.name.toLowerCase().replace(/\s+/g, '_');
+      const translationKey = `transactions.categories.${categoryKey}`;
       
       return {
-        value: `expense_${cat.name.toLowerCase().replace(/\s+/g, '_')}`,
-        label: label
+        value: `expense_${categoryKey}`,
+        label: t(translationKey, cat.name) // Fallback to original name if translation missing
       };
     });
     
     // Generate income category options
     const incomeOptions = DEFAULT_CATEGORIES.income.map(cat => {
-      const isIdLanguage = i18n.language === 'id';
-      let label = cat.name;
-      
-      // Handle Indonesian translation if needed
-      if (isIdLanguage) {
-        const translations: Record<string, string> = {
-          "Salary": "Gaji",
-          "Business": "Bisnis",
-          "Investment": "Investasi",
-          "Gift": "Hadiah",
-          "Other": "Lainnya"
-        };
-        label = translations[cat.name] || cat.name;
-      }
+      // Use translation keys instead of hardcoded translations
+      const categoryKey = cat.name.toLowerCase().replace(/\s+/g, '_');
+      const translationKey = `income.categories.${categoryKey}`;
       
       return {
-        value: `income_${cat.name.toLowerCase().replace(/\s+/g, '_')}`,
-        label: label
+        value: `income_${categoryKey}`,
+        label: t(translationKey, cat.name) // Fallback to original name if translation missing
       };
     });
     

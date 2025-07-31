@@ -7,7 +7,14 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen w-full relative">
+      {/* Emerald Void */}
+      <div 
+        className="absolute inset-0 z-0" 
+        style={{ 
+          background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #072607 100%)", 
+        }} 
+      />
       {/* Navigation */}
       <motion.header 
         className="absolute top-0 left-0 right-0 z-50 py-4 px-6 md:px-10 lg:px-20 border-b border-white/10"
@@ -63,19 +70,17 @@ const LandingPage: React.FC = () => {
 
       {/* Footer */}
       <motion.footer 
-        className="py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black"
+        className="relative py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black z-10"
         initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true, margin: "-50px" }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 1.2 }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.div 
             className="flex flex-col md:flex-row justify-between items-center"
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.3 }}
           >
             <div className="mb-4 md:mb-0">
               <h1 className="text-xl font-bold text-lime-400">Duitr</h1>
@@ -103,9 +108,8 @@ const LandingPage: React.FC = () => {
           <motion.div 
             className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.4 }}
           >
             <p className="text-sm text-gray-300">© {new Date().getFullYear()} Duitr. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">

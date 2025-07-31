@@ -24,7 +24,7 @@ export function setAppLanguage(lang: string): void {
   localStorage.setItem('preferredLanguage', lang);
 }
 
-// Initialize i18next
+// Initialize i18next with proper loading configuration
 i18n
   // Detect user language
   .use(LanguageDetector)
@@ -56,7 +56,13 @@ i18n
       lookupLocalStorage: 'preferredLanguage',
       // Cache language detection
       caches: ['localStorage'],
+    },
+    // Ensure synchronous loading
+    initImmediate: false,
+    // Wait for resources to be loaded
+    react: {
+      useSuspense: false
     }
   });
 
-export default i18n; 
+export default i18n;
