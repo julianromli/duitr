@@ -1,15 +1,27 @@
 
 // Main routing component that handles authenticated and unauthenticated routes
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { FinanceProvider } from '@/context/FinanceContext';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
 import PageTransition from '@/components/layout/PageTransition';
-import Offline from '@/pages/Offline';
-import NotFound from '@/pages/NotFound';
 import { protectedRoutes, publicRoutes, testRoutes, fallbackRoutes } from '@/config/routes';
+
+// Lazy load components used directly in AppRoutes
+const Offline = React.lazy(() => import('@/pages/Offline'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+
+// Loading component for Suspense fallback
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <p className="text-muted-foreground text-sm">Loading...</p>
+    </div>
+  </div>
+);
 
 export const AppRoutes: React.FC = () => {
   const { isLoading, user } = useAuth();
@@ -28,7 +40,11 @@ export const AppRoutes: React.FC = () => {
   }, []);
 
   if (!isOnline) {
-    return <Offline />;
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <Offline />
+      </Suspense>
+    );
   }
 
   if (isLoading) {
@@ -67,11 +83,9 @@ export const AppRoutes: React.FC = () => {
                   key={route.path}
                   path={route.path}
                   element={
-                    <ProtectedRoute>
-                      <PageTransition>
-                        {route.element}
-                      </PageTransition>
-                    </ProtectedRoute>
+                    <PageTransition>
+                      {route.element}
+                    </PageTransition>
                   }
                 />
               ))}
@@ -92,7 +106,11 @@ export const AppRoutes: React.FC = () => {
               ))}
 
               {/* Default fallback */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <NotFound />
+                </Suspense>
+              } />
             </Routes>
           </AnimatePresence>
         </main>
