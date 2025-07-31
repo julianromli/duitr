@@ -4,13 +4,19 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import PageTransition from '@/components/layout/PageTransition';
-import LandingPage from '@/pages/LandingPage';
-import Dashboard from '@/pages/Dashboard';
-import Transactions from '@/pages/Transactions';
-import BudgetPage from '@/pages/BudgetPage';
-import Statistics from '@/pages/Statistics';
-import Wallets from '@/pages/Wallets';
-import ProfilePage from '@/pages/ProfilePage';
+
+// Lazy load main pages for better performance
+const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+const Transactions = React.lazy(() => import('@/pages/Transactions'));
+const BudgetPage = React.lazy(() => import('@/pages/BudgetPage'));
+const Statistics = React.lazy(() => import('@/pages/Statistics'));
+const Wallets = React.lazy(() => import('@/pages/Wallets'));
+const ProfilePage = React.lazy(() => import('@/pages/ProfilePage'));
+const TransactionDetailPage = React.lazy(() => import('@/pages/TransactionDetailPage'));
+const EditCategoryPage = React.lazy(() => import('@/pages/EditCategoryPage'));
+
+// Keep critical pages as regular imports
 import NotFound from '@/pages/NotFound';
 import Offline from '@/pages/Offline';
 import Login from '@/pages/auth/Login';
@@ -18,55 +24,99 @@ import SignUp from '@/pages/auth/SignUp';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
 import AuthCallback from '@/pages/auth/AuthCallback';
-import TransactionDetailPage from '@/pages/TransactionDetailPage';
-import EditCategoryPage from '@/pages/EditCategoryPage';
-import SupabaseTestPage from '@/pages/SupabaseTestPage';
-import PrivacyPolicy from '@/pages/PrivacyPolicy';
-import TermsOfService from '@/pages/TermsOfService';
+
+// Lazy load test pages
+const SupabaseTestPage = React.lazy(() => import('@/pages/SupabaseTestPage'));
+// Lazy load legal pages to reduce initial bundle size
+const PrivacyPolicy = React.lazy(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = React.lazy(() => import('@/pages/TermsOfService'));
 import { TestDatePicker } from '@/components/ui/test-date-picker';
 import LoginButtonTest from '@/components/test/LoginButtonTest';
 
 export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics'];
 
+// Loading component for Suspense fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
+
 export const protectedRoutes = [
   {
     path: '/',
-    element: <Dashboard />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <Dashboard />
+      </React.Suspense>
+    )
   },
   {
     path: '/transactions',
-    element: <Transactions />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <Transactions />
+      </React.Suspense>
+    )
   },
   {
     path: '/transaction-detail',
-    element: <TransactionDetailPage />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <TransactionDetailPage />
+      </React.Suspense>
+    )
   },
   {
     path: '/editcategory',
-    element: <EditCategoryPage />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <EditCategoryPage />
+      </React.Suspense>
+    )
   },
   {
     path: '/budget',
-    element: <BudgetPage />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <BudgetPage />
+      </React.Suspense>
+    )
   },
   {
     path: '/statistics',
-    element: <Statistics />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <Statistics />
+      </React.Suspense>
+    )
   },
   {
     path: '/wallets',
-    element: <Wallets />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <Wallets />
+      </React.Suspense>
+    )
   },
   {
     path: '/profile',
-    element: <ProfilePage />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <ProfilePage />
+      </React.Suspense>
+    )
   }
 ];
 
 export const publicRoutes = [
   {
     path: '/landing',
-    element: <LandingPage />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <LandingPage />
+      </React.Suspense>
+    )
   },
   {
     path: '/login',
@@ -90,11 +140,19 @@ export const publicRoutes = [
   },
   {
     path: '/privacy',
-    element: <PrivacyPolicy />
+    element: (
+      <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+        <PrivacyPolicy />
+      </React.Suspense>
+    )
   },
   {
     path: '/terms',
-    element: <TermsOfService />
+    element: (
+      <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+        <TermsOfService />
+      </React.Suspense>
+    )
   }
 ];
 
@@ -105,7 +163,11 @@ export const testRoutes = [
   },
   {
     path: '/test-supabase',
-    element: <SupabaseTestPage />
+    element: (
+      <React.Suspense fallback={<PageLoader />}>
+        <SupabaseTestPage />
+      </React.Suspense>
+    )
   },
   {
     path: '/test-login-button',

@@ -3,12 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
 import { ChevronLeft, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from 'recharts';
+// Removed recharts dependency for better performance
 import { useTransactions } from '@/hooks/useTransactions';
 import { 
   Popover,
@@ -341,7 +336,7 @@ const Statistics: React.FC = () => {
               onClick={() => handleTabChange('analysis')}
               whileTap={{ scale: 0.98 }}
             >
-              Analisa
+              {t('statistics.analysis')}
             </motion.button>
           </div>
         </motion.div>
@@ -364,35 +359,39 @@ const Statistics: React.FC = () => {
                 variants={chartVariants}
                 key={`chart-${activeTab}`}
               >
-                <div className="h-[220px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={90}
-                        paddingAngle={0}
-                        dataKey="value"
-                        strokeWidth={0}
-                        animationBegin={300}
-                        animationDuration={800}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}-${activeTab}`} 
-                            fill={COLORS[index % COLORS.length]} 
+                <div className="h-[220px] w-full relative flex items-center justify-center">
+                  {/* Simple CSS Pie Chart */}
+                  <div className="relative w-48 h-48">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      {chartData.map((item, index) => {
+                        const percentage = item.percentage;
+                        const circumference = 2 * Math.PI * 15.915;
+                        const offset = chartData.slice(0, index).reduce((sum, prev) => sum + prev.percentage, 0);
+                        const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
+                        const strokeDashoffset = -((offset / 100) * circumference);
+                        
+                        return (
+                          <circle
+                            key={`segment-${index}`}
+                            cx="50"
+                            cy="50"
+                            r="15.915"
+                            fill="transparent"
+                            stroke={COLORS[index % COLORS.length]}
+                            strokeWidth="8"
+                            strokeDasharray={strokeDasharray}
+                            strokeDashoffset={strokeDashoffset}
+                            className="transition-all duration-300"
                           />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  
-                  {/* Center Text */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                    <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
-                    <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
+                        );
+                      })}
+                    </svg>
+                    
+                    {/* Center Text */}
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                      <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
+                      <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
+                    </div>
                   </div>
                 </div>
               </motion.div>
