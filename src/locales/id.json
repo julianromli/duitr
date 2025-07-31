@@ -98,13 +98,13 @@
   },
   "landing": {
     "hero": {
-      "badge": "Mulai masa depan pengelolaan keuangan dengan Duitr.",
-      "badgeAction": "Mulai sekarang",
-      "title": "Kendalikan",
-      "titleHighlight": ["Masa Depan Keuangan", "Pengelolaan Uang", "Anggaran Cerdas"],
-      "subtitle": "Temui asisten keuangan cerdas Anda. Analisis pengeluaran, kelola utang, dan buat anggaran dengan mudah – semua didukung AI dalam satu aplikasi yang indah.",
-      "cta": "Mulai gratis sekarang",
-      "imageAlt": "Dashboard Aplikasi Duitr"
+    "badge": "AI Smart Insight Kini Tersedia.",
+    "badgeAction": "Lihat Caranya",
+    "title": "Cerdas Kelola",
+    "titleHighlight": ["Anggaranmu", "Pengeluaranmu", "Keuanganmu", "Masa Depanmu"],
+    "subtitle": "Asisten keuangan pintarmu siap membantu. Dapatkan insight cerdas untuk pahami pengeluaran, capai target, dan kelola anggaran tanpa pusing. Semua didukung AI dalam satu aplikasi.",
+    "cta": "Mulai Gratis Sekarang",
+    "imageAlt": "Tampilan Aplikasi Duitr di Ponsel"
     },
     "features": {
       "title": "Semua yang Anda butuhkan",

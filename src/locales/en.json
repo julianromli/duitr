@@ -100,12 +100,12 @@
   },
   "landing": {
     "hero": {
-      "badge": "Get started to the future of financial management with Duitr.",
-      "badgeAction": "Start now",
+      "badge": "Now with Smart AI Insights.",
+      "badgeAction": "See How",
       "title": "Take Control of Your",
-      "titleHighlight": ["Financial Future", "Money Management", "Smart Budgeting"],
-      "subtitle": "Meet your smart finance assistant. Analyze spending, manage debts, and budget effortlessly – all powered by AI in one beautiful app.",
-      "cta": "Get started for free",
+      "titleHighlight": ["Spending", "Savings", "Budget", "Future"],
+      "subtitle": "Meet your intelligent finance assistant. Get smart insights to understand your spending, achieve your goals, and manage your budget effortlessly — all powered by AI in one beautiful app.",
+      "cta": "Get Started for Free",
       "imageAlt": "Duitr App Dashboard"
     },
     "features": {
