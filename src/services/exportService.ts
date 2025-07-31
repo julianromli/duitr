@@ -1,4 +1,4 @@
-// Removed xlsx dependency for better performance - using CSV export instead
+import * as XLSX from 'xlsx';
 import { Transaction } from '@/types/finance';
 import { supabase } from '@/lib/supabase';
 
@@ -55,9 +55,9 @@ const filterTransactionsByDate = (
 };
 
 /**
- * Generate CSV data for transactions export
+ * Generate worksheet for transactions export
  */
-const generateTransactionsCSV = async (transactions: Transaction[]): Promise<string> => {
+const generateTransactionsWorksheet = async (transactions: Transaction[]): Promise<XLSX.WorkSheet> => {
   // Sort transactions by date (newest first)
   const sortedTransactions = [...transactions].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -79,61 +79,58 @@ const generateTransactionsCSV = async (transactions: Transaction[]): Promise<str
     .select('category_id, category_key, en_name, type');
   
   const categoryMap = new Map();
+  const defaultExpenseCategory = { en_name: 'Other', type: 'expense' };
+  const defaultIncomeCategory = { en_name: 'Other', type: 'income' };
+  const transferCategory = { en_name: 'Transfer', type: 'system' };
   
   if (categories) {
     categories.forEach(cat => categoryMap.set(cat.category_id, cat));
   }
   
-  // CSV header
-  const headers = ['Date', 'Type', 'Category', 'Description', 'Amount', 'Wallet'];
-  let csvContent = headers.join(',') + '\n';
-  
-  // Map transactions to CSV rows
-  sortedTransactions.forEach(transaction => {
+  // Map transactions to table rows
+  const tableData = sortedTransactions.map(transaction => {
     // Determine category name
     let categoryName = 'Other';
     
     if (transaction.type === 'transfer') {
       categoryName = 'Transfer';
     } else if (transaction.categoryId) {
+      // Try to get category name from the categories table
       const category = categoryMap.get(transaction.categoryId);
       if (category) {
         categoryName = category.en_name;
       } else if (transaction.category) {
-        categoryName = transaction.category || 'Other';
+        // Use transaction.category if it exists and is not empty
+        categoryName = transaction.category || (transaction.type === 'income' ? 'Other' : 'Other');
+      } else {
+        // Default to "Other" based on transaction type
+        categoryName = transaction.type === 'income' ? 'Other' : 'Other';
       }
+    } else {
+      // Default to "Other" based on transaction type
+      categoryName = transaction.type === 'income' ? 'Other' : 'Other';
     }
     
-    // Get wallet name
+    // Get wallet name (or use "Unknown Wallet" if not found)
     const walletName = walletMap.get(transaction.walletId) || 'Unknown Wallet';
     
-    // Escape CSV values
-    const escapeCSV = (value: string) => {
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        return '"' + value.replace(/"/g, '""') + '"';
-      }
-      return value;
+    return {
+      Date: transaction.date,
+      Type: transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1),
+      Category: categoryName,
+      Description: transaction.description,
+      Amount: formatCurrency(transaction.amount),
+      Wallet: walletName,
     };
-    
-    const row = [
-      transaction.date,
-      transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1),
-      escapeCSV(categoryName),
-      escapeCSV(transaction.description),
-      formatCurrency(transaction.amount),
-      escapeCSV(walletName)
-    ];
-    
-    csvContent += row.join(',') + '\n';
   });
   
-  return csvContent;
+  return XLSX.utils.json_to_sheet(tableData);
 };
 
 /**
- * Export financial data to CSV
+ * Export financial data to Excel
  */
-export const exportToCSV = async (
+export const exportToExcel = async (
   transactions: Transaction[],
   options: ExportOptions = {}
 ): Promise<void> => {
@@ -154,34 +151,24 @@ export const exportToCSV = async (
     exportOptions.endDate
   );
   
-  // Generate CSV content
+  // Create a new workbook
+  const workbook = XLSX.utils.book_new();
+  
+  // Add transactions sheet if requested
   if (exportOptions.includeTransactions) {
-    const csvContent = await generateTransactionsCSV(filteredTransactions);
-    
-    // Generate filename with current date
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-    const filename = `finance_export_${dateStr}.csv`;
-    
-    // Create and download CSV file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    const transactionsSheet = await generateTransactionsWorksheet(filteredTransactions);
+    XLSX.utils.book_append_sheet(workbook, transactionsSheet, 'Transactions');
   }
+  
+  // Generate filename with current date
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+  const filename = `finance_export_${dateStr}.xlsx`;
+  
+  // Export the workbook
+  XLSX.writeFile(workbook, filename);
 };
-
-// Keep backward compatibility
-export const exportToExcel = exportToCSV;
 
 export default {
   exportToExcel,
-};
+}; 

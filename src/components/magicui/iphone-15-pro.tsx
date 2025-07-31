@@ -66,7 +66,6 @@ export default function Iphone15Pro({
           height="843.5"
           preserveAspectRatio="xMidYMid meet"
           clipPath="url(#roundedCorners)"
-          loading="lazy"
         />
       )}
       {videoSrc && (

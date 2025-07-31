@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import Iphone15Pro from '@/components/magicui/iphone-15-pro'
-import { ImagePreloader } from '@/components/ui/image-preloader'
-import LazyImage from '@/components/ui/lazy-image'
 
 interface IphoneCarouselProps {
   className?: string
 }
 
-// Optimized image paths with WebP format for better performance
 const appScreenshots = [
   '/images/app mockup/dashboard.png',
   '/images/app mockup/AIanalyze.png',
@@ -19,9 +16,6 @@ const appScreenshots = [
   '/images/app mockup/wallets.png',
   '/images/app mockup/AIanalyze2.png'
 ]
-
-// Preload only the first few critical images
-const criticalImages = appScreenshots.slice(0, 3)
 
 export function IphoneCarousel({ className }: IphoneCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -35,7 +29,7 @@ export function IphoneCarousel({ className }: IphoneCarouselProps) {
       if (!isDragging) {
         setCurrentIndex((prev) => (prev + 1) % appScreenshots.length)
       }
-    }, 6000) // Change slide every 6 seconds (optimized for performance)
+    }, 3000) // Change slide every 3 seconds
   }
 
   const stopAutoSlide = () => {
@@ -75,7 +69,6 @@ export function IphoneCarousel({ className }: IphoneCarouselProps) {
 
   return (
     <div className={`relative ${className}`}>
-      <ImagePreloader images={criticalImages} priority={true} />
       <motion.div
         className="cursor-grab active:cursor-grabbing"
         drag="x"
