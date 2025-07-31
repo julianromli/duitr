@@ -92,7 +92,82 @@
     "transactions": "Transactions",
     "budgets": "Budgets",
     "wallets": "Wallets",
-    "settings": "Settings"
+    "settings": "Settings",
+    "landing": "Home"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Get started to the future of financial management with Duitr.",
+      "badgeAction": "Start now",
+      "title": "Take Control of Your",
+      "titleHighlight": ["Financial Future", "Money Management", "Smart Budgeting"],
+      "subtitle": "Meet your smart finance assistant. Analyze spending, manage debts, and budget effortlessly – all powered by AI in one beautiful app.",
+      "cta": "Get started for free",
+      "imageAlt": "Duitr App Dashboard"
+    },
+    "features": {
+      "title": "Everything you need",
+      "subtitle": "Powerful features for modern finance",
+      "description": "From AI-powered insights to comprehensive tracking, Duitr provides all the tools you need to master your finances.",
+      "smartAnalytics": {
+        "title": "Smart Analytics",
+        "description": "AI-powered insights that help you understand your spending patterns and optimize your financial decisions."
+      },
+      "securePrivate": {
+        "title": "Secure & Private",
+        "description": "Bank-level security with end-to-end encryption. Your financial data is always protected and private."
+      },
+      "realtimeSync": {
+        "title": "Real-time Sync",
+        "description": "Instant synchronization across all your devices. Access your financial data anywhere, anytime."
+      }
+    },
+    "tabs": {
+      "analytics": {
+        "title": "Analytics",
+        "subtitle": "AI-Powered Financial Insights",
+        "description": "Get intelligent analysis of your spending patterns, budget recommendations, and financial health scores.",
+        "smartRecommendations": {
+          "title": "Smart Recommendations",
+          "description": "Personalized suggestions to optimize your spending and increase savings based on your financial behavior."
+        },
+        "spendingPatterns": {
+          "title": "Spending Patterns",
+          "description": "Detailed breakdown of where your money goes with visual charts and trend analysis."
+        }
+      },
+      "budgeting": {
+        "title": "Budgeting",
+        "subtitle": "Smart Budget Management",
+        "description": "Create and manage budgets with intelligent alerts and recommendations to stay on track.",
+        "automaticCategorization": {
+          "title": "Automatic Categorization",
+          "description": "AI automatically categorizes your transactions, making budget tracking effortless and accurate."
+        },
+        "budgetAlerts": {
+          "title": "Budget Alerts",
+          "description": "Get notified when you're approaching budget limits or when unusual spending is detected."
+        }
+      },
+      "tracking": {
+        "title": "Tracking",
+        "subtitle": "Comprehensive Expense Tracking",
+        "description": "Track every transaction across multiple accounts with real-time synchronization and detailed reporting.",
+        "multiAccount": {
+          "title": "Multi-Account Support",
+          "description": "Connect and manage multiple bank accounts, credit cards, and digital wallets in one place."
+        },
+        "realTimeUpdates": {
+          "title": "Real-Time Updates",
+          "description": "Instant transaction updates and balance synchronization across all your connected accounts."
+        }
+      }
+    },
+    "cta": {
+      "title": "Ready to take control of your finances?",
+      "subtitle": "Join thousands of users who have transformed their financial lives with Duitr.",
+      "button": "Start Your Financial Journey"
+    }
   },
   "navbar": {
     "dashboard": "Dashboard",
