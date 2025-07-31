@@ -299,4 +299,8 @@ If you encounter any issues or have questions:
 
 -----
 
+<<<<<<< HEAD
 **Duitr** - Manage your finances with ease and efficiency\! 💰✨
+=======
+**Duitr** - Manage your finances with ease and efficiency\! 💰✨
+>>>>>>> 21b2ae10bd376e97bbde3e8076293884edbe742e
