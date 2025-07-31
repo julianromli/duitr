@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Hero195 } from '@/components/ui/hero-195';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 import { motion } from 'framer-motion';
 
 const LandingPage: React.FC = () => {
@@ -49,6 +50,7 @@ const LandingPage: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
+            <LanguageToggle className="hidden md:block" />
             <button 
               onClick={() => navigate('/login')} 
               className="hidden md:block text-sm font-medium px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"

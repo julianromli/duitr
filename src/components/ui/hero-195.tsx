@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TracingBeam } from "@/components/ui/tracing-beam";
-import { Typewriter } from "@/components/ui/typewriter-text";
+import { WordRotate } from "@/components/magicui/word-rotate";
 import { Squares } from "@/components/ui/squares-background";
 import { IphoneCarousel } from "@/components/ui/iphone-carousel";
 import { ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
@@ -53,15 +53,11 @@ const Hero195 = () => {
             >
               {t('landing.hero.title')}{" "}
               <br></br>
-              <span className="bg-gradient-to-r from-lime-400 to-green-400 bg-clip-text text-transparent">
-                <Typewriter 
-                  text={t('landing.hero.titleHighlight', { returnObjects: true }) as string[]}
-                  speed={120}
-                  loop={true}
-                  delay={2000}
-                  className="inline"
-                />
-              </span>
+              <WordRotate 
+                words={t('landing.hero.titleHighlight', { returnObjects: true }) as string[]}
+                duration={2500}
+                className="inline"
+              />
             </motion.h1>
             
             <motion.p 
