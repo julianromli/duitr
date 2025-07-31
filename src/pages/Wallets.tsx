@@ -122,9 +122,9 @@ const Wallets: React.FC = () => {
       opacity: 1,
       transition: {
         when: "beforeChildren",
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
-        duration: 0.3
+        staggerChildren: 0.05,
+        delayChildren: 0.05,
+        duration: 0.15
       }
     }
   };
@@ -141,9 +141,9 @@ const Wallets: React.FC = () => {
       scale: 1,
       transition: {
         type: "spring",
-        stiffness: 500,
-        damping: 30,
-        mass: 0.8
+        stiffness: 600,
+        damping: 35,
+        mass: 0.6
       }
     }
   };
@@ -160,9 +160,9 @@ const Wallets: React.FC = () => {
       opacity: 1,
       transition: {
         type: "spring",
-        stiffness: 600,
-        damping: 25,
-        delay: 0.3
+        stiffness: 700,
+        damping: 30,
+        delay: 0.15
       }
     },
     hover: {
@@ -187,8 +187,8 @@ const Wallets: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        duration: 0.3,
-        delay: 0.4
+        duration: 0.15,
+        delay: 0.2
       }
     }
   };
@@ -207,9 +207,9 @@ const Wallets: React.FC = () => {
       rotateX: 0,
       transition: {
         type: "spring",
-        stiffness: 400,
-        damping: 25,
-        delay: 0.4
+        stiffness: 500,
+        damping: 30,
+        delay: 0.2
       }
     }
   };
@@ -224,9 +224,9 @@ const Wallets: React.FC = () => {
       opacity: 1,
       transition: {
         type: "spring",
-        stiffness: 400,
-        damping: 25,
-        delay: 0.1
+        stiffness: 500,
+        damping: 30,
+        delay: 0.05
       }
     }
   };

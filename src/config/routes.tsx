@@ -1,115 +1,132 @@
 
 // Route configuration for the application
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import PageTransition from '@/components/layout/PageTransition';
-import LandingPage from '@/pages/LandingPage';
-import Dashboard from '@/pages/Dashboard';
-import Transactions from '@/pages/Transactions';
-import BudgetPage from '@/pages/BudgetPage';
-import Statistics from '@/pages/Statistics';
-import Wallets from '@/pages/Wallets';
-import ProfilePage from '@/pages/ProfilePage';
-import NotFound from '@/pages/NotFound';
-import Offline from '@/pages/Offline';
-import Login from '@/pages/auth/Login';
-import SignUp from '@/pages/auth/SignUp';
-import ForgotPassword from '@/pages/auth/ForgotPassword';
-import ResetPassword from '@/pages/auth/ResetPassword';
-import AuthCallback from '@/pages/auth/AuthCallback';
-import TransactionDetailPage from '@/pages/TransactionDetailPage';
-import EditCategoryPage from '@/pages/EditCategoryPage';
-import SupabaseTestPage from '@/pages/SupabaseTestPage';
-import PrivacyPolicy from '@/pages/PrivacyPolicy';
-import TermsOfService from '@/pages/TermsOfService';
-import { TestDatePicker } from '@/components/ui/test-date-picker';
-import LoginButtonTest from '@/components/test/LoginButtonTest';
+
+// Lazy load components for code splitting
+const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+const Transactions = React.lazy(() => import('@/pages/Transactions'));
+const BudgetPage = React.lazy(() => import('@/pages/BudgetPage'));
+const Statistics = React.lazy(() => import('@/pages/Statistics'));
+const Wallets = React.lazy(() => import('@/pages/Wallets'));
+const ProfilePage = React.lazy(() => import('@/pages/ProfilePage'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const Offline = React.lazy(() => import('@/pages/Offline'));
+const Login = React.lazy(() => import('@/pages/auth/Login'));
+const SignUp = React.lazy(() => import('@/pages/auth/SignUp'));
+const ForgotPassword = React.lazy(() => import('@/pages/auth/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('@/pages/auth/ResetPassword'));
+const AuthCallback = React.lazy(() => import('@/pages/auth/AuthCallback'));
+const TransactionDetailPage = React.lazy(() => import('@/pages/TransactionDetailPage'));
+const EditCategoryPage = React.lazy(() => import('@/pages/EditCategoryPage'));
+const SupabaseTestPage = React.lazy(() => import('@/pages/SupabaseTestPage'));
+const PrivacyPolicy = React.lazy(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = React.lazy(() => import('@/pages/TermsOfService'));
+const TestDatePicker = React.lazy(() => import('@/components/ui/test-date-picker').then(module => ({ default: module.TestDatePicker })));
+const LoginButtonTest = React.lazy(() => import('@/components/test/LoginButtonTest'));
+
+// Loading component for Suspense fallback
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <p className="text-muted-foreground text-sm">Loading...</p>
+    </div>
+  </div>
+);
+
+// Wrapper component for lazy loaded components
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingSpinner />}>
+    {children}
+  </Suspense>
+);
 
 export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics'];
 
 export const protectedRoutes = [
   {
     path: '/',
-    element: <Dashboard />
+    element: <LazyWrapper><Dashboard /></LazyWrapper>
   },
   {
     path: '/transactions',
-    element: <Transactions />
+    element: <LazyWrapper><Transactions /></LazyWrapper>
   },
   {
     path: '/transaction-detail',
-    element: <TransactionDetailPage />
+    element: <LazyWrapper><TransactionDetailPage /></LazyWrapper>
   },
   {
     path: '/editcategory',
-    element: <EditCategoryPage />
+    element: <LazyWrapper><EditCategoryPage /></LazyWrapper>
   },
   {
     path: '/budget',
-    element: <BudgetPage />
+    element: <LazyWrapper><BudgetPage /></LazyWrapper>
   },
   {
     path: '/statistics',
-    element: <Statistics />
+    element: <LazyWrapper><Statistics /></LazyWrapper>
   },
   {
     path: '/wallets',
-    element: <Wallets />
+    element: <LazyWrapper><Wallets /></LazyWrapper>
   },
   {
     path: '/profile',
-    element: <ProfilePage />
+    element: <LazyWrapper><ProfilePage /></LazyWrapper>
   }
 ];
 
 export const publicRoutes = [
   {
     path: '/landing',
-    element: <LandingPage />
+    element: <LazyWrapper><LandingPage /></LazyWrapper>
   },
   {
     path: '/login',
-    element: <Login />
+    element: <LazyWrapper><Login /></LazyWrapper>
   },
   {
     path: '/signup',
-    element: <SignUp />
+    element: <LazyWrapper><SignUp /></LazyWrapper>
   },
   {
     path: '/forgotpassword',
-    element: <ForgotPassword />
+    element: <LazyWrapper><ForgotPassword /></LazyWrapper>
   },
   {
     path: '/reset-password',
-    element: <ResetPassword />
+    element: <LazyWrapper><ResetPassword /></LazyWrapper>
   },
   {
     path: '/auth/callback',
-    element: <AuthCallback />
+    element: <LazyWrapper><AuthCallback /></LazyWrapper>
   },
   {
     path: '/privacy',
-    element: <PrivacyPolicy />
+    element: <LazyWrapper><PrivacyPolicy /></LazyWrapper>
   },
   {
     path: '/terms',
-    element: <TermsOfService />
+    element: <LazyWrapper><TermsOfService /></LazyWrapper>
   }
 ];
 
 export const testRoutes = [
   {
     path: '/test-datepicker',
-    element: <TestDatePicker />
+    element: <LazyWrapper><TestDatePicker /></LazyWrapper>
   },
   {
     path: '/test-supabase',
-    element: <SupabaseTestPage />
+    element: <LazyWrapper><SupabaseTestPage /></LazyWrapper>
   },
   {
     path: '/test-login-button',
-    element: <LoginButtonTest />
+    element: <LazyWrapper><LoginButtonTest /></LazyWrapper>
   }
 ];
 
@@ -128,6 +145,6 @@ export const fallbackRoutes = [
   },
   {
     path: '/offline',
-    element: <Offline />
+    element: <LazyWrapper><Offline /></LazyWrapper>
   }
 ];
