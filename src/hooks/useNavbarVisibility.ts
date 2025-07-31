@@ -21,8 +21,8 @@ export const useNavbarVisibility = (): boolean => {
       }
     }
     
-    // Explicitly exclude landing and auth pages
-    const excludedPaths = ['/landing', '/login', '/signup', '/forgotpassword', '/reset-password', '/auth'];
+    // Explicitly exclude landing, auth, and legal pages
+    const excludedPaths = ['/landing', '/login', '/signup', '/forgotpassword', '/reset-password', '/auth', '/privacy', '/terms'];
     for (const path of excludedPaths) {
       if (currentPath === path || currentPath.startsWith(path + '/')) {
         return false;
