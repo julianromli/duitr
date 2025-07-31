@@ -89,7 +89,82 @@
     "transactions": "Transaksi",
     "budgets": "Anggaran",
     "wallets": "Dompet",
-    "settings": "Pengaturan"
+    "settings": "Pengaturan",
+    "landing": "Beranda"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Mulai masa depan pengelolaan keuangan dengan Duitr.",
+      "badgeAction": "Mulai sekarang",
+      "title": "Kendalikan",
+      "titleHighlight": ["Masa Depan Keuangan", "Pengelolaan Uang", "Anggaran Cerdas"],
+      "subtitle": "Temui asisten keuangan cerdas Anda. Analisis pengeluaran, kelola utang, dan buat anggaran dengan mudah – semua didukung AI dalam satu aplikasi yang indah.",
+      "cta": "Mulai gratis sekarang",
+      "imageAlt": "Dashboard Aplikasi Duitr"
+    },
+    "features": {
+      "title": "Semua yang Anda butuhkan",
+      "subtitle": "Fitur canggih untuk keuangan modern",
+      "description": "Dari wawasan bertenaga AI hingga pelacakan komprehensif, Duitr menyediakan semua alat yang Anda butuhkan untuk menguasai keuangan Anda.",
+      "smartAnalytics": {
+        "title": "Analitik Cerdas",
+        "description": "Wawasan bertenaga AI yang membantu Anda memahami pola pengeluaran dan mengoptimalkan keputusan keuangan."
+      },
+      "securePrivate": {
+        "title": "Aman & Privat",
+        "description": "Keamanan tingkat bank dengan enkripsi end-to-end. Data keuangan Anda selalu terlindungi dan privat."
+      },
+      "realtimeSync": {
+        "title": "Sinkronisasi Real-time",
+        "description": "Sinkronisasi instan di semua perangkat Anda. Akses data keuangan Anda kapan saja, di mana saja."
+      }
+    },
+    "tabs": {
+      "analytics": {
+        "title": "Analitik",
+        "subtitle": "Wawasan Keuangan Bertenaga AI",
+        "description": "Dapatkan analisis cerdas tentang pola pengeluaran, rekomendasi anggaran, dan skor kesehatan keuangan.",
+        "smartRecommendations": {
+          "title": "Rekomendasi Cerdas",
+          "description": "Saran personal untuk mengoptimalkan pengeluaran dan meningkatkan tabungan berdasarkan perilaku keuangan Anda."
+        },
+        "spendingPatterns": {
+          "title": "Pola Pengeluaran",
+          "description": "Rincian detail ke mana uang Anda pergi dengan grafik visual dan analisis tren."
+        }
+      },
+      "budgeting": {
+        "title": "Anggaran",
+        "subtitle": "Manajemen Anggaran Cerdas",
+        "description": "Buat dan kelola anggaran dengan peringatan cerdas dan rekomendasi untuk tetap pada jalur.",
+        "automaticCategorization": {
+          "title": "Kategorisasi Otomatis",
+          "description": "AI secara otomatis mengkategorikan transaksi Anda, membuat pelacakan anggaran menjadi mudah dan akurat."
+        },
+        "budgetAlerts": {
+          "title": "Peringatan Anggaran",
+          "description": "Dapatkan notifikasi saat Anda mendekati batas anggaran atau saat pengeluaran tidak biasa terdeteksi."
+        }
+      },
+      "tracking": {
+        "title": "Pelacakan",
+        "subtitle": "Pelacakan Pengeluaran Komprehensif",
+        "description": "Lacak setiap transaksi di berbagai akun dengan sinkronisasi real-time dan pelaporan detail.",
+        "multiAccount": {
+          "title": "Dukungan Multi-Akun",
+          "description": "Hubungkan dan kelola berbagai rekening bank, kartu kredit, dan dompet digital dalam satu tempat."
+        },
+        "realTimeUpdates": {
+          "title": "Pembaruan Real-Time",
+          "description": "Pembaruan transaksi instan dan sinkronisasi saldo di semua akun yang terhubung."
+        }
+      }
+    },
+    "cta": {
+      "title": "Siap mengendalikan keuangan Anda?",
+      "subtitle": "Bergabunglah dengan ribuan pengguna yang telah mengubah kehidupan keuangan mereka dengan Duitr.",
+      "button": "Mulai Perjalanan Keuangan Anda"
+    }
   },
   "navbar": {
     "dashboard": "Dasbor",

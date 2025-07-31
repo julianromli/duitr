@@ -21,6 +21,8 @@ import AuthCallback from '@/pages/auth/AuthCallback';
 import TransactionDetailPage from '@/pages/TransactionDetailPage';
 import EditCategoryPage from '@/pages/EditCategoryPage';
 import SupabaseTestPage from '@/pages/SupabaseTestPage';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsOfService from '@/pages/TermsOfService';
 import { TestDatePicker } from '@/components/ui/test-date-picker';
 import LoginButtonTest from '@/components/test/LoginButtonTest';
 
@@ -85,6 +87,14 @@ export const publicRoutes = [
   {
     path: '/auth/callback',
     element: <AuthCallback />
+  },
+  {
+    path: '/privacy',
+    element: <PrivacyPolicy />
+  },
+  {
+    path: '/terms',
+    element: <TermsOfService />
   }
 ];
 
