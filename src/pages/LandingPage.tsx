@@ -4,13 +4,6 @@ import { Hero195 } from '@/components/ui/hero-195';
 import { LanguageToggle } from '@/components/ui/language-toggle';
 import { motion } from 'framer-motion';
 
-// Simplified animation for header only
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4 }
-};
-
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -26,16 +19,37 @@ const LandingPage: React.FC = () => {
       {/* Navigation */}
       <motion.header 
         className="absolute top-0 left-0 right-0 z-50 py-4 px-6 md:px-10 lg:px-20 border-b border-white/10"
-        {...fadeInUp}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Logo */}
-          <div className="flex items-center">
+          <motion.div 
+            className="flex items-center"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
             <h1 className="text-2xl font-bold text-lime-400">Duitr</h1>
-          </div>
+          </motion.div>
+          
+          {/* Navigation Links - Desktop */}
+          {/* <nav className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-sm font-medium hover:text-green-600 transition-colors">Home</Link>
+            <Link to="/features" className="text-sm font-medium hover:text-green-600 transition-colors">Features</Link>
+            <Link to="/product" className="text-sm font-medium hover:text-green-600 transition-colors">Product</Link>
+            <Link to="/resources" className="text-sm font-medium hover:text-green-600 transition-colors">Resources</Link>
+            <Link to="/community" className="text-sm font-medium hover:text-green-600 transition-colors">Community</Link>
+          </nav> */}
           
           {/* Auth Buttons */}
-          <div className="flex items-center space-x-4">
+          <motion.div 
+            className="flex items-center space-x-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <LanguageToggle className="hidden md:block" />
             <button 
               onClick={() => navigate('/login')} 
@@ -49,7 +63,7 @@ const LandingPage: React.FC = () => {
             >
               Sign up
             </button>
-          </div>
+          </motion.div>
         </div>
       </motion.header>
 
@@ -57,9 +71,19 @@ const LandingPage: React.FC = () => {
       <Hero195 />
 
       {/* Footer */}
-      <footer className="relative py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black z-10">
+      <motion.footer 
+        className="relative py-8 px-6 md:px-10 lg:px-20 border-t border-white/10 bg-black z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 1.2 }}
+      >
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <motion.div 
+            className="flex flex-col md:flex-row justify-between items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.3 }}
+          >
             <div className="mb-4 md:mb-0">
               <h1 className="text-xl font-bold text-lime-400">Duitr</h1>
               <p className="text-sm text-gray-300 mt-1">Your AI-powered financial assistant</p>
@@ -82,17 +106,22 @@ const LandingPage: React.FC = () => {
                 </svg>
               </a>
             </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center">
+          </motion.div>
+          <motion.div 
+            className="mt-8 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.4 }}
+          >
             <p className="text-sm text-gray-300">© {new Date().getFullYear()} Duitr. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link to="/privacy" className="text-sm text-gray-300 hover:text-lime-400 transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-gray-300 hover:text-lime-400 transition-colors">Terms of Service</Link>
               <a href="mailto:faizintifada@gmail.com" className="text-sm text-gray-300 hover:text-lime-400 transition-colors">Contact Us</a>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 };

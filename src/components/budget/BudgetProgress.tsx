@@ -1,6 +1,6 @@
 import React from 'react';
 import { PieChart, LineChart, BarChart3, Calendar } from 'lucide-react';
-// Removed recharts dependency for better performance
+import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useBudgets } from '@/hooks/useBudgets';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,22 @@ const BudgetProgress: React.FC = () => {
   // Colors for pie chart
   const COLORS = ['#4263EB', '#0CA678', '#F59F00', '#FA5252', '#7950F2', '#74C0FC'];
   
-  // Simplified category display without charts
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="p-3 bg-white dark:bg-black border shadow-lg rounded-lg">
+          <p className="text-sm font-medium">{payload[0].name}</p>
+          <p className="text-xs" style={{ color: payload[0].color }}>
+            {formatCurrency(payload[0].value)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t(`budgets.${payload[0].payload.period}`)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // Function to get period labels
   const getPeriodLabel = (period: string) => {
@@ -101,35 +116,26 @@ const BudgetProgress: React.FC = () => {
         </CardHeader>
         
         <CardContent>
-          <div className="space-y-3">
-            {pieData.length > 0 ? (
-              pieData.map((item, index) => {
-                const percentage = totalSpent > 0 ? Math.round((item.value / totalSpent) * 100) : 0;
-                return (
-                  <div key={`category-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      />
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{getPeriodLabel(item.period)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{formatCurrency(item.value)}</p>
-                      <p className="text-sm text-muted-foreground">{percentage}%</p>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <PieChart className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>{t('budgets.no_spending_data')}</p>
-              </div>
-            )}
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <RePieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  labelLine={false}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+              </RePieChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
