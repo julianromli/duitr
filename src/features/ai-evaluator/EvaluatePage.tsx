@@ -67,7 +67,7 @@ const EvaluatePage: React.FC = () => {
       .filter(t => t.type === 'income')
       .reduce((acc, t) => {
         // Use getDisplayCategoryName to get the proper category name
-        const categoryName = getDisplayCategoryName(t) || 'Pendapatan Lainnya';
+        const categoryName = getDisplayCategoryName(t) || t('income.categories.other', 'Other Income');
         const existing = acc.find(item => item.category === categoryName);
         if (existing) {
           existing.amount += t.amount;
@@ -82,7 +82,7 @@ const EvaluatePage: React.FC = () => {
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => {
         // Use getDisplayCategoryName to get the proper category name
-        const categoryName = getDisplayCategoryName(t) || 'Pengeluaran Lainnya';
+        const categoryName = getDisplayCategoryName(t) || t('transactions.categories.other', 'Other Expenses');
         const existing = acc.find(item => item.category === categoryName);
         if (existing) {
           existing.amount += t.amount;
@@ -118,7 +118,7 @@ const EvaluatePage: React.FC = () => {
     const summary = calculateSummary();
     
     if (summary.totalIncome === 0 && summary.totalExpenses === 0) {
-      setInsight('Tidak ada data transaksi untuk periode yang dipilih. Silakan pilih periode lain atau tambahkan transaksi terlebih dahulu.');
+      setInsight(t('ai.noDataMessage', 'No transaction data for the selected period. Please choose another period or add transactions first.'));
       return;
     }
 
@@ -131,7 +131,7 @@ const EvaluatePage: React.FC = () => {
       setChatMessages([]);
     } catch (error) {
       console.error('Error getting insight:', error);
-      setInsight('Maaf, terjadi kesalahan saat menganalisis data keuangan Anda. Silakan coba lagi.');
+      setInsight(t('ai.errorMessage', 'Sorry, an error occurred while analyzing your financial data. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +187,7 @@ const EvaluatePage: React.FC = () => {
             <button onClick={() => navigate('/')} className="mr-4">
               <ChevronLeft size={24} className="text-white" />
             </button>
-            <h1 className="text-xl font-bold">Evaluasi Keuangan AI</h1>
+            <h1 className="text-xl font-bold">{t('ai.financialEvaluation', 'AI Financial Evaluation')}</h1>
           </div>
         </motion.div>
 
@@ -197,13 +197,13 @@ const EvaluatePage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
                 <Calendar className="w-5 h-5 text-green-600" />
-                Pilih Periode Analisis
+                {t('ai.selectAnalysisPeriod', 'Select Analysis Period')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Tanggal Mulai</Label>
+                  <Label className="text-gray-300">{t('common.startDate', 'Start Date')}</Label>
                   <DatePicker
                     date={startDate}
                     setDate={setStartDate}
@@ -211,7 +211,7 @@ const EvaluatePage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Tanggal Selesai</Label>
+                  <Label className="text-gray-300">{t('common.endDate', 'End Date')}</Label>
                   <DatePicker
                     date={endDate}
                     setDate={setEndDate}
@@ -225,7 +225,7 @@ const EvaluatePage: React.FC = () => {
                 disabled={!startDate || !endDate || isLoading}
                 className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-semibold py-6 rounded-full"
               >
-                {isLoading ? 'Menganalisis...' : 'Analisis Keuangan'}
+                {isLoading ? t('ai.analyzing', 'Analyzing...') : t('ai.analyzeFinance', 'Analyze Finance')}
               </Button>
             </CardContent>
           </Card>
@@ -239,7 +239,7 @@ const EvaluatePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-400">Pemasukan</span>
+                    <span className="text-sm text-gray-400">{t('transactions.income', 'Income')}</span>
                   </div>
                   <p className="text-base font-bold text-green-500">
                     Rp{summary.totalIncome.toLocaleString('id-ID')}
@@ -253,7 +253,7 @@ const EvaluatePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-400">Pengeluaran</span>
+                    <span className="text-sm text-gray-400">{t('transactions.expense', 'Expenses')}</span>
                   </div>
                   <p className="text-base font-bold text-red-500">
                     Rp{summary.totalExpenses.toLocaleString('id-ID')}

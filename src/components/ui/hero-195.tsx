@@ -14,7 +14,7 @@ const Hero195 = () => {
   const { t } = useTranslation();
   
   return (
-    <div className="min-h-screen bg-black">
+    <div className="w-full relative">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
         {/* Animated Grid Background */}

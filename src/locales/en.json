@@ -52,7 +52,10 @@
     "addNewCategoryDescription": "Create custom categories to better organize your transactions.",
     "addNewCategoryTitle": "Add New Category",
     "editCategory": "Edit Category",
-    "created_successfully": "created successfully"
+    "created_successfully": "created successfully",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "deleting": "Deleting..."
   },
   "categories": {
     "all": "All",
@@ -228,12 +231,12 @@
     "eWallet": "E-Wallet",
     "investment": "Investment",
     "fillAllFields": "Please fill in all required fields",
-    "accountAdded": "Account added successfully"
+    "accountAdded": "Account added successfully",
+    "addError": "Failed to add wallet. Please try again.",
+    "updateError": "Failed to update wallet. Please try again."
   },
 
-  "categories": {
-    "all": "All"
-  },
+
 
   "transactions": {
     "title": "Transactions",
@@ -280,6 +283,8 @@
     "view_all": "View All",
     "details": "Transaction Details",
     "type": "Type",
+    "time": "Time",
+    "download_receipt": "Download Receipt",
     "update_success": "Transaction updated successfully",
     "update_error": "Failed to update transaction"
   },
@@ -331,6 +336,7 @@
     "weekly": "Weekly",
     "monthly": "Monthly",
     "yearly": "Yearly",
+    "spending_by_category": "Spending by Category",
     "categories": {
       "groceries": "Groceries",
       "dining": "Dining",
@@ -550,5 +556,27 @@
     "verification_sent": "Verification email sent! Please check your inbox.",
     "signed_out_title": "Signed Out",
     "signed_out_description": "You have been signed out."
-  }
+  },
+  "ai": {
+    "financialEvaluation": "AI Financial Evaluation",
+    "selectAnalysisPeriod": "Select Analysis Period",
+    "analyzing": "Analyzing...",
+    "analyzeFinance": "Analyze Finance",
+    "noDataMessage": "No transaction data for the selected period. Please choose another period or add transactions first.",
+    "errorMessage": "Sorry, an error occurred while analyzing your financial data. Please try again.",
+    "failedToGetInsight": "Failed to get insight from AI",
+    "failedToGetAnswer": "Failed to get answer from AI",
+    "cannotAnswerQuestion": "Sorry, cannot answer this question.",
+    "frequentlyAskedQuestions": "Frequently Asked Questions",
+    "suggestedQuestions": {
+      "reduceExpenses": "How can I reduce my biggest expenses?",
+      "savingPercentage": "What percentage should I save from my income?",
+      "limitCategories": "Which categories should I limit next month?",
+      "cashFlowHealth": "Is my cash flow healthy?",
+      "savingTips": "Practical tips to increase saving rate?",
+      "realisticBudget": "How to create a realistic budget?"
+    }
+  },
+  "tryAgain": "Try Again",
+  "addError": "Failed to add item"
 }

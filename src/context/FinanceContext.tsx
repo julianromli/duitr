@@ -190,26 +190,27 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
                 categoryMap[numericId].id_name : 
                 categoryMap[numericId].en_name;
             } else {
-              // Fallback to hardcoded mappings if category not in the map
-              const idToName: Record<number, string> = {
+              // Fallback to translation keys if category not in the map
+              const idToTranslationKey: Record<number, string> = {
                 // Expense categories
-                1: i18next.language === 'id' ? 'Belanjaan' : 'Groceries',
-                2: i18next.language === 'id' ? 'Makanan' : 'Food',
-                3: i18next.language === 'id' ? 'Transportasi' : 'Transportation',
-                4: i18next.language === 'id' ? 'Langganan' : 'Subscription',
-                5: i18next.language === 'id' ? 'Perumahan' : 'Housing',
-                6: i18next.language === 'id' ? 'Hiburan' : 'Entertainment',
-                7: i18next.language === 'id' ? 'Belanja' : 'Shopping',
-                8: i18next.language === 'id' ? 'Kesehatan' : 'Health',
-                9: i18next.language === 'id' ? 'Pendidikan' : 'Education',
-                10: i18next.language === 'id' ? 'Perjalanan' : 'Travel',
-                11: i18next.language === 'id' ? 'Pribadi' : 'Personal',
-                12: i18next.language === 'id' ? 'Lainnya' : 'Other',
-                16: i18next.language === 'id' ? 'Hadiah' : 'Gift',
-                19: i18next.language === 'id' ? 'Sedekah' : 'Donate'
+                1: 'transactions.categories.groceries',
+                2: 'transactions.categories.dining',
+                3: 'transactions.categories.transportation',
+                4: 'transactions.categories.subscription',
+                5: 'transactions.categories.housing',
+                6: 'transactions.categories.entertainment',
+                7: 'transactions.categories.shopping',
+                8: 'transactions.categories.health',
+                9: 'transactions.categories.education',
+                10: 'transactions.categories.travel',
+                11: 'transactions.categories.personal',
+                12: 'transactions.categories.other',
+                16: 'transactions.categories.gift',
+                19: 'transactions.categories.donate'
               };
               
-              categoryDisplayName = idToName[numericId] || 'Other';
+              const translationKey = idToTranslationKey[numericId];
+              categoryDisplayName = translationKey ? i18next.t(translationKey) : 'Other';
             }
           }
           

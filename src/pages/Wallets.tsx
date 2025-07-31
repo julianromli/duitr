@@ -107,7 +107,7 @@ const Wallets: React.FC = () => {
       setOpen(false);
     } catch (error) {
       console.error('Error adding wallet:', error);
-      setError('Gagal menambahkan wallet. Silakan coba lagi.');
+      setError(t('wallets.addError'));
       // Toast error is already shown by addWallet function
       // Keep the form open to allow the user to try again
     } finally {
@@ -271,7 +271,7 @@ const Wallets: React.FC = () => {
         <div className="bg-[#242425] rounded-xl p-6 text-center mt-8">
           <p className="text-red-400 mb-4">{error}</p>
           <Button onClick={() => setError(null)} className="bg-[#C6FE1E] text-[#0D0D0D]">
-            Coba Lagi
+            {t('common.tryAgain')}
           </Button>
         </div>
         </div>

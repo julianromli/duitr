@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageCircle } from 'lucide-react';
@@ -8,22 +9,26 @@ interface SuggestedQuestionsProps {
   onSelect: (question: string) => void;
 }
 
-const SUGGESTED_QUESTIONS = [
-  "Bagaimana cara mengurangi pengeluaran terbesar saya?",
-  "Berapa persen ideal untuk ditabung dari penghasilan?",
-  "Kategori mana yang perlu saya batasi bulan depan?",
-  "Apakah cash flow saya sudah sehat?",
-  "Tips praktis untuk meningkatkan saving rate?",
-  "Bagaimana cara membuat budget yang realistis?"
-];
+// Suggested questions will be translated using i18n keys
 
 export const SuggestedQuestions: React.FC<SuggestedQuestionsProps> = ({ onSelect }) => {
+  const { t } = useTranslation();
+  
+  const SUGGESTED_QUESTIONS = [
+    t('ai.suggestedQuestions.reduceExpenses', 'How can I reduce my biggest expenses?'),
+    t('ai.suggestedQuestions.savingPercentage', 'What percentage should I save from my income?'),
+    t('ai.suggestedQuestions.limitCategories', 'Which categories should I limit next month?'),
+    t('ai.suggestedQuestions.cashFlowHealth', 'Is my cash flow healthy?'),
+    t('ai.suggestedQuestions.savingTips', 'Practical tips to increase saving rate?'),
+    t('ai.suggestedQuestions.realisticBudget', 'How to create a realistic budget?')
+  ];
+  
   return (
     <Card className="w-full mb-6 border-[#242425] overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-medium text-white">
           <MessageCircle className="w-4 h-4 text-green-500" />
-          <span className="text-sm font-medium text-gray-300">Pertanyaan yang Sering Ditanyakan</span>
+          <span className="text-sm font-medium text-gray-300">{t('ai.frequentlyAskedQuestions', 'Frequently Asked Questions')}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">

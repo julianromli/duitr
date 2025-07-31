@@ -2,22 +2,26 @@
 
 import { supabase } from '@/lib/supabase';
 import type { FinanceSummary } from '@/types/finance';
+import i18next from 'i18next';
 
 export async function getFinanceInsight(summary: FinanceSummary): Promise<string> {
   try {
     const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
-      body: { summary }
+      body: { 
+        summary,
+        language: i18next.language || 'id'
+      }
     });
 
     if (error) {
       console.error('Edge function error:', error);
-      throw new Error(error.message || 'Gagal mendapatkan insight dari AI');
+      throw new Error(error.message || i18next.t('ai.failedToGetInsight', 'Failed to get insight from AI'));
     }
 
-    return data?.result ?? "Gagal mendapatkan insight.";
+    return data?.result ?? i18next.t('ai.failedToGetInsight', 'Failed to get insight.');
   } catch (error) {
     console.error('Error getting finance insight:', error);
-    throw new Error('Gagal mendapatkan insight dari AI');
+    throw new Error(i18next.t('ai.failedToGetInsight', 'Failed to get insight from AI'));
   }
 }
 
@@ -26,19 +30,20 @@ export async function askAI(question: string, context: FinanceSummary): Promise<
     const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
       body: { 
         summary: context,
-        question: question
+        question: question,
+        language: i18next.language || 'id'
       }
     });
 
     if (error) {
       console.error('Edge function error:', error);
-      throw new Error(error.message || 'Gagal mendapatkan jawaban dari AI');
+      throw new Error(error.message || i18next.t('ai.failedToGetAnswer', 'Failed to get answer from AI'));
     }
 
-    return data?.result ?? "Maaf, tidak bisa menjawab pertanyaan ini.";
+    return data?.result ?? i18next.t('ai.cannotAnswerQuestion', 'Sorry, cannot answer this question.');
   } catch (error) {
     console.error('Error asking AI:', error);
-    throw new Error('Gagal mendapatkan jawaban dari AI');
+    throw new Error(i18next.t('ai.failedToGetAnswer', 'Failed to get answer from AI'));
   }
 }
 
