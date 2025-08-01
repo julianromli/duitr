@@ -7,8 +7,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => ({
   server: {
-    host: mode === 'development' ? '::' : '0.0.0.0',
+    host: mode === 'development' ? 'localhost' : '0.0.0.0',
     port: mode === 'development' ? 8080 : 4173,
+    hmr: {
+      port: 8080
+    }
   },
   preview: {
     host: '0.0.0.0',
