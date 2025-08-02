@@ -18,14 +18,14 @@ const Hero195 = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
         {/* Animated Grid Background */}
-        <Squares
+        {/* <Squares
           direction="diagonal"
           speed={0.5}
           borderColor="rgba(34, 197, 94, 0.3)"
           squareSize={40}
           hoverFillColor="rgba(163, 230, 53, 0.2)"
           className="absolute inset-0 -z-10 opacity-60"
-        />
+        /> */}
         <div className="absolute inset-0 bg-grid-white/[0.02] [mask-image:linear-gradient(0deg,transparent,rgba(255,255,255,0.1))]" />
         
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
