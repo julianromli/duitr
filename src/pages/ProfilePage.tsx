@@ -185,10 +185,10 @@ const ProfilePage: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        duration: 0.6,
+        duration: 0.4,
         ease: "easeOut",
-        staggerChildren: 0.1,
-        delayChildren: 0.2
+        staggerChildren: 0.05,
+        delayChildren: 0.05
       }
     }
   };
@@ -202,7 +202,7 @@ const ProfilePage: React.FC = () => {
         type: "spring",
         stiffness: 400,
         damping: 25,
-        duration: 0.6
+        duration: 0.4
       }
     }
   };
@@ -217,7 +217,7 @@ const ProfilePage: React.FC = () => {
         type: "spring",
         stiffness: 300,
         damping: 20,
-        duration: 0.8
+        duration: 0.5
       }
     }
   };
@@ -232,7 +232,7 @@ const ProfilePage: React.FC = () => {
         type: "spring",
         stiffness: 300,
         damping: 25,
-        duration: 0.7
+        duration: 0.4
       }
     }
   };
@@ -246,12 +246,12 @@ const ProfilePage: React.FC = () => {
         type: "spring",
         stiffness: 400,
         damping: 25,
-        duration: 0.5
+        duration: 0.3
       }
     },
     hover: {
       scale: 1.02,
-      transition: { duration: 0.2 }
+      transition: { duration: 0.15 }
     },
     tap: {
       scale: 0.98,
@@ -287,7 +287,7 @@ const ProfilePage: React.FC = () => {
               className="text-xl font-bold"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
             >
               {t('settings.profile')}
             </motion.h1>
@@ -303,7 +303,7 @@ const ProfilePage: React.FC = () => {
             className="relative mb-4"
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 20 }}
+            transition={{ delay: 0.15, type: "spring", stiffness: 300, damping: 20 }}
           >
             <motion.div
               className="relative cursor-pointer"
@@ -327,7 +327,7 @@ const ProfilePage: React.FC = () => {
                   className="absolute bottom-0 left-0 bg-black/50 w-full p-1 flex justify-center rounded-b-full"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.2 }}
                 >
                   <ZoomIn size={14} className="text-white" />
                 </motion.div>
@@ -342,7 +342,7 @@ const ProfilePage: React.FC = () => {
               title={t('settings.changeProfileImage')}
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.7, type: "spring", stiffness: 400, damping: 20 }}
+              transition={{ delay: 0.25, type: "spring", stiffness: 400, damping: 20 }}
             >
               <Camera size={16} />
             </motion.button>
@@ -359,7 +359,7 @@ const ProfilePage: React.FC = () => {
             className="text-xl font-bold"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
           >
             {userProfile.username}
           </motion.h2>
@@ -367,7 +367,7 @@ const ProfilePage: React.FC = () => {
             className="text-muted-foreground"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
+            transition={{ delay: 0.25, duration: 0.3 }}
           >
             {userProfile.email}
           </motion.p>
@@ -400,8 +400,8 @@ const ProfilePage: React.FC = () => {
             visible: {
               opacity: 1,
               transition: {
-                staggerChildren: 0.15,
-                delayChildren: 0.3
+                staggerChildren: 0.08,
+                delayChildren: 0.1
               }
             }
           }}
@@ -413,7 +413,7 @@ const ProfilePage: React.FC = () => {
                   className="space-y-2"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8, duration: 0.5 }}
+                  transition={{ delay: 0.3, duration: 0.3 }}
                 >
                   <Label htmlFor="username" className="text-muted-foreground">{t('settings.username')}</Label>
                   <Input
@@ -428,7 +428,7 @@ const ProfilePage: React.FC = () => {
                   className="space-y-2"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.9, duration: 0.5 }}
+                  transition={{ delay: 0.35, duration: 0.3 }}
                 >
                   <Label htmlFor="email" className="text-muted-foreground">{t('settings.email')}</Label>
                   <Input
@@ -445,7 +445,7 @@ const ProfilePage: React.FC = () => {
                   whileTap="tap"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0, duration: 0.5 }}
+                  transition={{ delay: 0.4, duration: 0.3 }}
                 >
                   <Button
                     onClick={handleProfileSave}
@@ -466,7 +466,7 @@ const ProfilePage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.1, duration: 0.6 }}
+                  transition={{ delay: 0.45, duration: 0.4 }}
                 >
                   <CategoryManagement />
                 </motion.div>
@@ -484,7 +484,7 @@ const ProfilePage: React.FC = () => {
                   whileTap="tap"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2, duration: 0.5 }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
                 >
                   <Button
                     onClick={handleLogout}
@@ -503,7 +503,7 @@ const ProfilePage: React.FC = () => {
                   whileTap="tap"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.3, duration: 0.5 }}
+                  transition={{ delay: 0.55, duration: 0.3 }}
                 >
                   <Button
                     onClick={handleDonateClick}
@@ -519,7 +519,7 @@ const ProfilePage: React.FC = () => {
                   className="text-center mt-4 text-xs text-muted-foreground"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.4, duration: 0.5 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
                 >
                   Made by{" "}
                   <motion.button 
