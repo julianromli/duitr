@@ -25,7 +25,7 @@
   "rewrites": [
     { "source": "/callback/(.*)", "destination": "/index.html" },
     { "source": "/r5sms-(.*)", "destination": "/index.html" },
-    { "source": "/sin1\\:(.*)", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/sin1\:(.*)", "destination": "/index.html" },
+    { "source": "/((?!assets|favicon|manifest|robots|pwa-icons|screenshots|fonts|images|.*\\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot|webp|mp4|webm|ogg|mp3|wav|flac|aac|json|xml|txt)).*)$", "destination": "/index.html" }
   ]
 }
