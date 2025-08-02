@@ -65,7 +65,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       .filter(cat => cat.type === 'expense')
       .map(cat => ({
         id: cat.id || cat.category_id?.toString() || '',
-        name: cat.id_name || cat.en_name || 'Unknown',
+        name: cat.en_name || cat.id_name || 'Unknown', // Fixed: prioritize en_name over id_name
         icon: cat.icon || 'circle',
         color: cat.color || '#6B7280'
       }));

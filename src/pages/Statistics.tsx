@@ -341,7 +341,7 @@ const Statistics: React.FC = () => {
               onClick={() => handleTabChange('analysis')}
               whileTap={{ scale: 0.98 }}
             >
-              Analisa
+              {t('statistics.analysis')}
             </motion.button>
           </div>
         </motion.div>

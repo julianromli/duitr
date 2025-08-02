@@ -1,8 +1,8 @@
 // Created ProfilePage to handle user profile viewing and editing.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSafeNavigate } from '@/hooks/useSafeNavigate';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   const { user, signOut } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

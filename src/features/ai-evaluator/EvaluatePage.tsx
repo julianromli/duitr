@@ -267,7 +267,7 @@ const EvaluatePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-400">Net Flow</span>
+                    <span className="text-sm text-gray-400">{t('ai.netFlow', 'Net Flow')}</span>
                   </div>
                   <p className={`text-base font-bold ${summary.netFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     Rp{summary.netFlow.toLocaleString('id-ID')}
@@ -281,7 +281,7 @@ const EvaluatePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <PieChart className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-400">Saving Rate</span>
+                    <span className="text-sm text-gray-400">{t('ai.savingRate', 'Saving Rate')}</span>
                   </div>
                   <p className="text-base font-bold text-yellow-500">
                     {summary.totalIncome > 0

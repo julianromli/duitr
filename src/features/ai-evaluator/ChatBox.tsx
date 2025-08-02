@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Send, Bot, User } from 'lucide-react';
 import { askAI } from './api';
 import type { ChatMessage, FinanceSummary } from '@/types/finance';
+import { useTranslation } from 'react-i18next';
 
 interface ChatBoxProps {
   messages: ChatMessage[];
@@ -26,6 +27,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
   suggestedQuestion, 
   onQuestionUsed 
 }) => {
+  const { t } = useTranslation();
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,7 +75,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Maaf, terjadi error saat memproses pertanyaan Anda. Silakan coba lagi.',
+        content: t('ai.chatErrorMessage', 'Sorry, an error occurred while processing your question. Please try again.'),
         timestamp: new Date()
       };
       const finalMessages = [...updatedMessages, errorMessage];
@@ -88,7 +90,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base text-white">
           <Bot className="w-4 h-4 text-purple-600" />
-          Tanya AI Lebih Lanjut
+          {t('ai.askAIMore', 'Ask AI More')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -131,7 +133,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
                   <div className="p-3 rounded-lg bg-gray-700 border border-gray-600">
                     <div className="flex items-center gap-2">
                       <div className="animate-spin w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full"></div>
-                      <span className="text-sm text-gray-300">AI sedang berpikir...</span>
+                      <span className="text-sm text-gray-300">{t('ai.aiThinking', 'AI is thinking...')}</span>
                     </div>
                   </div>
                 </div>
@@ -145,7 +147,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
           <Textarea
             value={currentQuestion}
             onChange={(e) => setCurrentQuestion(e.target.value)}
-            placeholder="Tanyakan sesuatu tentang evaluasi keuangan Anda..."
+            placeholder={t('ai.askQuestionPlaceholder')}
             className="min-h-[80px] resize-none bg-gray-800 border-gray-700 text-white placeholder-gray-400"
             disabled={isLoading}
           />
@@ -157,7 +159,7 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
               className="flex items-center gap-2 bg-[#C6FE1E] text-black hover:bg-[#B5E619]"
             >
               <Send className="w-4 h-4" />
-              Kirim
+              {t('ai.send', 'Send')}
             </Button>
           </div>
         </form>

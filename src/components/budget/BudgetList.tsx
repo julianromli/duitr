@@ -288,7 +288,10 @@ const BudgetList: React.FC = () => {
                           </span>
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          dari {formatCurrency(budget.amount)}
+                          <AnimatedText 
+                            text={`${t('budgets.from')} ${formatCurrency(budget.amount)}`}
+                            animationType="fade"
+                          />
                         </div>
                       </div>
                       
@@ -296,7 +299,7 @@ const BudgetList: React.FC = () => {
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-gray-600 dark:text-gray-400">
                           <AnimatedText 
-                            text={`${Math.round(percentage)}% digunakan`}
+                            text={`${Math.round(percentage)}% ${t('budgets.used_percentage')}`}
                             className="text-xs"
                             animationType="slide"
                           />
@@ -304,8 +307,8 @@ const BudgetList: React.FC = () => {
                         <span className={remaining < 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-green-600 dark:text-green-400'}>
                           <AnimatedText 
                             text={remaining < 0 
-                              ? `Kelebihan ${formatCurrency(Math.abs(remaining))}`
-                              : `Sisa ${formatCurrency(Math.abs(remaining))}`
+                              ? `${t('budgets.over_by')} ${formatCurrency(Math.abs(remaining))}`
+                              : `${t('budgets.remaining')} ${formatCurrency(Math.abs(remaining))}`
                             }
                             className="text-xs"
                             animationType="slide"
