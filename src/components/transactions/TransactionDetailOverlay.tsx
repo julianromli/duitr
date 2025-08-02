@@ -14,7 +14,8 @@ import {
   Sheet,
   SheetContent,
   SheetPortal,
-  SheetOverlay
+  SheetOverlay,
+  SheetTitle
 } from "@/components/ui/sheet";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import {
@@ -613,6 +614,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
           }}
           onEscapeKeyDown={handleClose}
         >
+          <SheetTitle className="sr-only">{t('transactions.detail')}</SheetTitle>
           <div className="pt-6 pb-10 px-6">
             {/* Header with title and edit button */}
             <div className="flex justify-center mb-4">
@@ -620,7 +622,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
             </div>
             
             <div className="relative mb-6">
-              <h2 className="text-foreground text-xl font-bold text-center">Detail Transaksi</h2>
+              <h2 className="text-foreground text-xl font-bold text-center">{t('transactions.detail')}</h2>
               
               {!isEditing && (
                 <button 
@@ -857,7 +859,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                     onClick={handleClose}
                     aria-label="Go back to previous page"
                   >
-                    {t('common.back')}
+                    {t('buttons.back')}
                   </Button>
                 </>
               )}

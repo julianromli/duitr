@@ -23,10 +23,11 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
       onPressedChange={handleToggle}
       aria-label={`Switch to ${isEnglish ? 'Indonesian' : 'English'}`}
       className={`
-        h-9 px-3 text-xs font-medium border border-gray-200 
-        hover:bg-gray-50 transition-colors
+        h-9 px-3 text-xs font-medium border border-white/10 
+        hover:bg-white/5 transition-colors
         data-[state=on]:bg-lime-400 data-[state=on]:text-black
-        data-[state=off]:bg-transparent data-[state=off]:text-gray-700
+        data-[state=off]:bg-transparent data-[state=off]:text-white
+        hidden md:block
         ${className}
       `}
     >

@@ -282,6 +282,7 @@
     "history": "Transactions History",
     "view_all": "View All",
     "details": "Transaction Details",
+    "detail": "Transaction Details",
     "type": "Type",
     "time": "Time",
     "download_receipt": "Download Receipt",
@@ -473,7 +474,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
-    "create": "Create"
+    "create": "Create",
+    "back": "Back"
   },
   "hello": "Hello",
   "welcomeBack": "Welcome Back",

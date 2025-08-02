@@ -21,7 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import CategoryManagement from '@/components/CategoryManagement';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog';
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
@@ -376,6 +376,7 @@ const ProfilePage: React.FC = () => {
         {/* Profile Image View Modal */}
         <Dialog open={isImageViewOpen} onOpenChange={setIsImageViewOpen}>
           <DialogContent className="bg-popover border-0 p-0 overflow-hidden max-w-md w-full rounded-lg">
+            <DialogTitle className="sr-only">Profile Image</DialogTitle>
             <div className="relative">
               <DialogClose className="absolute right-3 top-3 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors">
                 <X size={18} />

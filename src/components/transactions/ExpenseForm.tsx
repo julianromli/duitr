@@ -195,7 +195,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
                     <SelectItem 
                       key={category.id} 
                       value={String(category.id)}
-                      className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200"
+                      className="hover:bg-[#333]/80 focus:bg-[#333]/80 hover:text-white focus:text-white transition-colors duration-200"
                     >
                       <div className="flex items-center">
                         <CategoryIcon 
@@ -235,7 +235,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
               </SelectTrigger>
               <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
                 {wallets.map((wallet) => (
-                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                  <SelectItem key={wallet.id} value={wallet.id} className="hover:bg-[#333]/80 focus:bg-[#333]/80 hover:text-white focus:text-white transition-colors duration-200">
                     <AnimatedText text={wallet.name} />
                   </SelectItem>
                 ))}
