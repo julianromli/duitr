@@ -53,7 +53,7 @@ const LandingPage: React.FC = () => {
             <LanguageToggle className="hidden md:block" />
             <button 
               onClick={() => navigate('/login')} 
-              className="hidden md:block text-sm font-medium px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="hidden md:block text-sm font-medium px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white transition-colors"
             >
               Sign in
             </button>

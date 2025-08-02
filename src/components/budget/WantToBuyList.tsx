@@ -295,22 +295,22 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
                       </Button>
                     </motion.div>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-gray-900 border-gray-700 rounded-xl">
+                  <AlertDialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
                     <AlertDialogHeader>
                       <AlertDialogTitle className="text-white text-lg font-semibold">
                         {t('common.areYouSure')}
                       </AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-400 text-sm">
+                      <AlertDialogDescription className="text-gray-300 text-sm">
                         {t('budget.deleteWantToBuyConfirm')} "{item.name}"? {t('common.cannotBeUndone')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="gap-2">
-                      <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600 rounded-lg">
+                      <AlertDialogCancel className="bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border-white/10 rounded-lg">
                         {t('common.cancel')}
                       </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => deleteWantToBuyItem(item.id)}
-                        className="bg-red-600 text-white hover:bg-red-700 rounded-lg"
+                        className="bg-[#FF4444] hover:bg-[#FF6666] text-white rounded-lg"
                       >
                         {t('common.delete')}
                       </AlertDialogAction>

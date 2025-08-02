@@ -175,18 +175,22 @@ const PinjamanList: React.FC<PinjamanListProps> = ({ onEditItem }) => {
                          <span className="sr-only">{t('common.delete')}</span>
                     </Button>
                  </AlertDialogTrigger>
-                 <AlertDialogContent className="bg-[#1A1A1A] border-none text-white dark:bg-gray-800 dark:text-gray-200">
+                 <AlertDialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
                     <AlertDialogHeader>
-                      <AlertDialogTitle>{t('common.areYouSure')}</AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-400 dark:text-gray-500">
+                      <AlertDialogTitle className="text-white text-lg font-semibold">
+                        {t('common.areYouSure')}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-gray-300 text-sm">
                          {t('budget.deletePinjamanConfirm')} "{item.name}"? {t('common.cannotBeUndone')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200">{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2">
+                      <AlertDialogCancel className="bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white border-white/10 rounded-lg">
+                        {t('common.cancel')}
+                      </AlertDialogCancel>
                       <AlertDialogAction
                          onClick={() => deletePinjamanItem(item.id)}
-                         className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-600 dark:hover:bg-red-700"
+                         className="bg-[#FF4444] hover:bg-[#FF6666] text-white rounded-lg"
                        >
                          {t('common.delete')}
                        </AlertDialogAction>
