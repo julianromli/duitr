@@ -2,6 +2,8 @@
 // Route configuration for the application
 import React, { Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { TranslationErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 // Lazy load components for code splitting
 const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
@@ -26,21 +28,29 @@ const TermsOfService = React.lazy(() => import('@/pages/TermsOfService'));
 const TestDatePicker = React.lazy(() => import('@/components/ui/test-date-picker').then(module => ({ default: module.TestDatePicker })));
 const LoginButtonTest = React.lazy(() => import('@/components/test/LoginButtonTest'));
 
-// Loading component for Suspense fallback
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      <p className="text-muted-foreground text-sm">Loading...</p>
+// Enhanced loading component that's aware of translation state
+const LoadingSpinner = () => {
+  const { ready } = useTranslation();
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <p className="text-muted-foreground text-sm">
+          {ready ? 'Loading...' : 'Loading translations...'}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
-// Wrapper component for lazy loaded components
+// Enhanced wrapper component for lazy loaded components with translation error handling
 const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<LoadingSpinner />}>
-    {children}
-  </Suspense>
+  <TranslationErrorBoundary>
+    <Suspense fallback={<LoadingSpinner />}>
+      {children}
+    </Suspense>
+  </TranslationErrorBoundary>
 );
 
 export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics'];

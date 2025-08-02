@@ -307,7 +307,7 @@ const PrivacyPolicy: React.FC = () => {
           >
             <div className="mb-4 md:mb-0">
               <h1 className="text-xl font-bold text-lime-400">Duitr</h1>
-              <p className="text-sm text-gray-300 mt-1">Your AI-powered financial assistant</p>
+              <p className="text-sm text-gray-300 mt-1">Smart Money, Smarter Future</p>
             </div>
             <div className="flex space-x-6">
               <a href="https://threads.com/faizintifada" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-lime-400 transition-colors">

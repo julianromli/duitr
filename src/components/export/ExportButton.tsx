@@ -142,7 +142,7 @@ const ExportButton = () => {
                 <AnimatedText text={t('export.date_range')} />
               </Label>
               <Select value={dateRange} onValueChange={handleDateRangeChange}>
-                <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] hover:text-white transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
                   <SelectValue>
                     <AnimatedText 
                       text={dateRange === 'all' ? t('export.all_time') :
@@ -156,19 +156,19 @@ const ExportButton = () => {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
-                  <SelectItem value="all" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                  <SelectItem value="all" className="hover:bg-[#333]/80 hover:text-white focus:bg-[#333]/80 focus:text-white transition-colors duration-200">
                     <AnimatedText text={t('export.all_time')} />
                   </SelectItem>
-                  <SelectItem value="30days" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                  <SelectItem value="30days" className="hover:bg-[#333]/80 hover:text-white focus:bg-[#333]/80 focus:text-white transition-colors duration-200">
                     <AnimatedText text={t('export.last_30_days')} />
                   </SelectItem>
-                  <SelectItem value="90days" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                  <SelectItem value="90days" className="hover:bg-[#333]/80 hover:text-white focus:bg-[#333]/80 focus:text-white transition-colors duration-200">
                     <AnimatedText text={t('export.last_90_days')} />
                   </SelectItem>
-                  <SelectItem value="thisYear" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                  <SelectItem value="thisYear" className="hover:bg-[#333]/80 hover:text-white focus:bg-[#333]/80 focus:text-white transition-colors duration-200">
                     <AnimatedText text={t('export.this_year')} />
                   </SelectItem>
-                  <SelectItem value="custom" className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
+                  <SelectItem value="custom" className="hover:bg-[#333]/80 hover:text-white focus:bg-[#333]/80 focus:text-white transition-colors duration-200">
                     <AnimatedText text={t('export.custom_range')} />
                   </SelectItem>
                 </SelectContent>
@@ -184,7 +184,7 @@ const ExportButton = () => {
                   </Label>
                   <Popover open={calendarOpen === 'start'} onOpenChange={(open) => open ? setCalendarOpen('start') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] hover:text-white transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
                         <Calendar className="mr-2 h-4 w-4" />
                         <AnimatedText text={startDate ? format(startDate, 'PP') : t('export.pick_date')} />
                       </Button>
@@ -211,7 +211,7 @@ const ExportButton = () => {
                   </Label>
                   <Popover open={calendarOpen === 'end'} onOpenChange={(open) => open ? setCalendarOpen('end') : setCalendarOpen(null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
+                      <Button variant="outline" className="w-full justify-start text-left font-medium bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] hover:text-white transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
                         <Calendar className="mr-2 h-4 w-4" />
                         <AnimatedText text={endDate ? format(endDate, 'PP') : t('export.pick_date')} />
                       </Button>

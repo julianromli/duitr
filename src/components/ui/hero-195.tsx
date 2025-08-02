@@ -54,7 +54,15 @@ const Hero195 = () => {
               {t('landing.hero.title')}{" "}
               <br></br>
               <WordRotate 
-                words={t('landing.hero.titleHighlight', { returnObjects: true }) as string[]}
+                words={(() => {
+                  const titleHighlight = t('landing.hero.titleHighlight', { returnObjects: true });
+                  // Provide fallback if translation is not ready or invalid
+                  if (Array.isArray(titleHighlight) && titleHighlight.length > 0) {
+                    return titleHighlight as string[];
+                  }
+                  // Fallback words in case translation is not loaded
+                  return ['Smart', 'Secure', 'Simple'];
+                })()} 
                 duration={2500}
                 className="inline"
               />

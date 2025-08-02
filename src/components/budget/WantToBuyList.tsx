@@ -132,8 +132,8 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center py-12 px-6"
       >
-        <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <ShoppingBag className="h-8 w-8 text-gray-400" />
+        <div className="mx-auto w-16 h-16 bg-[#C6FE1E] rounded-full flex items-center justify-center mb-4">
+          <ShoppingBag className="h-8 w-8 text-[#0D0D0D]" />
         </div>
         <p className="text-gray-500 text-lg font-medium mb-2">{t('budget.noWantToBuyItems')}</p>
         <p className="text-gray-400 text-sm">Start adding items to your wishlist</p>

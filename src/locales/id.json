@@ -98,76 +98,76 @@
   },
   "landing": {
     "hero": {
-    "badge": "AI Smart Insight Kini Tersedia.",
-    "badgeAction": "Lihat Caranya",
-    "title": "Cerdas Kelola",
-    "titleHighlight": ["Anggaranmu", "Pengeluaranmu", "Keuanganmu", "Masa Depanmu"],
-    "subtitle": "Asisten keuangan pintarmu siap membantu. Dapatkan insight cerdas untuk pahami pengeluaran, capai target, dan kelola anggaran tanpa pusing. Semua didukung AI dalam satu aplikasi.",
-    "cta": "Mulai Gratis Sekarang",
+    "badge": "🚀 AI Smart Insight Tersedia!",
+    "badgeAction": "Coba Sekarang",
+    "title": "Kelola Uang",
+    "titleHighlight": ["Lebih Cerdas", "Tanpa Ribet", "Dengan AI", "Masa Depan"],
+    "subtitle": "Stop bingung sama keuangan! AI kami bantu kamu pahami pengeluaran, capai target, dan hemat lebih banyak. Semua otomatis, semua mudah.",
+    "cta": "Mulai Hemat Sekarang!",
     "imageAlt": "Tampilan Aplikasi Duitr di Ponsel"
     },
     "features": {
-      "title": "Semua yang Anda butuhkan",
-      "subtitle": "Fitur canggih untuk keuangan modern",
-      "description": "Dari wawasan bertenaga AI hingga pelacakan komprehensif, Duitr menyediakan semua alat yang Anda butuhkan untuk menguasai keuangan Anda.",
+      "title": "Kenapa Pilih Duitr?",
+      "subtitle": "3 Alasan Kamu Bakal Suka",
+      "description": "AI yang ngerti kebutuhan keuanganmu. Tracking otomatis, insight cerdas, keamanan terjamin. Semuanya dalam satu app!",
       "smartAnalytics": {
-        "title": "Analitik Cerdas",
-        "description": "Wawasan bertenaga AI yang membantu Anda memahami pola pengeluaran dan mengoptimalkan keputusan keuangan."
+        "title": "AI yang Ngerti Kamu",
+        "description": "Dapat insight personal tentang kebiasaan belanja. AI kasih saran biar kamu bisa hemat lebih banyak."
       },
       "securePrivate": {
-        "title": "Aman & Privat",
-        "description": "Keamanan tingkat bank dengan enkripsi end-to-end. Data keuangan Anda selalu terlindungi dan privat."
+        "title": "Data Aman 100%",
+        "description": "Keamanan setara bank besar. Data keuanganmu terlindungi enkripsi tingkat militer."
       },
       "realtimeSync": {
-        "title": "Sinkronisasi Real-time",
-        "description": "Sinkronisasi instan di semua perangkat Anda. Akses data keuangan Anda kapan saja, di mana saja."
+        "title": "Sync Otomatis",
+        "description": "Update real-time di semua device. Cek saldo kapan aja, dimana aja, selalu akurat."
       }
     },
     "tabs": {
       "analytics": {
         "title": "Analitik",
-        "subtitle": "Wawasan Keuangan Bertenaga AI",
-        "description": "Dapatkan analisis cerdas tentang pola pengeluaran, rekomendasi anggaran, dan skor kesehatan keuangan.",
+        "subtitle": "AI Kasih Tau Kemana Uangmu Pergi",
+        "description": "Lihat pola belanja, dapat saran hemat, dan cek skor keuangan kamu. Semua otomatis!",
         "smartRecommendations": {
-          "title": "Rekomendasi Cerdas",
-          "description": "Saran personal untuk mengoptimalkan pengeluaran dan meningkatkan tabungan berdasarkan perilaku keuangan Anda."
+          "title": "Saran Personal",
+          "description": "AI kasih tips hemat yang cocok sama gaya hidup kamu. Dijamin bisa nabung lebih banyak!"
         },
         "spendingPatterns": {
-          "title": "Pola Pengeluaran",
-          "description": "Rincian detail ke mana uang Anda pergi dengan grafik visual dan analisis tren."
+          "title": "Kemana Uangmu?",
+          "description": "Grafik keren yang tunjukin detail pengeluaran. Langsung keliatan mana yang boros!"
         }
       },
       "budgeting": {
         "title": "Anggaran",
-        "subtitle": "Manajemen Anggaran Cerdas",
-        "description": "Buat dan kelola anggaran dengan peringatan cerdas dan rekomendasi untuk tetap pada jalur.",
+        "subtitle": "Bikin Budget Jadi Gampang",
+        "description": "Set budget, dapat alert kalau mau habis, plus tips biar tetap on track. Anti bocor!",
         "automaticCategorization": {
-          "title": "Kategorisasi Otomatis",
-          "description": "AI secara otomatis mengkategorikan transaksi Anda, membuat pelacakan anggaran menjadi mudah dan akurat."
+          "title": "Auto Kategori",
+          "description": "AI otomatis kategorikan semua transaksi. Kamu tinggal duduk manis, semuanya rapi!"
         },
         "budgetAlerts": {
-          "title": "Peringatan Anggaran",
-          "description": "Dapatkan notifikasi saat Anda mendekati batas anggaran atau saat pengeluaran tidak biasa terdeteksi."
+          "title": "Alert Pintar",
+          "description": "Notif kalau budget mau habis atau ada pengeluaran aneh. Jadi gak bakal kaget!"
         }
       },
       "tracking": {
-        "title": "Pelacakan",
-        "subtitle": "Pelacakan Pengeluaran Komprehensif",
-        "description": "Lacak setiap transaksi di berbagai akun dengan sinkronisasi real-time dan pelaporan detail.",
+        "title": "Tracking",
+        "subtitle": "Pantau Semua Transaksi Real-Time",
+        "description": "Track semua akun dalam satu tempat. Update langsung, laporan detail, semuanya akurat!",
         "multiAccount": {
-          "title": "Dukungan Multi-Akun",
-          "description": "Hubungkan dan kelola berbagai rekening bank, kartu kredit, dan dompet digital dalam satu tempat."
+          "title": "Semua Akun Jadi Satu",
+          "description": "Gabungin semua rekening, kartu kredit, e-wallet. Satu app untuk semua!"
         },
         "realTimeUpdates": {
-          "title": "Pembaruan Real-Time",
-          "description": "Pembaruan transaksi instan dan sinkronisasi saldo di semua akun yang terhubung."
+          "title": "Update Langsung",
+          "description": "Transaksi masuk langsung keliatan. Saldo selalu update di semua device!"
         }
       }
     },
     "cta": {
-      "title": "Siap mengendalikan keuangan Anda?",
-      "subtitle": "Bergabunglah dengan ribuan pengguna yang telah mengubah kehidupan keuangan mereka dengan Duitr.",
-      "button": "Mulai Perjalanan Keuangan Anda"
+      "title": "Udah Siap Jadi Jutawan?",
+      "subtitle": "Join 100+ orang yang udah berhasil ngatur keuangan dan mulai nabung konsisten pakai Duitr!",
+      "button": "Yuk, Mulai Sekarang! 🚀"
     }
   },
   "navbar": {
@@ -371,7 +371,11 @@
       "created": "Anggaran berhasil dibuat"
     },
     "spending": "Pengeluaran per Kategori",
-    "no_budgets": "Anda belum memiliki anggaran."
+    "no_budgets": "Anda belum memiliki anggaran.",
+    "from": "dari",
+    "used_percentage": "digunakan",
+    "over_by": "Kelebihan",
+    "remaining": "Sisa"
   },
   "settings": {
     "title": "Pengaturan",
@@ -454,6 +458,7 @@
     }
   },
   "statistics": {
+    "analysis": "Analisis",
     "title": "Statistik",
     "last7Days": "7 Hari Terakhir",
     "last30Days": "30 Hari Terakhir",
@@ -571,6 +576,17 @@
     "failedToGetAnswer": "Gagal mendapatkan jawaban dari AI",
     "cannotAnswerQuestion": "Maaf, tidak bisa menjawab pertanyaan ini.",
     "frequentlyAskedQuestions": "Pertanyaan yang Sering Ditanyakan",
+    "chatErrorMessage": "Maaf, terjadi error saat memproses pertanyaan Anda. Silakan coba lagi.",
+    "askAIMore": "Tanya AI Lebih Lanjut",
+    "aiThinking": "AI sedang berpikir...",
+    "send": "Kirim",
+    "netFlow": "Arus Kas Bersih",
+    "savingRate": "Tingkat Tabungan",
+    "evaluation": "Evaluasi AI",
+    "analyzingData": "AI sedang menganalisis data keuangan Anda...",
+    "tips": "Tips",
+    "useChatboxTip": "Gunakan chatbox di bawah untuk bertanya lebih detail tentang evaluasi ini.",
+    "askQuestionPlaceholder": "Tanyakan sesuatu tentang evaluasi keuangan Anda...",
     "suggestedQuestions": {
       "reduceExpenses": "Bagaimana cara mengurangi pengeluaran terbesar saya?",
       "savingPercentage": "Berapa persen ideal untuk ditabung dari penghasilan?",

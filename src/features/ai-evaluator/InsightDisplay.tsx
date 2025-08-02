@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface InsightDisplayProps {
   text: string;
@@ -9,19 +10,20 @@ interface InsightDisplayProps {
 }
 
 export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading }) => {
+  const { t } = useTranslation();
   if (isLoading) {
     return (
       <Card className="mb-6 border-[#242425]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Brain className="w-5 h-5 text-blue-600" />
-            Evaluasi AI
+            {t('ai.evaluation')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-            <span className="ml-3 text-gray-300">AI sedang menganalisis data keuangan Anda...</span>
+            <span className="ml-3 text-gray-300">{t('ai.analyzingData')}</span>
           </div>
         </CardContent>
       </Card>
@@ -33,7 +35,7 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Brain className="w-5 h-5 text-blue-600" />
-          Evaluasi AI
+          {t('ai.evaluation')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -57,10 +59,10 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
         <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border-l-4 border-blue-600">
           <div className="flex items-center gap-2 text-blue-400 font-medium mb-1">
             <TrendingUp className="w-4 h-4" />
-            Tips
+            {t('ai.tips')}
           </div>
           <p className="text-sm text-blue-300">
-            Gunakan chatbox di bawah untuk bertanya lebih detail tentang evaluasi ini.
+            {t('ai.useChatboxTip')}
           </p>
         </div>
       </CardContent>

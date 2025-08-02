@@ -33,14 +33,22 @@
   - **Real-time Balance**: Enjoy automatic balance updates.
   - **Wallet Categories**: Organize your wallets by type for better clarity.
 
+### 🤖 AI-Powered Insights
+
+  - **Financial Evaluation**: AI-powered analysis of spending patterns and financial health.
+  - **Smart Recommendations**: Personalized tips for better financial management.
+  - **Spending Analysis**: Intelligent categorization and trend identification.
+  - **Financial Health Score**: Overall assessment of your financial wellness.
+
 ### 🌐 Additional Features
 
-  - **Multi-language**: Support for both English and Indonesian.
+  - **Multi-language**: Support for both English and Indonesian with complete internationalization.
   - **Dark/Light Mode**: Choose a theme that suits your preference.
   - **PWA (Progressive Web App)**: Installable on your mobile devices.
   - **Offline Support**: Functions seamlessly without an internet connection.
   - **Data Export**: Export your data to Excel/CSV formats.
   - **Responsive Design**: Optimized for a perfect experience on both desktop and mobile.
+  - **Modern Landing Page**: Engaging landing page with optimized copywriting and social proof.
 
 ## 🛠️ Tech Stack
 
@@ -287,6 +295,33 @@ If you encounter any issues or have questions:
 
 ## 🔄 Changelog
 
+### v2.1.0 (Latest - January 2025)
+
+#### 🎨 Landing Page Enhancements
+  - ✅ **Copywriting Optimization**: Improved English and Indonesian copy for better conversion
+  - ✅ **Unified Messaging**: Aligned tone and context between English and Indonesian versions
+  - ✅ **Social Proof Update**: Updated user count to 100+ for accuracy and authenticity
+  - ✅ **CTA Improvements**: Enhanced call-to-action buttons with urgency and benefit focus
+
+#### 🤖 AI Features Integration
+  - ✅ **Complete Internationalization**: Fixed hardcoded Indonesian text in AI evaluator components
+  - ✅ **Translation Keys**: Added proper translation support for AI features:
+    - `ai.evaluation` - AI Financial Evaluation
+    - `ai.analyzingData` - Data analysis status
+    - `ai.tips` - AI recommendations
+    - `ai.useChatboxTip` - Chatbox usage guidance
+    - `ai.askQuestionPlaceholder` - Question input placeholder
+
+#### 🎨 UI/UX Improvements
+  - ✅ **Navigation Enhancement**: Added consistent border styling to navigation components
+  - ✅ **Visual Consistency**: Improved component styling alignment across the application
+  - ✅ **Component Optimization**: Enhanced reusable component structure
+
+#### 🔧 Technical Improvements
+  - ✅ **Code Quality**: Improved component modularity and maintainability
+  - ✅ **Translation Management**: Better organization of translation keys
+  - ✅ **Performance**: Optimized component rendering and state management
+
 ### v1.0.0
 
   - ✅ Complete transaction management
@@ -299,8 +334,4 @@ If you encounter any issues or have questions:
 
 -----
 
-<<<<<<< HEAD
-**Duitr** - Manage your finances with ease and efficiency\! 💰✨
-=======
-**Duitr** - Manage your finances with ease and efficiency\! 💰✨
->>>>>>> 21b2ae10bd376e97bbde3e8076293884edbe742e
+**Duitr** - Smart Money, Smarter Future | Kelola Uang, Capai Impian 💰✨

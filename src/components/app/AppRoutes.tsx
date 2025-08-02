@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { FinanceProvider } from '@/context/FinanceContext';
 
@@ -25,6 +26,7 @@ const LoadingSpinner = () => (
 
 export const AppRoutes: React.FC = () => {
   const { isLoading, user } = useAuth();
+  const { ready: i18nReady } = useTranslation();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
 
@@ -47,12 +49,17 @@ export const AppRoutes: React.FC = () => {
     );
   }
 
-  if (isLoading) {
+  // Show loading if either auth or i18n is not ready
+  if (isLoading || !i18nReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
-          <p className="text-muted-foreground">Loading application...</p>
+          <p className="text-muted-foreground">
+            {isLoading && !i18nReady ? 'Loading application and translations...' :
+             isLoading ? 'Loading application...' :
+             'Loading translations...'}
+          </p>
         </div>
       </div>
     );

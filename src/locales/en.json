@@ -100,76 +100,76 @@
   },
   "landing": {
     "hero": {
-      "badge": "Now with Smart AI Insights.",
-      "badgeAction": "See How",
-      "title": "Take Control of Your",
-      "titleHighlight": ["Spending", "Savings", "Budget", "Future"],
-      "subtitle": "Meet your intelligent finance assistant. Get smart insights to understand your spending, achieve your goals, and manage your budget effortlessly — all powered by AI in one beautiful app.",
-      "cta": "Get Started for Free",
-      "imageAlt": "Duitr App Dashboard"
+      "badge": "🚀 AI Smart Insights Available!",
+      "badgeAction": "Try Now",
+      "title": "Manage Money",
+      "titleHighlight": ["Smarter", "Hassle-Free", "With AI", "Better"],
+      "subtitle": "Stop stressing about finances! Our AI helps you understand spending, reach goals, and save more money. Everything automatic, everything easy.",
+      "cta": "Start Saving Now!",
+      "imageAlt": "Duitr App on Mobile"
     },
     "features": {
-      "title": "Everything you need",
-      "subtitle": "Powerful features for modern finance",
-      "description": "From AI-powered insights to comprehensive tracking, Duitr provides all the tools you need to master your finances.",
+      "title": "Why Choose Duitr?",
+      "subtitle": "3 Reasons You'll Love It",
+      "description": "AI that understands your financial needs. Automatic tracking, smart insights, guaranteed security. Everything in one app!",
       "smartAnalytics": {
-        "title": "Smart Analytics",
-        "description": "AI-powered insights that help you understand your spending patterns and optimize your financial decisions."
+        "title": "AI That Gets You",
+        "description": "Get personal insights about your spending habits. AI gives tips so you can save more money."
       },
       "securePrivate": {
-        "title": "Secure & Private",
-        "description": "Bank-level security with end-to-end encryption. Your financial data is always protected and private."
+        "title": "100% Safe Data",
+        "description": "Security equal to big banks. Your financial data is protected with military-grade encryption."
       },
       "realtimeSync": {
-        "title": "Real-time Sync",
-        "description": "Instant synchronization across all your devices. Access your financial data anywhere, anytime."
+        "title": "Auto Sync",
+        "description": "Real-time updates on all devices. Check balance anytime, anywhere, always accurate."
       }
     },
     "tabs": {
       "analytics": {
         "title": "Analytics",
-        "subtitle": "AI-Powered Financial Insights",
-        "description": "Get intelligent analysis of your spending patterns, budget recommendations, and financial health scores.",
+        "subtitle": "AI Shows Where Your Money Goes",
+        "description": "See spending patterns, get saving tips, and check your financial score. All automatic!",
         "smartRecommendations": {
-          "title": "Smart Recommendations",
-          "description": "Personalized suggestions to optimize your spending and increase savings based on your financial behavior."
+          "title": "Personal Tips",
+          "description": "AI gives saving tips that match your lifestyle. Guaranteed you can save more!"
         },
         "spendingPatterns": {
-          "title": "Spending Patterns",
-          "description": "Detailed breakdown of where your money goes with visual charts and trend analysis."
+          "title": "Where's Your Money?",
+          "description": "Cool charts that show spending details. Instantly see what's wasteful!"
         }
       },
       "budgeting": {
-        "title": "Budgeting",
-        "subtitle": "Smart Budget Management",
-        "description": "Create and manage budgets with intelligent alerts and recommendations to stay on track.",
+        "title": "Budget",
+        "subtitle": "Make Budgeting Easy",
+        "description": "Set budget, get alerts when almost spent, plus tips to stay on track. No overspending!",
         "automaticCategorization": {
-          "title": "Automatic Categorization",
-          "description": "AI automatically categorizes your transactions, making budget tracking effortless and accurate."
+          "title": "Auto Categories",
+          "description": "AI automatically categorizes all transactions. You just sit back, everything's organized!"
         },
         "budgetAlerts": {
-          "title": "Budget Alerts",
-          "description": "Get notified when you're approaching budget limits or when unusual spending is detected."
+          "title": "Smart Alerts",
+          "description": "Notifications when budget's almost gone or weird spending happens. No more surprises!"
         }
       },
       "tracking": {
         "title": "Tracking",
-        "subtitle": "Comprehensive Expense Tracking",
-        "description": "Track every transaction across multiple accounts with real-time synchronization and detailed reporting.",
+        "subtitle": "Monitor All Transactions Real-Time",
+        "description": "Track all accounts in one place. Instant updates, detailed reports, everything accurate!",
         "multiAccount": {
-          "title": "Multi-Account Support",
-          "description": "Connect and manage multiple bank accounts, credit cards, and digital wallets in one place."
+          "title": "All Accounts in One",
+          "description": "Combine all bank accounts, credit cards, e-wallets. One app for everything!"
         },
         "realTimeUpdates": {
-          "title": "Real-Time Updates",
-          "description": "Instant transaction updates and balance synchronization across all your connected accounts."
+          "title": "Instant Updates",
+          "description": "Transactions show up immediately. Balance always updated on all devices!"
         }
       }
     },
     "cta": {
-      "title": "Ready to take control of your finances?",
-      "subtitle": "Join thousands of users who have transformed their financial lives with Duitr.",
-      "button": "Start Your Financial Journey"
+      "title": "Ready to Be a Millionaire?",
+      "subtitle": "Join 100+ people who've successfully managed their finances and started saving consistently with Duitr!",
+      "button": "Let's Start Now! 🚀"
     }
   },
   "navbar": {
@@ -371,7 +371,11 @@
       "yearly": "Yearly"
     },
     "spending": "Spending by Category",
-    "no_budgets": "You don't have any budgets yet."
+    "no_budgets": "You don't have any budgets yet.",
+    "from": "from",
+    "used_percentage": "used",
+    "over_by": "Over by",
+    "remaining": "Remaining"
   },
   "settings": {
     "title": "Settings",
@@ -454,6 +458,7 @@
     }
   },
   "statistics": {
+    "analysis": "Analysis",
     "title": "Statistics",
     "last7Days": "Last 7 Days",
     "last30Days": "Last 30 Days",
@@ -570,6 +575,17 @@
     "failedToGetAnswer": "Failed to get answer from AI",
     "cannotAnswerQuestion": "Sorry, cannot answer this question.",
     "frequentlyAskedQuestions": "Frequently Asked Questions",
+    "chatErrorMessage": "Sorry, an error occurred while processing your question. Please try again.",
+    "askAIMore": "Ask AI More",
+    "aiThinking": "AI is thinking...",
+    "send": "Send",
+    "netFlow": "Net Flow",
+    "savingRate": "Saving Rate",
+    "askQuestionPlaceholder": "Ask something about your financial evaluation...",
+    "evaluation": "AI Evaluation",
+    "analyzingData": "AI is analyzing your financial data...",
+    "tips": "Tips",
+    "useChatboxTip": "Use the chatbox below to ask more detailed questions about this evaluation.",
     "suggestedQuestions": {
       "reduceExpenses": "How can I reduce my biggest expenses?",
       "savingPercentage": "What percentage should I save from my income?",
