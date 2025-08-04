@@ -81,8 +81,65 @@ export const getCategoryStringIdFromUuid = (uuid: string): string => {
   return uuid;
 };
 
-export const getCategoryUuidFromStringId = (stringId: string): string => {
-  return stringId;
+export const getCategoryUuidFromStringId = (stringId: string): number => {
+  // Convert string category keys to integer IDs for database compatibility
+  // This mapping matches the category_reset_fixed.sql migration
+  const categoryKeyToId: Record<string, number> = {
+    // Expense categories (IDs 1-12)
+    'expense_groceries': 1,
+    'expense_food': 2,
+    'expense_dining': 2, // Map dining to food (ID 2)
+    'expense_transportation': 3,
+    'expense_subscription': 4,
+    'expense_housing': 5,
+    'expense_entertainment': 6,
+    'expense_shopping': 7,
+    'expense_health': 8,
+    'expense_education': 9,
+    'expense_travel': 10,
+    'expense_personal': 11,
+    'expense_other': 12,
+    
+    // Income categories (IDs 13-17)
+    'income_salary': 13,
+    'income_business': 14,
+    'income_investment': 15,
+    'income_gift': 16,
+    'income_other': 17,
+    
+    // System category (ID 18)
+    'system_transfer': 18,
+    
+    // Additional expense categories
+    'expense_donation': 19,
+    'expense_investment': 20,
+    'expense_baby': 21
+  };
+  
+  // If it's already a number, return it
+  if (!isNaN(Number(stringId))) {
+    return Number(stringId);
+  }
+  
+  // If it's a string category key, convert it
+  if (typeof stringId === 'string' && stringId.includes('_')) {
+    const categoryId = categoryKeyToId[stringId];
+    if (categoryId) {
+      return categoryId;
+    }
+    
+    // Fallback based on prefix
+    if (stringId.startsWith('expense_')) {
+      return 12; // expense_other
+    } else if (stringId.startsWith('income_')) {
+      return 17; // income_other
+    } else if (stringId.startsWith('system_')) {
+      return 18; // system_transfer
+    }
+  }
+  
+  // Default fallback
+  return 12; // expense_other
 };
 
 export const getDefaultCategories = (): Category[] => {

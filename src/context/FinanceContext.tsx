@@ -100,23 +100,20 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       setIsLoading(true);
       
       try {
-        const [walletsRes, transactionsRes, budgetsRes, wantToBuyRes, pinjamanRes, categoriesRes] = await Promise.all([
+        const [walletsRes, transactionsRes, budgetsRes, wantToBuyRes, pinjamanRes] = await Promise.all([
           supabase.from('wallets').select('*').eq('user_id', user.id),
           supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }), // Order by creation time
           supabase.from('budgets').select('*').eq('user_id', user.id),
           supabase.from('want_to_buy_items').select('*').eq('user_id', user.id),
-          supabase.from('pinjaman_items').select('*').eq('user_id', user.id),
-          supabase.from('categories').select('*').order('type').order('en_name') // Fetch all available categories
+          supabase.from('pinjaman_items').select('*').eq('user_id', user.id)
         ]);
 
-        // Store categories for mapping purposes
+        // Store categories for mapping purposes using useCategories hook data
         let categoryMap: Record<number, { en_name: string, id_name: string }> = {};
         
-        if (categoriesRes.error) {
-          console.warn('Error loading categories:', categoriesRes.error.message);
-        } else if (categoriesRes.data) {
-          // Create a map of categoryId -> category names
-          categoriesRes.data.forEach(cat => {
+        // Create a map of categoryId -> category names from useCategories hook
+        if (userCategories && userCategories.length > 0) {
+          userCategories.forEach(cat => {
             if (cat.category_id) {
               categoryMap[cat.category_id] = {
                 en_name: cat.en_name,
@@ -124,6 +121,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
               };
             }
           });
+        } else {
+          console.warn('No categories available from useCategories hook');
         }
 
         if (walletsRes.error) throw walletsRes.error;

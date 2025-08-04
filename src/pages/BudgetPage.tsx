@@ -30,12 +30,14 @@ import { FormattedInput } from '@/components/ui/formatted-input';
 import { supabase } from '@/integrations/supabase/client';
 import i18next from 'i18next';
 import AnimatedText from '@/components/ui/animated-text';
+import { useCategories } from '@/hooks/useCategories';
 
 const BudgetPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { addBudget } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories();
   
   // Budget state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -46,18 +48,18 @@ const BudgetPage: React.FC = () => {
     spent: 0
   });
 
-  // Categories state
-  const [categories, setCategories] = useState<Array<{
-    id: string;
-    category_id?: number;
-    category_key?: string;
-    en_name: string;
-    id_name: string;
-    type?: string;
-    icon?: string;
-    created_at?: string;
-  }>>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  // Categories state - now using useCategories hook
+  const categories = categoriesData.map(cat => ({
+    id: cat.category_id?.toString() || cat.id,
+    category_id: cat.category_id,
+    category_key: cat.category_key,
+    en_name: cat.en_name,
+    id_name: cat.id_name,
+    type: cat.type,
+    icon: cat.icon,
+    created_at: cat.created_at
+  }));
+  const isLoadingCategories = categoriesLoading;
 
   // Want to Buy state
   const [isWantToBuyFormOpen, setIsWantToBuyFormOpen] = useState(false);
@@ -74,9 +76,7 @@ const BudgetPage: React.FC = () => {
     // Update current language when it changes
     const handleLanguageChange = () => {
       setCurrentLanguage(i18n.language);
-      
-      // Re-fetch categories when language changes to update translations
-      fetchCategories();
+      // Categories will automatically update through useCategories hook
     };
     
     // Subscribe to language changes
@@ -87,44 +87,6 @@ const BudgetPage: React.FC = () => {
       i18n.off('languageChanged', handleLanguageChange);
     };
   }, [i18n]);
-  
-  // Call fetchCategories on component mount
-  useEffect(() => {
-    fetchCategories();
-  }, [toast, t]);
-  
-  // Load categories from Supabase
-  const fetchCategories = async () => {
-    setIsLoadingCategories(true);
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('type')
-        .order('en_name');
-      
-      if (error) throw error;
-      setCategories((data || []).map(cat => ({
-        id: cat.category_id.toString(),
-        category_id: cat.category_id,
-        category_key: cat.category_key,
-        en_name: cat.en_name,
-        id_name: cat.id_name,
-        type: cat.type,
-        icon: cat.icon,
-        created_at: cat.created_at
-      })));
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      toast({
-        title: t('common.error'),
-        description: t('categories.error.load', 'Failed to load categories'),
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoadingCategories(false);
-    }
-  };
 
   // Enhanced animation variants
   const containerVariants = {

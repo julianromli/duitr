@@ -170,7 +170,20 @@ const EditCategoryPage: React.FC = () => {
         .order('type')
         .order('en_name');
       
-      if (error) throw error;
+      if (error) {
+        // Check if it's a "relation does not exist" error
+        if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
+          console.warn('Categories table does not exist, showing empty list');
+          setCategories([]);
+          toast({
+            title: t('common.warning'),
+            description: 'Categories feature is not available. Please contact support.',
+            variant: 'destructive'
+          });
+          return;
+        }
+        throw error;
+      }
       
       if (data) {
         setCategories(data.map(cat => ({
@@ -185,13 +198,24 @@ const EditCategoryPage: React.FC = () => {
       } else {
         setCategories([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching categories:', error);
-      toast({
-        title: t('common.error'),
-        description: t('categories.error.load', 'Failed to load categories'),
-        variant: 'destructive'
-      });
+      // Check if it's a "relation does not exist" error
+      if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        console.warn('Categories table does not exist, showing empty list');
+        setCategories([]);
+        toast({
+          title: t('common.warning'),
+          description: 'Categories feature is not available. Please contact support.',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: t('common.error'),
+          description: t('categories.error.load', 'Failed to load categories'),
+          variant: 'destructive'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -288,7 +312,13 @@ const EditCategoryPage: React.FC = () => {
           ])
           .select();
         
-        if (error) throw error;
+        if (error) {
+          // Check if it's a "relation does not exist" error
+          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
+            throw new Error('Categories feature is not available. Please contact support.');
+          }
+          throw error;
+        }
         
         toast({
           title: t('common.success'),
@@ -307,7 +337,13 @@ const EditCategoryPage: React.FC = () => {
           })
           .eq('category_id', parseInt(currentCategory.id));
         
-        if (error) throw error;
+        if (error) {
+          // Check if it's a "relation does not exist" error
+          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
+            throw new Error('Categories feature is not available. Please contact support.');
+          }
+          throw error;
+        }
         
         toast({
           title: t('common.success'),
@@ -320,11 +356,20 @@ const EditCategoryPage: React.FC = () => {
       setEditDialogOpen(false);
     } catch (error: any) {
       console.error('Error saving category:', error);
-      toast({
-        title: t('common.error'),
-        description: error.message || t('categories.error.save', 'Failed to save category'),
-        variant: 'destructive'
-      });
+      // Check if it's a "relation does not exist" error
+      if (error.message?.includes('Categories feature is not available')) {
+        toast({
+          title: t('common.error'),
+          description: error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: t('common.error'),
+          description: error.message || t('categories.error.save', 'Failed to save category'),
+          variant: 'destructive'
+        });
+      }
     }
   };
   
@@ -338,7 +383,13 @@ const EditCategoryPage: React.FC = () => {
         .delete()
         .eq('category_id', parseInt(currentCategory.id));
       
-      if (error) throw error;
+      if (error) {
+        // Check if it's a "relation does not exist" error
+        if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
+          throw new Error('Categories feature is not available. Please contact support.');
+        }
+        throw error;
+      }
       
       toast({
         title: t('common.success'),
@@ -350,11 +401,20 @@ const EditCategoryPage: React.FC = () => {
       setDeleteDialogOpen(false);
     } catch (error: any) {
       console.error('Error deleting category:', error);
-      toast({
-        title: t('common.error'),
-        description: error.message || t('categories.error.delete', 'Failed to delete category'),
-        variant: 'destructive'
-      });
+      // Check if it's a "relation does not exist" error
+      if (error.message?.includes('Categories feature is not available')) {
+        toast({
+          title: t('common.error'),
+          description: error.message,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: t('common.error'),
+          description: error.message || t('categories.error.delete', 'Failed to delete category'),
+          variant: 'destructive'
+        });
+      }
     }
   };
   

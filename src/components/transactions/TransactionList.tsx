@@ -27,6 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { getCategoryStringIdFromUuid, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { useNavigate } from 'react-router-dom';
+import { useCategories } from '@/hooks/useCategories';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 import i18next from 'i18next';
 import { format, parseISO, isToday, isYesterday, parse } from 'date-fns';
@@ -46,6 +47,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   const { formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   
   // Pagination and loading state
   const [page, setPage] = useState(0);
@@ -166,52 +168,44 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         logCategoryDebug('Filtering transactions by category', filterParams.selectedCategory);
         
         try {
+          // Use categories from useCategories hook instead of direct queries
+          let categoryId: number | null = null;
+          
           // If the selected category value contains underscore (like expense_food), use that directly as category_key
           if (filterParams.selectedCategory.includes('_')) {
-            const { data: categoryByKey, error: keyError } = await supabase
-              .from('categories')
-              .select('category_id, category_key, en_name, type')
-              .eq('category_key', filterParams.selectedCategory)
-              .single();
+            const categoryByKey = categories.find(cat => cat.category_key === filterParams.selectedCategory);
               
-            if (!keyError && categoryByKey?.category_id) {
-              const categoryId = categoryByKey.category_id;
+            if (categoryByKey?.category_id) {
+              categoryId = categoryByKey.category_id;
               logCategoryDebug('Found category by key match', {
                 categoryKey: filterParams.selectedCategory,
                 categoryId,
                 matchedName: categoryByKey.en_name
               });
-              
-              // Apply direct filter by category_id
-              query = query.eq('category_id', categoryId);
             } else {
               // Try to look up by category label as fallback
               const categoryLabel = categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label;
               if (categoryLabel) {
-                const { data: categoryByName, error: nameError } = await supabase
-                  .from('categories')
-                  .select('category_id, en_name, category_key, type')
-                  .ilike('en_name', categoryLabel)
-                  .single();
+                const categoryByName = categories.find(cat => 
+                  cat.en_name?.toLowerCase() === categoryLabel.toLowerCase() ||
+                  cat.id_name?.toLowerCase() === categoryLabel.toLowerCase()
+                );
                   
-                if (!nameError && categoryByName?.category_id) {
-                  const categoryId = categoryByName.category_id;
+                if (categoryByName?.category_id) {
+                  categoryId = categoryByName.category_id;
                   logCategoryDebug('Found category by name match', {
                     categoryLabel,
                     matchedName: categoryByName.en_name,
                     categoryId,
                     key: categoryByName.category_key
                   });
-                  
-                  // Apply direct filter by category_id
-                  query = query.eq('category_id', categoryId);
                 } else {
                   // To show no results (empty state), use an impossible category_id
-                  query = query.eq('category_id', -999);
+                  categoryId = -999;
                 }
               } else {
                 // No label found for the selected category
-                query = query.eq('category_id', -999);
+                categoryId = -999;
               }
             }
           } else {
@@ -219,7 +213,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
             const numericId = Number(filterParams.selectedCategory);
             if (!isNaN(numericId)) {
               logCategoryDebug('Using direct numeric ID', numericId);
-              query = query.eq('category_id', numericId);
+              categoryId = numericId;
             } else {
               // Log that we couldn't find the category
               logCategoryDebug('Could not find matching category', {
@@ -227,8 +221,13 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
               });
               
               // To show no results (empty state), use an impossible category_id
-              query = query.eq('category_id', -999);
+              categoryId = -999;
             }
+          }
+          
+          // Apply the category filter if we found a valid category ID
+          if (categoryId !== null) {
+            query = query.eq('category_id', categoryId);
           }
         } catch (error) {
           console.error('Error processing category filter:', error);
@@ -457,20 +456,22 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
     }
   }
   
-  // Helper function to fetch all category information for debugging
-  const logAllCategories = async () => {
+  // Helper function to log all category information for debugging
+  const logAllCategories = () => {
     try {
-      const { data: allCategories, error } = await supabase
-        .from('categories')
-        .select('category_id, en_name, category_key, type');
-        
-      if (error) {
-        console.error('Error fetching all categories:', error);
+      if (categories && categories.length > 0) {
+        console.log('All available categories:', categories.map(cat => ({
+          category_id: cat.category_id,
+          en_name: cat.en_name,
+          id_name: cat.id_name,
+          category_key: cat.category_key,
+          type: cat.type
+        })));
       } else {
-        console.log('All available categories:', allCategories);
+        console.log('No categories available from useCategories hook');
       }
     } catch (e) {
-      console.error('Exception fetching categories:', e);
+      console.error('Exception logging categories:', e);
     }
   }
   

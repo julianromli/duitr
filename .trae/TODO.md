@@ -1,8 +1,6 @@
 # TODO:
 
-- [x] leo-1: Add AI-friendly structured data and semantic markup for better LLM understanding (priority: High)
-- [x] leo-2: Implement enhanced meta tags specifically for AI crawlers and chatbots (priority: High)
-- [x] leo-3: Create clear content hierarchy and context markup for LLMs (priority: Medium)
-- [x] leo-4: Add FAQ schema for better AI response generation (priority: Medium)
-- [x] leo-5: Implement machine-readable feature descriptions and product information (priority: Medium)
-- [x] leo-6: Add context-rich metadata for AI systems to understand app purpose (priority: Medium)
+- [x] fix_useCategories: Fix useCategories.ts to handle missing categories table with fallback to default categories (priority: High)
+- [x] fix_exportService: Fix exportService.ts to handle missing categories table with proper error handling (priority: High)
+- [x] fix_editCategoryPage: Fix EditCategoryPage.tsx to handle missing categories table gracefully (priority: High)
+- [x] test_fixes: Test the application to ensure all category-related errors are resolved (priority: Medium)

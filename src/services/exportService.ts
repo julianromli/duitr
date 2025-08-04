@@ -73,18 +73,36 @@ const generateTransactionsWorksheet = async (transactions: Transaction[]): Promi
     wallets.forEach(wallet => walletMap.set(wallet.id, wallet.name));
   }
 
-  // Fetch category data to ensure we have proper categories
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('category_id, category_key, en_name, type');
-  
+  // Try to fetch category data with proper error handling
   const categoryMap = new Map();
   const defaultExpenseCategory = { en_name: 'Other', type: 'expense' };
   const defaultIncomeCategory = { en_name: 'Other', type: 'income' };
   const transferCategory = { en_name: 'Transfer', type: 'system' };
   
-  if (categories) {
-    categories.forEach(cat => categoryMap.set(cat.category_id, cat));
+  try {
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select('category_id, category_key, en_name, type');
+    
+    if (error) {
+      // Check if it's a "relation does not exist" error
+      if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
+        console.warn('Categories table does not exist, using fallback categories for export');
+      } else {
+        console.warn('Could not fetch categories for export:', error.message);
+      }
+      // Continue with empty category map - will use fallback logic
+    } else if (categories) {
+      categories.forEach(cat => categoryMap.set(cat.category_id, cat));
+    }
+  } catch (error: any) {
+    // Check if it's a "relation does not exist" error
+    if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+      console.warn('Categories table does not exist, using fallback categories for export');
+    } else {
+      console.warn('Error fetching categories for export:', error);
+    }
+    // Continue with empty category map - will use fallback logic
   }
   
   // Map transactions to table rows
@@ -171,4 +189,4 @@ export const exportToExcel = async (
 
 export default {
   exportToExcel,
-}; 
+};
