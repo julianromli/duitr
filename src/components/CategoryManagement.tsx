@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import { 
   Plus, Edit2, Trash2, Circle
 } from 'lucide-react';
@@ -216,7 +217,7 @@ const CategoryManagement: React.FC = () => {
   const handleEditCategory = (category: Category) => {
     setEditingCategory(category);
     setFormData({
-      name: category.en_name,
+      name: i18n.language === 'id' ? (category.id_name || category.en_name) : (category.en_name || category.id_name),
       type: category.type as 'income' | 'expense',
       icon: normalizeIconName(category.icon || 'circle'),
       color: category.color || '#6B7280'
@@ -333,7 +334,11 @@ const CategoryManagement: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">{t('categories.deleteConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-                {t('categories.deleteConfirmDescription', { name: categoryToDelete?.en_name || '' })}
+                {t('categories.deleteConfirmDescription', { 
+                  name: categoryToDelete ? 
+                    (i18n.language === 'id' ? (categoryToDelete.id_name || categoryToDelete.en_name) : (categoryToDelete.en_name || categoryToDelete.id_name)) 
+                    : '' 
+                })}
               </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -372,7 +377,9 @@ const CategoryManagement: React.FC = () => {
                       >
                         <IconComponent className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-card-foreground font-medium truncate">{category.en_name}</span>
+                      <span className="text-card-foreground font-medium truncate">
+                        {i18n.language === 'id' ? (category.id_name || category.en_name) : (category.en_name || category.id_name)}
+                      </span>
                     </div>
                     <div className="flex space-x-1 justify-end">
                       <Button
@@ -420,7 +427,9 @@ const CategoryManagement: React.FC = () => {
                       >
                         <IconComponent className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-card-foreground font-medium truncate">{category.en_name}</span>
+                      <span className="text-card-foreground font-medium truncate">
+                        {i18n.language === 'id' ? (category.id_name || category.en_name) : (category.en_name || category.id_name)}
+                      </span>
                     </div>
                     <div className="flex space-x-1 justify-end">
                       <Button

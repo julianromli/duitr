@@ -68,7 +68,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   disabled = false,
   className
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     categories,
     getCategoriesByType,
@@ -113,7 +113,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       // We need to wait a bit for the cache to update
       setTimeout(() => {
         const newCategory = getCategoriesByType(type).find(
-          cat => cat.en_name.toLowerCase() === quickCreateData.name.toLowerCase().trim()
+          cat => (i18n.language === 'id' ? cat.id_name : cat.en_name).toLowerCase() === quickCreateData.name.toLowerCase().trim()
         );
         if (newCategory) {
           onValueChange(newCategory.id);
@@ -147,7 +147,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                   category={selectedCategory.id} 
                   size="sm" 
                 />
-                <span>{selectedCategory.en_name}</span>
+                <span>{i18n.language === 'id' ? selectedCategory.id_name : selectedCategory.en_name}</span>
               </div>
             ) : (
               <span className="text-muted-foreground">
@@ -183,7 +183,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                 {availableCategories.map((category) => (
                   <CommandItem
                     key={category.id}
-                    value={category.en_name}
+                    value={i18n.language === 'id' ? category.id_name : category.en_name}
                     onSelect={() => {
                       onValueChange(category.id);
                       setOpen(false);
@@ -195,7 +195,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                         category={category.id} 
                         size="sm" 
                       />
-                      <span>{category.en_name}</span>
+                      <span>{i18n.language === 'id' ? category.id_name : category.en_name}</span>
                       {category.user_id && (
                         <span className="text-xs text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
                           {t('categories.custom')}

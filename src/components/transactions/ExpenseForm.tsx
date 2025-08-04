@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { useCategories } from '@/hooks/useCategories';
 import CategoryIcon from '@/components/shared/CategoryIcon';
@@ -65,11 +66,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       .filter(cat => cat.type === 'expense')
       .map(cat => ({
         id: cat.id || cat.category_id?.toString() || '',
-        name: cat.en_name || cat.id_name || 'Unknown', // Fixed: prioritize en_name over id_name
+        name: i18n.language === 'id' ? (cat.id_name || cat.en_name || 'Unknown') : (cat.en_name || cat.id_name || 'Unknown'),
         icon: cat.icon || 'circle',
         color: cat.color || '#6B7280'
       }));
-  }, [allCategories]);
+  }, [allCategories, i18n.language]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
