@@ -116,7 +116,7 @@ function LoginForm() {
           <motion.div className="space-y-4" variants={itemVariants}>
             <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-email`}>Email</Label>
-              <Input id={`${id}-email`} placeholder="hi@yourcompany.com" type="email" required />
+              <Input id={`${id}-email`} placeholder="hi@youremail.com" type="email" required />
             </motion.div>
             <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-password`}>Password</Label>

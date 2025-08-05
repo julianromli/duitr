@@ -33,39 +33,58 @@ const Header: React.FC = () => {
         // Set username from metadata
         setUsername(user.user_metadata?.name || user.email?.split('@')[0] || '');
         
-        // Try to load profile image from public URL with retry logic
+        // Try to load profile image using signed URL to avoid ORB errors
         const loadProfileImage = async (retryCount = 0) => {
           try {
-            // Get public URL with timestamp to prevent caching
-            const timestamp = new Date().getTime();
-            const { data } = await supabase
-              .storage
+            // Use signed URL instead of public URL to avoid CORS/ORB issues
+            const { data, error } = await supabase.storage
               .from('avatars')
-              .getPublicUrl(`${user.id}`);
-              
-            if (data?.publicUrl) {
-              // Add timestamp to prevent caching
-              const imageUrl = `${data.publicUrl}?t=${timestamp}`;
-              
-              // Check if image exists by loading it
-              const img = new Image();
-              
-              // Create a promise that resolves when the image loads or rejects on error
-              await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = imageUrl;
-              });
-              
-              // If we get here, the image loaded successfully
-              setProfileImage(imageUrl);
+              .createSignedUrl(`${user.id}`, 3600); // 1 hour expiry
+
+            if (error) {
+              // Handle specific ORB/CORS errors immediately
+              if (error.message.includes('not found') || error.message.includes('does not exist')) {
+                console.log('Avatar not found, using fallback');
+                setProfileImage(null);
+                return;
+              }
+              throw error;
             }
-          } catch (error) {
+
+            if (data?.signedUrl) {
+              // Test if the signed URL is accessible
+              const img = new Image();
+              img.crossOrigin = 'anonymous'; // Handle CORS properly
+              
+              await new Promise((resolve, reject) => {
+                img.onload = () => {
+                  setProfileImage(data.signedUrl);
+                  resolve(undefined);
+                };
+                img.onerror = (e) => {
+                  console.log('Signed URL image failed to load:', e);
+                  reject(new Error('Image load failed'));
+                };
+                img.src = data.signedUrl;
+              });
+            } else {
+              setProfileImage(null);
+            }
+          } catch (error: any) {
             console.log('Error loading avatar image:', error);
-            
-            // Retry up to 2 times with increasing delay if we get network errors
+
+            // Handle ORB errors immediately without retry
+            if (error.message?.includes('ERR_BLOCKED_BY_ORB') || 
+                error.message?.includes('CORS') ||
+                error.name === 'NetworkError') {
+              console.log('ORB/CORS error detected, using fallback avatar');
+              setProfileImage(null);
+              return;
+            }
+
+            // Retry only for other types of errors
             if (retryCount < 2) {
-              const delay = 500 * Math.pow(2, retryCount); // Exponential backoff: 500ms, 1000ms
+              const delay = 500 * Math.pow(2, retryCount);
               console.log(`Retrying avatar load after ${delay}ms...`);
               setTimeout(() => loadProfileImage(retryCount + 1), delay);
             } else {

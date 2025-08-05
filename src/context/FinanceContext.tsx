@@ -4,8 +4,8 @@
 // Enhanced fallback logic to prevent incorrect categorization as Transfer
 // Fixed display name mapping in getDisplayCategoryName function
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { formatIDR } from '@/utils/currency';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
+import { formatIDR, formatCurrency as utilsFormatCurrency } from '@/utils/currency';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,8 @@ import {
 } from '@/utils/categoryUtils';
 import { getCategoryById } from '@/services/categoryService';
 import { useCategories } from '@/hooks/useCategories';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import i18next from 'i18next';
 import { useTranslation } from 'react-i18next';
 
@@ -49,6 +51,7 @@ interface FinanceContextType {
   updatePinjamanItem: (item: PinjamanItem) => Promise<void>;
   deletePinjamanItem: (id: string) => Promise<void>;
   totalBalance: number;
+  convertedTotalBalance: number;
   monthlyIncome: number;
   monthlyExpense: number;
   formatCurrency: (amount: number) => string;
@@ -63,6 +66,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const { toast } = useToast();
   const { t } = useTranslation();
   const { categories: userCategories } = useCategories();
+  const { currency: userCurrency } = useCurrency();
+  const { convertCurrency, getExchangeRate } = useExchangeRate();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -276,6 +281,36 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
 
+  // Convert total balance to user's selected currency
+  const [convertedTotalBalance, setConvertedTotalBalance] = useState(0);
+  
+  useEffect(() => {
+    const convertBalance = async () => {
+      // Always set a valid number, never undefined or NaN
+      if (userCurrency === 'IDR' || !totalBalance || totalBalance === 0) {
+        setConvertedTotalBalance(totalBalance || 0);
+        return;
+      }
+      
+      try {
+        // Convert from IDR to user's selected currency
+        const result = await convertCurrency(totalBalance, 'IDR', userCurrency as any);
+        // Ensure we always set a valid number
+        const convertedAmount = result?.convertedAmount;
+        if (typeof convertedAmount === 'number' && !isNaN(convertedAmount)) {
+          setConvertedTotalBalance(convertedAmount);
+        } else {
+          setConvertedTotalBalance(totalBalance || 0);
+        }
+      } catch (error) {
+        console.error('Currency conversion failed:', error);
+        setConvertedTotalBalance(totalBalance || 0); // Fallback to original amount
+      }
+    };
+    
+    convertBalance();
+  }, [totalBalance, userCurrency, convertCurrency]);
+
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
@@ -297,7 +332,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     .reduce((sum, t) => sum + t.amount, 0);
 
   const formatCurrency = (amount: number) => {
-    return formatIDR(amount);
+    return utilsFormatCurrency(amount, userCurrency);
   };
 
   // Get display category name based on categoryId and current language
@@ -510,7 +545,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       const { data: transactionData, error: transactionError } = await supabase
         .from('transactions')
-        .insert(formatTransactionForDB(newTransactionData))
+        .insert(await formatTransactionForDB(newTransactionData))
         .select()
         .single();
         
@@ -534,7 +569,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
             try {
               const { data: basicTransData, error: basicTransError } = await supabase
                 .from('transactions')
-                .insert(formatTransactionForDB(fallbackData))
+                .insert(await formatTransactionForDB(fallbackData))
                 .select()
                 .single();
                 
@@ -768,7 +803,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         // Update the transaction in the database
         const { data: updatedData, error: updateError } = await supabase
           .from('transactions')
-          .update(formatTransactionForDB(updateData))
+          .update(await formatTransactionForDB(updateData))
           .eq('id', updatedTransaction.id)
           .select()
           .single();
@@ -1616,9 +1651,44 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Utility function to format transaction data for database operations
   // Ensures compatibility with the updated schema (without 'category' column)
-  const formatTransactionForDB = (data: any) => {
+  const formatTransactionForDB = async (data: any) => {
     // Create a copy of the data without the 'category' field
     const { category, ...dbData } = data;
+    
+    // Add required currency fields
+    const originalCurrency = data.original_currency || userCurrency;
+    const baseCurrency = 'IDR'; // Base currency for the app
+    
+    // Set original amount and currency
+    dbData.original_amount = data.amount;
+    dbData.original_currency = originalCurrency;
+    
+    // Handle currency conversion
+    if (originalCurrency === baseCurrency) {
+      // Same currency, no conversion needed
+      dbData.converted_amount = data.amount;
+      dbData.converted_currency = baseCurrency;
+      dbData.exchange_rate = 1;
+      dbData.rate_timestamp = new Date().toISOString();
+    } else {
+      // Different currency, need conversion
+      try {
+        const rate = await getExchangeRate(originalCurrency, baseCurrency);
+        const convertedAmount = await convertAmount(data.amount, originalCurrency, baseCurrency);
+        
+        dbData.converted_amount = convertedAmount;
+        dbData.converted_currency = baseCurrency;
+        dbData.exchange_rate = rate;
+        dbData.rate_timestamp = new Date().toISOString();
+      } catch (error) {
+        console.error('Error converting currency:', error);
+        // Fallback: use original amount if conversion fails
+        dbData.converted_amount = data.amount;
+        dbData.converted_currency = originalCurrency;
+        dbData.exchange_rate = 1;
+        dbData.rate_timestamp = new Date().toISOString();
+      }
+    }
     
     try {
       // Make sure category_id is properly formatted for database
@@ -1742,6 +1812,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     updatePinjamanItem,
     deletePinjamanItem,
         totalBalance,
+        convertedTotalBalance,
         monthlyIncome,
         monthlyExpense,
     formatCurrency,

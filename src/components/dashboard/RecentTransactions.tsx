@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight, Trash2 } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import DashboardCard from './DashboardCard';
+import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -130,9 +131,15 @@ const RecentTransactions: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <span className={`mr-4 font-medium ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
-                    {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
-                  </span>
+                  <div className={`mr-4 font-medium ${transaction.type === 'expense' ? 'text-[#FF6B6B]' : 'text-[#C6FE1E]'}`}>
+                    <span>{transaction.type === 'expense' ? '-' : '+'}</span>
+                    <CurrencyDisplay 
+                      amount={transaction.amount}
+                      currency={transaction.converted_currency || transaction.original_currency || 'IDR'}
+                      showConversion={true}
+                      className="inline"
+                    />
+                  </div>
                   <button 
                     onClick={(e) => handleDeleteClick(transaction.id, e)}
                     className="text-[#868686] hover:text-[#FF6B6B] transition-colors"

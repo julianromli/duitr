@@ -7,10 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFinance } from '@/context/FinanceContext';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
+import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const BudgetProgress: React.FC = () => {
   const { budgets, totalBudgeted, totalSpent, remainingBudget, overallProgress } = useBudgets();
   const { formatCurrency } = useFinance();
+  const { currency } = useCurrency();
   const { t } = useTranslation();
   
   // Count budgets by period for the summary
@@ -35,9 +38,14 @@ const BudgetProgress: React.FC = () => {
       return (
         <div className="p-3 bg-white dark:bg-black border shadow-lg rounded-lg">
           <p className="text-sm font-medium">{payload[0].name}</p>
-          <p className="text-xs" style={{ color: payload[0].color }}>
-            {formatCurrency(payload[0].value)}
-          </p>
+          <div className="text-xs" style={{ color: payload[0].color }}>
+            <CurrencyDisplay 
+              amount={payload[0].value}
+              currency={currency}
+              showConversion={true}
+              size="sm"
+            />
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t(`budgets.${payload[0].payload.period}`)}
           </p>
@@ -83,9 +91,14 @@ const BudgetProgress: React.FC = () => {
               <p className="text-sm text-muted-foreground font-medium">
                 {remainingBudget < 0 ? t('budgets.over_budget') : t('budgets.remaining_this_period')}
               </p>
-              <p className={`text-3xl font-bold ${remainingBudget < 0 ? 'text-finance-expense' : 'text-finance-income'}`}>
-                {formatCurrency(Math.abs(remainingBudget))}
-              </p>
+              <div className={`text-3xl font-bold ${remainingBudget < 0 ? 'text-finance-expense' : 'text-finance-income'}`}>
+                <CurrencyDisplay 
+                  amount={Math.abs(remainingBudget)}
+                  currency={currency}
+                  showConversion={true}
+                  size="lg"
+                />
+              </div>
             </div>
             
             {/* Progress Bar */}
@@ -99,8 +112,22 @@ const BudgetProgress: React.FC = () => {
               {/* Consolidated Supporting Details */}
                <div className="text-center">
                  <p className="text-sm text-muted-foreground">
-                   <span className="font-medium text-foreground">{formatCurrency(totalSpent)}</span> /{' '}
-                   <span className="font-medium text-foreground">{formatCurrency(totalBudgeted)}</span>
+                   <span className="font-medium text-foreground">
+                     <CurrencyDisplay 
+                       amount={totalSpent}
+                       currency={currency}
+                       showConversion={true}
+                       size="sm"
+                     />
+                   </span> /{' '}
+                   <span className="font-medium text-foreground">
+                     <CurrencyDisplay 
+                       amount={totalBudgeted}
+                       currency={currency}
+                       showConversion={true}
+                       size="sm"
+                     />
+                   </span>
                  </p>
                </div>
             </div>
