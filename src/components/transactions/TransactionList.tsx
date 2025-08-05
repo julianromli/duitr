@@ -813,7 +813,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
             <CurrencyDisplay 
               amount={transaction.amount}
               currency={transaction.converted_currency || transaction.original_currency || 'IDR'}
-              showConversion={true}
+              
               className="inline"
             />
           </div>

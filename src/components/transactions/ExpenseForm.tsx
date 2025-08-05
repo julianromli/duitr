@@ -8,6 +8,8 @@ import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/currency/CurrencyInput';
+import { SupportedCurrency } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -52,7 +54,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
-    amount: '',
+    amount: 0,
     categoryId: '',
     description: '',
     walletId: '',
@@ -76,6 +78,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  const handleAmountChange = (amount: number, currency: SupportedCurrency) => {
+    setFormData({ ...formData, amount });
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +96,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     }
     
     // Validation
-    if (!formData.amount || !formData.categoryId || !formData.description || !formData.walletId) {
+    if (formData.amount <= 0 || !formData.categoryId || !formData.description || !formData.walletId) {
       toast({
         title: t('common.error'),
         description: t('transactions.errors.fill_all_fields'),
@@ -104,7 +110,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     
     // Add transaction with required parameters
     addTransaction({
-      amount: parseFloat(formData.amount),
+      amount: formData.amount,
       categoryId: formData.categoryId,
       description: formData.description,
       date: dateString,
@@ -114,7 +120,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     
     // Reset form
     setFormData({
-      amount: '',
+      amount: 0,
       categoryId: '',
       description: '',
       walletId: '',
@@ -148,20 +154,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
         
         <form onSubmit={handleSubmit} className="grid gap-6 py-0">
           <div className="space-y-3">
-            <Label htmlFor="amount" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+            <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
               <AnimatedText text={t('transactions.amount')} />
             </Label>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
+            <CurrencyInput
               value={formData.amount}
-              onChange={handleChange}
+              onChange={handleAmountChange}
+              placeholder="0.00"
               required
-              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
+              className="[&>div>div:first-child]:bg-[#242425]/80 [&>div>div:first-child]:border-white/10 [&>div>div:first-child]:text-white [&>div>div:first-child]:h-12 [&>div>div:first-child]:rounded-xl [&>div>div:first-child]:hover:bg-[#242425] [&>div>div:last-child>input]:bg-[#242425]/80 [&>div>div:last-child>input]:border-white/10 [&>div>div:last-child>input]:text-white [&>div>div:last-child>input]:h-12 [&>div>div:last-child>input]:rounded-xl [&>div>div:last-child>input]:hover:bg-[#242425] [&>div>div:last-child>input]:focus:ring-2 [&>div>div:last-child>input]:focus:ring-[#C6FE1E]/50"
             />
           </div>
           

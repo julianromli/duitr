@@ -10,6 +10,8 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { TransitionProvider } from '@/context/TransitionContext';
 import { AppContent } from '@/components/app/AppContent';
 import ErrorBoundary from '@/components/shared/ErrorBoundary';
+import { CurrencyOnboardingDialog } from '@/components/currency/CurrencyOnboardingDialog';
+import { useCurrencyOnboarding } from '@/hooks/useCurrencyOnboarding';
 import i18n from './i18n';
 
 const queryClient = new QueryClient();
@@ -23,6 +25,20 @@ const AppLoadingScreen: React.FC = () => {
         <p className="text-muted-foreground">Loading...</p>
       </div>
     </div>
+  );
+};
+
+// Currency onboarding wrapper component
+const CurrencyOnboardingWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const currencyOnboarding = useCurrencyOnboarding();
+  
+  return (
+    <>
+      {children}
+      <CurrencyOnboardingDialog 
+        open={currencyOnboarding.isRequired && !currencyOnboarding.isLoading} 
+      />
+    </>
   );
 };
 
@@ -129,11 +145,13 @@ const AppWrapper: React.FC = () => {
     >
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter>
-            <TransitionProvider>
-              <AppContent />
-            </TransitionProvider>
-          </BrowserRouter>
+          <CurrencyOnboardingWrapper>
+            <BrowserRouter>
+              <TransitionProvider>
+                <AppContent />
+              </TransitionProvider>
+            </BrowserRouter>
+          </CurrencyOnboardingWrapper>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

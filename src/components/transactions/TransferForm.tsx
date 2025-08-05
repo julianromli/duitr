@@ -3,6 +3,8 @@ import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/currency/CurrencyInput';
+import { SupportedCurrency } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -29,11 +31,11 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
-    amount: '',
+    amount: 0,
     fromWalletId: '',
     toWalletId: '',
     description: '',
-    fee: '0'
+    fee: 0
   });
   
   const [categories, setCategories] = useState([]);
@@ -44,12 +46,12 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     setFormData({ ...formData, [name]: value });
   };
   
-  const handleFormattedChange = (name: string, value: string) => {
-    setFormData({ ...formData, [name]: value });
+  const handleAmountChange = (amount: number) => {
+    setFormData({ ...formData, amount });
   };
   
-  const handleFormattedValueChange = (name: string, numericValue: number) => {
-    setFormData({ ...formData, [name]: String(numericValue) });
+  const handleFeeChange = (fee: number) => {
+    setFormData({ ...formData, fee });
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,7 +67,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     }
     
     // Validation
-    if (!formData.amount || !formData.fromWalletId || !formData.toWalletId) {
+    if (formData.amount <= 0 || !formData.fromWalletId || !formData.toWalletId) {
       toast({
         title: t('common.error'),
         description: t('transactions.errors.fill_all_fields'),
@@ -91,23 +93,23 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     
     // Add transaction
     addTransaction({
-      amount: parseFloat(formData.amount),
+      amount: formData.amount,
       date: dateString,
       description: formData.description || t('transactions.transfer'),
       type: 'transfer',
       walletId: formData.fromWalletId,
       destinationWalletId: formData.toWalletId,
-      fee: parseFloat(formData.fee || '0'),
+      fee: formData.fee,
       categoryId: transferCategory.id
     });
     
     // Reset form
     setFormData({
-      amount: '',
+      amount: 0,
       fromWalletId: '',
       toWalletId: '',
       description: '',
-      fee: '0'
+      fee: 0
     });
     setSelectedDate(new Date());
     
@@ -239,19 +241,16 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
           </div>
           
           <div className="space-y-3">
-            <Label htmlFor="amount" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+            <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
               <AnimatedText text={t('transactions.amount')} />
             </Label>
-            <FormattedInput
-              id="amount"
-              name="amount"
-              placeholder="0"
+            <CurrencyInput
               value={formData.amount}
-              onChange={(value) => handleFormattedChange('amount', value)}
-              onValueChange={(numericValue) => handleFormattedValueChange('amount', numericValue)}
+              onChange={handleAmountChange}
+              placeholder="0.00"
               required
-              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
+              className="[&>div>input]:bg-[#242425]/80 [&>div>input]:border-white/10 [&>div>input]:text-white [&>div>input]:h-12 [&>div>input]:rounded-xl [&>div>input]:hover:bg-[#242425] [&>div>input]:focus:ring-2 [&>div>input]:focus:ring-[#C6FE1E]/50"
             />
           </div>
           
@@ -260,13 +259,14 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
               <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
               <AnimatedText text={t('transactions.fee')} />
             </Label>
-            <FormattedInput
+            <Input
               id="fee"
               name="fee"
-              placeholder="0"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
               value={formData.fee}
-              onChange={(value) => handleFormattedChange('fee', value)}
-              onValueChange={(numericValue) => handleFormattedValueChange('fee', numericValue)}
+              onChange={(e) => handleFeeChange(parseFloat(e.target.value) || 0)}
               className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
             />
           </div>

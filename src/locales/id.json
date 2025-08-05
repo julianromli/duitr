@@ -617,7 +617,7 @@
       "skipForNow": "Lewati untuk sekarang"
     },
     "messages": {
-      "currencyUpdated": "Mata uang diperbarui ke {symbol}",
+      "currencyUpdated": "Mata uang diperbarui ke {{symbol}}",
       "failedToSave": "Gagal menyimpan preferensi mata uang"
     },
     "settingsNote": "Anda dapat mengubah ini nanti di pengaturan profil"

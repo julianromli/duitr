@@ -389,7 +389,7 @@ const WalletList: React.FC = () => {
                     <CurrencyDisplay 
                       amount={wallet.balance}
                       currency={wallet.base_currency || 'IDR'}
-                      showConversion={false}
+                      
                       size="lg"
                     />
                   </div>
@@ -408,7 +408,7 @@ const WalletList: React.FC = () => {
                         <CurrencyDisplay 
                           amount={walletStats?.walletTransactions?.find(w => w.id === wallet.id)?.income || 0}
                           currency={wallet.base_currency || 'IDR'}
-                          showConversion={false}
+                          
                           size="sm"
                         />
                       </div>
@@ -422,7 +422,7 @@ const WalletList: React.FC = () => {
                         <CurrencyDisplay 
                           amount={walletStats?.walletTransactions?.find(w => w.id === wallet.id)?.expense || 0}
                           currency={wallet.base_currency || 'IDR'}
-                          showConversion={false}
+                          
                           size="sm"
                         />
                       </div>

@@ -290,7 +290,7 @@ const BudgetList: React.FC = () => {
                             <CurrencyDisplay 
                               amount={budget.spent}
                               currency={currency}
-                              showConversion={true}
+                              
                               size="sm"
                             />
                           </span>
@@ -303,7 +303,7 @@ const BudgetList: React.FC = () => {
                           <CurrencyDisplay 
                             amount={budget.amount}
                             currency={currency}
-                            showConversion={true}
+                            
                             size="sm"
                           />
                         </div>
@@ -328,7 +328,7 @@ const BudgetList: React.FC = () => {
                           <CurrencyDisplay 
                             amount={Math.abs(remaining)}
                             currency={currency}
-                            showConversion={true}
+                            
                             size="sm"
                           />
                         </span>

@@ -248,7 +248,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateBalanceVisibility,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
@@ -257,4 +261,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
