@@ -596,6 +596,31 @@
       "realisticBudget": "How to create a realistic budget?"
     }
   },
+  "currencySelection": {
+    "title": "Choose Your Currency",
+    "description": "Select your preferred currency for transactions and budgets",
+    "currencies": {
+      "IDR": {
+        "name": "Indonesian Rupiah",
+        "description": "Indonesian currency"
+      },
+      "USD": {
+        "name": "US Dollar",
+        "description": "United States currency"
+      }
+    },
+    "example": "Example",
+    "buttons": {
+      "continue": "Continue",
+      "saveAndContinue": "Save & Continue",
+      "skipForNow": "Skip for now"
+    },
+    "messages": {
+      "currencyUpdated": "Currency updated to {symbol}",
+      "failedToSave": "Failed to save currency preference"
+    },
+    "settingsNote": "You can change this later in your profile settings"
+  },
   "tryAgain": "Try Again",
   "addError": "Failed to add item"
 }

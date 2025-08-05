@@ -596,5 +596,30 @@
       "savingTips": "Tips praktis untuk meningkatkan saving rate?",
       "realisticBudget": "Bagaimana cara membuat budget yang realistis?"
     }
+  },
+  "currencySelection": {
+    "title": "Pilih Mata Uang Anda",
+    "description": "Pilih mata uang yang diinginkan untuk transaksi dan anggaran",
+    "currencies": {
+      "IDR": {
+        "name": "Rupiah Indonesia",
+        "description": "Mata uang Indonesia"
+      },
+      "USD": {
+        "name": "Dolar Amerika",
+        "description": "Mata uang Amerika Serikat"
+      }
+    },
+    "example": "Contoh",
+    "buttons": {
+      "continue": "Lanjutkan",
+      "saveAndContinue": "Simpan & Lanjutkan",
+      "skipForNow": "Lewati untuk sekarang"
+    },
+    "messages": {
+      "currencyUpdated": "Mata uang diperbarui ke {symbol}",
+      "failedToSave": "Gagal menyimpan preferensi mata uang"
+    },
+    "settingsNote": "Anda dapat mengubah ini nanti di pengaturan profil"
   }
 }
