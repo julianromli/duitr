@@ -42,7 +42,7 @@ const BudgetProgress: React.FC = () => {
             <CurrencyDisplay 
               amount={payload[0].value}
               currency={currency}
-              showConversion={true}
+              
               size="sm"
             />
           </div>
@@ -95,7 +95,7 @@ const BudgetProgress: React.FC = () => {
                 <CurrencyDisplay 
                   amount={Math.abs(remainingBudget)}
                   currency={currency}
-                  showConversion={true}
+                  
                   size="lg"
                 />
               </div>
@@ -116,7 +116,7 @@ const BudgetProgress: React.FC = () => {
                      <CurrencyDisplay 
                        amount={totalSpent}
                        currency={currency}
-                       showConversion={true}
+                       
                        size="sm"
                      />
                    </span> /{' '}
@@ -124,7 +124,7 @@ const BudgetProgress: React.FC = () => {
                      <CurrencyDisplay 
                        amount={totalBudgeted}
                        currency={currency}
-                       showConversion={true}
+                       
                        size="sm"
                      />
                    </span>

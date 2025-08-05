@@ -5,13 +5,13 @@ import { SupportedCurrency } from '../utils/currency'
 
 export interface UseCurrencyReturn {
 	currency: SupportedCurrency
-	setCurrency: (currency: SupportedCurrency) => Promise<void>
 	isLoading: boolean
 	error: string | null
 }
 
 /**
- * Custom hook for managing user currency preferences
+ * Custom hook for reading user currency preferences (read-only)
+ * For currency updates, use useCurrencyOnboarding during onboarding
  */
 export function useCurrency(): UseCurrencyReturn {
 	const { user } = useAuth()
@@ -49,37 +49,6 @@ export function useCurrency(): UseCurrencyReturn {
 		}
 	}, [user])
 
-	// Update user's currency preference
-	const setCurrency = useCallback(async (newCurrency: SupportedCurrency) => {
-		if (!user) {
-			throw new Error('User must be logged in to set currency preference')
-		}
-
-		try {
-			setIsLoading(true)
-			setError(null)
-
-			// Update user metadata
-			const { error: updateError } = await supabase.auth.updateUser({
-				data: {
-					preferred_currency: newCurrency
-				}
-			})
-
-			if (updateError) {
-				throw updateError
-			}
-
-			setCurrencyState(newCurrency)
-		} catch (err) {
-			console.error('Failed to update currency preference:', err)
-			setError('Failed to update currency preference')
-			throw err
-		} finally {
-			setIsLoading(false)
-		}
-	}, [user])
-
 	// Load currency on mount and when user changes
 	useEffect(() => {
 		loadCurrency()
@@ -87,7 +56,6 @@ export function useCurrency(): UseCurrencyReturn {
 
 	return {
 		currency,
-		setCurrency,
 		isLoading,
 		error
 	}

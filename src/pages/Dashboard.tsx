@@ -403,7 +403,7 @@ const Dashboard: React.FC = () => {
                     <CurrencyDisplay 
                       amount={transaction.amount}
                       currency={transaction.converted_currency || transaction.original_currency || 'IDR'}
-                      showConversion={false}
+                      
                       className="inline"
                     />
                   </div>

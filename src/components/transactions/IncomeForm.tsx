@@ -4,6 +4,8 @@ import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/currency/CurrencyInput';
+import { SupportedCurrency } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -30,7 +32,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
-    amount: '',
+    amount: 0,
     categoryId: '',
     description: '',
     walletId: '',
@@ -54,6 +56,10 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  const handleAmountChange = (amount: number) => {
+    setFormData({ ...formData, amount });
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +74,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     }
     
     // Validation
-    if (!formData.amount || !formData.categoryId || !formData.description || !formData.walletId) {
+    if (formData.amount <= 0 || !formData.categoryId || !formData.description || !formData.walletId) {
       toast({
         title: t('common.error'),
         description: t('transactions.errors.fill_all_fields'),
@@ -82,7 +88,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     
     // Add transaction
     addTransaction({
-      amount: parseFloat(formData.amount),
+      amount: formData.amount,
       categoryId: formData.categoryId,
       description: formData.description,
       date: dateString,
@@ -92,7 +98,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     
     // Reset form
     setFormData({
-      amount: '',
+      amount: 0,
       categoryId: '',
       description: '',
       walletId: '',
@@ -126,20 +132,16 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
         
         <form onSubmit={handleSubmit} className="grid gap-6 py-0">
           <div className="space-y-3">
-            <Label htmlFor="amount" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+            <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
               <AnimatedText text={t('transactions.amount')} />
             </Label>
-            <Input
-              id="amount"
-              name="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
+            <CurrencyInput
               value={formData.amount}
-              onChange={handleChange}
+              onChange={handleAmountChange}
+              placeholder="0.00"
               required
-              className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50"
+              className="[&>div>input]:bg-[#242425]/80 [&>div>input]:border-white/10 [&>div>input]:text-white [&>div>input]:h-12 [&>div>input]:rounded-xl [&>div>input]:hover:bg-[#242425] [&>div>input]:focus:ring-2 [&>div>input]:focus:ring-[#C6FE1E]/50"
             />
           </div>
           
