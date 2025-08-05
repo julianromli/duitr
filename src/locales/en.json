@@ -88,7 +88,8 @@
     },
     "createError": "Failed to create category",
     "updateError": "Failed to update category",
-    "deleteError": "Failed to delete category"
+    "deleteError": "Failed to delete category",
+    "deleted": "Category deleted successfully"
   },
   "pages": {
     "dashboard": "Dashboard",

@@ -1,6 +1,7 @@
 # TODO:
 
-- [x] fix_useCategories: Fix useCategories.ts to handle missing categories table with fallback to default categories (priority: High)
-- [x] fix_exportService: Fix exportService.ts to handle missing categories table with proper error handling (priority: High)
-- [x] fix_editCategoryPage: Fix EditCategoryPage.tsx to handle missing categories table gracefully (priority: High)
-- [x] test_fixes: Test the application to ensure all category-related errors are resolved (priority: Medium)
+- [x] 1: Examine current totalBalance calculation in FinanceContext.tsx (priority: High)
+- [x] 2: Create a convertedTotalBalance function that converts wallet balances to user's selected currency (priority: High)
+- [x] 3: Update displayBalance function in Dashboard.tsx to use CurrencyDisplay component (priority: High)
+- [x] 4: Test the balance display with USD currency selection to ensure proper conversion (priority: Medium)
+- [x] 5: Verify the balance shows real USD conversion rates, not just $ symbol prefix (priority: Medium)

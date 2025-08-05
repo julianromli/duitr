@@ -86,7 +86,8 @@
     },
     "createError": "Gagal membuat kategori",
     "updateError": "Gagal memperbarui kategori",
-    "deleteError": "Gagal menghapus kategori"
+    "deleteError": "Gagal menghapus kategori",
+    "deleted": "Kategori berhasil dihapus"
   },
   "pages": {
     "dashboard": "Dasbor",

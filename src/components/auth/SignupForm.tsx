@@ -117,11 +117,11 @@ function SignupForm() {
           <motion.div className="space-y-4" variants={itemVariants}>
             <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-name`}>Full name</Label>
-              <Input id={`${id}-name`} placeholder="Matt Welsh" type="text" required />
+              <Input id={`${id}-name`} placeholder="Faiz Intifada" type="text" required />
             </motion.div>
             <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-email`}>Email</Label>
-              <Input id={`${id}-email`} placeholder="hi@yourcompany.com" type="email" required />
+              <Input id={`${id}-email`} placeholder="hi@yourmail.com" type="email" required />
             </motion.div>
             <motion.div className="space-y-2" variants={itemVariants}>
               <Label htmlFor={`${id}-password`}>Password</Label>

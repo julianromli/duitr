@@ -7,9 +7,11 @@ import ExpenseForm from '@/components/transactions/ExpenseForm';
 import IncomeForm from '@/components/transactions/IncomeForm';
 import TransferForm from '@/components/transactions/TransferForm';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
 import AppSettings from '@/components/shared/AppSettings';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { useCurrency } from '@/hooks/useCurrency';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -24,6 +26,7 @@ const Dashboard: React.FC = () => {
   } = useTranslation();
   const {
     totalBalance,
+    convertedTotalBalance,
     transactions,
     formatCurrency,
     monthlyExpense,
@@ -36,6 +39,7 @@ const Dashboard: React.FC = () => {
     isBalanceHidden,
     updateBalanceVisibility
   } = useAuth();
+  const { currency } = useCurrency();
 
   // State for form dialogs
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
@@ -73,9 +77,16 @@ const Dashboard: React.FC = () => {
   // Display masked balance when hidden
   const displayBalance = () => {
     if (isBalanceHidden) {
-      return "Rp ***";
+      return "*** ***";
     }
-    return formatCurrency(totalBalance);
+    return (
+      <CurrencyDisplay 
+        amount={convertedTotalBalance}
+        currency={currency}
+        showConversion={false}
+        className="inline"
+      />
+    );
   };
 
   // Open transaction form dialogs
@@ -98,37 +109,58 @@ const Dashboard: React.FC = () => {
         // Set username from metadata
         setUsername(user.user_metadata?.name || user.email?.split('@')[0] || '');
 
-        // Try to load profile image from public URL with retry logic
+        // Try to load profile image using signed URL to avoid ORB errors
         const loadProfileImage = async (retryCount = 0) => {
           try {
-            // Get public URL with timestamp to prevent caching
-            const timestamp = new Date().getTime();
-            const {
-              data
-            } = await supabase.storage.from('avatars').getPublicUrl(`${user.id}`);
-            if (data?.publicUrl) {
-              // Add timestamp to prevent caching
-              const imageUrl = `${data.publicUrl}?t=${timestamp}`;
+            // Use signed URL instead of public URL to avoid CORS/ORB issues
+            const { data, error } = await supabase.storage
+              .from('avatars')
+              .createSignedUrl(`${user.id}`, 3600); // 1 hour expiry
 
-              // Check if image exists by loading it
-              const img = new Image();
-
-              // Create a promise that resolves when the image loads or rejects on error
-              await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = imageUrl;
-              });
-
-              // If we get here, the image loaded successfully
-              setProfileImage(imageUrl);
+            if (error) {
+              // Handle specific ORB/CORS errors immediately
+              if (error.message.includes('not found') || error.message.includes('does not exist')) {
+                console.log('Avatar not found, using fallback');
+                setProfileImage(null);
+                return;
+              }
+              throw error;
             }
-          } catch (error) {
+
+            if (data?.signedUrl) {
+              // Test if the signed URL is accessible
+              const img = new Image();
+              img.crossOrigin = 'anonymous'; // Handle CORS properly
+              
+              await new Promise((resolve, reject) => {
+                img.onload = () => {
+                  setProfileImage(data.signedUrl);
+                  resolve(undefined);
+                };
+                img.onerror = (e) => {
+                  console.log('Signed URL image failed to load:', e);
+                  reject(new Error('Image load failed'));
+                };
+                img.src = data.signedUrl;
+              });
+            } else {
+              setProfileImage(null);
+            }
+          } catch (error: any) {
             console.log('Error loading avatar image:', error);
 
-            // Retry up to 2 times with increasing delay if we get network errors
+            // Handle ORB errors immediately without retry
+            if (error.message?.includes('ERR_BLOCKED_BY_ORB') || 
+                error.message?.includes('CORS') ||
+                error.name === 'NetworkError') {
+              console.log('ORB/CORS error detected, using fallback avatar');
+              setProfileImage(null);
+              return;
+            }
+
+            // Retry only for other types of errors
             if (retryCount < 2) {
-              const delay = 500 * Math.pow(2, retryCount); // Exponential backoff: 500ms, 1000ms
+              const delay = 500 * Math.pow(2, retryCount);
               console.log(`Retrying avatar load after ${delay}ms...`);
               setTimeout(() => loadProfileImage(retryCount + 1), delay);
             } else {
@@ -296,7 +328,11 @@ const Dashboard: React.FC = () => {
             
             {/* Balance Amount with Hide Button */}
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-4xl font-bold text-[#0D0D0D]">{displayBalance()}</h2>
+              {isBalanceHidden ? (
+                <h2 className="text-4xl font-bold text-[#0D0D0D]">{displayBalance()}</h2>
+              ) : (
+                <h2 className="text-4xl font-bold text-[#0D0D0D]">{displayBalance()}</h2>
+              )}
               <button className="text-[#0D0D0D] hover:opacity-75 transition-opacity" onClick={toggleBalanceVisibility}>
                 {isBalanceHidden ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
@@ -379,9 +415,15 @@ const Dashboard: React.FC = () => {
                         </p>
                     </div>
                   </div>
-                  <p className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : transaction.type === 'expense' ? 'text-red-500' : 'text-white'}`}>
-                    {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
-                  </p>
+                  <div className={`font-medium ${transaction.type === 'income' ? 'text-[#C6FE1E]' : transaction.type === 'expense' ? 'text-red-500' : 'text-white'}`}>
+                    <span>{transaction.type === 'expense' ? '-' : '+'}</span>
+                    <CurrencyDisplay 
+                      amount={transaction.amount}
+                      currency={transaction.converted_currency || transaction.original_currency || 'IDR'}
+                      showConversion={false}
+                      className="inline"
+                    />
+                  </div>
                 </motion.div>)}
               {recentTransactions.length === 0 && <motion.div className="text-center py-5 text-[#868686]" variants={transactionItemVariants}>
                   {t('transactions.no_transactions')}

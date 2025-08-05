@@ -3,6 +3,8 @@ import { PieChart, Edit, Trash, X, Check, Calendar } from 'lucide-react';
 import { useBudgets } from '@/hooks/useBudgets';
 import { Progress } from '@/components/ui/progress';
 import { useFinance } from '@/context/FinanceContext';
+import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
+import { useCurrency } from '@/hooks/useCurrency';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -26,6 +28,7 @@ import AnimatedText from '@/components/ui/animated-text';
 const BudgetList: React.FC = () => {
   const { budgets } = useBudgets();
   const { formatCurrency, updateBudget, deleteBudget } = useFinance();
+  const { currency } = useCurrency();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const [editingBudget, setEditingBudget] = useState<string | null>(null);
@@ -284,13 +287,24 @@ const BudgetList: React.FC = () => {
                       <div className="flex justify-between items-center">
                         <div className="text-sm">
                           <span className={`font-semibold ${remaining < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
-                            {formatCurrency(budget.spent)}
+                            <CurrencyDisplay 
+                              amount={budget.spent}
+                              currency={currency}
+                              showConversion={true}
+                              size="sm"
+                            />
                           </span>
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                           <AnimatedText 
-                            text={`${t('budgets.from')} ${formatCurrency(budget.amount)}`}
+                            text={`${t('budgets.from')} `}
                             animationType="fade"
+                          />
+                          <CurrencyDisplay 
+                            amount={budget.amount}
+                            currency={currency}
+                            showConversion={true}
+                            size="sm"
                           />
                         </div>
                       </div>
@@ -306,12 +320,16 @@ const BudgetList: React.FC = () => {
                         </span>
                         <span className={remaining < 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-green-600 dark:text-green-400'}>
                           <AnimatedText 
-                            text={remaining < 0 
-                              ? `${t('budgets.over_by')} ${formatCurrency(Math.abs(remaining))}`
-                              : `${t('budgets.remaining')} ${formatCurrency(Math.abs(remaining))}`
-                            }
+                            text={remaining < 0 ? t('budgets.over_by') : t('budgets.remaining')}
                             className="text-xs"
                             animationType="slide"
+                          />
+                          {' '}
+                          <CurrencyDisplay 
+                            amount={Math.abs(remaining)}
+                            currency={currency}
+                            showConversion={true}
+                            size="sm"
                           />
                         </span>
                       </div>

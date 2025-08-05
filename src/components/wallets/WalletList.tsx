@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, CreditCard, Landmark, TrendingUp, ArrowUpRight, ArrowDownRight, Edit, Trash, MoreVertical, MoreHorizontal, Plus, Wallet as WalletIcon, Trash2, CreditCard as CreditCardIcon, Smartphone, Briefcase, DollarSign, Banknote, PiggyBank, Key } from 'lucide-react';
 import { useWallets } from '@/hooks/useWallets';
 import { cn } from '@/lib/utils';
+import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
 import {
   Dialog,
   DialogContent,
@@ -384,9 +385,14 @@ const WalletList: React.FC = () => {
                 </div>
                 
                 <div>
-                  <p className="text-2xl font-bold text-white dark:text-gray-100">
-                    {formatCurrency(wallet.balance)}
-                  </p>
+                  <div className="text-2xl font-bold text-white dark:text-gray-100">
+                    <CurrencyDisplay 
+                      amount={wallet.balance}
+                      currency={wallet.base_currency || 'IDR'}
+                      showConversion={false}
+                      size="lg"
+                    />
+                  </div>
                   
                   <motion.div 
                     className="flex mt-3 gap-6"
@@ -398,24 +404,28 @@ const WalletList: React.FC = () => {
                       <div className="flex items-center text-xs text-[#C6FE1E] dark:text-green-400">
                         <ArrowUpRight className="w-3 h-3 mr-1" /> {t('transactions.income')}
                       </div>
-                      <p className="text-sm font-medium text-white dark:text-gray-200">
-                        {formatCurrency(
-                          walletStats?.walletTransactions
-                            ?.find(w => w.id === wallet.id)?.income || 0
-                        )}
-                      </p>
+                      <div className="text-sm font-medium text-white dark:text-gray-200">
+                        <CurrencyDisplay 
+                          amount={walletStats?.walletTransactions?.find(w => w.id === wallet.id)?.income || 0}
+                          currency={wallet.base_currency || 'IDR'}
+                          showConversion={false}
+                          size="sm"
+                        />
+                      </div>
                     </motion.div>
                     
                     <motion.div className="space-y-0.5" variants={statItemVariants}>
                       <div className="flex items-center text-xs text-red-400 dark:text-red-400">
                         <ArrowDownRight className="w-3 h-3 mr-1" /> {t('transactions.expense')}
                       </div>
-                      <p className="text-sm font-medium text-white dark:text-gray-200">
-                        {formatCurrency(
-                          walletStats?.walletTransactions
-                            ?.find(w => w.id === wallet.id)?.expense || 0
-                        )}
-                      </p>
+                      <div className="text-sm font-medium text-white dark:text-gray-200">
+                        <CurrencyDisplay 
+                          amount={walletStats?.walletTransactions?.find(w => w.id === wallet.id)?.expense || 0}
+                          currency={wallet.base_currency || 'IDR'}
+                          showConversion={false}
+                          size="sm"
+                        />
+                      </div>
                     </motion.div>
                   </motion.div>
                 </div>

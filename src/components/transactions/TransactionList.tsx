@@ -4,6 +4,7 @@ import { Calendar, Filter, Search, Trash2, ChevronDown, Loader, X, Wallet } from
 import { useFinance } from '@/context/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -807,9 +808,15 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
           </div>
         </div>
         <div className="flex items-center">
-          <span className={`font-medium mr-3 ${transaction.type === 'expense' ? 'text-red-500' : 'text-[#C6FE1E]'}`}>
-            {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
-          </span>
+          <div className={`font-medium mr-3 ${transaction.type === 'expense' ? 'text-red-500' : 'text-[#C6FE1E]'}`}>
+            <span>{transaction.type === 'expense' ? '-' : '+'}</span>
+            <CurrencyDisplay 
+              amount={transaction.amount}
+              currency={transaction.converted_currency || transaction.original_currency || 'IDR'}
+              showConversion={true}
+              className="inline"
+            />
+          </div>
           <button 
             onClick={(e) => handleDeleteClick(transaction.id, e)}
             className="text-[#868686] hover:text-red-500 transition-colors"
