@@ -1,7 +1,7 @@
 # TODO:
 
-- [x] 1: Examine current totalBalance calculation in FinanceContext.tsx (priority: High)
-- [x] 2: Create a convertedTotalBalance function that converts wallet balances to user's selected currency (priority: High)
-- [x] 3: Update displayBalance function in Dashboard.tsx to use CurrencyDisplay component (priority: High)
-- [x] 4: Test the balance display with USD currency selection to ensure proper conversion (priority: Medium)
-- [x] 5: Verify the balance shows real USD conversion rates, not just $ symbol prefix (priority: Medium)
+- [x] 1: Add missing translation keys to en.json for currency selection (priority: High)
+- [x] 2: Add missing translation keys to id.json for currency selection (priority: High)
+- [x] 3: Update CurrencySelection.tsx to import useTranslation hook (priority: High)
+- [x] 4: Replace hardcoded English text with translation keys in CurrencySelection.tsx (priority: High)
+- [x] 5: Test the translation functionality works correctly (priority: Medium)

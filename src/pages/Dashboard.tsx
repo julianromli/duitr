@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
+import BalanceDisplay from '@/components/dashboard/BalanceDisplay';
 
 // Dashboard component displaying summary info and recent transactions.
 // Updated recent transactions sorting to use 'created_at' for accuracy.
@@ -26,7 +27,6 @@ const Dashboard: React.FC = () => {
   } = useTranslation();
   const {
     totalBalance,
-    convertedTotalBalance,
     transactions,
     formatCurrency,
     monthlyExpense,
@@ -74,20 +74,7 @@ const Dashboard: React.FC = () => {
     updateBalanceVisibility(!isBalanceHidden);
   };
 
-  // Display masked balance when hidden
-  const displayBalance = () => {
-    if (isBalanceHidden) {
-      return "*** ***";
-    }
-    return (
-      <CurrencyDisplay 
-        amount={convertedTotalBalance}
-        currency={currency}
-        showConversion={false}
-        className="inline"
-      />
-    );
-  };
+
 
   // Open transaction form dialogs
   const openExpenseForm = () => setIsExpenseFormOpen(true);
@@ -328,11 +315,7 @@ const Dashboard: React.FC = () => {
             
             {/* Balance Amount with Hide Button */}
             <div className="flex items-center gap-2 mb-3">
-              {isBalanceHidden ? (
-                <h2 className="text-4xl font-bold text-[#0D0D0D]">{displayBalance()}</h2>
-              ) : (
-                <h2 className="text-4xl font-bold text-[#0D0D0D]">{displayBalance()}</h2>
-              )}
+              <BalanceDisplay isHidden={isBalanceHidden} />
               <button className="text-[#0D0D0D] hover:opacity-75 transition-opacity" onClick={toggleBalanceVisibility}>
                 {isBalanceHidden ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
