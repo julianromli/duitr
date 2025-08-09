@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { Badge } from '../ui/badge'
 import { 
 	SupportedCurrency, 
 	formatCurrencyInput, 
@@ -85,32 +84,20 @@ export function CurrencyInput({
 			)}
 			
 			<div className="relative">
-				<div className="flex space-x-2">
-					{/* Currency display */}
-					<div className="flex items-center justify-center w-20 px-3 py-2 border border-input bg-background rounded-md">
-						<Badge variant="outline" className="text-xs">
-							{userCurrency}
-						</Badge>
-					</div>
-
-					{/* Amount input */}
-					<div className="flex-1 relative">
-						<Input
-							type="text"
-							value={inputValue}
-							onChange={handleInputChange}
-							placeholder={placeholder || `Enter amount in ${userCurrency}`}
-							disabled={disabled}
-							className={cn(
-								'font-mono pl-8',
-								error && 'border-destructive focus-visible:ring-destructive'
-							)}
-						/>
-						{/* Currency symbol overlay */}
-						<div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
-							{getCurrencySymbol(userCurrency)}
-						</div>
-					</div>
+				<Input
+					type="text"
+					value={inputValue}
+					onChange={handleInputChange}
+					placeholder={placeholder || `Enter amount in ${userCurrency}`}
+					disabled={disabled}
+					className={cn(
+						'font-mono pl-8',
+						error && 'border-destructive focus-visible:ring-destructive'
+					)}
+				/>
+				{/* Currency symbol overlay */}
+				<div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm">
+					{getCurrencySymbol(userCurrency)}
 				</div>
 			</div>
 

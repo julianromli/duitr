@@ -60,7 +60,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     walletId: '',
   });
   
-  const { categories: allCategories, isLoading: isLoadingCategories } = useCategories();
+  const { categories: allCategories, isLoading: isLoadingCategories, refetch: refetchCategories } = useCategories();
   
   // Filter expense categories (both default and custom)
   const categories = useMemo(() => {
@@ -74,6 +74,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
       }));
   }, [allCategories, i18n.language]);
   
+  // Force cache refresh when dialog opens to ensure latest categories are loaded
+  useEffect(() => {
+    if (open) {
+      refetchCategories();
+    }
+  }, [open, refetchCategories]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
