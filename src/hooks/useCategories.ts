@@ -186,6 +186,7 @@ export const useCategories = () => {
       });
 
       // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
@@ -273,6 +274,7 @@ export const useCategories = () => {
       });
 
       // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
@@ -368,6 +370,11 @@ export const useCategories = () => {
       queryClient.setQueryData(['categories', user?.id], (oldCategories: Category[] = []) => {
         return oldCategories.filter(cat => cat.id !== categoryId);
       });
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
 
       toast({
         title: t('categories.deleted'),

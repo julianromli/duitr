@@ -45,20 +45,13 @@ const normalizeIconName = (iconName: string): string => {
   return iconNameMap[iconName] || iconName || 'circle';
 };
 
-// Available colors for categories
-const availableColors = [
-  '#EF4444', '#F97316', '#F59E0B', '#EAB308',
-  '#84CC16', '#22C55E', '#10B981', '#14B8A6',
-  '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1',
-  '#8B5CF6', '#A855F7', '#D946EF', '#EC4899',
-  '#F43F5E', '#6B7280', '#374151', '#1F2937'
-];
+// Fixed green color for all category icons
+const CATEGORY_COLOR = '#C6FE1E';
 
 interface CategoryFormData {
   name: string;
   type: 'income' | 'expense';
   icon: string;
-  color: string;
 }
 
 interface CategoryFormProps {
@@ -120,22 +113,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         label={t('categories.icon')}
       />
 
-      <div className="space-y-2">
-        <Label className="text-foreground">{t('categories.color')}</Label>
-        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-          {availableColors.map((color) => (
-            <Button
-              key={color}
-              type="button"
-              className={`h-8 w-8 p-0 rounded-full border-2 ${
-                formData.color === color ? 'border-primary' : 'border-border'
-              }`}
-              style={{ backgroundColor: color }}
-              onClick={() => setFormData({ ...formData, color })}
-            />
-          ))}
-        </div>
-      </div>
+
 
       <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 sm:justify-end pt-4">
         <Button
@@ -177,8 +155,7 @@ const CategoryManagement: React.FC = () => {
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     type: 'expense',
-    icon: 'circle',
-    color: '#6B7280'
+    icon: 'circle'
   });
 
   const customCategories = getCustomCategories();
@@ -192,8 +169,7 @@ const CategoryManagement: React.FC = () => {
     setFormData({
       name: '',
       type: 'expense',
-      icon: 'circle',
-      color: '#6B7280'
+      icon: 'circle'
     });
   };
 
@@ -205,7 +181,7 @@ const CategoryManagement: React.FC = () => {
         name: formData.name.trim(),
         type: formData.type,
         icon: formData.icon,
-        color: formData.color
+        color: CATEGORY_COLOR
       });
       setIsCreateDialogOpen(false);
       resetForm();
@@ -219,8 +195,7 @@ const CategoryManagement: React.FC = () => {
     setFormData({
       name: i18n.language === 'id' ? (category.id_name || category.en_name) : (category.en_name || category.id_name),
       type: category.type as 'income' | 'expense',
-      icon: normalizeIconName(category.icon || 'circle'),
-      color: category.color || '#6B7280'
+      icon: normalizeIconName(category.icon || 'circle')
     });
   };
 
@@ -232,7 +207,7 @@ const CategoryManagement: React.FC = () => {
         id: editingCategory.id,
         name: formData.name.trim(),
         icon: formData.icon,
-        color: formData.color
+        color: CATEGORY_COLOR
       });
       setEditingCategory(null);
       resetForm();
@@ -373,7 +348,7 @@ const CategoryManagement: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: category.color || '#6B7280' }}
+                        style={{ backgroundColor: CATEGORY_COLOR }}
                       >
                         <IconComponent className="h-4 w-4 text-white" />
                       </div>
@@ -423,7 +398,7 @@ const CategoryManagement: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: category.color || '#6B7280' }}
+                        style={{ backgroundColor: CATEGORY_COLOR }}
                       >
                         <IconComponent className="h-4 w-4 text-white" />
                       </div>

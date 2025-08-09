@@ -5,7 +5,7 @@
 // Redesigned header to match other pages and removed scrollbar.
 // Fixed container layout issues that caused double scrollbars.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -31,13 +31,14 @@ import { supabase } from '@/integrations/supabase/client';
 import i18next from 'i18next';
 import AnimatedText from '@/components/ui/animated-text';
 import { useCategories } from '@/hooks/useCategories';
+import CategoryIcon from '@/components/shared/CategoryIcon';
 
 const BudgetPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { addBudget } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories();
+  const { categories: allCategories, isLoading: isLoadingCategories } = useCategories();
   
   // Budget state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,18 +49,17 @@ const BudgetPage: React.FC = () => {
     spent: 0
   });
 
-  // Categories state - now using useCategories hook
-  const categories = categoriesData.map(cat => ({
-    id: cat.category_id?.toString() || cat.id,
-    category_id: cat.category_id,
-    category_key: cat.category_key,
-    en_name: cat.en_name,
-    id_name: cat.id_name,
-    type: cat.type,
-    icon: cat.icon,
-    created_at: cat.created_at
-  }));
-  const isLoadingCategories = categoriesLoading;
+  // Filter expense categories (both default and custom) - using same pattern as ExpenseForm
+  const categories = useMemo(() => {
+    return allCategories
+      .filter(cat => cat.type === 'expense')
+      .map(cat => ({
+        id: cat.id || cat.category_id?.toString() || '',
+        name: i18n.language === 'id' ? (cat.id_name || cat.en_name || 'Unknown') : (cat.en_name || cat.id_name || 'Unknown'),
+        icon: cat.icon || 'circle',
+        color: cat.color || '#6B7280'
+      }));
+  }, [allCategories, i18n.language]);
 
   // Want to Buy state
   const [isWantToBuyFormOpen, setIsWantToBuyFormOpen] = useState(false);
@@ -173,13 +173,7 @@ const BudgetPage: React.FC = () => {
     }
   };
 
-  // Get expense categories for budget creation
-  const expenseCategories = categories
-    .filter(cat => cat.type === 'expense')
-    .map(cat => ({
-      key: cat.category_id ? cat.category_id.toString() : cat.id,
-      label: i18next.language === 'id' ? cat.id_name : cat.en_name
-    }));
+
 
   // Budget form handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -223,15 +217,7 @@ const BudgetPage: React.FC = () => {
     }
 
     // Find the corresponding category from our fetched categories
-    const categoryId = Number(newBudget.category);
-    const selectedCategory = categories.find(cat => {
-      // Check if category has a category_id property that matches
-      if (cat.category_id !== undefined) {
-        return cat.category_id === categoryId;
-      }
-      // Fallback to using the id property directly
-      return cat.id === newBudget.category || Number(cat.id) === categoryId;
-    });
+    const selectedCategory = categories.find(cat => cat.id === newBudget.category);
     
     if (!selectedCategory) {
       toast({
@@ -241,16 +227,11 @@ const BudgetPage: React.FC = () => {
       });
       return;
     }
-    
-    // Use the display name based on current language
-    const displayCategoryName = i18next.language === 'id' 
-      ? selectedCategory.id_name 
-      : selectedCategory.en_name;
 
     // Add the new budget with the correct category ID
     addBudget({
-      category: displayCategoryName, // Use the correct display name for the category
-      categoryId: selectedCategory.category_id || Number(selectedCategory.id),  // Use the numeric ID
+      category: selectedCategory.name, // Use the display name for the category
+      categoryId: selectedCategory.id,  // Use the ID
       amount: Number(newBudget.amount),
       period: newBudget.period,
       spent: 0
@@ -354,29 +335,43 @@ const BudgetPage: React.FC = () => {
                     <AnimatedText text={t('transactions.category')} />
                   </Label>
                   <Select
-                    value={newBudget.category}
+                    value={newBudget.category ? String(newBudget.category) : ""}
                     onValueChange={(value) => handleSelectChange('category', value)}
+                    disabled={isLoadingCategories}
                   >
                     <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
                       <SelectValue>
                         <AnimatedText 
-                          text={newBudget.category ? 
-                            expenseCategories.find(c => c.key === newBudget.category)?.label || 
-                            t('budgets.select_category') : 
-                            t('budgets.select_category')
+                          text={isLoadingCategories ? t('common.loading') : 
+                            newBudget.category ? 
+                              categories.find(c => c.id === newBudget.category)?.name || t('budgets.select_category') :
+                              t('budgets.select_category')
                           }
                         />
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl">
+                    <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl max-h-[300px]">
                       {isLoadingCategories ? (
                         <SelectItem value="loading" disabled>
-                          <AnimatedText text="Loading categories..." />
+                          <AnimatedText text={t('common.loading')} />
                         </SelectItem>
                       ) : (
-                        expenseCategories.map((option) => (
-                          <SelectItem key={option.key} value={option.key} className="hover:bg-[#333]/80 focus:bg-[#333]/80 transition-colors duration-200">
-                            <AnimatedText text={option.label} animationType="fade" />
+                        categories.map((category) => (
+                          <SelectItem 
+                            key={category.id} 
+                            value={String(category.id)}
+                            className="hover:bg-[#333]/80 focus:bg-[#333]/80 hover:text-white focus:text-white transition-colors duration-200"
+                          >
+                            <div className="flex items-center">
+                              <CategoryIcon 
+                                category={category.id}
+                                size="sm"
+                                className="mr-2"
+                              />
+                              <span className="ml-2">
+                                <AnimatedText text={category.name} animationType="fade" />
+                              </span>
+                            </div>
                           </SelectItem>
                         ))
                       )}

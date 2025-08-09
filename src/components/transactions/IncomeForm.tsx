@@ -38,7 +38,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     walletId: '',
   });
   
-  const { categories: allCategories, isLoading: isLoadingCategories } = useCategories();
+  const { categories: allCategories, isLoading: isLoadingCategories, refetch: refetchCategories } = useCategories();
   
   // Filter income categories (both default and custom)
   const categories = useMemo(() => {
@@ -52,6 +52,13 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
       }));
   }, [allCategories, i18n.language]);
   
+  // Force cache refresh when dialog opens to ensure latest categories are loaded
+  useEffect(() => {
+    if (open) {
+      refetchCategories();
+    }
+  }, [open, refetchCategories]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });

@@ -14,7 +14,19 @@ import { CurrencyOnboardingDialog } from '@/components/currency/CurrencyOnboardi
 import { useCurrencyOnboarding } from '@/hooks/useCurrencyOnboarding';
 import i18n from './i18n';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Reduce staleTime for categories to 30 seconds to ensure fresh data
+      staleTime: (query) => {
+        if (query.queryKey[0] === 'categories') {
+          return 30 * 1000; // 30 seconds for categories
+        }
+        return 5 * 60 * 1000; // 5 minutes for other queries
+      },
+    },
+  },
+});
 
 // Loading component while i18n initializes
 const AppLoadingScreen: React.FC = () => {
