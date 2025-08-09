@@ -7,6 +7,10 @@
     "shadcn-ui": {
       "command": "npx",
       "args": ["-y", "@jpisnice/shadcn-ui-mcp-server"]
+    },
+    "git-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "@cyanheads/git-mcp-server"]
     }
   }
 }
