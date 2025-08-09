@@ -86,6 +86,13 @@
   - **Service Worker** - For caching and offline support.
   - **Web App Manifest** - For app installation metadata.
 
+### Development Tools & Integration
+
+  - **MCP Servers** - Model Context Protocol integration for enhanced development workflow.
+  - **Git MCP Server** - AI-powered Git operations and repository management.
+  - **Context7 MCP** - Advanced context management for development.
+  - **shadcn/ui MCP** - Component library integration and management.
+
 ## 📱 Installation and Setup
 
 ### Prerequisites
@@ -138,6 +145,16 @@
     ```
 
     The application will be running at `http://localhost:5173`.
+
+### 🤖 MCP Integration Setup
+
+The project includes Model Context Protocol (MCP) servers for enhanced development workflow:
+
+- **Git MCP Server**: Provides AI-powered Git operations
+- **Context7 MCP**: Advanced context management
+- **shadcn/ui MCP**: Component library integration
+
+MCP servers are configured in `.trae/mcp.json` and work automatically with compatible AI development tools.
 
 ## 🏗️ Project Structure
 
@@ -295,7 +312,20 @@ If you encounter any issues or have questions:
 
 ## 🔄 Changelog
 
-### v2.1.0 (Latest - January 2025)
+### v2.2.0 (Latest - January 2025)
+
+#### 🛠️ Development Workflow Enhancements
+  - ✅ **Git MCP Server Integration**: Added AI-powered Git operations through Model Context Protocol
+  - ✅ **Enhanced Development Tools**: Integrated multiple MCP servers for improved development workflow
+  - ✅ **Repository Management**: Streamlined Git operations with intelligent automation
+  - ✅ **Context Management**: Advanced context handling for better development experience
+
+#### 🔧 Technical Infrastructure
+  - ✅ **MCP Configuration**: Properly configured `.trae/mcp.json` for development tools
+  - ✅ **AI-Assisted Development**: Enhanced development workflow with AI-powered tools
+  - ✅ **Component Integration**: Improved shadcn/ui component management through MCP
+
+### v2.1.0 (January 2025)
 
 #### 🎨 Landing Page Enhancements
   - ✅ **Copywriting Optimization**: Improved English and Indonesian copy for better conversion

@@ -1,8 +1,6 @@
 # TODO:
 
-- [x] 1: Force cache refresh in ExpenseForm by calling refetch() from useCategories on mount (priority: High)
-- [x] 2: Force cache refresh in IncomeForm by calling refetch() from useCategories on mount (priority: High)
-- [x] 3: Reduce staleTime for categories in QueryClient configuration to 30 seconds (priority: High)
-- [x] 6: Test the implementation to verify the bug is fixed (priority: High)
-- [x] 4: Add cache synchronization by invalidating categories query after successful mutations (priority: Medium)
-- [x] 5: Ensure proper error handling and loading states in category-related components (priority: Medium)
+- [x] check-git-status: Check current git status to see what files need to be committed (priority: High)
+- [ ] stage-changes: Stage all the modified files (README.md, PRD.md, package.json, .trae/TODO.md) (**IN PROGRESS**) (priority: High)
+- [ ] commit-changes: Commit the changes with appropriate commit message describing documentation updates and git-mcp-server integration (priority: High)
+- [ ] push-to-github: Push the committed changes to GitHub repository (priority: High)
