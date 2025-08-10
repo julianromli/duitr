@@ -76,7 +76,7 @@ function SignupContent({
             <Label htmlFor={`${id}-name`} className="text-foreground">Full name</Label>
             <Input
               id={`${id}-name`}
-              placeholder="Matt Welsh"
+              placeholder="Faiz Intifada"
               type="text"
               required
               value={username} // Bind to username state
@@ -90,7 +90,7 @@ function SignupContent({
             <Label htmlFor={`${id}-email`} className="text-foreground">Email</Label>
             <Input
               id={`${id}-email`}
-              placeholder="hi@yourcompany.com"
+              placeholder="hi@youremail.com"
               type="email"
               required
               value={email}
@@ -165,4 +165,4 @@ function SignupContent({
   );
 }
 
-export { SignupContent }; 
+export { SignupContent };

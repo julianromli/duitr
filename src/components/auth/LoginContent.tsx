@@ -82,7 +82,7 @@ function LoginContent({
             <Label htmlFor={`${id}-email`} className="text-foreground">Email</Label>
             <Input
               id={`${id}-email`}
-              placeholder="hi@yourcompany.com"
+              placeholder="hi@youremail.com"
               type="email"
               required
               value={email}
@@ -150,4 +150,4 @@ function LoginContent({
   );
 }
 
-export { LoginContent }; 
+export { LoginContent };
