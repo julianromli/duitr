@@ -131,7 +131,12 @@ export function getSupportedCurrencies(): SupportedCurrency[] {
  * Check if a currency is supported
  */
 export function isSupportedCurrency(currency: string): currency is SupportedCurrency {
-	return currency in CURRENCY_CONFIGS
+        // Using the `in` operator here would return true for any property
+        // on the object's prototype chain (e.g. `toString`), which means
+        // invalid currency strings could be treated as supported. Use
+        // `hasOwnProperty` to ensure only explicitly defined currencies are
+        // considered valid.
+        return Object.prototype.hasOwnProperty.call(CURRENCY_CONFIGS, currency)
 }
 
 /**

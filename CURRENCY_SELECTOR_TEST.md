@@ -113,6 +113,7 @@ This document outlines the manual testing steps for the currency selector featur
 ## Notes
 - Test with both USD and IDR currencies
 - Verify exchange rate calculations
+- `isSupportedCurrency` only accepts defined currency codes and rejects prototype properties
 - Check for any console errors
 - Ensure responsive design works on different screen sizes
 
