@@ -104,15 +104,16 @@ function testCurrencyUtilities() {
   const currencyUtilsPath = path.join(__dirname, 'src/utils/currency.ts');
   
   try {
-    if (fs.existsSync(currencyUtilsPath)) {
-      const content = fs.readFileSync(currencyUtilsPath, 'utf8');
+      if (fs.existsSync(currencyUtilsPath)) {
+        const content = fs.readFileSync(currencyUtilsPath, 'utf8');
       
       const requiredFunctions = [
         'formatCurrencyInput',
         'unformatCurrencyInput',
         'getSupportedCurrencies',
         'getCurrencySymbol',
-        'formatCurrency'
+        'formatCurrency',
+        'isSupportedCurrency'
       ];
       
       let allFunctionsExist = true;
@@ -124,8 +125,31 @@ function testCurrencyUtilities() {
           allFunctionsExist = false;
         }
       });
-      
-      return allFunctionsExist;
+
+      if (!allFunctionsExist) return false;
+
+      // Verify isSupportedCurrency does not validate prototype properties
+      // Load the TypeScript module by transpiling it on the fly
+      const ts = require('typescript');
+      const tsContent = fs.readFileSync(currencyUtilsPath, 'utf8');
+      const transpiled = ts.transpileModule(tsContent, {
+        compilerOptions: { module: ts.ModuleKind.CommonJS }
+      });
+      const moduleExports = {};
+      // eslint-disable-next-line no-new-func
+      const loader = new Function('exports', 'require', 'module', '__filename', '__dirname', transpiled.outputText);
+      loader(moduleExports, require, { exports: moduleExports }, currencyUtilsPath, path.dirname(currencyUtilsPath));
+      const { isSupportedCurrency } = moduleExports;
+      if (!isSupportedCurrency('USD')) {
+        console.log('❌ isSupportedCurrency fails for valid currency code');
+        return false;
+      }
+      if (isSupportedCurrency('toString')) {
+        console.log('❌ isSupportedCurrency incorrectly accepts prototype properties');
+        return false;
+      }
+
+      return true;
     } else {
       console.log('❌ Currency utilities file not found');
       return false;
@@ -167,10 +191,9 @@ function runTests() {
   return allTestsPassed;
 }
 
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { runTests };
-} else {
-  // Run tests if script is executed directly
+// Run tests if the script is executed directly; otherwise export for use
+if (require.main === module) {
   runTests();
+} else {
+  module.exports = { runTests };
 }
