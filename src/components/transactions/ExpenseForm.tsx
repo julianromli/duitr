@@ -22,14 +22,8 @@ import { motion } from 'framer-motion';
 import { PlusCircle } from 'lucide-react';
 import AnimatedText from '@/components/ui/animated-text';
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { DatePicker } from '@/components/ui/date-picker';
-
-// Create a local Supabase client for this component
-const supabaseClient = createClient(
-  import.meta.env.VITE_SUPABASE_URL || "https://cxqluedeykgqmthzveiw.supabase.co",
-  import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cWx1ZWRleWtncW10aHp2ZWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDQxNjcsImV4cCI6MjA1ODU4MDE2N30.Lh08kodIf9QzggcjUP4mTc2axGFEtW8o9efDXRVNQ_E"
-);
 
 // Define the category type from Supabase
 interface SupabaseCategory {

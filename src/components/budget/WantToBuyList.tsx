@@ -136,7 +136,7 @@ const WantToBuyList: React.FC<WantToBuyListProps> = ({ onEditItem }) => {
           <ShoppingBag className="h-8 w-8 text-[#0D0D0D]" />
         </div>
         <p className="text-gray-500 text-lg font-medium mb-2">{t('budget.noWantToBuyItems')}</p>
-        <p className="text-gray-400 text-sm">Start adding items to your wishlist</p>
+        <p className="text-gray-400 text-sm">{t('budget.noWantToBuyDescription')}</p>
       </motion.div>
     );
   }

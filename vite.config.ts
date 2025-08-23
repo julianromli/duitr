@@ -102,8 +102,6 @@ export default defineConfig(({ mode, command }) => ({
     },
   },
   envPrefix: "VITE_",
-  define: {
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
-    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
-  },
+  // Environment variables are automatically handled by Vite
+  // No need to manually define them here
 }));

@@ -321,7 +321,7 @@ const BudgetPage: React.FC = () => {
                 </DialogTitle>
                 <p className="text-sm text-gray-400 mt-2">
                   <AnimatedText 
-                    text={t('budgets.create_description', 'Set spending limits for your categories')}
+                    text={t('budgets.create_description')}
                     animationType="fade"
                     duration={0.4}
                   />
