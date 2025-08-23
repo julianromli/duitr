@@ -27,6 +27,7 @@
     "comingSoon": "Segera Hadir...",
     "added_successfully": "berhasil ditambahkan",
     "errorMessage": "Terjadi kesalahan. Silakan coba lagi nanti.",
+    "error_occurred": "Terjadi kesalahan",
     "reset_filters": "Reset Filter",
     "clear_filters": "Hapus Filter",
     "creating": "Membuat...",
@@ -366,17 +367,22 @@
     },
     "errors": {
       "select_category": "Silakan pilih kategori",
-      "valid_amount": "Silakan masukkan jumlah yang valid"
+      "valid_amount": "Silakan masukkan jumlah yang valid",
+      "invalid_category": "Kategori yang dipilih tidak valid"
     },
     "success": {
-      "created": "Anggaran berhasil dibuat"
+      "created": "Anggaran berhasil dibuat",
+      "updated": "Anggaran berhasil diperbarui",
+      "deleted": "Anggaran berhasil dihapus"
     },
     "spending": "Pengeluaran per Kategori",
     "no_budgets": "Anda belum memiliki anggaran.",
     "from": "dari",
     "used_percentage": "digunakan",
     "over_by": "Kelebihan",
-    "remaining": "Sisa"
+    "remaining": "Sisa",
+    "no_category": "Tanpa Kategori",
+    "create_description": "Atur batas pengeluaran untuk kategori Anda"
   },
   "settings": {
     "title": "Pengaturan",
@@ -543,6 +549,7 @@
     "priorityLow": "Rendah",
     "estimatedDate": "Perkiraan Tanggal",
     "noWantToBuyItems": "Belum ada barang impian.",
+    "noWantToBuyDescription": "Mulai tambahkan item ke daftar impian Anda",
     "deleteWantToBuyConfirm": "Yakin ingin menghapus barang impian",
     "estimate": "Perk.",
     "pinjamanName": "Nama Transaksi",
@@ -554,8 +561,10 @@
     "noPinjamanItems": "Belum ada utang atau piutang tercatat.",
     "deletePinjamanConfirm": "Yakin ingin menghapus transaksi",
     "wantToBuyAdded": "Barang impian ditambahkan.",
+    "wantToBuyUpdated": "Barang impian diperbarui.",
     "wantToBuyDeleted": "Barang impian dihapus.",
     "pinjamanAdded": "Item Utang/Piutang ditambahkan.",
+    "pinjamanUpdated": "Item Utang/Piutang diperbarui.",
     "pinjamanDeleted": "Item Utang/Piutang dihapus."
   },
   "auth": {

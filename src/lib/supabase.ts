@@ -1,51 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 import { logAuthEvent } from '@/utils/auth-logger';
 
-// Use environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cxqluedeykgqmthzveiw.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cWx1ZWRleWtncW10aHp2ZWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDQxNjcsImV4cCI6MjA1ODU4MDE2N30.Lh08kodIf9QzggcjUP4mTc2axGFEtW8o9efDXRVNQ_E';
+// Use environment variables - fail fast if not provided
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Log for debugging
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10));
+// Validate required environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing required environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
+  );
+}
+
+// Log for debugging (only show first 10 chars for security)
+if (import.meta.env.DEV) {
+  console.log('Supabase URL:', supabaseUrl);
+  console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10));
+}
 
 // Detect iOS devices
 export const isIOS = () => {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-};
-
-// Test direct API call method
-export const testDirectSignup = async (email: string, password: string) => {
-  // Create a new client using hardcoded credentials (just for testing)
-  const directSupabase = createClient(
-    'https://cxqluedeykgqmthzveiw.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cWx1ZWRleWtncW10aHp2ZWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMDQxNjcsImV4cCI6MjA1ODU4MDE2N30.Lh08kodIf9QzggcjUP4mTc2axGFEtW8o9efDXRVNQ_E'
-  );
-  
-  try {
-    console.log('Testing direct signup with creds:', { url: 'https://cxqluedeykgqmthzveiw.supabase.co', keyFirstChars: 'eyJhbGciOi'});
-    
-    // Try first without email confirmation (for development)
-    const { data, error } = await directSupabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: import.meta.env.MODE === 'production'
-          ? 'https://duitr.my.id/auth/callback'
-          : `${window.location.origin}/auth/callback`,
-        data: {
-          name: email.split('@')[0], // Use part of email as name
-        }
-      }
-    });
-    
-    console.log('Direct signup response:', { data, error });
-    return { data, error };
-  } catch (e) {
-    console.error('Exception during direct signup test:', e);
-    return { data: null, error: e };
-  }
 };
 
 // Custom storage implementation to handle iOS Safari issues
@@ -113,7 +89,7 @@ export const signUpWithEmail = async (email: string, password: string) => {
     password,
     options: {
       emailRedirectTo: import.meta.env.MODE === 'production'
-        ? 'https://duitr.my.id/auth/callback'
+        ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
         : `${window.location.origin}/auth/callback`,
       data: {
         name: email.split('@')[0], // Use part of email as name
@@ -135,7 +111,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signInWithGoogle = async () => {
   // Set a clean redirect URL without any parameters that might cause issues
   const redirectTo = import.meta.env.MODE === 'production' 
-    ? 'https://duitr.my.id/auth/callback'
+    ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
     : `${window.location.origin}/auth/callback`;
   
   // Log device info

@@ -27,6 +27,7 @@
     "comingSoon": "Coming Soon...",
     "added_successfully": "added successfully",
     "errorMessage": "An error occurred. Please try again later.",
+    "error_occurred": "An error occurred",
     "reset_filters": "Reset Filters",
     "clear_filters": "Clear Filters",
     "creating": "Creating...",
@@ -356,10 +357,13 @@
     },
     "errors": {
       "select_category": "Please select a category",
-      "valid_amount": "Please enter a valid amount"
+      "valid_amount": "Please enter a valid amount",
+      "invalid_category": "Invalid category selected"
     },
     "success": {
-      "created": "Budget created successfully"
+      "created": "Budget created successfully",
+      "updated": "Budget updated successfully",
+      "deleted": "Budget deleted successfully"
     },
     "subtitle": "Budget Management",
     "create": "Create Budget",
@@ -376,7 +380,9 @@
     "from": "from",
     "used_percentage": "used",
     "over_by": "Over by",
-    "remaining": "Remaining"
+    "remaining": "Remaining",
+    "no_category": "No Category",
+    "create_description": "Set spending limits for your categories"
   },
   "settings": {
     "title": "Settings",
@@ -542,6 +548,7 @@
     "priorityLow": "Low",
     "estimatedDate": "Estimated Date",
     "noWantToBuyItems": "No Wishlist items added yet.",
+    "noWantToBuyDescription": "Start adding items to your wishlist",
     "deleteWantToBuyConfirm": "Are you sure you want to delete the dream item",
     "estimate": "Est.",
     "pinjamanName": "Transaction Name",
@@ -553,8 +560,10 @@
     "noPinjamanItems": "No debts or credits recorded yet.",
     "deletePinjamanConfirm": "Are you sure you want to delete the transaction",
     "wantToBuyAdded": "Dream item added.",
+    "wantToBuyUpdated": "Dream item updated.",
     "wantToBuyDeleted": "Dream item deleted.",
     "pinjamanAdded": "Debt/Credit item added.",
+    "pinjamanUpdated": "Debt/Credit item updated.",
     "pinjamanDeleted": "Debt/Credit item deleted."
   },
   "auth": {

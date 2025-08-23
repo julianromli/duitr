@@ -12,6 +12,26 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (SECURITY CRITICAL)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# Supabase secrets
+.supabase/
+
+# Security and credentials
+*.pem
+*.p12
+*.key
+*.crt
+*.cert
+auth-config.json
+service-account.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -25,3 +45,31 @@ dist-ssr
 
 # YoYo AI version control directory
 .yoyo/
+
+# Build and cache
+.vercel
+.netlify
+.cache
+.temp
+.tmp
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs_vista.db
+
+# Package manager
+.pnpm-debug.log*
+.npm
+.yarn-integrity
+yarn-error.log
