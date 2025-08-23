@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import AnimatedText from '@/components/ui/animated-text';
+import { useCategories } from '@/hooks/useCategories';
 
 const BudgetList: React.FC = () => {
   const { budgets } = useBudgets();
@@ -31,6 +32,7 @@ const BudgetList: React.FC = () => {
   const { currency } = useCurrency();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
+  const { categories } = useCategories();
   const [editingBudget, setEditingBudget] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     category: '',
@@ -92,8 +94,8 @@ const BudgetList: React.FC = () => {
     // Validate inputs
     if (!editForm.amount || isNaN(Number(editForm.amount)) || Number(editForm.amount) <= 0) {
       toast({
-        title: "Error",
-        description: "Please enter a valid amount",
+        title: t('common.error'),
+        description: t('budgets.errors.valid_amount'),
         variant: "destructive"
       });
       return;
@@ -108,8 +110,8 @@ const BudgetList: React.FC = () => {
     });
 
     toast({
-      title: "Success",
-      description: "Budget updated successfully"
+      title: t('common.success'),
+      description: t('budgets.success.updated')
     });
 
     setEditingBudget(null);
@@ -119,8 +121,8 @@ const BudgetList: React.FC = () => {
     deleteBudget(id);
     
     toast({
-      title: "Success",
-      description: "Budget deleted successfully"
+      title: t('common.success'),
+      description: t('budgets.success.deleted')
     });
   };
 
@@ -135,6 +137,25 @@ const BudgetList: React.FC = () => {
       default:
         return t('budgets.monthly');
     }
+  };
+
+  // Function to get translated category name
+  const getCategoryDisplayName = (categoryName: string) => {
+    // First try to find the category by matching the category name
+    const category = categories.find(cat => 
+      cat.en_name === categoryName || 
+      cat.id_name === categoryName ||
+      cat.category_key === categoryName
+    );
+    
+    if (category) {
+      return i18n.language === 'id' ? 
+        (category.id_name || category.en_name || 'Unknown') : 
+        (category.en_name || category.id_name || 'Unknown');
+    }
+    
+    // If not found, return the original category name as fallback
+    return categoryName || t('budgets.no_category');
   };
 
   return (
@@ -166,7 +187,7 @@ const BudgetList: React.FC = () => {
                             <AnimatedText text={t('transactions.category')} animationType="slide" />:
                           </label>
                           <span className="text-sm">
-                            <AnimatedText text={budget.category || 'No Category'} animationType="scale" />
+                            <AnimatedText text={getCategoryDisplayName(budget.category)} animationType="scale" />
                           </span>
                         </div>
                       
@@ -237,7 +258,7 @@ const BudgetList: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-base text-gray-900 dark:text-white truncate">
                             <AnimatedText 
-                              text={budget.category}
+                              text={getCategoryDisplayName(budget.category)}
                               animationType="slide"
                               duration={0.4}
                             />
@@ -289,8 +310,6 @@ const BudgetList: React.FC = () => {
                           <span className={`font-semibold ${remaining < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
                             <CurrencyDisplay 
                               amount={budget.spent}
-                              currency={currency}
-                              
                               size="sm"
                             />
                           </span>
@@ -302,8 +321,6 @@ const BudgetList: React.FC = () => {
                           />
                           <CurrencyDisplay 
                             amount={budget.amount}
-                            currency={currency}
-                            
                             size="sm"
                           />
                         </div>
@@ -327,8 +344,6 @@ const BudgetList: React.FC = () => {
                           {' '}
                           <CurrencyDisplay 
                             amount={Math.abs(remaining)}
-                            currency={currency}
-                            
                             size="sm"
                           />
                         </span>
