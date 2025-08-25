@@ -1,5 +1,8 @@
 # Duitr - Personal Finance Manager
 
+Live: https://www.duitr.my.id
+Repo: https://github.com/julianromli/duitr
+
 **Duitr** is a modern and intuitive personal finance management application, built with a cutting-edge web stack. This app empowers you to effortlessly track your expenses, manage your budgets, and achieve your financial goals.
 
 ## 🚀 Key Features
@@ -106,7 +109,7 @@
 1.  **Clone the repository**
 
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/julianromli/duitr.git
     cd duitr
     ```
 
@@ -255,6 +258,20 @@ npm run build:pwa
 npm run vercel:deploy
 ```
 
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+## 🧪 Testing
+
+- Run tests: `npm test`
+- Run once (CI): `npm run test:run`
+- Coverage: `npm run test:coverage`
+- Watch mode: `npm run test:watch`
+- UI runner: `npm run test:ui`
+
 ## 📊 Database Schema
 
 The application uses Supabase with the following schema:
@@ -274,6 +291,14 @@ The application uses Supabase with the following schema:
   - **Environment Variables** - Sensitive configurations are kept secret.
   - **Input Validation** - Data validation powered by Zod.
 
+### Security scripts
+
+```bash
+npm run security:audit     # audit all dependencies
+npm run security:check     # audit with high severity threshold
+npm run security:fix       # attempt automatic fixes
+```
+
 ## 🌍 Internationalization
 
 The application supports multiple languages:
@@ -291,6 +316,15 @@ Translation files are stored in `src/locales/`.
   - **Background Sync** - Automatic data synchronization.
   - **App Shortcuts** - Shortcuts to key features.
 
+## 🧰 Troubleshooting
+
+- Blank page after deploy (PWA/site cache):
+  1) DevTools > Application > Service Workers > Unregister
+  2) Application > Clear storage > Clear site data
+  3) Hard refresh (Ctrl+F5)
+- Validate production build locally: `npm run build` then `npm run preview`
+- React context error in production: ensure React/ReactDOM versions match; if in doubt, delete node_modules and reinstall (`rm -rf node_modules && npm i`).
+
 ## 🤝 Contributing
 
 1.  Fork the repository.
@@ -301,7 +335,9 @@ Translation files are stored in `src/locales/`.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+This project is licensed under the MIT License.
+
+See LICENSE for details.
 
 ## 📞 Support
 
