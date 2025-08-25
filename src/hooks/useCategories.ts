@@ -185,10 +185,11 @@ export const useCategories = () => {
         });
       });
 
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      // 🔧 Only invalidate specific category queries to prevent cascade
+      queryClient.invalidateQueries({ 
+        queryKey: ['categories', user?.id],
+        exact: true 
+      });
 
       toast({
         title: t('categories.created'),

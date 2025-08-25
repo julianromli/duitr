@@ -23,14 +23,20 @@ export function useCurrencyOnboarding() {
 		selectedCurrency: null,
 	})
 
+	// 🔧 Optimized useEffect with debouncing and proper dependencies
 	useEffect(() => {
 		if (!user) {
-			setState(prev => ({ ...prev, isLoading: false }))
+			setState(prev => ({ ...prev, isLoading: false, isRequired: false }))
 			return
 		}
 
-		checkCurrencySelection()
-	}, [user])
+		// 🔧 Debounce the currency check to prevent rapid state updates
+		const timer = setTimeout(() => {
+			checkCurrencySelection()
+		}, 500)
+
+		return () => clearTimeout(timer)
+	}, [user?.id]) // 🔧 Only depend on user.id, not the entire user object
 
 	/**
 	 * Check if user has already selected a currency

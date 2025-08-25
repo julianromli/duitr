@@ -28,7 +28,7 @@ export default defineConfig(({ mode, command }) => ({
       strategies: 'generateSW',
       injectRegister: 'script',
       devOptions: {
-        enabled: true,
+        enabled: false, // 🔧 Disabled PWA in development to prevent auto-reload issues
         type: 'module',
         navigateFallback: '/index.html',
       },
@@ -36,8 +36,8 @@ export default defineConfig(({ mode, command }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
-        skipWaiting: false,
-        clientsClaim: true,
+        skipWaiting: true, // 🔧 Changed to true to prevent reload prompts
+        clientsClaim: false, // 🔧 Changed to false to prevent immediate takeover
         cleanupOutdatedCaches: true,
         sourcemap: true,
         swDest: mode === 'production' ? 'dist/sw.js' : undefined,
