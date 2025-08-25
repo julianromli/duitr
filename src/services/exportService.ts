@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import { Transaction } from '@/types/finance';
 import { supabase } from '@/lib/supabase';
 
@@ -57,7 +57,7 @@ const filterTransactionsByDate = (
 /**
  * Generate worksheet for transactions export
  */
-const generateTransactionsWorksheet = async (transactions: Transaction[]): Promise<XLSX.WorkSheet> => {
+const generateTransactionsWorksheet = async (transactions: Transaction[], worksheet: ExcelJS.Worksheet): Promise<void> => {
   // Sort transactions by date (newest first)
   const sortedTransactions = [...transactions].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -142,7 +142,33 @@ const generateTransactionsWorksheet = async (transactions: Transaction[]): Promi
     };
   });
   
-  return XLSX.utils.json_to_sheet(tableData);
+  // Add headers
+  const headers = ['Date', 'Type', 'Category', 'Description', 'Amount', 'Wallet'];
+  worksheet.addRow(headers);
+  
+  // Style headers
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' }
+  };
+  
+  // Add data rows
+  tableData.forEach(row => {
+    worksheet.addRow([row.Date, row.Type, row.Category, row.Description, row.Amount, row.Wallet]);
+  });
+  
+  // Auto-fit columns
+  worksheet.columns = [
+    { width: 12 }, // Date
+    { width: 10 }, // Type
+    { width: 15 }, // Category
+    { width: 25 }, // Description
+    { width: 15 }, // Amount
+    { width: 15 }  // Wallet
+  ];
 };
 
 /**
@@ -170,12 +196,12 @@ export const exportToExcel = async (
   );
   
   // Create a new workbook
-  const workbook = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
   
   // Add transactions sheet if requested
   if (exportOptions.includeTransactions) {
-    const transactionsSheet = await generateTransactionsWorksheet(filteredTransactions);
-    XLSX.utils.book_append_sheet(workbook, transactionsSheet, 'Transactions');
+    const worksheet = workbook.addWorksheet('Transactions');
+    await generateTransactionsWorksheet(filteredTransactions, worksheet);
   }
   
   // Generate filename with current date
@@ -184,7 +210,18 @@ export const exportToExcel = async (
   const filename = `finance_export_${dateStr}.xlsx`;
   
   // Export the workbook
-  XLSX.writeFile(workbook, filename);
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  
+  // Create download link
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 };
 
 export default {
