@@ -112,8 +112,8 @@ const WalletList: React.FC = () => {
     setError(null);
     
     try {
-      // Validation
-      if (!editWallet.name || !editWallet.balance || !editWallet.type) {
+      // Validation - Allow zero balance but prevent empty/null/undefined values
+      if (!editWallet.name || editWallet.balance === '' || editWallet.balance == null || !editWallet.type) {
         toast({
           title: t('common.error'),
           description: t('wallets.fillAllFields'),
