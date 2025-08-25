@@ -166,7 +166,7 @@ if ('serviceWorker' in navigator) {
                     }
                     
                     // Schedule a reload when the user is not actively using the app
-                    const autoReloadDelay = isIOSDevice ? 10000 : 5000; // 10s for iOS, 5s for others
+                    const autoReloadDelay = isIOSDevice ? 60000 : 60000; // 60s for iOS, 60s for others
                     
                     console.log(`Scheduling auto-reload in ${autoReloadDelay/1000}s for new version`);
                     

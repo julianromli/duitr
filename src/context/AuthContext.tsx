@@ -24,6 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const { toast } = useToast();
 
+  // 🔧 Memoized loadUserSettings to prevent re-creation on every render
   const loadUserSettings = useCallback((currentUser: User | null) => {
     if (currentUser?.user_metadata?.is_balance_hidden !== undefined) {
       setIsBalanceHidden(currentUser.user_metadata.is_balance_hidden);
@@ -32,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsBalanceHidden(false);
       logAuthEvent('user_settings_defaulted', { isBalanceHidden: false });
     }
-  }, []);
+  }, []); // 🔧 Empty dependency array for stable reference
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -85,15 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('Auth state change event:', event, session?.user?.id);
       
-      if (currentUser && event === 'SIGNED_IN') {
-        const preferredLanguage = localStorage.getItem('preferredLanguage');
-        if (!preferredLanguage) {
-          console.log('No preferred language found after SIGNED_IN, setting default to id');
-          logAuthEvent('setting_default_language_post_signin', { userId: currentUser.id, lang: 'id' });
-          i18n.changeLanguage('id');
-          localStorage.setItem('preferredLanguage', 'id');
-        }
-      } else if (event === 'SIGNED_OUT') {
+      // 🔧 Removed language logic from here to prevent i18n loops
+      // Language initialization moved to separate useEffect
+      if (event === 'SIGNED_OUT') {
         setIsBalanceHidden(false);
       } else if (event === 'USER_UPDATED') {
          if (currentUser) {
