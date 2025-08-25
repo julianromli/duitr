@@ -929,26 +929,40 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
 
        if (transactionToDelete.type === 'transfer') {
+        // Update source wallet balance
         const { error: fromWalletError } = await supabase
           .from('wallets')
-              .update({ balance: updatedFromWallet!.balance })
-              .eq('id', updatedFromWallet!.id);
-          if (fromWalletError) console.error("Error updating source wallet on delete:", fromWalletError);
-          
+          .update({ balance: updatedFromWallet!.balance })
+          .eq('id', updatedFromWallet!.id);
         
-          if (updatedToWallet) {
-        const { error: toWalletError } = await supabase
-          .from('wallets')
-          .update({ balance: updatedToWallet.balance })
-                .eq('id', updatedToWallet.id);
-              if (toWalletError) console.error("Error updating destination wallet on delete:", toWalletError);
+        if (fromWalletError) {
+          console.error("Error updating source wallet on delete:", fromWalletError);
+          throw new Error(`Failed to update source wallet balance: ${fromWalletError.message}`);
+        }
+
+        // Update destination wallet balance
+        if (updatedToWallet) {
+          const { error: toWalletError } = await supabase
+            .from('wallets')
+            .update({ balance: updatedToWallet.balance })
+            .eq('id', updatedToWallet.id);
+          
+          if (toWalletError) {
+            console.error("Error updating destination wallet on delete:", toWalletError);
+            throw new Error(`Failed to update destination wallet balance: ${toWalletError.message}`);
           }
+        }
        } else {
-          const { error: walletError } = await supabase
-              .from('wallets')
-              .update({ balance: updatedFromWallet!.balance })
-              .eq('id', updatedFromWallet!.id);
-           if (walletError) console.error("Error updating wallet on delete:", walletError);
+        // Update single wallet balance for income/expense transactions
+        const { error: walletError } = await supabase
+          .from('wallets')
+          .update({ balance: updatedFromWallet!.balance })
+          .eq('id', updatedFromWallet!.id);
+        
+        if (walletError) {
+          console.error("Error updating wallet on delete:", walletError);
+          throw new Error(`Failed to update wallet balance: ${walletError.message}`);
+        }
        }
 
 
