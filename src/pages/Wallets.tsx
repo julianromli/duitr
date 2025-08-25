@@ -75,8 +75,8 @@ const Wallets: React.FC = () => {
     setError(null);
     setIsLoading(true);
     
-    // Validation
-    if (!formData.name || !formData.balance || !formData.type) {
+    // Validation - Allow zero balance but prevent empty/null/undefined values
+    if (!formData.name || formData.balance === '' || formData.balance == null || !formData.type) {
       toast({
         title: t('common.error'),
         description: t('wallets.fillAllFields'),
