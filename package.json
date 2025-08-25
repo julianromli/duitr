@@ -18,7 +18,10 @@
     "pwa:icons": "node generate-pwa-icons.mjs",
     "pwa:verify": "node verify-pwa.mjs",
     "copy-pwa": "node public/copy-to-dist.mjs",
-    "vercel:deploy": "npx vercel"
+    "vercel:deploy": "npx vercel",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "security:check": "npm audit --audit-level=high"
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.2.8",
@@ -59,6 +62,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "exceljs": "^4.4.0",
     "framer-motion": "^12.6.2",
     "html2canvas": "^1.4.1",
     "i18next": "^24.2.3",
@@ -82,7 +86,6 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
-    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -91,6 +94,7 @@
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/exceljs": "^0.5.3",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -109,7 +113,7 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vercel": "^25.2.0",
+    "vercel": "^46.0.2",
     "vite": "^5.4.1",
     "vite-plugin-pwa": "^0.19.5",
     "vitest": "^3.2.4",
