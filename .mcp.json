@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "Ref": {
+      "command": "npx",
+      "args": [
+      "ref-tools-mcp@latest",
+      "REF_API_KEY",
+      "ref-1a001b84e62ff1b1b9aa"
+    ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "duitr Docs": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://gitmcp.io/julianromli/duitr"
+      ]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+      "-y",
+      "@supabase/mcp-server-supabase@latest",
+      "--project-ref=cxqluedeykgqmthzveiw",
+      "--access-token",
+      "sbp_617702e2c8724c58430750f53698e6444bf3e68e"
+      ]
+    }
+  }
+}

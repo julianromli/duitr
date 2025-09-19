@@ -8,6 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { FinanceProvider } from '@/context/FinanceContext';
 
 import PageTransition from '@/components/layout/PageTransition';
+import { AIFloatingButton } from '@/components/transactions/AIFloatingButton';
+import { useNavbarVisibility } from '@/hooks/useNavbarVisibility';
 import { protectedRoutes, publicRoutes, testRoutes, fallbackRoutes } from '@/config/routes';
 
 // Lazy load components used directly in AppRoutes
@@ -29,6 +31,7 @@ export const AppRoutes: React.FC = () => {
   const { ready: i18nReady } = useTranslation();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
+  const shouldShowNavbar = useNavbarVisibility();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -121,6 +124,9 @@ export const AppRoutes: React.FC = () => {
             </Routes>
           </AnimatePresence>
         </main>
+
+        {/* AI Floating Button - only show on main app pages */}
+        {shouldShowNavbar && <AIFloatingButton />}
       </div>
     </FinanceProvider>
   );

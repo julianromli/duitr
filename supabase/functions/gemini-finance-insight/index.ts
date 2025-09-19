@@ -97,6 +97,79 @@ ${p.format_header}
 ${p.format_instructions}
   `.trim();
 }
+
+// =================================================================
+// Transaction parsing prompt builder
+// =================================================================
+function buildTransactionParsePrompt(input: string, language: string = 'id', availableCategories?: Array<{name: string, type: string, keywords: string[]}>) {
+  const categoriesText = availableCategories ? availableCategories.map(cat =>
+    `${cat.name} (${cat.type}) - Keywords: ${cat.keywords.join(', ')}`
+  ).join('\n') : '';
+
+  const prompts = {
+    en: {
+      instructions: `You are a transaction parsing AI for the Duitr finance app. Parse the user's input and extract financial transactions.
+
+Available categories and their keywords:
+${categoriesText || 'Dining, Groceries, Transportation, Shopping, Entertainment, etc.'}
+
+Rules:
+1. Extract multiple transactions if present (separated by commas, "and", or "juga")
+2. Categorize each transaction appropriately
+3. Parse amounts in Indonesian format (ribu, rb, k, juta, jt)
+4. Default to expense type unless explicitly stated as income
+5. Return a JSON response with this exact structure:
+{
+  "success": true,
+  "message": "Successfully parsed X transactions",
+  "transactions": [
+    {
+      "description": "Clean description",
+      "amount": 10000,
+      "category": "Category Name",
+      "type": "expense",
+      "confidence": 0.9
+    }
+  ]
+}`,
+      userInput: `User input: "${input}"`
+    },
+    id: {
+      instructions: `Anda adalah AI parsing transaksi untuk aplikasi Duitr. Parse input user dan ekstrak transaksi keuangan.
+
+Kategori yang tersedia dan keywordnya:
+${categoriesText || 'Dining, Groceries, Transportation, Shopping, Entertainment, dll.'}
+
+Aturan:
+1. Ekstrak multiple transaksi jika ada (dipisahkan koma, "dan", atau "juga")
+2. Kategorikan setiap transaksi dengan tepat
+3. Parse jumlah dalam format Indonesia (ribu, rb, k, juta, jt)
+4. Default ke expense kecuali secara eksplisit disebut income
+5. Return response JSON dengan struktur tepat ini:
+{
+  "success": true,
+  "message": "Berhasil mem-parse X transaksi",
+  "transactions": [
+    {
+      "description": "Deskripsi bersih",
+      "amount": 10000,
+      "category": "Nama Kategori",
+      "type": "expense",
+      "confidence": 0.9
+    }
+  ]
+}`,
+      userInput: `Input user: "${input}"`
+    }
+  };
+
+  const p = prompts[language] || prompts['id'];
+  return `${p.instructions}
+
+${p.userInput}
+
+Pastikan response adalah JSON yang valid.`;
+}
 // =================================================================
 // Main server function
 // =================================================================
@@ -112,8 +185,99 @@ serve(async (req)=>{
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
-    // UPDATED: Now accepts 'language' from the client
-    const { summary, question, language = 'id' } = await req.json();
+    // UPDATED: Now accepts 'language' and 'action' from the client
+    const { summary, question, language = 'id', action, input, availableCategories } = await req.json();
+
+    // Handle different actions
+    if (action === 'parse_transactions') {
+      if (!input) {
+        throw new Error('Input text is required for transaction parsing');
+      }
+
+      const parsePrompt = buildTransactionParsePrompt(input, language, availableCategories);
+      const parseResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: parsePrompt
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        })
+      });
+
+      if (!parseResponse.ok) {
+        throw new Error(`HTTP error! status: ${parseResponse.status}`);
+      }
+
+      const parseData = await parseResponse.json();
+      const parseResult = parseData.candidates[0].content.parts[0].text;
+
+      // Try to parse the result as JSON, handle markdown code blocks
+      let parsed;
+      try {
+        // First try direct JSON parse
+        parsed = JSON.parse(parseResult);
+      } catch {
+        // Try to extract JSON from markdown code blocks
+        let jsonMatch = parseResult.match(/```json\s*([\s\S]*?)\s*```/);
+        if (!jsonMatch) {
+          // Try alternative format: ```json {content} ```
+          jsonMatch = parseResult.match(/```json\s*(\{[\s\S]*\})\s*```/);
+        }
+        if (!jsonMatch) {
+          // Try to find any JSON object between backticks
+          jsonMatch = parseResult.match(/```\s*(\{[\s\S]*\})\s*```/);
+        }
+        if (jsonMatch) {
+          try {
+            parsed = JSON.parse(jsonMatch[1].trim());
+          } catch {
+            return new Response(JSON.stringify({
+              result: {
+                success: false,
+                message: 'Invalid JSON format in AI response',
+                transactions: [],
+                error: 'JSON parsing failed'
+              }
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+        } else {
+          return new Response(JSON.stringify({
+            result: {
+              success: false,
+              message: parseResult,
+              transactions: [],
+              error: 'No valid JSON found in response'
+            }
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+      
+      return new Response(JSON.stringify({
+        result: parsed
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     if (!summary) {
       throw new Error('Finance summary is required');
     }

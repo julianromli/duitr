@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Read(//c/Users/faiz/AppData/Roaming/Claude/**)",
+      "Bash($env:ANTHROPIC_BASE_URL=\"https://open.bigmodel.cn/api/anthropic\")",
+      "Bash(set:*)",
+      "Bash(claude mcp add:*)",
+      "Read(//c/Users/faiz/AppData/Local/**)",
+      "Bash(claude mcp list:*)",
+      "Bash(claude mcp:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)",
+      "mcp__playwright__browser_install",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_type",
+      "Bash(curl:*)",
+      "mcp__supabase__deploy_edge_function",
+      "mcp__playwright__browser_network_requests",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(node:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
+}
