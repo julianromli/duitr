@@ -70,6 +70,12 @@ The app uses a layered provider approach:
 QueryClientProvider → TooltipProvider → I18nextProvider → ErrorBoundary → ThemeProvider → AuthProvider → CurrencyOnboardingWrapper → BrowserRouter → TransitionProvider
 ```
 
+#### AI-Powered Features
+- **Add with AI**: Natural language transaction parsing via Gemini AI
+- **Smart categorization**: Automatic transaction categorization based on description
+- **Wallet selection**: Manual wallet selection with real-time balance display
+- **Individual transaction management**: Delete parsed transactions before confirmation
+
 #### Component Organization
 - **Container/Presentational Pattern**: Logic containers separate from UI components
 - **Custom Hooks**: Business logic abstracted into reusable hooks (`useTransactions`, `useBudgets`, etc.)
@@ -94,7 +100,9 @@ src/
 │   ├── layout/                 # App layout (header, navbar, page transitions)
 │   ├── settings/               # Settings and preferences
 │   ├── shared/                 # Reusable components (icons, error boundaries)
-│   ├── transactions/           # Transaction CRUD operations
+│   ├── transactions/           # Transaction CRUD + AI-powered features
+│   │   ├── AIAddTransactionDialog.tsx  # AI chat interface for transaction parsing
+│   │   └── AIFloatingButton.tsx       # Perfect circle floating action button
 │   └── ui/                     # Base shadcn/ui components
 ├── context/                    # React Context providers
 ├── hooks/                      # Custom business logic hooks
@@ -263,6 +271,20 @@ npm run build:pwa              # Full PWA build with assets
 
 ### MCP Configuration
 Configuration is stored in `.trae/mcp.json` and enables enhanced AI-powered development workflows.
+
+## Recent Updates (Latest)
+
+### AI-Powered Transaction Features ✨
+- **Enhanced AI Dialog**: Complete wallet selection functionality with manual user control
+- **Individual Transaction Management**: Users can delete specific parsed transactions before confirmation
+- **Perfect Circle UI**: Fixed floating action button to be perfectly circular
+- **Real-time Balance Display**: Wallet selector shows live balance information
+- **Gemini AI Integration**: Natural language parsing via Supabase Edge Functions
+
+### Key Components Updated
+- `AIAddTransactionDialog.tsx`: Added delete buttons with Trash2 icons for individual transaction removal
+- `AIFloatingButton.tsx`: Fixed button styling for perfect circle shape (`p-0 min-w-0 flex items-center justify-center`)
+- Enhanced state management for parsed transactions with filter functionality
 
 ## Common Development Tasks
 
