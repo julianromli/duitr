@@ -812,8 +812,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
             <span>{transaction.type === 'expense' ? '-' : '+'}</span>
             <CurrencyDisplay 
               amount={transaction.amount}
-              currency={transaction.converted_currency || transaction.original_currency || 'IDR'}
-              
               className="inline"
             />
           </div>

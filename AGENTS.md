@@ -21,6 +21,7 @@ bun run preview                # Preview build (port 4173)
 - **State**: React Query + React Context
 - **Forms**: React Hook Form + Zod
 - **i18n**: i18next (English/Indonesian)
+- **Currency**: Simple display-only preference system (USD/IDR)
 - **Package Manager**: Bun
 
 ## Project Structure
@@ -71,6 +72,46 @@ bun run lint                   # Must pass
 bun test                       # Must pass
 bun run build                  # Must succeed
 git diff                       # Review all changes
+```
+
+## Currency System (IMPORTANT)
+
+### Overview
+Duitr uses a **simplified display-only currency system**:
+- User selects currency (USD/IDR) during onboarding
+- All transactions recorded in selected currency
+- **NO currency conversion** - it's just formatting preference
+- Currency affects display format only:
+  - USD: $1,234.56 (with decimals)
+  - IDR: Rp 1.234.567 (no decimals)
+
+### Key Points
+- User currency stored in `auth.users.user_metadata.currency`
+- Database uses single `amount` column (no conversion columns)
+- Changing currency **DELETES ALL USER DATA** (requires confirmation)
+- See `CURRENCY_REFACTOR_SUMMARY.md` for implementation details
+
+### Currency Change Flow
+1. User goes to Profile → Currency Settings
+2. Clicks "Change Currency" button
+3. Sees warning dialog about data deletion
+4. Selects new currency (USD/IDR)
+5. Types "DELETE" to confirm
+6. All data deleted via `delete_all_user_data()` function
+7. Currency updated in user metadata
+8. User starts fresh with new currency
+
+### Database Schema
+```sql
+-- Simple schema (no conversion columns)
+transactions:
+  - amount NUMERIC(20,2)  ✅ Only this!
+  
+-- NO MORE: original_amount, converted_amount, exchange_rate, etc.
+
+-- User currency preference
+auth.users.user_metadata:
+  - currency: 'USD' | 'IDR'
 ```
 
 ## Common Workflows
@@ -167,8 +208,10 @@ After implementing UI features, ALWAYS offer Playwright testing for:
 ## Documentation References
 
 - **Comprehensive Guide**: See `CLAUDE.md` for detailed architecture
+- **Technical Overview**: See `technical_overview.md` for system architecture
 - **Developer Setup**: See `DEVELOPER_GUIDE.md` for environment setup
 - **API Details**: See `API_DOCUMENTATION.md` for backend integration
+- **Currency System**: See `CURRENCY_REFACTOR_SUMMARY.md` for currency implementation
 - **README**: See `README.md` for project overview
 
 ## Key Files
