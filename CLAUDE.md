@@ -10,36 +10,36 @@ Duitr is a modern personal finance management application built with React 18, T
 
 ### Essential Commands
 ```bash
-npm run dev          # Start development server (port 8080)
-npm run build        # Production build
-npm run build:pwa    # PWA build with icons and verification
-npm run build:dev    # Development build
-npm run lint         # Run ESLint
-npm run preview      # Preview production build (port 4173)
+bun dev              # Start development server (port 8080)
+bun run build        # Production build
+bun run build:pwa    # PWA build with icons and verification
+bun run build:dev    # Development build
+bun run lint         # Run ESLint
+bun run preview      # Preview production build (port 4173)
 ```
 
 ### Testing
 ```bash
-npm test             # Run tests with Vitest
-npm run test:run     # Run tests once (CI mode)
-npm run test:coverage # Run tests with coverage
-npm run test:watch   # Watch mode
-npm run test:ui      # UI test runner
+bun test             # Run tests with Vitest
+bun run test:run     # Run tests once (CI mode)
+bun run test:coverage # Run tests with coverage
+bun run test:watch   # Watch mode
+bun run test:ui      # UI test runner
 ```
 
 ### Security
 ```bash
-npm run security:audit   # Audit all dependencies
-npm run security:check   # Audit with high severity threshold
-npm run security:fix     # Attempt automatic fixes
+bun run security:audit   # Audit all dependencies
+bun run security:check   # Audit with high severity threshold
+bun run security:fix     # Attempt automatic fixes
 ```
 
 ### PWA & Deployment
 ```bash
-npm run pwa:icons        # Generate PWA icons
-npm run pwa:verify       # Verify PWA setup
-npm run copy-pwa         # Copy PWA assets to dist
-npm run vercel:deploy    # Deploy to Vercel
+bun run pwa:icons        # Generate PWA icons
+bun run pwa:verify       # Verify PWA setup
+bun run copy-pwa         # Copy PWA assets to dist
+bun run vercel:deploy    # Deploy to Vercel
 ```
 
 ## Architecture
@@ -131,13 +131,13 @@ src/
 
 ### Testing
 - Write tests for new components and utilities
-- Use Vitest for unit testing
+- Use Vitest for unit testing (run with `bun test`)
 - Test both happy paths and error cases
 - Maintain test coverage
 
 ### PWA Development
 - PWA is disabled in development (devOptions.enabled: false)
-- Use `npm run build:pwa` for production PWA builds
+- Use `bun run build:pwa` for production PWA builds
 - Test offline functionality thoroughly
 - Ensure all assets are properly cached
 
@@ -150,9 +150,9 @@ If experiencing blank pages after deployment:
 3. Hard refresh (Ctrl+F5)
 
 ### Build Issues
-- Validate production builds locally: `npm run build` then `npm run preview`
+- Validate production builds locally: `bun run build` then `bun run preview`
 - For React context errors, ensure React/ReactDOM versions match
-- Delete node_modules and reinstall if needed
+- Delete node_modules and reinstall with `bun install` if needed
 
 ### Development Server
 - Development server runs on port 8080

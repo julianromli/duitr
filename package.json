@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:pwa": "vite build && npm run pwa:icons && npm run pwa:verify && npm run copy-pwa",
+    "build:pwa": "vite build && bun run pwa:icons && bun run pwa:verify && bun run copy-pwa",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -18,10 +18,10 @@
     "pwa:icons": "node generate-pwa-icons.mjs",
     "pwa:verify": "node verify-pwa.mjs",
     "copy-pwa": "node public/copy-to-dist.mjs",
-    "vercel:deploy": "npx vercel",
-    "security:audit": "npm audit",
-    "security:fix": "npm audit fix",
-    "security:check": "npm audit --audit-level=high"
+    "vercel:deploy": "bunx vercel",
+    "security:audit": "bun audit",
+    "security:fix": "bun audit --fix",
+    "security:check": "bun audit --audit-level=high"
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.2.8",

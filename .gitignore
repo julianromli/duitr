@@ -73,3 +73,4 @@ ehthumbs_vista.db
 .npm
 .yarn-integrity
 yarn-error.log
+package-lock.json

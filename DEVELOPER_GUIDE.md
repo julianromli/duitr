@@ -64,8 +64,8 @@ Panduan lengkap untuk developer yang ingin berkontribusi atau memahami arsitektu
 
 ### Prerequisites
 
-- **Node.js** >= 18.0.0
-- **npm** atau **yarn**
+- **Node.js** >= 18.0.0 or **Bun** >= 1.0.0
+- **Bun** (recommended package manager)
 - **Git**
 - **Supabase Account**
 - **Code Editor** (VS Code recommended)
@@ -80,7 +80,7 @@ cd duitr
 
 2. **Install Dependencies**
 ```bash
-npm install
+bun install
 ```
 
 3. **Environment Variables**
@@ -102,7 +102,7 @@ VITE_APP_VERSION=1.0.0
 4. **Database Setup**
 ```bash
 # Install Supabase CLI
-npm install -g @supabase/cli
+bun install -g @supabase/cli
 
 # Login to Supabase
 supabase login
@@ -116,7 +116,7 @@ supabase db push
 
 5. **Start Development Server**
 ```bash
-npm run dev
+bun dev
 ```
 
 ### VS Code Setup
@@ -616,7 +616,7 @@ export const useTransactions = () => {
 
 ```bash
 # Install testing dependencies
-npm install --save-dev @testing-library/react @testing-library/jest-dom @testing-library/user-event vitest jsdom
+bun add -d @testing-library/react @testing-library/jest-dom @testing-library/user-event vitest jsdom
 ```
 
 ```tsx
@@ -730,13 +730,13 @@ describe('useTransactions', () => {
 
 ```bash
 # Development build
-npm run build:dev
+bun run build:dev
 
 # Production build
-npm run build
+bun run build
 
 # PWA build with icons
-npm run build:pwa
+bun run build:pwa
 ```
 
 ### Vercel Deployment
@@ -744,7 +744,7 @@ npm run build:pwa
 ```json
 // vercel.json
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "bun run build",
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
@@ -788,20 +788,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
-          cache: 'npm'
+          bun-version: latest
       
       - name: Install dependencies
-        run: npm ci
+        run: bun install
       
       - name: Run tests
-        run: npm test
+        run: bun test
       
       - name: Build application
-        run: npm run build
+        run: bun run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -827,9 +826,9 @@ jobs:
 4. **Write Tests**
 5. **Run Tests**
    ```bash
-   npm test
-   npm run lint
-   npm run type-check
+   bun test
+   bun run lint
+   bun run type-check
    ```
 6. **Commit Changes**
    ```bash
@@ -899,7 +898,7 @@ docs(readme): update installation guide
 
 1. **Version Bump**
    ```bash
-   npm version patch|minor|major
+   bun version patch|minor|major
    ```
 
 2. **Update Changelog**
