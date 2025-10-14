@@ -79,122 +79,55 @@ const CurrencyOnboardingWrapper: React.FC<{ children: React.ReactNode }> = ({ ch
 const AppWrapper: React.FC = () => {
   const { ready, i18n: i18nInstance } = useTranslation();
   const [isI18nReady, setIsI18nReady] = React.useState(false);
-  const [hasError, setHasError] = React.useState(false);
-  const [retryCount, setRetryCount] = React.useState(0);
-  const retryAttemptedRef = React.useRef(false);
   
-  // 🔧 Separate effect for initial i18n check to prevent dependency issues
   React.useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    let checkTimeoutId: NodeJS.Timeout;
+    // Simple readiness check with timeout
+    const checkReady = () => {
+      if (!ready || !i18nInstance.isInitialized) {
+        return false;
+      }
+      
+      const currentLang = i18nInstance.language || 'id';
+      const hasResources = i18nInstance.hasResourceBundle(currentLang, 'translation');
+      
+      return hasResources;
+    };
     
-    const checkI18nReady = () => {
-      try {
-        // Check if i18n is initialized and has loaded resources
-        const currentLang = i18nInstance.language || 'id';
-        const hasResources = i18nInstance.hasResourceBundle(currentLang, 'translation');
-        const isInitialized = i18nInstance.isInitialized;
-        
-        // Additional check: ensure we have actual translation data
-        const hasTranslationData = i18nInstance.exists('landing.hero.title', { lng: currentLang });
-        
-        if (ready && hasResources && isInitialized && hasTranslationData) {
-          setIsI18nReady(true);
-          setHasError(false);
-          retryAttemptedRef.current = false;
-        } else if (ready && isInitialized && !hasResources && !retryAttemptedRef.current) {
-          // 🔧 Use ref instead of state to prevent re-render loop
-          console.warn(`i18n resources not loaded for ${currentLang}, retrying once...`);
-          retryAttemptedRef.current = true;
-          // 🔧 Debounce the retry attempt
-          setTimeout(() => {
-            i18nInstance.reloadResources([currentLang]);
-          }, 500);
-        }
-      } catch (error) {
-        console.error('Error checking i18n readiness:', error);
-        setHasError(true);
+    // Immediate check
+    if (checkReady()) {
+      setIsI18nReady(true);
+      return;
+    }
+    
+    // Wait for i18n to be ready with short timeout
+    const timeoutId = setTimeout(() => {
+      if (checkReady()) {
+        setIsI18nReady(true);
+      } else {
+        // Force proceed after timeout - translations are bundled so they should always be available
+        console.warn('i18n timeout - proceeding with available translations');
+        setIsI18nReady(true);
+      }
+    }, 1000);
+    
+    // Listen for i18n ready events
+    const handleReady = () => {
+      if (checkReady()) {
+        setIsI18nReady(true);
       }
     };
     
-    // 🔧 Debounce initial check to prevent rapid fire
-    checkTimeoutId = setTimeout(checkI18nReady, 100);
-    
-    // Set up timeout to prevent infinite loading (fallback after 10 seconds)
-    timeoutId = setTimeout(() => {
-      if (!isI18nReady) {
-        console.warn('i18n loading timeout, proceeding with fallback');
-        setIsI18nReady(true);
-      }
-    }, 10000);
+    i18nInstance.on('initialized', handleReady);
+    i18nInstance.on('loaded', handleReady);
+    i18nInstance.on('languageChanged', handleReady);
     
     return () => {
       clearTimeout(timeoutId);
-      clearTimeout(checkTimeoutId);
+      i18nInstance.off('initialized', handleReady);
+      i18nInstance.off('loaded', handleReady);
+      i18nInstance.off('languageChanged', handleReady);
     };
-  }, [ready, i18nInstance]); // 🔧 Removed retryCount from dependencies
-  
-  // 🔧 Separate effect for event listeners to prevent re-registration
-  React.useEffect(() => {
-    if (!ready || !i18nInstance) return;
-    
-    const handleI18nEvent = () => {
-      // 🔧 Debounced check to prevent rapid state updates
-      setTimeout(() => {
-        const currentLang = i18nInstance.language || 'id';
-        const hasResources = i18nInstance.hasResourceBundle(currentLang, 'translation');
-        const isInitialized = i18nInstance.isInitialized;
-        const hasTranslationData = i18nInstance.exists('landing.hero.title', { lng: currentLang });
-        
-        if (hasResources && isInitialized && hasTranslationData) {
-          setIsI18nReady(true);
-          setHasError(false);
-        }
-      }, 200);
-    };
-    
-    const handleFailedLoading = () => {
-      console.error('Failed to load i18n resources');
-      // 🔧 Only set error after timeout, don't retry from event
-      setTimeout(() => {
-        setHasError(true);
-      }, 1000);
-    };
-    
-    // Listen for language changes and initialization
-    i18nInstance.on('initialized', handleI18nEvent);
-    i18nInstance.on('languageChanged', handleI18nEvent);
-    i18nInstance.on('loaded', handleI18nEvent);
-    i18nInstance.on('failedLoading', handleFailedLoading);
-    
-    return () => {
-      i18nInstance.off('initialized', handleI18nEvent);
-      i18nInstance.off('languageChanged', handleI18nEvent);
-      i18nInstance.off('loaded', handleI18nEvent);
-      i18nInstance.off('failedLoading', handleFailedLoading);
-    };
-  }, [ready, i18nInstance]); // 🔧 Stable dependencies
-  
-  // Show error state if i18n failed to load after retries
-  if (hasError) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-destructive">Failed to load language resources</p>
-          <button 
-            onClick={() => {
-              setHasError(false);
-              setRetryCount(0);
-              window.location.reload();
-            }}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  }, [ready, i18nInstance]);
   
   if (!isI18nReady) {
     return <AppLoadingScreen />;
@@ -203,9 +136,7 @@ const AppWrapper: React.FC = () => {
   return (
     <ErrorBoundary
       onError={(error, errorInfo) => {
-        // Log errors for debugging
         console.error('App Error Boundary caught error:', error, errorInfo);
-        // Could send to error tracking service here
       }}
     >
       <ThemeProvider>
