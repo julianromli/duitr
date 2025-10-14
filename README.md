@@ -100,8 +100,8 @@ Repo: https://github.com/julianromli/duitr
 
 ### Prerequisites
 
-  - Node.js (v18 or newer)
-  - npm or yarn
+  - Node.js (v18 or newer) or Bun (v1.0 or newer)
+  - Bun package manager (recommended)
   - A Supabase account
 
 ### Installation Steps
@@ -116,9 +116,7 @@ Repo: https://github.com/julianromli/duitr
 2.  **Install dependencies**
 
     ```bash
-    npm install
-    # or
-    yarn install
+    bun install
     ```
 
 3.  **Set up environment variables**
@@ -142,12 +140,10 @@ Repo: https://github.com/julianromli/duitr
 5.  **Run the application**
 
     ```bash
-    npm run dev
-    # or
-    yarn dev
+    bun dev
     ```
 
-    The application will be running at `http://localhost:5173`.
+    The application will be running at `http://localhost:8080`.
 
 ### 🤖 MCP Integration Setup
 
@@ -237,40 +233,40 @@ Duitr uses a centralized logo system for easy customization:
 ### Development Build
 
 ```bash
-npm run build:dev
+bun run build:dev
 ```
 
 ### Production Build
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### PWA Build
 
 ```bash
-npm run build:pwa
+bun run build:pwa
 ```
 
 ### Deploy to Vercel
 
 ```bash
-npm run vercel:deploy
+bun run vercel:deploy
 ```
 
 ### Preview Production Build
 
 ```bash
-npm run preview
+bun run preview
 ```
 
 ## 🧪 Testing
 
-- Run tests: `npm test`
-- Run once (CI): `npm run test:run`
-- Coverage: `npm run test:coverage`
-- Watch mode: `npm run test:watch`
-- UI runner: `npm run test:ui`
+- Run tests: `bun test`
+- Run once (CI): `bun run test:run`
+- Coverage: `bun run test:coverage`
+- Watch mode: `bun run test:watch`
+- UI runner: `bun run test:ui`
 
 ## 📊 Database Schema
 
@@ -294,9 +290,9 @@ The application uses Supabase with the following schema:
 ### Security scripts
 
 ```bash
-npm run security:audit     # audit all dependencies
-npm run security:check     # audit with high severity threshold
-npm run security:fix       # attempt automatic fixes
+bun run security:audit     # audit all dependencies
+bun run security:check     # audit with high severity threshold
+bun run security:fix       # attempt automatic fixes
 ```
 
 ## 🌍 Internationalization
@@ -322,8 +318,8 @@ Translation files are stored in `src/locales/`.
   1) DevTools > Application > Service Workers > Unregister
   2) Application > Clear storage > Clear site data
   3) Hard refresh (Ctrl+F5)
-- Validate production build locally: `npm run build` then `npm run preview`
-- React context error in production: ensure React/ReactDOM versions match; if in doubt, delete node_modules and reinstall (`rm -rf node_modules && npm i`).
+- Validate production build locally: `bun run build` then `bun run preview`
+- React context error in production: ensure React/ReactDOM versions match; if in doubt, delete node_modules and reinstall (`rm -rf node_modules && bun install`).
 
 ## 🤝 Contributing
 

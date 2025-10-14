@@ -71,7 +71,7 @@ install_nodejs() {
                 exit 1
             }
             log_success "Node.js installed: $(node -v)"
-            log_success "npm version: $(npm -v)"
+            log_success "bun version: $(bun -v 2>/dev/null || echo 'not installed')"
             ;;
         *)
             log_error "Unsupported platform: $platform"
@@ -111,7 +111,7 @@ install_claude_code() {
         log_success "Claude Code is already installed: $(claude --version)"
     else
         log_info "Installing Claude Code..."
-        npm install -g "$CLAUDE_PACKAGE" || {
+        bun install -g "$CLAUDE_PACKAGE" || {
             log_error "Failed to install claude-code"
             exit 1
         }

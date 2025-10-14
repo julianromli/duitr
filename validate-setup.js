@@ -108,6 +108,6 @@ if (hasErrors) {
 }
 
 console.log('\n🚀 Next steps:');
-console.log('   - Run: npm run dev');
+console.log('   - Run: bun dev');
 console.log('   - Visit: http://localhost:8080');
 console.log('   - Check the Security Fixes Summary: SECURITY_FIXES_SUMMARY.md');
