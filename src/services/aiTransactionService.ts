@@ -1,7 +1,20 @@
 import { supabase } from '@/lib/supabase';
 import type { Transaction } from '@/types/finance';
 import i18next from 'i18next';
-import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
+
+// Minimal category hints for AI (not source of truth - real categories in database)
+const AI_CATEGORY_HINTS = {
+  expense: [
+    { id: '1', name: 'Groceries' }, { id: '2', name: 'Dining' }, { id: '3', name: 'Transportation' },
+    { id: '4', name: 'Subscription' }, { id: '5', name: 'Housing' }, { id: '6', name: 'Entertainment' },
+    { id: '7', name: 'Shopping' }, { id: '8', name: 'Health' }, { id: '9', name: 'Education' },
+    { id: '10', name: 'Vehicle' }, { id: '11', name: 'Personal' }, { id: '12', name: 'Other' }
+  ],
+  income: [
+    { id: '13', name: 'Salary' }, { id: '14', name: 'Business' }, { id: '15', name: 'Investment' },
+    { id: '16', name: 'Gift' }, { id: '17', name: 'Other' }
+  ]
+};
 
 export interface ParsedTransaction {
   description: string;
@@ -132,12 +145,12 @@ export class AITransactionService {
 
   private getAvailableCategories(): Array<{name: string, type: string, keywords: string[]}> {
     return [
-      ...DEFAULT_CATEGORIES.expense.map(cat => ({
+      ...AI_CATEGORY_HINTS.expense.map(cat => ({
         name: cat.name,
         type: 'expense',
         keywords: this.getCategoryKeywords(cat.name.toLowerCase())
       })),
-      ...DEFAULT_CATEGORIES.income.map(cat => ({
+      ...AI_CATEGORY_HINTS.income.map(cat => ({
         name: cat.name,
         type: 'income',
         keywords: this.getCategoryKeywords(cat.name.toLowerCase())
@@ -191,8 +204,8 @@ export class AITransactionService {
 
   private mapToCategoryId(categoryName: string, type: 'income' | 'expense'): string {
     const allCategories = [
-      ...DEFAULT_CATEGORIES.expense,
-      ...DEFAULT_CATEGORIES.income
+      ...AI_CATEGORY_HINTS.expense,
+      ...AI_CATEGORY_HINTS.income
     ];
 
     // Find best matching category
@@ -212,7 +225,7 @@ export class AITransactionService {
   }
 
   private findBestCategoryMatch(input: string, type: 'income' | 'expense'): {id: string, name: string} | undefined {
-    const categories = type === 'expense' ? DEFAULT_CATEGORIES.expense : DEFAULT_CATEGORIES.income;
+    const categories = type === 'expense' ? AI_CATEGORY_HINTS.expense : AI_CATEGORY_HINTS.income;
 
     // Simple keyword matching
     for (const category of categories) {

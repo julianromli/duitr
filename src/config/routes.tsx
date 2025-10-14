@@ -3,7 +3,6 @@
 import React, { Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { TranslationErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 // Lazy load components for code splitting
 const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
@@ -44,13 +43,11 @@ const LoadingSpinner = () => {
   );
 };
 
-// Enhanced wrapper component for lazy loaded components with translation error handling
+// Wrapper component for lazy loaded components
 const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
-  <TranslationErrorBoundary>
-    <Suspense fallback={<LoadingSpinner />}>
-      {children}
-    </Suspense>
-  </TranslationErrorBoundary>
+  <Suspense fallback={<LoadingSpinner />}>
+    {children}
+  </Suspense>
 );
 
 export const mainPages = ['/', '/transactions', '/wallets', '/budget', '/profile', '/statistics'];

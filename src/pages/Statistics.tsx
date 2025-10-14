@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
 import { ChevronLeft, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCategories } from '@/hooks/useCategories';
 import {
   PieChart,
   Pie,
@@ -41,14 +42,23 @@ interface ChartDataItem {
 
 // Function to group transactions by categoryId
 function groupTransactionsByCategory(
-  transactions: Transaction[], 
-  getDisplayCategoryName: (transaction: Transaction) => string
+  transactions: Transaction[],
+  t: any,
+  findById: (id: number) => any,
+  getDisplayName: (category: any) => string
 ): CategoryTotal[] {
   const categoryTotals: Record<string, CategoryTotal> = {};
   
   transactions.forEach(transaction => {
     // Get the display name for the category
-    const categoryName = getDisplayCategoryName(transaction);
+    let categoryName: string;
+    if (transaction.type === 'transfer') {
+      categoryName = t('transactions.transfer');
+    } else if (transaction.categoryId && findById(transaction.categoryId)) {
+      categoryName = getDisplayName(findById(transaction.categoryId)!);
+    } else {
+      categoryName = t('transactions.uncategorized');
+    }
     
     // Use the categoryName as the key
     const key = categoryName;
@@ -71,7 +81,8 @@ function groupTransactionsByCategory(
 
 const Statistics: React.FC = () => {
   const { t } = useTranslation();
-  const { transactions, formatCurrency, getDisplayCategoryName } = useFinance();
+  const { transactions, formatCurrency } = useFinance();
+  const { findById, getDisplayName } = useCategories();
   
   // State for date selection
   const [dateRange, setDateRange] = useState<'7days' | '30days' | 'month' | 'custom'>('month');
@@ -127,7 +138,7 @@ const Statistics: React.FC = () => {
   const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
   
   // Group transactions by category with new category system
-  const groupedCategories = groupTransactionsByCategory(filteredTransactions, getDisplayCategoryName);
+  const groupedCategories = groupTransactionsByCategory(filteredTransactions, t, findById, getDisplayName);
   
   // Convert to chart data format and calculate percentages
   const chartData: ChartDataItem[] = groupedCategories.map(category => {

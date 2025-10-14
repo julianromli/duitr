@@ -1,8 +1,9 @@
-// Context: FinanceContext
-// Description: Main context for financial data management
-// Fixed category mapping for Investment (ID 21) and Baby Needs (ID 20) categories
-// Enhanced fallback logic to prevent incorrect categorization as Transfer
-// Fixed display name mapping in getDisplayCategoryName function
+/**
+ * FinanceContext
+ * 
+ * Main context for financial data management.
+ * Simplified - no category logic (handled by CategoryService/useCategories).
+ */
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { formatIDR, formatCurrency as utilsFormatCurrency } from '@/utils/currency';
@@ -10,15 +11,6 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Transaction, Budget, Wallet, WantToBuyItem, PinjamanItem } from '@/types/finance';
-import { 
-  legacyCategoryNameToId, 
-  getLocalizedCategoryName,
-  getCategoryUuidFromStringId,
-  getCategoryStringIdFromUuid,
-  getDefaultCategories,
-  DEFAULT_CATEGORIES
-} from '@/utils/categoryUtils';
-import { getCategoryById } from '@/services/categoryService';
 import { useCategories } from '@/hooks/useCategories';
 import { useCurrencyOnboarding } from '@/hooks/useCurrencyOnboarding';
 import i18next from 'i18next';
@@ -54,8 +46,6 @@ interface FinanceContextType {
   monthlyIncome: number;
   monthlyExpense: number;
   formatCurrency: (amount: number) => string;
-  getDisplayCategoryName: (transaction: Transaction) => string;
-  getCategoryKey: (categoryId: any) => string;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -63,7 +53,7 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { categories: userCategories } = useCategories();
   const { getUserCurrency } = useCurrencyOnboarding();
   const userCurrency = getUserCurrency();
@@ -77,17 +67,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const [currency] = useState('IDR');
   const [currencySymbol] = useState('Rp');
-
-  // Cache for category names to avoid repeated database queries
-  const [categoryNameCache, setCategoryNameCache] = useState<Record<string, string>>({});
-  
-  // Current language (used for cache keys)
-  const currentLanguage = i18next.language;
-
-  // Clear category cache when language changes
-  useEffect(() => {
-    setCategoryNameCache({});
-  }, [currentLanguage]);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -276,7 +255,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
     
     loadUserData();
-  }, [user, toast, currentLanguage]);
+  }, [user, toast, i18n.language, userCategories]);
 
   const totalBalance = wallets.reduce((sum, wallet) => sum + wallet.balance, 0);
 
@@ -305,131 +284,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const formatCurrency = (amount: number) => {
     return utilsFormatCurrency(amount, userCurrency);
-  };
-
-  // Get display category name based on categoryId and current language
-  const getDisplayCategoryName = (transaction: Transaction): string => {
-    // If it's a transfer, always return "Transfer"
-    if (transaction.type === 'transfer') {
-      return t('transactions.transfer');
-    }
-
-    // If we have a categoryId, try to find it in the user's categories
-    if (transaction.categoryId) {
-      const categoryId = String(transaction.categoryId);
-      const category = userCategories.find(cat => 
-        cat.id === categoryId || 
-        cat.category_id?.toString() === categoryId
-      );
-      
-      if (category) {
-        // Return localized name based on current language
-        return i18next.language === 'id' ? category.id_name : category.en_name;
-      }
-      
-      // If not found in user categories, check cache
-      const cacheKey = `${currentLanguage}_${categoryId}`;
-      if (categoryNameCache[cacheKey]) {
-        return categoryNameCache[cacheKey];
-      }
-      
-      // Fetch from database in background for future use
-      if (typeof transaction.categoryId === 'number' || !isNaN(Number(transaction.categoryId))) {
-        getCategoryById(Number(transaction.categoryId)).then(category => {
-          if (category) {
-            const name = i18next.language === 'id' ? category.id_name : category.en_name;
-            setCategoryNameCache(prev => ({...prev, [cacheKey]: name}));
-          }
-        }).catch(err => {
-          console.warn(`Error fetching category ${transaction.categoryId} from database:`, err);
-        });
-      }
-    }
-    
-    // Fallback: If we still have a category property (legacy), use that
-    if (transaction.category) {
-      return transaction.category;
-    }
-    
-    // Ultimate fallback based on transaction type
-    return transaction.type === 'income' 
-      ? (i18next.language === 'id' ? 'Pendapatan' : 'Income') 
-      : (i18next.language === 'id' ? 'Pengeluaran' : 'Expense');
-  };
-
-  // Get the category key (e.g., 'expense_food') from a category ID
-  const getCategoryKey = (categoryId: any): string => {
-    // If it's already a string key (e.g., 'expense_food')
-    if (typeof categoryId === 'string' && categoryId.includes('_')) {
-      return categoryId;
-    }
-    
-    // If it's a UUID, convert to string ID
-    if (typeof categoryId === 'string' && categoryId.includes('-')) {
-      return getCategoryStringIdFromUuid(categoryId);
-    }
-    
-    // If it's a number or numeric string, map to category key
-    if (typeof categoryId === 'number' || (typeof categoryId === 'string' && !isNaN(Number(categoryId)))) {
-      const numId = Number(categoryId);
-      
-      // Map numeric IDs back to string keys
-      const idToCategoryKey: Record<number, string> = {
-        // Expense categories (IDs 1-12)
-        1: 'expense_groceries',
-        2: 'expense_food',
-        3: 'expense_transportation',
-        4: 'expense_subscription',
-        5: 'expense_housing',
-        6: 'expense_entertainment',
-        7: 'expense_shopping',
-        8: 'expense_health',
-        9: 'expense_education',
-        10: 'expense_travel',
-        11: 'expense_personal',
-        12: 'expense_other',
-
-        // Income categories (IDs 13-17)
-        13: 'income_salary',
-        14: 'income_business',
-        15: 'income_investment',
-        16: 'income_gift',
-        17: 'income_other',
-
-        // System category (ID 18)
-        18: 'system_transfer',
-
-        // Additional expense categories
-        19: 'expense_donation',
-        20: 'expense_baby_needs',
-        21: 'expense_investment'
-      };
-      
-      // Return the mapped category key or a default based on range
-      if (idToCategoryKey[numId]) {
-        return idToCategoryKey[numId];
-      }
-      
-      // Fallback based on ID ranges
-      if (numId <= 12 || numId === 19 || numId === 20 || numId === 21) {
-        return 'expense_other';
-      } else if (numId <= 17) {
-        return 'income_other';
-      } else if (numId === 18) {
-        return 'system_transfer';
-      } else {
-        // For unknown IDs, default to expense_other
-        return 'expense_other';
-      }
-    }
-    
-    // Default fallback for empty or undefined
-    if (!categoryId) {
-      return 'expense_other';
-    }
-    
-    // Ultimate fallback
-    return 'expense_other';
   };
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'userId'>) => {
@@ -1780,8 +1634,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         monthlyIncome,
         monthlyExpense,
     formatCurrency,
-    getDisplayCategoryName,
-    getCategoryKey,
   };
 
   // Ensure transactions are sorted by date in descending order

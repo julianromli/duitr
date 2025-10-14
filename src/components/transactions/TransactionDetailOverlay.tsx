@@ -27,8 +27,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
-import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
-import { useAuth } from '@/context/AuthContext';
+import { useCategories } from '@/hooks/useCategories';
 import { format, parseISO } from 'date-fns';
 
 interface TransactionDetailOverlayProps {
@@ -45,7 +44,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
   const { formatCurrency, wallets, getDisplayCategoryName, updateTransaction } = useFinance();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { getByType, getDisplayName } = useCategories();
   const contentRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const { theme } = useTheme();
@@ -53,7 +52,11 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editedTransaction, setEditedTransaction] = useState<any>(null);
-  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
+  
+  // Get categories based on transaction type
+  const categories = transaction && transaction.type !== 'transfer' 
+    ? getByType(transaction.type === 'income' ? 'income' : 'expense')
+    : [];
 
   const handleClose = () => {
     if (isEditing) {
@@ -82,36 +85,7 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
     }
   }, [transaction, open]);
   
-  // Load categories when needed
-  useEffect(() => {
-    const loadCategories = async () => {
-      if (transaction && transaction.type !== 'transfer' && isEditing) {
-        try {
-          const type = transaction.type === 'income' ? 'income' : 'expense';
-          const fetchedCategories = await getLocalizedCategoriesByType(type, user?.id);
-          
-          // Sort categories by ID to maintain consistent order
-          const sortedCategories = [...fetchedCategories].sort((a, b) => {
-            // Ensure IDs are treated as numbers for comparison
-            const idA = typeof a.id === 'number' ? a.id : Number(a.id);
-            const idB = typeof b.id === 'number' ? b.id : Number(b.id);
-            return idA - idB;
-          });
-          
-          setCategories(sortedCategories);
-        } catch (error) {
-          console.error('Error loading categories:', error);
-          toast({
-            title: t('common.error'),
-            description: t('categories.error.load'),
-            variant: 'destructive'
-          });
-        }
-      }
-    };
-    
-    loadCategories();
-  }, [transaction, isEditing, t]);
+
 
   if (!transaction || !editedTransaction) {
     return null;

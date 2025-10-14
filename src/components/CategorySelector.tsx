@@ -1,6 +1,14 @@
-// Component: CategorySelector
-// Description: Enhanced category selector with "Add New Category" option for transaction forms
-// Provides quick category creation without leaving the transaction form
+/**
+ * CategorySelector Component
+ * 
+ * Simplified selector using integer IDs and translation helpers.
+ * Provides quick category creation without leaving the form.
+ * 
+ * Key Features:
+ * - Integer category IDs (no string conversion)
+ * - Automatic language switching via getDisplayName
+ * - Quick create dialog for custom categories
+ */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,13 +16,6 @@ import { Plus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -39,12 +40,11 @@ import {
 } from '@/components/ui/popover';
 import { useCategories } from '@/hooks/useCategories';
 import CategoryIcon from '@/components/shared/CategoryIcon';
-import { Category } from '@/types/categories';
 import { cn } from '@/lib/utils';
 
 interface CategorySelectorProps {
-  value?: string;
-  onValueChange: (value: string) => void;
+  value?: number | null;          // Integer category ID
+  onValueChange: (value: number) => void;
   type: 'income' | 'expense';
   placeholder?: string;
   disabled?: boolean;
@@ -68,10 +68,11 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   disabled = false,
   className
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const {
-    categories,
-    getCategoriesByType,
+    getByType,
+    getDisplayName,
+    findById,
     createCategory,
     isCreating
   } = useCategories();
@@ -84,8 +85,8 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     color: '#6B7280'
   });
 
-  const availableCategories = getCategoriesByType(type);
-  const selectedCategory = categories.find(cat => cat.id === value);
+  const availableCategories = getByType(type);
+  const selectedCategory = value ? findById(value) : null;
 
   const resetQuickCreateForm = () => {
     setQuickCreateData({
@@ -109,14 +110,13 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       setShowCreateDialog(false);
       resetQuickCreateForm();
       
-      // The new category will be automatically selected via the mutation's onSuccess callback
-      // We need to wait a bit for the cache to update
+      // The new category will be automatically selected after cache updates
       setTimeout(() => {
-        const newCategory = getCategoriesByType(type).find(
-          cat => (i18n.language === 'id' ? cat.id_name : cat.en_name).toLowerCase() === quickCreateData.name.toLowerCase().trim()
+        const newCategory = getByType(type).find(
+          cat => getDisplayName(cat).toLowerCase() === quickCreateData.name.toLowerCase().trim()
         );
         if (newCategory) {
-          onValueChange(newCategory.id);
+          onValueChange(newCategory.category_id);
         }
       }, 100);
     } catch (error) {
@@ -144,10 +144,10 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
             {selectedCategory ? (
               <div className="flex items-center space-x-2">
                 <CategoryIcon 
-                  category={selectedCategory.id} 
+                  category={selectedCategory.category_id} 
                   size="sm" 
                 />
-                <span>{i18n.language === 'id' ? selectedCategory.id_name : selectedCategory.en_name}</span>
+                <span>{getDisplayName(selectedCategory)}</span>
               </div>
             ) : (
               <span className="text-muted-foreground">
@@ -182,27 +182,27 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
               <CommandGroup heading={t(`categories.${type}Categories`)}>
                 {availableCategories.map((category) => (
                   <CommandItem
-                    key={category.id}
-                    value={i18n.language === 'id' ? category.id_name : category.en_name}
+                    key={category.category_id}
+                    value={getDisplayName(category)}
                     onSelect={() => {
-                      onValueChange(category.id);
+                      onValueChange(category.category_id);
                       setOpen(false);
                     }}
                     className="flex items-center justify-between"
                   >
                     <div className="flex items-center space-x-2">
                       <CategoryIcon 
-                        category={category.id} 
+                        category={category.category_id} 
                         size="sm" 
                       />
-                      <span>{i18n.language === 'id' ? category.id_name : category.en_name}</span>
+                      <span>{getDisplayName(category)}</span>
                       {category.user_id && (
                         <span className="text-xs text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
                           {t('categories.custom')}
                         </span>
                       )}
                     </div>
-                    {value === category.id && (
+                    {value === category.category_id && (
                       <Check className="h-4 w-4 text-blue-600" />
                     )}
                   </CommandItem>

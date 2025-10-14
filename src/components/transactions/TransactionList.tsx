@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/select";
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { getCategoryStringIdFromUuid, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { useNavigate } from 'react-router-dom';
 import { useCategories } from '@/hooks/useCategories';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
@@ -45,10 +44,10 @@ interface WalletOption {
 
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
   const { t, i18n } = useTranslation();
-  const { formatCurrency, deleteTransaction, getDisplayCategoryName, getCategoryKey } = useFinance();
+  const { formatCurrency, deleteTransaction } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { getDisplayName, findById, categories } = useCategories();
   
   // Pagination and loading state
   const [page, setPage] = useState(0);
@@ -603,45 +602,20 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   
   const groupedTransactions = groupTransactionsByDate();
   
-  // Category list - generate from DEFAULT_CATEGORIES
-  // This ensures we always have a fallback when DB categories are unavailable
+  // Category list - generate from database categories
   const generateCategoryOptions = () => {
     const allOption = [{ value: 'all', label: t('categories.all') }];
     
-    // Generate expense category options
-    const expenseOptions = DEFAULT_CATEGORIES.expense.map(cat => {
-      // Use translation keys instead of hardcoded translations
-      const categoryKey = cat.name.toLowerCase().replace(/\s+/g, '_');
-      const translationKey = `transactions.categories.${categoryKey}`;
-      
+    // Generate category options from database
+    const categoryOptions = categories.map(cat => {
       return {
-        value: `expense_${categoryKey}`,
-        label: t(translationKey, cat.name) // Fallback to original name if translation missing
-      };
-    });
-    
-    // Generate income category options
-    const incomeOptions = DEFAULT_CATEGORIES.income.map(cat => {
-      // Use translation keys instead of hardcoded translations
-      const categoryKey = cat.name.toLowerCase().replace(/\s+/g, '_');
-      const translationKey = `income.categories.${categoryKey}`;
-      
-      return {
-        value: `income_${categoryKey}`,
-        label: t(translationKey, cat.name) // Fallback to original name if translation missing
-      };
-    });
-    
-    // Generate system category options
-    const systemOptions = DEFAULT_CATEGORIES.system.map(cat => {
-      return {
-        value: `system_${cat.name.toLowerCase().replace(/\s+/g, '_')}`,
-        label: cat.name
+        value: cat.category_id.toString(),
+        label: getDisplayName(cat)
       };
     });
     
     // Combine all options
-    return [...allOption, ...expenseOptions, ...incomeOptions, ...systemOptions];
+    return [...allOption, ...categoryOptions];
   };
   
   const categoryOptions = generateCategoryOptions();
@@ -793,7 +767,11 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
           <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
           <div className="ml-4">
             <h3 className="font-medium">
-              {getDisplayCategoryName(transaction)}
+              {transaction.type === 'transfer' 
+                ? t('transactions.transfer') 
+                : (transaction.categoryId && findById(transaction.categoryId)
+                  ? getDisplayName(findById(transaction.categoryId)!)
+                  : t('transactions.uncategorized'))}
             </h3>
             <p className="text-xs text-[#868686]">
               {transaction.description}

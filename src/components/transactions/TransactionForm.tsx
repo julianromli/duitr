@@ -13,7 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import CategoryIcon from '@/components/shared/CategoryIcon';
-import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
 import CategorySelector from '@/components/CategorySelector';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -31,7 +30,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     amount: '',
-    categoryId: '',
+    categoryId: null as number | null,  // Integer category ID
     description: '',
     type: 'expense' as 'income' | 'expense' | 'transfer',
     walletId: '',
@@ -54,7 +53,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
     setFormData({ 
       ...formData, 
       type: value,
-      categoryId: '' // Reset category when type changes
+      categoryId: null // Reset category when type changes
     });
   };
   
@@ -88,9 +87,9 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
       return;
     }
     
-    // For transfer, use system_transfer category
+    // For transfer, use system_transfer category (ID 18)
     const categoryId = formData.type === 'transfer' 
-      ? 'system_transfer' 
+      ? 18 
       : formData.categoryId;
       
     if (!categoryId && formData.type !== 'transfer') {
@@ -105,9 +104,9 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
     try {
       await addTransaction({
         amount: parseFloat(formData.amount),
-        categoryId: categoryId,
+        categoryId: categoryId!,  // Non-null assertion (validated above)
         description: formData.description,
-        date: new Date().toISOString(), // <-- Use current timestamp directly
+        date: new Date().toISOString(),
         type: formData.type,
         walletId: formData.walletId,
         destinationWalletId: formData.type === 'transfer' ? formData.destinationWalletId : undefined,
@@ -116,7 +115,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
       
       setFormData({
         amount: '',
-        categoryId: '',
+        categoryId: null,
         description: '',
         type: 'expense',
         walletId: '',
@@ -228,7 +227,7 @@ const TransactionForm: React.FC<TransactionFormProps> = (/* props */) => {
               <CategorySelector
                 type={formData.type}
                 value={formData.categoryId}
-                onValueChange={(value) => handleSelectChange('categoryId', value)}
+                onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
                 placeholder={
                   formData.type === 'income' ? t('transactions.selectIncomeCategory') : t('transactions.selectExpenseCategory')
                 }

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/context/ThemeContext';
 import html2canvas from 'html2canvas';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import { useCategories } from '@/hooks/useCategories';
 import {
   Sheet,
   SheetContent,
@@ -19,7 +20,8 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 
 const TransactionDetailPage: React.FC = () => {
   const { state } = useLocation();
-  const { formatCurrency, wallets, getDisplayCategoryName } = useFinance();
+  const { formatCurrency, wallets } = useFinance();
+  const { findById, getDisplayName } = useCategories();
   const transaction = state?.transaction;
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -463,7 +465,13 @@ const TransactionDetailPage: React.FC = () => {
                         category={transaction.categoryId} 
                         size="sm" 
                       />
-                      <span className="font-medium">{getDisplayCategoryName(transaction)}</span>
+                      <span className="font-medium">
+                        {transaction.type === 'transfer' 
+                          ? t('transactions.transfer') 
+                          : (transaction.categoryId && findById(transaction.categoryId)
+                            ? getDisplayName(findById(transaction.categoryId)!)
+                            : t('transactions.uncategorized'))}
+                      </span>
                     </div>
                   </div>
                   

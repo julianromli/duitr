@@ -1,37 +1,37 @@
-// Hook: useCategories
-// Description: Manages category data with React Query for user-specific custom categories
-// Provides CRUD operations for categories with proper caching and optimistic updates
+/**
+ * useCategories Hook
+ * 
+ * Simplified React Query wrapper around CategoryService.
+ * Provides translation-aware category management.
+ * 
+ * Key Features:
+ * - Automatic caching with React Query
+ * - Translation helpers (getDisplayName)
+ * - CRUD operations with optimistic updates
+ * - No hardcoded fallbacks - database is the only source
+ */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Category } from '@/types/categories';
-import { transformCategory } from '@/types/categories';
 import { useTranslation } from 'react-i18next';
-import { getDefaultCategories } from '@/utils/categoryUtils';
+import categoryService from '@/services/CategoryService';
+import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@/types/category';
 
-interface CreateCategoryData {
-  name: string;
-  type: 'income' | 'expense';
-  icon?: string;
-  color?: string;
-}
-
-interface UpdateCategoryData {
-  id: string;
-  name?: string;
-  icon?: string;
-  color?: string;
-}
-
+/**
+ * useCategories Hook
+ * Simplified React Query wrapper around CategoryService
+ */
 export const useCategories = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
 
-  // Fetch all accessible categories (default + user's custom)
+  // Current language from i18n
+  const currentLanguage = i18n.language as 'en' | 'id';
+
+  // Fetch all categories (returns BOTH language names)
   const {
     data: categories = [],
     isLoading,
@@ -39,359 +39,100 @@ export const useCategories = () => {
     refetch
   } = useQuery({
     queryKey: ['categories', user?.id],
-    queryFn: async (): Promise<Category[]> => {
-      // Always return default categories if no user
-      if (!user) return getDefaultCategories();
-
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .or(`user_id.is.null,user_id.eq.${user.id}`)
-          .order('type')
-          .order('en_name');
-
-        if (error) {
-          // Check if it's a "relation does not exist" error
-          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-            console.warn('Categories table does not exist, using default categories:', error);
-            return getDefaultCategories();
-          }
-          // For any other database error, still return default categories to prevent app crash
-          console.warn('Error fetching categories, using default categories:', error);
-          return getDefaultCategories();
-        }
-
-        const transformedCategories = (data || []).map(item => transformCategory({
-          ...item,
-          id: item.category_id?.toString() || item.id || ''
-        }));
-
-        // Sort categories: custom categories first, then default categories
-        return transformedCategories.sort((a, b) => {
-          // First sort by type (expense/income)
-          if (a.type !== b.type) {
-            return a.type.localeCompare(b.type);
-          }
-          
-          // Within same type, custom categories (with user_id) come first
-          const aIsCustom = !!a.user_id;
-          const bIsCustom = !!b.user_id;
-          
-          if (aIsCustom && !bIsCustom) return -1;
-          if (!aIsCustom && bIsCustom) return 1;
-          
-          // Within same category type (custom or default), sort by name
-          return a.en_name.localeCompare(b.en_name);
-        });
-      } catch (error: any) {
-        // Always fallback to default categories if database is unavailable
-        console.warn('Failed to fetch categories from database, using defaults:', error);
-        return getDefaultCategories();
-      }
-    },
-    enabled: true, // Always enabled, will return defaults if no user
+    queryFn: () => categoryService.getAll(user?.id),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (gcTime replaces cacheTime in newer versions)
+    gcTime: 10 * 60 * 1000 // 10 minutes
   });
 
-  // Fetch categories by type
-  const getCategoriesByType = (type: 'income' | 'expense') => {
-    return categories.filter(category => category.type === type);
+  // Helper: Get display name for a category based on current language
+  const getDisplayName = (category: Category): string => {
+    return categoryService.getDisplayName(category, currentLanguage);
   };
 
-  // Get user's custom categories only
-  const getCustomCategories = () => {
-    return categories.filter(category => category.user_id === user?.id);
+  // Helper: Filter by type
+  const getByType = (type: 'income' | 'expense'): Category[] => {
+    return categories.filter(cat => cat.type === type);
   };
 
-  // Get default categories only
-  const getDefaultCategories = () => {
-    return categories.filter(category => !category.user_id);
+  // Helper: Get custom categories only
+  const getCustomCategories = (): Category[] => {
+    return categories.filter(cat => cat.user_id === user?.id);
   };
 
-  // Create new category mutation
-  const createCategoryMutation = useMutation({
-    mutationFn: async (categoryData: CreateCategoryData): Promise<Category> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+  // Helper: Get default categories only
+  const getDefaultCategories = (): Category[] => {
+    return categories.filter(cat => !cat.user_id);
+  };
 
-      // Validate input
-      if (!categoryData.name.trim()) {
-        throw new Error('Category name is required');
-      }
+  // Helper: Find category by ID
+  const findById = (id: number): Category | undefined => {
+    return categories.find(cat => cat.category_id === id);
+  };
 
-      if (!['income', 'expense'].includes(categoryData.type)) {
-        throw new Error('Invalid category type');
-      }
-
-      // Check if category name already exists for this user
-      const existingCategory = categories.find(
-        cat => cat.en_name.toLowerCase() === categoryData.name.toLowerCase().trim() &&
-               cat.type === categoryData.type &&
-               (cat.user_id === user.id || !cat.user_id)
-      );
-
-      if (existingCategory) {
-        throw new Error(`Category "${categoryData.name}" already exists for ${categoryData.type}`);
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .insert({
-            en_name: categoryData.name.trim(),
-            id_name: categoryData.name.trim(),
-            category_key: `custom_${Date.now()}`,
-            type: categoryData.type,
-            icon: categoryData.icon || 'circle',
-            color: categoryData.color || '#6B7280',
-            user_id: user.id
-          })
-          .select()
-          .single();
-
-        if (error) {
-          // Check if it's a "relation does not exist" error
-          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-            throw new Error('Custom categories feature is not available in this version.');
-          }
-          console.error('Error creating category:', error);
-          throw error;
-        }
-
-        return transformCategory({
-          ...data,
-          id: data.category_id?.toString() || data.id || ''
-        });
-      } catch (error: any) {
-        if (error.message.includes('Custom categories feature is not available')) {
-          throw error;
-        }
-        console.error('Error creating category:', error);
-        throw new Error('Failed to create category. Please try again.');
-      }
-    },
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: (input: CreateCategoryInput) => 
+      categoryService.create(input, user!.id),
     onSuccess: (newCategory) => {
-      // Optimistically update the cache
-      queryClient.setQueryData(['categories', user?.id], (oldCategories: Category[] = []) => {
-        return [...oldCategories, newCategory].sort((a, b) => {
-          if (a.type !== b.type) {
-            return a.type.localeCompare(b.type);
-          }
-          return a.en_name.localeCompare(b.en_name);
-        });
-      });
-
-      // 🔧 Only invalidate specific category queries to prevent cascade
-      queryClient.invalidateQueries({ 
-        queryKey: ['categories', user?.id],
-        exact: true 
-      });
-
-      toast({
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast({ 
         title: t('categories.created'),
-        description: t('categories.createSuccess', { name: newCategory.en_name }),
+        description: t('categories.createSuccess', { 
+          name: getDisplayName(newCategory) 
+        })
       });
     },
     onError: (error: Error) => {
-      console.error('Error creating category:', error);
-      toast({
-        variant: 'destructive',
+      toast({ 
+        variant: 'destructive', 
         title: t('categories.createError'),
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
-  // Update category mutation
-  const updateCategoryMutation = useMutation({
-    mutationFn: async (updateData: UpdateCategoryData): Promise<Category> => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const categoryId = parseInt(updateData.id, 10);
-      if (isNaN(categoryId)) {
-        throw new Error('Invalid category ID');
-      }
-
-      // Check if user owns this category
-      const category = categories.find(cat => cat.id === updateData.id);
-      if (!category) {
-        throw new Error('Category not found');
-      }
-
-      if (category.user_id !== user.id) {
-        throw new Error('You can only update your own categories');
-      }
-
-      const updatePayload: any = {};
-      if (updateData.name) {
-        updatePayload.en_name = updateData.name.trim();
-        updatePayload.id_name = updateData.name.trim();
-      }
-      if (updateData.icon) updatePayload.icon = updateData.icon;
-      if (updateData.color) updatePayload.color = updateData.color;
-
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .update(updatePayload)
-          .eq('category_id', categoryId)
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (error) {
-          // Check if it's a "relation does not exist" error
-          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-            throw new Error('Custom categories feature is not available in this version.');
-          }
-          console.error('Error updating category:', error);
-          throw error;
-        }
-      } catch (error: any) {
-        if (error.message.includes('Custom categories feature is not available')) {
-          throw error;
-        }
-        console.error('Error updating category:', error);
-        throw new Error('Failed to update category. Please try again.');
-      }
-
-      return transformCategory({
-        ...data,
-        id: data.category_id?.toString() || data.id || ''
-      });
-    },
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, input }: { id: number; input: UpdateCategoryInput }) =>
+      categoryService.update(id, input, user!.id),
     onSuccess: (updatedCategory) => {
-      // Optimistically update the cache
-      queryClient.setQueryData(['categories', user?.id], (oldCategories: Category[] = []) => {
-        return oldCategories.map(cat => 
-          cat.id === updatedCategory.id ? updatedCategory : cat
-        );
-      });
-
-      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
-
-      toast({
+      toast({ 
         title: t('categories.updated'),
-        description: t('categories.updateSuccess', { name: updatedCategory.en_name }),
+        description: t('categories.updateSuccess', { 
+          name: getDisplayName(updatedCategory) 
+        })
       });
     },
     onError: (error: Error) => {
-      console.error('Error updating category:', error);
-      toast({
+      toast({ 
         variant: 'destructive',
         title: t('categories.updateError'),
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
-  // Delete category mutation
-  const deleteCategoryMutation = useMutation({
-    mutationFn: async (categoryId: string): Promise<void> => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const numericId = parseInt(categoryId, 10);
-      if (isNaN(numericId)) {
-        throw new Error('Invalid category ID');
-      }
-
-      // Check if user owns this category
-      const category = categories.find(cat => cat.id === categoryId);
-      if (!category) {
-        throw new Error('Category not found');
-      }
-
-      if (category.user_id !== user.id) {
-        throw new Error('You can only delete your own categories');
-      }
-
-      try {
-        // Check if category is being used in transactions or budgets
-        const [transactionsRes, budgetsRes] = await Promise.all([
-          supabase
-            .from('transactions')
-            .select('id')
-            .eq('category_id', numericId)
-            .eq('user_id', user.id)
-            .limit(1),
-          supabase
-            .from('budgets')
-            .select('id')
-            .eq('category_id', numericId)
-            .eq('user_id', user.id)
-            .limit(1)
-        ]);
-
-        if (transactionsRes.data && transactionsRes.data.length > 0) {
-          throw new Error('Cannot delete category that is being used in transactions');
-        }
-
-        if (budgetsRes.data && budgetsRes.data.length > 0) {
-          throw new Error('Cannot delete category that is being used in budgets');
-        }
-
-        const { error } = await supabase
-          .from('categories')
-          .delete()
-          .eq('category_id', numericId)
-          .eq('user_id', user.id);
-
-        if (error) {
-          // Check if it's a "relation does not exist" error
-          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-            throw new Error('Custom categories feature is not available in this version.');
-          }
-          console.error('Error deleting category:', error);
-          throw error;
-        }
-      } catch (error: any) {
-        if (error.message.includes('Custom categories feature is not available') || 
-            error.message.includes('Cannot delete category')) {
-          throw error;
-        }
-        console.error('Error deleting category:', error);
-        throw new Error('Failed to delete category. Please try again.');
-      }
-    },
-    onSuccess: (_, categoryId) => {
-      const deletedCategory = categories.find(cat => cat.id === categoryId);
-      
-      // Optimistically update the cache
-      queryClient.setQueryData(['categories', user?.id], (oldCategories: Category[] = []) => {
-        return oldCategories.filter(cat => cat.id !== categoryId);
-      });
-
-      // Invalidate related queries
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => categoryService.delete(id, user!.id),
+    onSuccess: (_, deletedId) => {
+      const deletedCategory = categories.find(cat => cat.category_id === deletedId);
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
-
-      toast({
+      toast({ 
         title: t('categories.deleted'),
         description: t('categories.deleteSuccess', { 
-          name: deletedCategory?.en_name || 'Category' 
-        }),
+          name: deletedCategory ? getDisplayName(deletedCategory) : 'Category' 
+        })
       });
     },
     onError: (error: Error) => {
-      console.error('Error deleting category:', error);
       toast({
         variant: 'destructive',
         title: t('categories.deleteError'),
-        description: error.message,
+        description: error.message
       });
-    },
+    }
   });
 
   return {
@@ -399,22 +140,25 @@ export const useCategories = () => {
     categories,
     isLoading,
     error,
+    currentLanguage,
     
-    // Filtered data
-    getCategoriesByType,
+    // Helpers
+    getDisplayName,
+    getByType,
     getCustomCategories,
     getDefaultCategories,
+    findById,
     
     // Actions
-    createCategory: createCategoryMutation.mutate,
-    updateCategory: updateCategoryMutation.mutate,
-    deleteCategory: deleteCategoryMutation.mutate,
-    refetch,
+    createCategory: createMutation.mutate,
+    updateCategory: updateMutation.mutate,
+    deleteCategory: deleteMutation.mutate,
+    refetch, // Refetch categories from database
     
     // Loading states
-    isCreating: createCategoryMutation.isPending,
-    isUpdating: updateCategoryMutation.isPending,
-    isDeleting: deleteCategoryMutation.isPending,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending
   };
 };
 
