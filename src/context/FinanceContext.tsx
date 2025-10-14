@@ -1641,6 +1641,19 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Create a copy of the data without the 'category' field
     const { category, ...dbData } = data;
     
+    // Add currency fields for display-only currency preference
+    // Since currency is now display-only (no conversion), we use the same amount for both original and converted
+    if (dbData.amount !== undefined && !dbData.original_amount) {
+      // Get user's preferred currency
+      const userCurrency = getUserCurrency();
+      
+      dbData.original_amount = dbData.amount;
+      dbData.original_currency = userCurrency;
+      dbData.converted_amount = dbData.amount;
+      dbData.converted_currency = userCurrency;
+      dbData.exchange_rate = 1.0;
+    }
+    
     try {
       // Make sure category_id is properly formatted for database
       if (dbData.category_id) {

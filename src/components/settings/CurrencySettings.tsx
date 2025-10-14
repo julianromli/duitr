@@ -75,9 +75,9 @@ export function CurrencySettings() {
       setConfirmText('');
       setSelectedNewCurrency(null);
       
-      // Redirect to dashboard after a short delay
+      // Redirect to home after a short delay
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
         window.location.reload(); // Force full reload to clear any cached data
       }, 1000);
       
