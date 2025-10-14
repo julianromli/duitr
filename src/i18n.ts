@@ -24,45 +24,73 @@ export function setAppLanguage(lang: string): void {
   localStorage.setItem('preferredLanguage', lang);
 }
 
-// Initialize i18next with proper loading configuration
-i18n
-  // Detect user language
-  .use(LanguageDetector)
-  // Pass the i18n instance to react-i18next
-  .use(initReactI18next)
-  // Initialize i18next
-  .init({
-    resources: {
-      en: {
-        translation: enTranslation
-      },
-      id: {
-        translation: idTranslation
-      }
-    },
-    fallbackLng: 'id', // Set Indonesian as the default language
-    // Allow only supported languages
-    supportedLngs: VALID_LANGUAGES,
-    // If a language is detected that is not in supportedLngs, use fallbackLng
-    nonExplicitSupportedLngs: false,
-    debug: process.env.NODE_ENV === 'development',
-    interpolation: {
-      escapeValue: false // React already escapes values
-    },
-    detection: {
-      // Order of detection methods
-      order: ['localStorage', 'querystring', 'navigator'],
-      // Key to use in localStorage
-      lookupLocalStorage: 'preferredLanguage',
-      // Cache language detection
-      caches: ['localStorage'],
-    },
-    // Ensure synchronous loading
-    initImmediate: false,
-    // Wait for resources to be loaded
-    react: {
-      useSuspense: false
+// Get stored language or detect from browser
+const getInitialLanguage = (): string => {
+  try {
+    // Check localStorage first
+    const stored = localStorage.getItem('preferredLanguage');
+    if (stored && VALID_LANGUAGES.includes(stored)) {
+      return stored;
     }
-  });
+    
+    // Detect from browser navigator
+    const browserLang = navigator.language.split('-')[0];
+    if (VALID_LANGUAGES.includes(browserLang)) {
+      return browserLang;
+    }
+  } catch (e) {
+    console.warn('Error detecting language:', e);
+  }
+  
+  // Default to Indonesian
+  return 'id';
+};
 
-export default i18n;
+const initialLanguage = getInitialLanguage();
+
+// Initialize i18next synchronously with bundled translations
+const i18nInstance = i18n
+  .use(LanguageDetector)
+  .use(initReactI18next);
+
+// Synchronous initialization to prevent loading errors
+i18nInstance.init({
+  resources: {
+    en: {
+      translation: enTranslation
+    },
+    id: {
+      translation: idTranslation
+    }
+  },
+  lng: initialLanguage,
+  fallbackLng: 'id',
+  supportedLngs: VALID_LANGUAGES,
+  nonExplicitSupportedLngs: false,
+  debug: false, // Disable debug to reduce console noise
+  interpolation: {
+    escapeValue: false
+  },
+  detection: {
+    order: ['localStorage', 'navigator'],
+    lookupLocalStorage: 'preferredLanguage',
+    caches: ['localStorage'],
+  },
+  // Critical: ensure synchronous loading since resources are bundled
+  initImmediate: false,
+  react: {
+    useSuspense: false,
+    bindI18n: 'languageChanged loaded',
+    bindI18nStore: 'added',
+    transEmptyNodeValue: '',
+    transSupportBasicHtmlNodes: true,
+    transKeepBasicHtmlNodesFor: ['br', 'strong', 'i', 'p']
+  },
+  // Reduce loading issues
+  load: 'languageOnly',
+  cleanCode: true,
+  // Ensure translations are loaded immediately
+  partialBundledLanguages: false
+});
+
+export default i18nInstance;
