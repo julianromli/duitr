@@ -108,10 +108,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
     // Format date to ISO string
     const dateString = selectedDate.toISOString();
     
-    // Add transaction with required parameters
+    // Add transaction with required parameters (convert categoryId to number)
     addTransaction({
       amount: formData.amount,
-      categoryId: formData.categoryId,
+      categoryId: Number(formData.categoryId),
       description: formData.description,
       date: dateString,
       type: 'expense',
@@ -267,12 +267,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ open, onOpenChange }) => {
               <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
               <AnimatedText text={t('transactions.date')} />
             </Label>
-            <div className="bg-[#242425]/80 border border-white/10 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus-within:ring-2 focus-within:ring-[#C6FE1E]/50">
-              <DatePicker 
-                date={selectedDate}
-                setDate={setSelectedDate}
-              />
-            </div>
+            <DatePicker 
+              date={selectedDate}
+              setDate={setSelectedDate}
+              className="[&>div>button]:bg-[#242425]/80 [&>div>button]:border [&>div>button]:border-white/10 [&>div>button]:rounded-xl [&>div>button]:hover:bg-[#242425] [&>div>button]:transition-colors [&>div>button]:duration-200"
+            />
           </div>
           
         </form>

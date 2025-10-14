@@ -41,10 +41,10 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
   open, 
   onOpenChange 
 }) => {
-  const { formatCurrency, wallets, getDisplayCategoryName, updateTransaction } = useFinance();
+  const { formatCurrency, wallets, updateTransaction } = useFinance();
   const { toast } = useToast();
-  const { t } = useTranslation();
-  const { getByType, getDisplayName } = useCategories();
+  const { t, i18n } = useTranslation();
+  const { getByType, getDisplayName, findById } = useCategories();
   const contentRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const { theme } = useTheme();
@@ -685,7 +685,10 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                           category={transaction.categoryId} 
                           size="sm" 
                         />
-                        <span className="font-medium">{getDisplayCategoryName(transaction)}</span>
+                        <span className="font-medium">{(() => {
+                          const category = findById(transaction.categoryId);
+                          return category ? getDisplayName(category, i18n.language) : t('transactions.other');
+                        })()}</span>
                       </div>
                     </div>
                   )}
@@ -749,31 +752,30 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                       <Label htmlFor="date" className="text-muted-foreground">
                         {t('transactions.time')}
                       </Label>
-                      <div className="bg-card rounded-md border border-muted-foreground/20">
-                        <DatePicker 
-                          date={editedTransaction.date ? new Date(editedTransaction.date) : undefined}
-                          setDate={(date) => {
-                            if (date) {
-                              // Use the full ISO string to preserve timezone information
-                              const correctedDate = new Date(
-                                date.getFullYear(),
-                                date.getMonth(),
-                                date.getDate(),
-                                12, 0, 0
-                              ).toISOString();
-                              setEditedTransaction({ 
-                                ...editedTransaction, 
-                                date: correctedDate
-                              });
-                            } else {
-                              setEditedTransaction({
-                                ...editedTransaction,
-                                date: ''
-                              });
-                            }
-                          }}
-                        />
-                      </div>
+                      <DatePicker 
+                        date={editedTransaction.date ? new Date(editedTransaction.date) : undefined}
+                        setDate={(date) => {
+                          if (date) {
+                            // Use the full ISO string to preserve timezone information
+                            const correctedDate = new Date(
+                              date.getFullYear(),
+                              date.getMonth(),
+                              date.getDate(),
+                              12, 0, 0
+                            ).toISOString();
+                            setEditedTransaction({ 
+                              ...editedTransaction, 
+                              date: correctedDate
+                            });
+                          } else {
+                            setEditedTransaction({
+                              ...editedTransaction,
+                              date: ''
+                            });
+                          }
+                        }}
+                        className="[&>div>button]:bg-card [&>div>button]:rounded-md [&>div>button]:border [&>div>button]:border-muted-foreground/20"
+                      />
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
