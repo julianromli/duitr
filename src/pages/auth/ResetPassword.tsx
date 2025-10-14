@@ -6,7 +6,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, AlertCircle } from 'lucide-react';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import { validatePassword } from '@/utils/password-validation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -37,11 +40,13 @@ const ResetPassword = () => {
       return;
     }
     
-    if (password.length < 6) {
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
       toast({
         variant: 'destructive',
-        title: 'Password too short',
-        description: 'Password must be at least 6 characters long',
+        title: 'Weak password',
+        description: passwordValidation.errors[0] || 'Please choose a stronger password',
       });
       return;
     }
@@ -98,7 +103,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header with back button */}
       <motion.div 
         className="p-6 flex items-start"
@@ -108,7 +113,8 @@ const ResetPassword = () => {
       >
         <button 
           onClick={() => navigate('/auth/login')} 
-          className="p-1 text-white rounded-full"
+          className="p-1 text-foreground rounded-full hover:bg-accent"
+          aria-label="Go back to login"
         >
           <ChevronLeft size={24} />
         </button>
@@ -125,12 +131,9 @@ const ResetPassword = () => {
           className="mb-12 flex flex-col items-center"
           variants={itemVariants}
         >
-          <div className="w-16 h-16 bg-[#C6FE1E] rounded-full flex items-center justify-center mb-4">
-            <svg viewBox="0 0 24 24" fill="none" className="w-10 h-10" stroke="#0D0D0D" strokeWidth="2">
-              <path d="M3 6.5V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V6.5M3 6.5H21M3 6.5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V6.5M12 11C12 9.89543 12.8954 9 14 9H17C18.1046 9 19 9.89543 19 11V14C19 15.1046 18.1046 16 17 16H14C12.8954 16 12 15.1046 12 14V11Z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-white">Reset Password</h1>
+          <img src="/pwa-icons/new/192.png" alt="Duitr Logo" className="h-16 w-16 mb-4" />
+          <h1 className="text-3xl font-semibold text-foreground">Reset Password</h1>
+          <p className="text-sm text-muted-foreground mt-2">Create a new strong password for your account</p>
         </motion.div>
 
         {isSuccess ? (
@@ -142,19 +145,19 @@ const ResetPassword = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="mx-auto w-16 h-16 bg-[#C6FE1E] rounded-full flex items-center justify-center"
+              className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center"
             >
-              <svg className="w-8 h-8 text-[#0D0D0D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-8 h-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </motion.div>
-            <h2 className="text-xl font-semibold text-white">Password Reset Complete!</h2>
-            <p className="text-[#868686]">
+            <h2 className="text-xl font-semibold text-foreground">Password Reset Complete!</h2>
+            <p className="text-muted-foreground">
               Your password has been successfully updated. You can now log in with your new password.
             </p>
             <Button 
               onClick={() => navigate('/auth/login')} 
-              className="mt-4 bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full w-full"
+              className="mt-4 w-full"
             >
               Go to Login
             </Button>
@@ -162,10 +165,10 @@ const ResetPassword = () => {
         ) : (
           <>
             <motion.p 
-              className="text-[#868686] mb-8 text-center"
+              className="text-muted-foreground mb-8 text-center"
               variants={itemVariants}
             >
-              Please enter your new password to continue.
+              Please enter your new password. Make sure it's strong and secure.
             </motion.p>
             
             <motion.form 
@@ -174,8 +177,8 @@ const ResetPassword = () => {
               variants={itemVariants}
             >
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="password" className="text-white mb-2 block">New Password</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-foreground">New Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -183,12 +186,13 @@ const ResetPassword = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
+                    className="h-auto py-3"
                   />
+                  <PasswordStrengthIndicator password={password} />
                 </div>
                 
-                <div>
-                  <Label htmlFor="confirmPassword" className="text-white mb-2 block">Confirm Password</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -196,14 +200,20 @@ const ResetPassword = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="bg-[#292929] border-none text-white py-6 px-4 rounded-md placeholder:text-[#868686]"
+                    className="h-auto py-3"
                   />
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Passwords do not match
+                    </p>
+                  )}
                 </div>
                 
                 <div className="pt-4">
                   <Button 
                     type="submit" 
-                    className="w-full bg-[#C6FE1E] hover:bg-[#B0E018] text-[#0D0D0D] font-bold py-6 rounded-full" 
+                    className="w-full" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Updating...' : 'Reset Password'}

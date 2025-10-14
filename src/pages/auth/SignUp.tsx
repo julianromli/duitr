@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { SignupContent } from '@/components/auth/SignupContent';
+import { validatePassword, validateEmail, sanitizeEmail } from '@/utils/password-validation';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -24,6 +25,7 @@ const SignUp = () => {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
     if (!email || !password || !username) {
       toast({
         variant: 'destructive',
@@ -33,6 +35,29 @@ const SignUp = () => {
       return;
     }
     
+    // Validate email format
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid email',
+        description: emailValidation.error,
+      });
+      return;
+    }
+    
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      toast({
+        variant: 'destructive',
+        title: 'Weak password',
+        description: passwordValidation.errors[0] || 'Please choose a stronger password',
+      });
+      return;
+    }
+    
+    // Check terms agreement
     if (!agreedToTerms) {
       toast({
         variant: 'destructive',
@@ -45,7 +70,9 @@ const SignUp = () => {
     setIsSubmitting(true);
     
     try {
-      const result = await signUp(email, password);
+      // Sanitize email before signup
+      const sanitizedEmail = sanitizeEmail(email);
+      const result = await signUp(sanitizedEmail, password);
       
       if (result.success) {
         toast({

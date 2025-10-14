@@ -10,10 +10,11 @@ interface AuthContextType {
   isLoading: boolean;
   isBalanceHidden: boolean;
   signUp: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; message: string; needsVerification?: boolean }>;
   signInWithGoogle: () => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
   updateBalanceVisibility: (isHidden: boolean) => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -166,14 +167,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
+        // Check for email not confirmed error
+        if (error.message.toLowerCase().includes('email not confirmed') || 
+            error.message.toLowerCase().includes('email not verified')) {
+          logAuthEvent('sign_in_email_not_verified', { email });
+          return { 
+            success: false, 
+            message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+            needsVerification: true 
+          };
+        }
+        
+        logAuthEvent('sign_in_error', { email }, error);
         return { success: false, message: error.message };
       }
       
+      // Double check email verification status
+      if (data.user && !data.user.email_confirmed_at) {
+        logAuthEvent('sign_in_unverified_user', { userId: data.user.id });
+        // Sign out the user immediately
+        await supabase.auth.signOut();
+        return { 
+          success: false, 
+          message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+          needsVerification: true 
+        };
+      }
+      
+      logAuthEvent('sign_in_success', { userId: data.user?.id });
       return { success: true, message: '' };
     } catch (error: any) {
+      logAuthEvent('sign_in_exception', {}, error);
       return { success: false, message: error.message || 'An error occurred during sign in' };
     } finally {
       setIsLoading(false);
@@ -232,6 +259,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resendVerificationEmail = async (email: string) => {
+    try {
+      logAuthEvent('resend_verification_email_attempt', { email });
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: import.meta.env.MODE === 'production'
+            ? 'https://duitr.my.id/auth/callback'
+            : `${window.location.origin}/auth/callback`,
+        }
+      });
+      
+      if (error) {
+        logAuthEvent('resend_verification_email_error', { email }, error);
+        return { success: false, message: error.message };
+      }
+      
+      logAuthEvent('resend_verification_email_success', { email });
+      return { 
+        success: true, 
+        message: 'Verification email sent! Please check your inbox.' 
+      };
+    } catch (error: any) {
+      logAuthEvent('resend_verification_email_exception', { email }, error);
+      return { 
+        success: false, 
+        message: error.message || 'An error occurred while resending verification email' 
+      };
+    }
+  };
+
   const value = {
     user,
     isLoading,
@@ -241,6 +301,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle,
     signOut,
     updateBalanceVisibility,
+    resendVerificationEmail,
   };
 
   return (
