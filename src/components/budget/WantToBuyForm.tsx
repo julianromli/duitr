@@ -220,12 +220,11 @@ const WantToBuyForm: React.FC<WantToBuyFormProps> = ({ open, onOpenChange, itemT
                 name="estimated_date"
                 control={control}
                 render={({ field }) => (
-                    <div className="bg-[#242425] rounded-md border-0 light:bg-gray-200 light:text-black">
-                        <DatePicker
-                            date={field.value}
-                            setDate={field.onChange}
-                         />
-                     </div>
+                    <DatePicker
+                        date={field.value}
+                        setDate={field.onChange}
+                        className="[&>div>button]:bg-[#242425] [&>div>button]:rounded-md [&>div>button]:border-0"
+                     />
                 )}
             />
             {errors.estimated_date && <p className="text-xs text-red-500">{errors.estimated_date.message}</p>}
