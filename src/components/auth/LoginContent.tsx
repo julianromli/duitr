@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useId } from "react";
 import { FaGoogle } from 'react-icons/fa'; // Keep consistency with original Login page
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle, Mail } from 'lucide-react';
 import { logAuthEvent } from '@/utils/auth-logger';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Define props expected from the parent Login page
 interface LoginContentProps {
@@ -22,7 +23,8 @@ interface LoginContentProps {
   isSubmitting: boolean;
   handleEmailSignIn: (e: React.FormEvent) => Promise<void>;
   handleGoogleSignIn: () => Promise<void>;
-  // Add any other props needed, e.g., rememberMe state/handler if implemented
+  showResendVerification?: boolean;
+  handleResendVerification?: () => Promise<void>;
 }
 
 function LoginContent({
@@ -33,6 +35,8 @@ function LoginContent({
   isSubmitting,
   handleEmailSignIn,
   handleGoogleSignIn,
+  showResendVerification = false,
+  handleResendVerification,
 }: LoginContentProps) {
   const id = useId();
 
@@ -73,6 +77,27 @@ function LoginContent({
           <span className="px-4 bg-background text-muted-foreground">or</span>
         </div>
       </div>
+
+      {/* Email Verification Alert */}
+      {showResendVerification && handleResendVerification && (
+        <Alert className="mb-6">
+          <Mail className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-sm">
+              Email not verified. Check your inbox or resend verification email.
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResendVerification}
+              disabled={isSubmitting}
+              className="ml-2"
+            >
+              Resend
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Email Login Form */}
       <form onSubmit={handleEmailSignIn} className="space-y-6">

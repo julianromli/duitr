@@ -12,7 +12,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const { signIn, signInWithGoogle, resendVerificationEmail } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -68,6 +69,12 @@ const Login = () => {
         navigate('/');
       } else {
         logAuthEvent('login_email_sign_in_failure', { message: result.message });
+        
+        // Show resend verification option if email not verified
+        if (result.needsVerification) {
+          setShowResendVerification(true);
+        }
+        
         toast({
           variant: 'destructive',
           title: 'Login failed',
@@ -79,6 +86,44 @@ const Login = () => {
       toast({
         variant: 'destructive',
         title: 'Login error',
+        description: error.message || 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast({
+        variant: 'destructive',
+        title: 'Email required',
+        description: 'Please enter your email address first',
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const result = await resendVerificationEmail(email);
+      
+      if (result.success) {
+        toast({
+          title: 'Email sent!',
+          description: result.message,
+        });
+        setShowResendVerification(false);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to send email',
+          description: result.message,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
         description: error.message || 'An unexpected error occurred',
       });
     } finally {
@@ -209,6 +254,8 @@ const Login = () => {
               isSubmitting={isSubmitting}
               handleEmailSignIn={handleEmailSignIn}
               handleGoogleSignIn={handleGoogleSignIn}
+              showResendVerification={showResendVerification}
+              handleResendVerification={handleResendVerification}
             />
           </motion.div>
         </div>
