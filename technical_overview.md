@@ -38,16 +38,29 @@ Based on my analysis of the codebase, here's a comprehensive technical overview:
 
 ### Backend Architecture
 **Supabase (PostgreSQL + Auth)**:
-- **Database Schema**: `wallets`, `transactions`, `budgets`, `categories`, `want_to_buy`, `pinjaman` (loans), `exchange_rates`
+- **Database Schema**: `wallets`, `transactions`, `budgets`, `categories`, `want_to_buy`, `pinjaman` (loans)
+  - **Note**: Removed `exchange_rates` table (no longer needed after currency simplification)
+  - Transactions table uses single `amount` column (removed: original_amount, converted_amount, exchange_rate, rate_timestamp)
 - **Row Level Security (RLS)**: Policies enforce `auth.uid() = user_id` on all tables
 - **Auth**: Email/password + Google OAuth with PKCE flow, custom storage layer for iOS Safari compatibility
 - **Edge Functions**: `gemini-finance-insight` for AI-powered financial analysis
+- **Custom Functions**: `delete_all_user_data(user_id)` for currency change (deletes all user data safely)
 
 **Data Types** (`src/types/`):
 - Transaction: id, amount, categoryId, date, type (income/expense/transfer), walletId, destinationWalletId?, fee?
 - Wallet: id, name, balance, type (cash/bank/e-wallet/investment), color
 - Budget: id, amount, categoryId, month, year
 - PinjamanItem, WantToBuyItem for loans and wishlists
+
+**Currency System** (Simplified Display-Only):
+- User selects currency (USD/IDR) during onboarding
+- Currency stored in `auth.users.user_metadata.currency`
+- All amounts displayed using user's preferred currency format
+- **NO currency conversion** - just formatting preference
+- USD format: $1,234.56 (with decimals)
+- IDR format: Rp 1.234.567 (no decimals)
+- Currency utilities in `src/utils/currency.ts`: `formatCurrency()`, `parseCurrency()`, `getCurrencySymbol()`
+- Currency change requires data reset (all transactions/budgets/wallets deleted)
 
 ## Component Interactions
 
@@ -153,7 +166,8 @@ bun run build:pwa  # vite build + pwa:icons + pwa:verify + copy-pwa
 2. **Google OAuth**: Button → signInWithGoogle → clears old session data → generates PKCE verifier → redirects to Google → callback to `/auth/callback` → session established
 3. **Wallet Transfer**: Transfer form → creates 2 transactions (expense from source, income to destination) → updates both wallet balances → single atomic operation
 4. **Budget Tracking**: FinanceContext calculates spent amount by filtering transactions by category → compares to budget limit → renders progress bar
-5. **Multi-Currency**: User sets preferred currency in onboarding → stored in user metadata → all amounts formatted per currency → exchange rates fetched for conversions
+5. **Currency Display**: User sets preferred currency in onboarding → stored in user metadata → all amounts formatted per currency → NO conversion (display-only preference)
+6. **Currency Change**: User clicks "Change Currency" in settings → warning dialog shows → types "DELETE" to confirm → `delete_all_user_data()` function called → all data deleted → currency updated → user starts fresh
 
 **Error Handling**:
 - **ErrorBoundary**: Catches React render errors, displays fallback UI, logs to console (can extend to error tracking service)
@@ -178,3 +192,6 @@ bun run build:pwa  # vite build + pwa:icons + pwa:verify + copy-pwa
 ## Summary
 
 This architecture follows a modern React SPA pattern with server-side data persistence, offline-first PWA capabilities, and strict security boundaries via RLS policies. The codebase emphasizes type safety, accessibility (Radix primitives), and developer experience (hot reload, comprehensive tooling).
+
+**Recent Major Changes:**
+- **Currency System Refactor (Jan 2025)**: Simplified from complex multi-currency exchange system to display-only preference system. Removed 9 unnecessary database columns, deleted exchange_rates table, reduced code by 70%. See `CURRENCY_REFACTOR_SUMMARY.md` for details.

@@ -1,121 +1,183 @@
-# Currency Selector Feature Test Plan
+# Simple Currency System Test Plan
 
 ## Overview
-This document outlines the manual testing steps for the currency selector feature in transaction forms.
+This document outlines the manual testing steps for the **simplified currency system** - a display-only preference system (not a conversion system).
+
+**IMPORTANT:** Currency is just a formatting preference. USD users record in USD, IDR users record in IDR. There is NO conversion between currencies.
 
 ## Test Environment
 - Development server: http://localhost:8080/
-- Forms to test: ExpenseForm, IncomeForm, TransferForm
+- Test Supabase migrations first
+
+## Core Concept
+- User selects currency (USD/IDR) during onboarding
+- All transactions are recorded in that currency
+- Currency affects **DISPLAY FORMAT ONLY**:
+  - USD: $1,234.56
+  - IDR: Rp 1.234.567
+- Changing currency **DELETES ALL DATA** (requires confirmation)
 
 ## Test Cases
 
-### 1. ExpenseForm Currency Selection Test
-**Objective**: Verify USD currency selection and conversion display
+### 1. USD User Flow Test
+**Objective**: Verify USD user can record transactions in USD format
 
 **Steps**:
-1. Navigate to the application
-2. Click "Add Expense" button
-3. In the amount field, verify:
-   - Currency selector shows IDR by default
-   - Can switch to USD
-   - Amount input accepts decimal values
-   - Conversion badge appears when currency differs from user preference
-4. Enter amount: 100
-5. Switch currency from IDR to USD
-6. Verify conversion display shows equivalent IDR amount
-7. Fill other required fields (category, description)
-8. Submit the form
-9. Verify transaction is created with correct currency
+1. New user onboarding
+2. Select USD currency
+3. Create expense: $100.50
+4. Create income: $1,500.00
+5. Create transfer: $50.25
+6. Check dashboard balance displays as: $X,XXX.XX
+7. Check transaction list shows amounts with $ symbol
+8. Check budget amounts display as: $XXX.XX
 
 **Expected Results**:
-- ✅ Currency selector is visible and functional
-- ✅ Conversion display shows correct exchange rate
-- ✅ Form submits successfully with USD currency
+- ✅ All amounts display with $ symbol
+- ✅ Decimal formatting: $1,234.56
+- ✅ No IDR amounts anywhere
+- ✅ Statistics and charts show USD format
 
-### 2. IncomeForm Currency Switching Test
-**Objective**: Test switching between USD and IDR during input
+### 2. IDR User Flow Test
+**Objective**: Verify IDR user can record transactions in IDR format
 
 **Steps**:
-1. Click "Add Income" button
-2. Enter amount: 50 (IDR)
-3. Switch to USD currency
-4. Verify amount remains 50 but currency changes to USD
-5. Verify conversion badge shows IDR equivalent
-6. Switch back to IDR
-7. Verify conversion updates correctly
-8. Submit with final currency selection
+1. New user onboarding
+2. Select IDR currency
+3. Create expense: 100000
+4. Create income: 1500000
+5. Create transfer: 50000
+6. Check dashboard balance displays as: Rp X.XXX.XXX
+7. Check transaction list shows amounts with Rp symbol
+8. Check budget amounts display as: Rp XXX.XXX
 
 **Expected Results**:
-- ✅ Currency switching works smoothly
-- ✅ Conversion calculations are accurate
-- ✅ Form maintains amount value during currency switch
+- ✅ All amounts display with Rp symbol
+- ✅ Thousand separator: Rp 1.234.567
+- ✅ No decimal places for IDR
+- ✅ No USD amounts anywhere
+- ✅ Statistics and charts show IDR format
 
-### 3. TransferForm Different Currency Test
-**Objective**: Test transfer with different currency selection
+### 3. Currency Change Flow Test
+**Objective**: Test currency change with data deletion
 
 **Steps**:
-1. Click "Transfer" button
-2. Select source and destination wallets
-3. Enter transfer amount: 25
-4. Test currency selector:
-   - Default currency (IDR)
-   - Switch to USD
-   - Verify conversion display
-5. Submit transfer
+1. Login as user with existing data (e.g., USD user with transactions)
+2. Navigate to Profile/Settings page
+3. Locate "Currency Preference" section
+4. Click "Change Currency" button
+5. Verify warning dialog appears
+6. Verify dialog shows:
+   - ⚠️ Warning about data deletion
+   - List of data that will be deleted
+   - Currency selection (USD/IDR)
+   - Confirmation input field
+7. Select new currency (e.g., switch from USD to IDR)
+8. Try to submit without typing "DELETE" → should be blocked
+9. Type "DELETE" in confirmation field
+10. Click "Delete All Data & Change Currency"
+11. Wait for success message
+12. Verify redirect to dashboard
+13. Verify all previous data is gone
+14. Create new transaction in new currency format
+15. Verify new transaction displays correctly
 
 **Expected Results**:
-- ✅ Currency selector works in transfer form
-- ✅ Conversion display is accurate
-- ✅ Transfer is recorded with correct currency
+- ✅ Warning dialog shows clearly
+- ✅ Cannot proceed without typing "DELETE"
+- ✅ All previous data deleted successfully
+- ✅ Currency changed successfully
+- ✅ New transactions use new currency format
+- ✅ No mixing of old and new currency data
 
-### 4. Database Verification Test
-**Objective**: Verify transactions are saved with correct currency information
+### 4. Currency Display Consistency Test
+**Objective**: Verify currency display is consistent across all components
+
+**Test Areas**:
+- [ ] Dashboard balance summary
+- [ ] Transaction list
+- [ ] Recent transactions widget
+- [ ] Budget cards
+- [ ] Want to buy items
+- [ ] Pinjaman/loans
+- [ ] Statistics charts
+- [ ] Export CSV
+- [ ] Transaction details overlay
+
+**Expected Results**:
+- ✅ All displays use user's preferred currency
+- ✅ Consistent formatting everywhere
+- ✅ No currency mismatch
+
+### 5. Database Schema Test
+**Objective**: Verify database columns are cleaned up
 
 **Steps**:
-1. After creating transactions in previous tests
-2. Check transaction list/history
-3. Verify each transaction shows:
-   - Original amount and currency
-   - Converted amount (if different from user preference)
-   - Correct currency symbols
+1. Run migrations:
+   - `20250116_simplify_currency_system.sql`
+   - `20250116_add_delete_user_data_function.sql`
+2. Check `transactions` table schema
+3. Check `wallets` table schema
+4. Check `budgets` table schema
+5. Verify `exchange_rates` table is removed
 
 **Expected Results**:
-- ✅ Transactions display correct currency information
-- ✅ Original and converted amounts are preserved
-- ✅ Currency symbols are displayed correctly
+- ✅ `transactions` table:
+  - Has `amount` column ✓
+  - NO `original_amount` column ✗
+  - NO `original_currency` column ✗
+  - NO `converted_amount` column ✗
+  - NO `converted_currency` column ✗
+  - NO `exchange_rate` column ✗
+  - NO `rate_timestamp` column ✗
+- ✅ `wallets` table:
+  - NO `base_currency` column ✗
+  - NO `currency` column ✗
+- ✅ `budgets` table:
+  - NO `currency` column ✗
+- ✅ `exchange_rates` table dropped
+- ✅ Function `delete_all_user_data` exists
 
-## Test Results
+## Test Results Checklist
 
-### ExpenseForm Test
-- [ ] Currency selector visible
-- [ ] USD selection works
-- [ ] Conversion display accurate
-- [ ] Form submission successful
-- [ ] Transaction saved with USD currency
+### USD User Flow
+- [ ] Onboarding USD selection works
+- [ ] Transactions display with $ symbol
+- [ ] Amounts format: $1,234.56
+- [ ] Dashboard shows USD correctly
+- [ ] Budget shows USD correctly
+- [ ] No IDR formatting anywhere
 
-### IncomeForm Test
-- [ ] Currency switching functional
-- [ ] Conversion updates correctly
-- [ ] Amount preserved during switch
-- [ ] Form submission successful
+### IDR User Flow
+- [ ] Onboarding IDR selection works
+- [ ] Transactions display with Rp symbol
+- [ ] Amounts format: Rp 1.234.567 (no decimals)
+- [ ] Dashboard shows IDR correctly
+- [ ] Budget shows IDR correctly
+- [ ] No USD formatting anywhere
 
-### TransferForm Test
-- [ ] Currency selector works
-- [ ] Conversion display accurate
-- [ ] Transfer recorded correctly
+### Currency Change Flow
+- [ ] Settings shows current currency
+- [ ] Change dialog appears with warning
+- [ ] Cannot proceed without "DELETE" confirmation
+- [ ] Currency selection works
+- [ ] All data deleted after confirmation
+- [ ] Currency updated successfully
+- [ ] Can create new transactions in new currency
 
-### Database Verification
-- [ ] Transactions show correct currency
-- [ ] Original amounts preserved
-- [ ] Converted amounts accurate
-- [ ] Currency symbols correct
+### Database Cleanup
+- [ ] Migration runs without errors
+- [ ] Unnecessary columns removed
+- [ ] delete_all_user_data function created
+- [ ] exchange_rates table removed
 
 ## Notes
-- Test with both USD and IDR currencies
-- Verify exchange rate calculations
-- `isSupportedCurrency` only accepts defined currency codes and rejects prototype properties
+- **NO CURRENCY CONVERSION** - This is a display-only preference system
+- User must choose one currency and stick with it
+- Changing currency requires starting fresh (all data deleted)
+- Test with both USD and IDR to ensure formatting is correct
 - Check for any console errors
 - Ensure responsive design works on different screen sizes
 
 ## Completion Criteria
-All checkboxes above should be marked as completed for the currency selector feature to be considered fully functional.
+All checkboxes above should be marked as completed for the simplified currency system to be considered fully functional and ready for production.

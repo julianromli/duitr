@@ -1641,14 +1641,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Create a copy of the data without the 'category' field
     const { category, ...dbData } = data;
     
-    // In single-currency system, all transactions use the user's selected currency
-    dbData.original_amount = data.amount;
-    dbData.original_currency = userCurrency;
-    dbData.converted_amount = data.amount;
-    dbData.converted_currency = userCurrency;
-    dbData.exchange_rate = 1;
-    dbData.rate_timestamp = new Date().toISOString();
-    
     try {
       // Make sure category_id is properly formatted for database
       if (dbData.category_id) {

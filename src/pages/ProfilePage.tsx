@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import CategoryManagement from '@/components/CategoryManagement';
+import { CurrencySettings } from '@/components/settings/CurrencySettings';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog';
@@ -457,6 +458,17 @@ const ProfilePage: React.FC = () => {
                 </motion.div>
               </CardContent>
             </Card>
+          </motion.div>
+
+          {/* Currency Settings Section */}
+          <motion.div variants={cardVariants}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.42, duration: 0.4 }}
+            >
+              <CurrencySettings />
+            </motion.div>
           </motion.div>
 
           {/* Category Management Section */}
