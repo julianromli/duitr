@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
-import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
 import { useCategories } from '@/hooks/useCategories';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { motion } from 'framer-motion';

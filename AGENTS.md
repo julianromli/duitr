@@ -121,64 +121,6 @@ auth.users.user_metadata:
 - Support for English (en) and Indonesian (id)
 - Translation files: `src/locales/en.json` and `src/locales/id.json`
 
-### Category Translation Pattern (CRITICAL)
-When displaying category names from budgets/transactions:
-
-**✅ CORRECT - Use categoryId for lookup:**
-```typescript
-const getCategoryDisplayName = (categoryName: string, categoryId?: string) => {
-  // PRIORITY 1: Look up by categoryId (most reliable across language changes)
-  if (categoryId) {
-    const categoryById = categories.find(cat => 
-      cat.id === categoryId || 
-      cat.category_id?.toString() === categoryId
-    );
-    
-    if (categoryById) {
-      return i18n.language === 'id' ? 
-        (categoryById.id_name || categoryById.en_name) : 
-        (categoryById.en_name || categoryById.id_name);
-    }
-  }
-  
-  // PRIORITY 2: Fallback to name matching (legacy budgets)
-  const category = categories.find(cat => 
-    cat.en_name === categoryName || 
-    cat.id_name === categoryName
-  );
-  
-  if (category) {
-    return i18n.language === 'id' ? 
-      (category.id_name || category.en_name) : 
-      (category.en_name || category.id_name);
-  }
-  
-  // PRIORITY 3: Handle "Other" category
-  if (categoryName?.toLowerCase() === 'other' || 
-      categoryName?.toLowerCase() === 'lainnya') {
-    return t('budgets.categories.other');
-  }
-  
-  // Final fallback
-  return categoryName || t('budgets.no_category');
-};
-
-// Usage
-<h3>{getCategoryDisplayName(budget.category, budget.categoryId)}</h3>
-```
-
-**❌ WRONG - Don't use name-only matching:**
-```typescript
-// This breaks when user switches languages!
-<h3>{budget.category}</h3>  // Shows "Dining" instead of "Makanan"
-```
-
-### Why categoryId Lookup?
-- Budgets store category name in the language at creation time
-- When user switches language, name-based lookup fails
-- categoryId remains constant across all languages
-- Ensures proper translation even for legacy data
-
 ### Language Change Handling
 ```typescript
 // Watch for language changes
@@ -194,6 +136,194 @@ useEffect(() => {
   };
 }, [i18n]);
 ```
+
+## Category System (Database-First Architecture)
+
+### Overview
+Duitr uses a **database-first category system**:
+- Categories stored in `categories` table (single source of truth)
+- 21 default categories seeded with bilingual names (EN + ID)
+- Integer IDs used consistently throughout the app
+- Automatic translation without page reload
+- Users can create custom categories
+
+### Key Principles
+- **NO hardcoded categories** - all categories come from database
+- **Integer IDs only** - `categoryId: number` (not string)
+- **Bilingual by design** - each category has `en_name` and `id_name`
+- **Service layer** - CategoryService handles all operations
+- **React Query caching** - useCategories hook for optimal performance
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────┐
+│   Database (categories table)           │  ← Single source of truth
+│   - 21 default categories                │
+│   - User custom categories               │
+└─────────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│   CategoryService.ts                     │  ← Service layer
+│   - getAll(), getByType(), getById()    │
+│   - create(), update(), delete()         │
+│   - getDisplayName()                     │
+└─────────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│   useCategories.ts (React Query)         │  ← Hook layer
+│   - Auto-caching                         │
+│   - Translation helpers                  │
+│   - Mutations with optimistic updates   │
+└─────────────────────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│   Components (UI)                        │  ← Component layer
+│   - CategorySelector, TransactionForm   │
+│   - TransactionList, Dashboard, etc.    │
+└─────────────────────────────────────────┘
+```
+
+### Usage Pattern (CRITICAL)
+
+**✅ CORRECT - Use useCategories hook:**
+```typescript
+import { useCategories } from '@/hooks/useCategories';
+
+function MyComponent() {
+  const { t } = useTranslation();
+  const { findById, getDisplayName, categories } = useCategories();
+  
+  // Display category name (auto-translated)
+  const categoryName = transaction.type === 'transfer' 
+    ? t('transactions.transfer')
+    : (transaction.categoryId && findById(transaction.categoryId)
+      ? getDisplayName(findById(transaction.categoryId)!)
+      : t('transactions.uncategorized'));
+  
+  return <p>{categoryName}</p>;
+}
+```
+
+**❌ WRONG - Don't hardcode categories:**
+```typescript
+// DON'T DO THIS - categoryUtils.ts has been deleted!
+import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils'; // ❌ Error!
+import { getLocalizedCategoryName } from '@/utils/categoryUtils'; // ❌ Error!
+
+// DON'T DO THIS - Categories are not hardcoded anymore
+const categories = [
+  { id: 1, name: 'Groceries' },
+  { id: 2, name: 'Dining' }
+]; // ❌ Use database instead!
+```
+
+### Category Display Pattern
+
+**For Transactions:**
+```typescript
+const { findById, getDisplayName } = useCategories();
+
+// Inline display
+<p>
+  {transaction.type === 'transfer' 
+    ? t('transactions.transfer') 
+    : (transaction.categoryId && findById(transaction.categoryId)
+      ? getDisplayName(findById(transaction.categoryId)!)
+      : t('transactions.uncategorized'))}
+</p>
+```
+
+**For Category Selection:**
+```typescript
+<CategorySelector 
+  value={categoryId}              // number | null
+  onValueChange={setCategoryId}   // (id: number | null) => void
+  type="expense"                  // 'income' | 'expense'
+/>
+```
+
+### Key Functions from useCategories
+
+```typescript
+const {
+  // Data
+  categories,              // Category[] - All categories from DB
+  isLoading,              // boolean
+  error,                  // Error | null
+  
+  // Helpers
+  getDisplayName,         // (category: Category) => string (auto EN/ID)
+  getByType,              // (type: 'income' | 'expense') => Category[]
+  findById,               // (id: number) => Category | undefined
+  getCustomCategories,    // () => Category[]
+  getDefaultCategories,   // () => Category[]
+  
+  // Actions
+  createCategory,         // (input: CreateCategoryInput) => void
+  updateCategory,         // ({ id, input }) => void
+  deleteCategory,         // (id: number) => void
+  refetch,                // () => void - Force refresh from DB
+  
+  // States
+  isCreating,             // boolean
+  isUpdating,             // boolean
+  isDeleting              // boolean
+} = useCategories();
+```
+
+### Database Schema
+
+```sql
+-- Categories table
+CREATE TABLE categories (
+  category_id SERIAL PRIMARY KEY,
+  en_name TEXT NOT NULL,           -- English name
+  id_name TEXT NOT NULL,           -- Indonesian name
+  type TEXT NOT NULL,              -- 'income' | 'expense' | 'system'
+  icon TEXT,                       -- Icon name (optional)
+  color TEXT,                      -- Color code (optional)
+  user_id UUID REFERENCES auth.users, -- NULL for default categories
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Foreign key constraints
+ALTER TABLE transactions 
+  ADD CONSTRAINT fk_category 
+  FOREIGN KEY (category_id) 
+  REFERENCES categories(category_id) 
+  ON DELETE RESTRICT;
+
+ALTER TABLE budgets 
+  ADD CONSTRAINT fk_category 
+  FOREIGN KEY (category_id) 
+  REFERENCES categories(category_id) 
+  ON DELETE RESTRICT;
+```
+
+### Translation Flow
+
+1. **Data Storage**: Categories stored with both `en_name` and `id_name`
+2. **Hook Call**: Component calls `useCategories()` hook
+3. **Display Helper**: Use `getDisplayName(category)` for display
+4. **Auto-Switch**: Changes language → `getDisplayName()` returns correct name
+5. **No Reload**: Language switch is instant (no page reload)
+
+### Migration Notes
+
+- **Deleted Files**: `src/utils/categoryUtils.ts` (300+ lines removed)
+- **No More**: `DEFAULT_CATEGORIES`, `getLocalizedCategoryName()`, etc.
+- **Code Reduction**: 800 → 230 lines across category logic (-71%)
+- **Consistency**: All components use same pattern (CategoryService → useCategories)
+
+### Benefits
+
+- ✅ **Single Source of Truth**: Database is the only source
+- ✅ **Type Safety**: Integer IDs (no string/number confusion)
+- ✅ **Automatic Translation**: No manual translation key mapping
+- ✅ **Extensible**: Users can create custom categories
+- ✅ **Performance**: React Query caching prevents unnecessary fetches
+- ✅ **Maintainable**: Centralized logic in 2 files (Service + Hook)
 
 ## Common Workflows
 

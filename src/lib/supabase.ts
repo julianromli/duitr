@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { logAuthEvent } from '@/utils/auth-logger';
+import { shouldWarnAboutGoogleOAuth, logWebViewDetection } from '@/utils/webview-detection';
 
 // Use environment variables - fail fast if not provided
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -109,6 +110,32 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const signInWithGoogle = async () => {
+  // Check if we're in a WebView or in-app browser
+  const shouldWarn = shouldWarnAboutGoogleOAuth();
+  
+  if (shouldWarn) {
+    // Log the WebView detection
+    logWebViewDetection({ 
+      action: 'google_oauth_blocked',
+      context: 'sign_in_with_google'
+    });
+    
+    // Return error instead of proceeding
+    const error = new Error(
+      'Google OAuth is not supported in in-app browsers. Please open this page in your default browser (Safari/Chrome).'
+    );
+    
+    logAuthEvent('google_sign_in_blocked_webview', { 
+      reason: 'in_app_browser_detected' 
+    });
+    
+    return { 
+      data: null, 
+      error,
+      isWebViewBlocked: true 
+    };
+  }
+  
   // Set a clean redirect URL without any parameters that might cause issues
   const redirectTo = import.meta.env.MODE === 'production' 
     ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
@@ -183,10 +210,10 @@ export const signInWithGoogle = async () => {
       hasError: !!error
     }, error);
     
-    return { data, error };
+    return { data, error, isWebViewBlocked: false };
   } catch (error: any) {
     logAuthEvent('google_sign_in_exception', {}, error);
-    return { data: null, error };
+    return { data: null, error, isWebViewBlocked: false };
   }
 };
 

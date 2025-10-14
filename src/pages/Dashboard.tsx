@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 import BalanceDisplay from '@/components/dashboard/BalanceDisplay';
+import { useCategories } from '@/hooks/useCategories';
 
 // Dashboard component displaying summary info and recent transactions.
 // Updated recent transactions sorting to use 'created_at' for accuracy.
@@ -30,9 +31,9 @@ const Dashboard: React.FC = () => {
     transactions,
     formatCurrency,
     monthlyExpense,
-    monthlyIncome,
-    getDisplayCategoryName
+    monthlyIncome
   } = useFinance();
+  const { findById, getDisplayName } = useCategories();
   const navigate = useNavigate();
   const {
     user,
@@ -392,7 +393,13 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <CategoryIcon category={transaction.categoryId || transaction.category} size="md" />
                     <div>
-                      <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
+                      <p className="font-medium">
+                        {transaction.type === 'transfer' 
+                          ? t('transactions.transfer') 
+                          : (transaction.categoryId && findById(transaction.categoryId)
+                            ? getDisplayName(findById(transaction.categoryId)!)
+                            : t('transactions.uncategorized'))}
+                      </p>
                       <p className="text-xs text-[#868686]">
                           {transaction.description}
                         </p>

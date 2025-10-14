@@ -10,8 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { FormattedInput } from '@/components/ui/formatted-input';
-import { getLocalizedCategoriesByType, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
-import { useAuth } from '@/context/AuthContext';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { DatePicker } from '@/components/ui/date-picker';
 import { motion } from 'framer-motion';
@@ -27,7 +25,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
   const { wallets, addTransaction } = useFinance();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { user } = useAuth();
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
@@ -37,9 +34,6 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     description: '',
     fee: 0
   });
-  
-  const [categories, setCategories] = useState([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -85,8 +79,8 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       return;
     }
     
-    // Use the system transfer category from DEFAULT_CATEGORIES
-    const transferCategory = DEFAULT_CATEGORIES.system[0];
+    // Use the system transfer category (ID 18)
+    const transferCategoryId = 18;
     
     // Format date to ISO string
     const dateString = selectedDate.toISOString();
@@ -100,7 +94,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
       walletId: formData.fromWalletId,
       destinationWalletId: formData.toWalletId,
       fee: formData.fee,
-      categoryId: transferCategory.id
+      categoryId: transferCategoryId
     });
     
     // Reset form
@@ -123,43 +117,7 @@ const TransferForm: React.FC<TransferFormProps> = ({ open, onOpenChange }) => {
     onOpenChange(false);
   };
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      setIsLoadingCategories(true);
-      try {
-        const fetchedCategories = await getLocalizedCategoriesByType('system', user?.id);
-        
-        // Sort categories by ID to maintain consistent order
-        const sortedCategories = [...fetchedCategories].sort((a, b) => {
-          const idA = typeof a.id === 'number' ? a.id : Number(a.id);
-          const idB = typeof b.id === 'number' ? b.id : Number(b.id);
-          return idA - idB;
-        });
-        
-        setCategories(sortedCategories);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        
-        // Use default categories as fallback
-        const defaultCategories = DEFAULT_CATEGORIES.system.map(cat => ({
-          id: cat.id,
-          name: cat.name
-        }));
-        
-        setCategories(defaultCategories);
-        
-        toast({
-          title: t('common.error'),
-          description: t('categories.error.load'),
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-    
-    loadCategories();
-  }, [t, user?.id]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

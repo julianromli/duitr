@@ -16,8 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getLocalizedCategoriesByType } from '@/utils/categoryUtils';
-import { useAuth } from '@/context/AuthContext';
+import { useCategories } from '@/hooks/useCategories';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
 import { format, parseISO } from 'date-fns';
@@ -37,7 +36,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   const { t } = useTranslation();
   const { transactions, formatCurrency, wallets, updateTransaction, getDisplayCategoryName } = useFinance();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { getByType, getDisplayName } = useCategories();
   const [isEditing, setIsEditing] = useState(false);
   
   // Find the transaction
@@ -45,39 +44,11 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   
   // State for edited transaction
   const [editedTransaction, setEditedTransaction] = useState<any>(null);
-  // State for categories
-  const [categories, setCategories] = useState<{id: string | number; name: string}[]>([]);
   
-  // Load categories when needed
-  useEffect(() => {
-    const loadCategories = async () => {
-      if (transaction && transaction.type !== 'transfer' && isEditing) {
-        try {
-          const type = transaction.type === 'income' ? 'income' : 'expense';
-          const fetchedCategories = await getLocalizedCategoriesByType(type, user?.id);
-          
-          // Sort categories by ID to maintain consistent order
-          const sortedCategories = [...fetchedCategories].sort((a, b) => {
-            // Ensure IDs are treated as numbers for comparison
-            const idA = typeof a.id === 'number' ? a.id : Number(a.id);
-            const idB = typeof b.id === 'number' ? b.id : Number(b.id);
-            return idA - idB; // This returns a number for comparison
-          });
-          
-          setCategories(sortedCategories);
-        } catch (error) {
-          console.error('Error loading categories:', error);
-          toast({
-            title: t('common.error'),
-            description: t('categories.error.load'),
-            variant: 'destructive'
-          });
-        }
-      }
-    };
-    
-    loadCategories();
-  }, [transaction, isEditing, t]);
+  // Get categories based on transaction type
+  const categories = transaction && transaction.type !== 'transfer' 
+    ? getByType(transaction.type === 'income' ? 'income' : 'expense')
+    : [];
   
   // Reset edited transaction when transaction changes or dialog opens/closes
   useEffect(() => {

@@ -7,6 +7,7 @@ import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useCategories } from '@/hooks/useCategories';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,8 @@ import TransactionDetailOverlay from '@/components/transactions/TransactionDetai
 const RecentTransactions: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { transactions, formatCurrency, deleteTransaction, getDisplayCategoryName } = useFinance();
+  const { transactions, formatCurrency, deleteTransaction } = useFinance();
+  const { findById, getDisplayName } = useCategories();
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
@@ -126,7 +128,13 @@ const RecentTransactions: React.FC = () => {
                 <div className="flex items-center">
                   <CategoryIcon category={transaction.categoryId || transaction.category} size="sm" />
                   <div className="ml-3">
-                    <p className="font-medium">{getDisplayCategoryName(transaction)}</p>
+                    <p className="font-medium">
+                      {transaction.type === 'transfer' 
+                        ? t('transactions.transfer') 
+                        : (transaction.categoryId && findById(transaction.categoryId)
+                          ? getDisplayName(findById(transaction.categoryId)!)
+                          : t('transactions.uncategorized'))}
+                    </p>
                     <p className="text-xs text-[#868686]">{formatDate(transaction.date)}</p>
                   </div>
                 </div>

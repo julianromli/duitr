@@ -1,15 +1,13 @@
 
 // Type definitions for finance-related data structures.
-// Added 'created_at' field to Transaction type.
-// Fixed PinjamanItem to use consistent user_id field.
+// Updated to use integer categoryId consistently (no more string IDs)
 export type Transaction = {
   id: string;
   amount: number;
-  categoryId: string | number;
-  category?: string;
+  categoryId: number;           // INTEGER category ID (references categories.category_id)
   description: string;
   date: string;
-  created_at?: string; // Added for accurate timestamp sorting
+  created_at?: string;          // Added for accurate timestamp sorting
   type: 'income' | 'expense' | 'transfer';
   walletId: string;
   userId?: string;
@@ -20,13 +18,11 @@ export type Transaction = {
 export type Budget = {
   id: string;
   amount: number;
-  categoryId: string | number;
-  category?: string;
+  categoryId: number;           // INTEGER category ID (references categories.category_id)
   month?: string;
   year?: string;
   walletId?: string;
   userId?: string;
-  type?: string;
   // Legacy fields for compatibility
   spent?: number;
   period?: 'monthly' | 'weekly' | 'yearly';

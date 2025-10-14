@@ -5,7 +5,10 @@ import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { SignupContent } from '@/components/auth/SignupContent';
+import { WebViewWarningModal } from '@/components/auth/WebViewWarningModal';
 import { validatePassword, validateEmail, sanitizeEmail } from '@/utils/password-validation';
+import { shouldWarnAboutGoogleOAuth } from '@/utils/webview-detection';
+import { logAuthEvent } from '@/utils/auth-logger';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +17,7 @@ const SignUp = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [showWebViewWarning, setShowWebViewWarning] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -99,11 +103,25 @@ const SignUp = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    // Check if we're in a WebView or in-app browser first
+    if (shouldWarnAboutGoogleOAuth()) {
+      logAuthEvent('signup_google_blocked_webview');
+      setShowWebViewWarning(true);
+      return;
+    }
+    
     let googleSignInSuccess = false;
     try {
       setIsSubmitting(true);
       const result = await signInWithGoogle();
       googleSignInSuccess = !!(result && result.success);
+
+      // Check if blocked by WebView (double safety check)
+      if (result && (result as any).isWebViewBlocked) {
+        logAuthEvent('signup_google_blocked_webview_secondary');
+        setShowWebViewWarning(true);
+        return;
+      }
 
       if (result && !result.success) {
         toast({
@@ -123,6 +141,13 @@ const SignUp = () => {
         setIsSubmitting(false);
       }
     }
+  };
+  
+  const handleUseEmailInstead = () => {
+    // Close modal and let user use email signup
+    setShowWebViewWarning(false);
+    // Optionally focus on email input
+    // You can add a ref to the email input and focus it here
   };
 
   const containerVariants = {
@@ -227,6 +252,13 @@ Enter your details below to get started.
           </motion.div>
         </div>
       </motion.div>
+      
+      {/* WebView Warning Modal */}
+      <WebViewWarningModal
+        open={showWebViewWarning}
+        onOpenChange={setShowWebViewWarning}
+        onUseEmailInstead={handleUseEmailInstead}
+      />
     </div>
   );
 };

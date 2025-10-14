@@ -7,8 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getLocalizedCategoryName, DEFAULT_CATEGORIES } from '@/utils/categoryUtils';
-import { getCategoryById } from '@/services/categoryService';
+import categoryService from '@/services/CategoryService';
 import { getIconComponent } from '@/components/shared/IconSelector';
 import { motion } from 'framer-motion';
 import {
@@ -157,20 +156,10 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
       try {
         let categoryData = null;
         
-        // Check if it's a UUID string
-        if (typeof category === 'string' && category.includes('-')) {
-          // Get the category from the database
-          try {
-            categoryData = await getCategoryById(category);
-          } catch (error) {
-            console.warn(`Error getting category by UUID ${category}:`, error);
-            // Will continue to fallback mechanisms
-          }
-        }
         // Check if it's a number (integer ID from database)
-        else if (typeof category === 'number' || (typeof category === 'string' && !isNaN(Number(category)))) {
+        if (typeof category === 'number' || (typeof category === 'string' && !isNaN(Number(category)))) {
           try {
-            categoryData = await getCategoryById(category);
+            categoryData = await categoryService.getById(Number(category));
           } catch (error) {
             console.warn(`Error getting category by ID ${category}:`, error);
             // Will continue to fallback mechanisms
@@ -194,97 +183,8 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({
           return;
         }
         
-        // For string keys (like 'expense_groceries')
-        if (typeof category === 'string' && category.includes('_')) {
-          // For string category IDs, extract the type (expense/income) and name
-          const parts = category.split('_');
-          if (parts.length > 1) {
-            setCategoryType(category); // Store the full ID for icon selection
-            
-            try {
-              // Also try to get the localized name
-              const loadedName = getLocalizedCategoryName(category);
-              setDisplayName(loadedName);
-            } catch (error) {
-              console.warn(`Could not get localized name for ${category}:`, error);
-              // Use the second part of the category ID as fallback name
-              setDisplayName(parts[1].charAt(0).toUpperCase() + parts[1].slice(1));
-            }
-            return;
-          }
-        }
-        
-        // For numeric IDs, try to use DEFAULT_CATEGORIES lookup
-        if (typeof category === 'number' || (typeof category === 'string' && !isNaN(Number(category)))) {
-          const numericId = Number(category);
-          
-          // Determine category type based on ID range
-          let categoryType: 'expense' | 'income' | 'system' = 'expense';
-          if (numericId >= 13 && numericId <= 17) {
-            categoryType = 'income';
-          } else if (numericId === 18) {
-            categoryType = 'system';
-          }
-          
-          // Find the category in DEFAULT_CATEGORIES
-          const defaultCategory = DEFAULT_CATEGORIES[categoryType].find(cat => cat.id === String(numericId));
-          if (defaultCategory) {
-            // Use translation keys for category names
-            const categoryKey = defaultCategory.name.toLowerCase().replace(/\s+/g, '_');
-            let translationKey = '';
-            
-            if (categoryType === 'expense') {
-              translationKey = `transactions.categories.${categoryKey}`;
-            } else if (categoryType === 'income') {
-              translationKey = `income.categories.${categoryKey}`;
-            } else {
-              translationKey = `transactions.${categoryKey}`;
-            }
-            
-            // Use translation with fallback to original name
-            const translatedName = t(translationKey, defaultCategory.name);
-            setDisplayName(translatedName);
-            
-            // Set category type based on ID for icon matching
-            const categoryKeyMap: Record<number, string> = {
-              1: 'expense_groceries',
-              2: 'expense_food',
-              3: 'expense_transportation',
-              4: 'expense_subscription',
-              5: 'expense_housing',
-              6: 'expense_entertainment',
-              7: 'expense_shopping',
-              8: 'expense_health',
-              9: 'expense_education',
-              10: 'expense_vehicle',
-              11: 'expense_personal',
-              12: 'expense_other',
-              13: 'income_salary',
-              14: 'income_business',
-              15: 'income_investment',
-              16: 'income_gift',
-              17: 'income_other',
-              18: 'system_transfer',
-              19: 'expense_donation',
-              20: 'expense_baby_needs',
-              21: 'expense_investment'
-            };
-            
-            setCategoryType(categoryKeyMap[numericId] || `${categoryType}_other`);
-            return;
-          }
-        }
-        
-        // Fallback: for any other case, try to get localized name
-        try {
-          const loadedName = getLocalizedCategoryName(
-            typeof category === 'string' ? category : String(category)
-          );
-          setDisplayName(loadedName || 'Other');
-        } catch (error) {
-          console.error('Error getting localized category name:', error);
-          setDisplayName('Other');
-        }
+        // Fallback for any unhandled case
+        setDisplayName('Other');
       } catch (err) {
         console.error('Error loading category:', err);
         setDisplayName('Other');

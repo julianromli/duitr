@@ -5,7 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { LoginContent } from '@/components/auth/LoginContent';
+import { WebViewWarningModal } from '@/components/auth/WebViewWarningModal';
 import { logAuthEvent } from '@/utils/auth-logger';
+import { shouldWarnAboutGoogleOAuth } from '@/utils/webview-detection';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +15,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [showResendVerification, setShowResendVerification] = useState(false);
+  const [showWebViewWarning, setShowWebViewWarning] = useState(false);
   const { signIn, signInWithGoogle, resendVerificationEmail } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -132,6 +135,13 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    // Check if we're in a WebView or in-app browser first
+    if (shouldWarnAboutGoogleOAuth()) {
+      logAuthEvent('login_google_blocked_webview');
+      setShowWebViewWarning(true);
+      return;
+    }
+    
     let googleSignInSuccess = false;
     try {
       setIsSubmitting(true);
@@ -139,6 +149,13 @@ const Login = () => {
       
       const result = await signInWithGoogle();
       googleSignInSuccess = !!(result && result.success);
+
+      // Check if blocked by WebView (double safety check)
+      if (result && (result as any).isWebViewBlocked) {
+        logAuthEvent('login_google_blocked_webview_secondary');
+        setShowWebViewWarning(true);
+        return;
+      }
 
       if (result && !result.success) {
         logAuthEvent('login_google_sign_in_failure', { message: result.message });
@@ -164,6 +181,13 @@ const Login = () => {
       }
       // If successful, let the page redirect without setting isSubmitting=false
     }
+  };
+  
+  const handleUseEmailInstead = () => {
+    // Close modal and let user use email login
+    setShowWebViewWarning(false);
+    // Optionally focus on email input
+    // You can add a ref to the email input and focus it here
   };
 
   const containerVariants = {
@@ -260,6 +284,13 @@ const Login = () => {
           </motion.div>
         </div>
       </motion.div>
+      
+      {/* WebView Warning Modal */}
+      <WebViewWarningModal
+        open={showWebViewWarning}
+        onOpenChange={setShowWebViewWarning}
+        onUseEmailInstead={handleUseEmailInstead}
+      />
     </div>
   );
 };
