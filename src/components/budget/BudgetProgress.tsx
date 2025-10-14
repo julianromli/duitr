@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { PieChart, LineChart, BarChart3, Calendar } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useBudgets } from '@/hooks/useBudgets';
@@ -9,12 +9,52 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import CurrencyDisplay from '@/components/currency/CurrencyDisplay';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useCategories } from '@/hooks/useCategories';
 
 const BudgetProgress: React.FC = () => {
   const { budgets, totalBudgeted, totalSpent, remainingBudget, overallProgress } = useBudgets();
   const { formatCurrency } = useFinance();
   const { currency } = useCurrency();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { categories } = useCategories();
+  
+  // Function to get translated category name
+  const getCategoryDisplayName = useCallback((categoryName: string, categoryId?: string) => {
+    // PRIORITY 1: Look up by categoryId if available (most reliable)
+    if (categoryId) {
+      const categoryById = categories.find(cat => 
+        cat.id === categoryId || 
+        cat.category_id?.toString() === categoryId
+      );
+      
+      if (categoryById) {
+        return i18n.language === 'id' ? 
+          (categoryById.id_name || categoryById.en_name || 'Unknown') : 
+          (categoryById.en_name || categoryById.id_name || 'Unknown');
+      }
+    }
+    
+    // PRIORITY 2: Fallback to name matching (for legacy budgets)
+    const category = categories.find(cat => 
+      cat.en_name === categoryName || 
+      cat.id_name === categoryName ||
+      cat.category_key === categoryName
+    );
+    
+    if (category) {
+      return i18n.language === 'id' ? 
+        (category.id_name || category.en_name || 'Unknown') : 
+        (category.en_name || category.id_name || 'Unknown');
+    }
+    
+    // PRIORITY 3: Check if it's the "Other" category
+    if (categoryName?.toLowerCase() === 'other' || categoryName?.toLowerCase() === 'lainnya') {
+      return t('budgets.categories.other');
+    }
+    
+    // Final fallback
+    return categoryName || t('budgets.no_category');
+  }, [categories, i18n.language, t]);
   
   // Count budgets by period for the summary
   const budgetCounts = budgets.reduce((acc, budget) => {
@@ -23,12 +63,15 @@ const BudgetProgress: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
   
-  // Prepare data for pie chart
-  const pieData = budgets.map((budget) => ({
-    name: budget.category,
-    value: budget.spent,
-    period: budget.period || 'monthly'
-  }));
+  // Prepare data for pie chart with translated category names
+  const pieData = useMemo(() => 
+    budgets.map((budget) => ({
+      name: getCategoryDisplayName(budget.category, budget.categoryId),
+      value: budget.spent,
+      period: budget.period || 'monthly'
+    })),
+    [budgets, categories, i18n.language]
+  );
   
   // Colors for pie chart
   const COLORS = ['#4263EB', '#0CA678', '#F59F00', '#FA5252', '#7950F2', '#74C0FC'];

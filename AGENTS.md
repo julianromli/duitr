@@ -114,6 +114,87 @@ auth.users.user_metadata:
   - currency: 'USD' | 'IDR'
 ```
 
+## Translation System (i18next)
+
+### Key Principles
+- All user-facing text MUST use i18next keys via `t()` function
+- Support for English (en) and Indonesian (id)
+- Translation files: `src/locales/en.json` and `src/locales/id.json`
+
+### Category Translation Pattern (CRITICAL)
+When displaying category names from budgets/transactions:
+
+**✅ CORRECT - Use categoryId for lookup:**
+```typescript
+const getCategoryDisplayName = (categoryName: string, categoryId?: string) => {
+  // PRIORITY 1: Look up by categoryId (most reliable across language changes)
+  if (categoryId) {
+    const categoryById = categories.find(cat => 
+      cat.id === categoryId || 
+      cat.category_id?.toString() === categoryId
+    );
+    
+    if (categoryById) {
+      return i18n.language === 'id' ? 
+        (categoryById.id_name || categoryById.en_name) : 
+        (categoryById.en_name || categoryById.id_name);
+    }
+  }
+  
+  // PRIORITY 2: Fallback to name matching (legacy budgets)
+  const category = categories.find(cat => 
+    cat.en_name === categoryName || 
+    cat.id_name === categoryName
+  );
+  
+  if (category) {
+    return i18n.language === 'id' ? 
+      (category.id_name || category.en_name) : 
+      (category.en_name || category.id_name);
+  }
+  
+  // PRIORITY 3: Handle "Other" category
+  if (categoryName?.toLowerCase() === 'other' || 
+      categoryName?.toLowerCase() === 'lainnya') {
+    return t('budgets.categories.other');
+  }
+  
+  // Final fallback
+  return categoryName || t('budgets.no_category');
+};
+
+// Usage
+<h3>{getCategoryDisplayName(budget.category, budget.categoryId)}</h3>
+```
+
+**❌ WRONG - Don't use name-only matching:**
+```typescript
+// This breaks when user switches languages!
+<h3>{budget.category}</h3>  // Shows "Dining" instead of "Makanan"
+```
+
+### Why categoryId Lookup?
+- Budgets store category name in the language at creation time
+- When user switches language, name-based lookup fails
+- categoryId remains constant across all languages
+- Ensures proper translation even for legacy data
+
+### Language Change Handling
+```typescript
+// Watch for language changes
+useEffect(() => {
+  const handleLanguageChange = () => {
+    // Component will re-render with new translations
+  };
+  
+  i18n.on('languageChanged', handleLanguageChange);
+  
+  return () => {
+    i18n.off('languageChanged', handleLanguageChange);
+  };
+}, [i18n]);
+```
+
 ## Common Workflows
 
 ### Adding shadcn Component

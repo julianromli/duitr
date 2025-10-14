@@ -140,8 +140,22 @@ const BudgetList: React.FC = () => {
   };
 
   // Function to get translated category name
-  const getCategoryDisplayName = (categoryName: string) => {
-    // First try to find the category by matching the category name
+  const getCategoryDisplayName = (categoryName: string, categoryId?: string) => {
+    // PRIORITY 1: Look up by categoryId if available (most reliable)
+    if (categoryId) {
+      const categoryById = categories.find(cat => 
+        cat.id === categoryId || 
+        cat.category_id?.toString() === categoryId
+      );
+      
+      if (categoryById) {
+        return i18n.language === 'id' ? 
+          (categoryById.id_name || categoryById.en_name || 'Unknown') : 
+          (categoryById.en_name || categoryById.id_name || 'Unknown');
+      }
+    }
+    
+    // PRIORITY 2: Fallback to name matching (for legacy budgets)
     const category = categories.find(cat => 
       cat.en_name === categoryName || 
       cat.id_name === categoryName ||
@@ -154,7 +168,12 @@ const BudgetList: React.FC = () => {
         (category.en_name || category.id_name || 'Unknown');
     }
     
-    // If not found, return the original category name as fallback
+    // PRIORITY 3: Check if it's the "Other" category
+    if (categoryName?.toLowerCase() === 'other' || categoryName?.toLowerCase() === 'lainnya') {
+      return t('budgets.categories.other');
+    }
+    
+    // Final fallback
     return categoryName || t('budgets.no_category');
   };
 
@@ -187,7 +206,7 @@ const BudgetList: React.FC = () => {
                             <AnimatedText text={t('transactions.category')} animationType="slide" />:
                           </label>
                           <span className="text-sm">
-                            <AnimatedText text={getCategoryDisplayName(budget.category)} animationType="scale" />
+                            <AnimatedText text={getCategoryDisplayName(budget.category, budget.categoryId)} animationType="scale" />
                           </span>
                         </div>
                       
@@ -258,7 +277,7 @@ const BudgetList: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-base text-gray-900 dark:text-white truncate">
                             <AnimatedText 
-                              text={getCategoryDisplayName(budget.category)}
+                              text={getCategoryDisplayName(budget.category, budget.categoryId)}
                               animationType="slide"
                               duration={0.4}
                             />
