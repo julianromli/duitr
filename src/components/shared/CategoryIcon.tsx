@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import categoryService from '@/services/CategoryService';
+import categoryService from '@/services/categoryService';
 import { getIconComponent } from '@/components/shared/IconSelector';
 import { motion } from 'framer-motion';
 import {
