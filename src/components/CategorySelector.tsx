@@ -12,7 +12,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Check, ChevronsUpDown, X, Circle, Square, Star, Heart, Home, Car, ShoppingCart, Coffee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import { useCategories } from '@/hooks/useCategories';
 import CategoryIcon from '@/components/shared/CategoryIcon';
 import { cn } from '@/lib/utils';
@@ -57,8 +64,29 @@ interface QuickCreateFormData {
   color: string;
 }
 
-const QUICK_ICONS = ['circle', 'square', 'star', 'heart', 'home', 'car', 'shopping-cart', 'coffee'];
-const QUICK_COLORS = ['#EF4444', '#F97316', '#F59E0B', '#22C55E', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'];
+// Quick icon options with Lucide components
+const QUICK_ICONS = [
+  { name: 'circle', icon: Circle, label: 'Circle' },
+  { name: 'square', icon: Square, label: 'Square' },
+  { name: 'star', icon: Star, label: 'Star' },
+  { name: 'heart', icon: Heart, label: 'Heart' },
+  { name: 'home', icon: Home, label: 'Home' },
+  { name: 'car', icon: Car, label: 'Car' },
+  { name: 'shopping-cart', icon: ShoppingCart, label: 'Shopping' },
+  { name: 'coffee', icon: Coffee, label: 'Coffee' }
+];
+
+// Quick color options with names
+const QUICK_COLORS = [
+  { value: '#EF4444', name: 'Red' },
+  { value: '#F97316', name: 'Orange' },
+  { value: '#F59E0B', name: 'Amber' },
+  { value: '#22C55E', name: 'Green' },
+  { value: '#3B82F6', name: 'Blue' },
+  { value: '#8B5CF6', name: 'Purple' },
+  { value: '#EC4899', name: 'Pink' },
+  { value: '#6B7280', name: 'Gray' }
+];
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({
   value,
@@ -94,6 +122,12 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
       icon: 'circle',
       color: '#6B7280'
     });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && quickCreateData.name.trim() && !isCreating) {
+      handleQuickCreate();
+    }
   };
 
   const handleQuickCreate = async () => {
@@ -132,7 +166,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -157,8 +191,22 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
+        <PopoverContent 
+          className="w-[var(--radix-popover-trigger-width)] p-0" 
+          align="start"
+          sideOffset={4}
+          style={{ zIndex: 100 }}
+          onInteractOutside={(e) => {
+            // Prevent closing when clicking inside the popover
+            if (e.target instanceof Element && e.target.closest('[role="dialog"]')) {
+              e.preventDefault();
+            }
+          }}
+        >
+          <Command 
+            className="relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <CommandInput 
               placeholder={t('categories.searchCategoriesPlaceholder')} 
               className="h-9"
@@ -215,74 +263,137 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
         </PopoverContent>
       </Popover>
 
-      {/* Quick Create Category Dialog */}
+      {/* Quick Create Category Dialog - Enhanced UI */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('categories.quickCreate')}</DialogTitle>
-            <DialogDescription>
-              {t('categories.quickCreateDescription', { type: t(`categories.${type}`) })}
+        <DialogContent className="max-w-md p-6">
+          {/* Header Section */}
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-lg font-semibold">
+              {t('categories.quickCreate', 'Quick Create Category')}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              {t('categories.quickCreateDescriptionShort', 'Choose a name, icon, and color for your new category')}
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="quick-category-name">{t('categories.name')}</Label>
-              <Input
-                id="quick-category-name"
-                value={quickCreateData.name}
-                onChange={(e) => setQuickCreateData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder={t('categories.namePlaceholder')}
-                maxLength={50}
-                autoFocus
-              />
-            </div>
 
-            <div>
-              <Label>{t('categories.icon')}</Label>
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                {QUICK_ICONS.map((icon) => (
+          <Separator className="my-4" />
+
+          {/* Form Section */}
+          <div className="space-y-6">
+            {/* Category Name Input */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="quick-category-name" className="text-sm font-medium">
+                  {t('categories.name', 'Category Name')}
+                </Label>
+                <span className={cn(
+                  "text-xs",
+                  quickCreateData.name.length > 45 ? "text-destructive" : "text-muted-foreground"
+                )}>
+                  {quickCreateData.name.length}/50
+                </span>
+              </div>
+              <div className="relative">
+                <Input
+                  id="quick-category-name"
+                  value={quickCreateData.name}
+                  onChange={(e) => setQuickCreateData(prev => ({ ...prev, name: e.target.value }))}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t('categories.namePlaceholder', 'e.g., Groceries, Salary, Investment')}
+                  maxLength={50}
+                  autoFocus
+                  className="pr-10"
+                />
+                {quickCreateData.name && (
                   <Button
-                    key={icon}
-                    variant={quickCreateData.icon === icon ? 'default' : 'outline'}
+                    variant="ghost"
                     size="sm"
-                    onClick={() => setQuickCreateData(prev => ({ ...prev, icon }))}
-                    className="h-10 w-10 p-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
+                    onClick={() => setQuickCreateData(prev => ({ ...prev, name: '' }))}
                     type="button"
                   >
-                    <span className="text-lg">{icon}</span>
+                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
                   </Button>
-                ))}
+                )}
               </div>
             </div>
 
-            <div>
-              <Label>{t('categories.color')}</Label>
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                {QUICK_COLORS.map((color) => (
-                  <Button
-                    key={color}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuickCreateData(prev => ({ ...prev, color }))}
-                    className="h-10 w-10 p-0 border-2"
-                    style={{ 
-                      backgroundColor: quickCreateData.color === color ? color : 'transparent',
-                      borderColor: quickCreateData.color === color ? color : '#e5e7eb'
-                    }}
-                    type="button"
-                  >
-                    <div 
-                      className="h-6 w-6 rounded-full" 
-                      style={{ backgroundColor: color }}
-                    />
-                  </Button>
-                ))}
-              </div>
+            {/* Icon Selection */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">
+                {t('categories.icon', 'Icon')}
+              </Label>
+              <TooltipProvider delayDuration={300}>
+                <div className="grid grid-cols-4 gap-3">
+                  {QUICK_ICONS.map(({ name, icon: IconComponent, label }) => (
+                    <Tooltip key={name}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setQuickCreateData(prev => ({ ...prev, icon: name }))}
+                          className={cn(
+                            "h-14 w-14 p-0 rounded-xl transition-all duration-200",
+                            "hover:scale-105 hover:ring-1 hover:ring-primary/50",
+                            quickCreateData.icon === name && "ring-2 ring-primary scale-110 bg-primary/10"
+                          )}
+                          type="button"
+                          aria-label={label}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">{label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </TooltipProvider>
+            </div>
+
+            {/* Color Selection */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">
+                {t('categories.color', 'Color')}
+              </Label>
+              <TooltipProvider delayDuration={300}>
+                <div className="grid grid-cols-4 gap-3">
+                  {QUICK_COLORS.map(({ value, name }) => (
+                    <Tooltip key={value}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setQuickCreateData(prev => ({ ...prev, color: value }))}
+                          className={cn(
+                            "h-14 w-14 p-0 rounded-xl transition-all duration-200 border-2",
+                            "hover:scale-105 hover:ring-2 hover:ring-white/50",
+                            quickCreateData.color === value && "ring-4 ring-white shadow-lg"
+                          )}
+                          style={{ backgroundColor: value }}
+                          type="button"
+                          aria-label={name}
+                        >
+                          {quickCreateData.color === value && (
+                            <Check className="h-6 w-6 text-white drop-shadow-md" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p className="text-xs">{name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </TooltipProvider>
             </div>
           </div>
 
-          <DialogFooter>
+          <Separator className="my-4" />
+
+          {/* Footer Actions */}
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => {
@@ -291,13 +402,24 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
               }}
               disabled={isCreating}
             >
-              {t('common.cancel')}
+              {t('common.cancel', 'Cancel')}
             </Button>
             <Button
               onClick={handleQuickCreate}
               disabled={!quickCreateData.name.trim() || isCreating}
+              className="min-w-[100px]"
             >
-              {isCreating ? t('common.creating') : t('common.create')}
+              {isCreating ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  {t('common.creating', 'Creating...')}
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  {t('common.create', 'Create')}
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

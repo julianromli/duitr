@@ -1,4 +1,15 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * EditCategoryPage - Refactored to use CategoryService
+ * 
+ * Improvements:
+ * - Uses useCategories hook (single source of truth)
+ * - Simplified form (single name field, auto category_key)
+ * - Added color picker
+ * - Shows only user's custom categories
+ * - Consistent with Quick Create UX
+ */
+
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Table, 
@@ -25,200 +36,77 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { 
-  ArrowLeftRight, 
   ChevronLeft, 
-  Circle, 
   Edit, 
-  ShoppingCart, 
   Trash2,
-  Utensils,
   Plus,
   Check,
-  X,
-  Home, 
-  Coffee, 
-  Car, 
-  Briefcase, 
-  DollarSign,
-  Gift, 
-  Package, 
-  Heart, 
-  Plane, 
-  Film,
-  Settings, 
-  Book, 
-  Monitor, 
-  Smartphone, 
-  CreditCard,
-  HelpCircle, 
-  ShoppingBag, 
-  Zap, 
-  User, 
-  Music,
-  Pill, 
-  Baby, 
-  BusFront, 
-  Shirt, 
-  ArrowUpDown,
-  Coins, 
-  Building2, 
-  LineChart, 
-  Wallet
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import IconSelector, { getIconComponent, iconNameMap } from '@/components/shared/IconSelector';
+import IconSelector, { getIconComponent } from '@/components/shared/IconSelector';
+import { useCategories } from '@/hooks/useCategories';
+import type { Category } from '@/types/category';
 
-// Define a map for icons
-const iconMap: Record<string, React.ComponentType> = {
-  ShoppingCart,
-  Utensils,
-  ArrowLeftRight,
-  Circle,
-  Home, 
-  Coffee, 
-  Car, 
-  Briefcase, 
-  DollarSign,
-  Gift, 
-  Package, 
-  Heart, 
-  Plane, 
-  Film,
-  Settings, 
-  Book, 
-  Monitor, 
-  Smartphone, 
-  CreditCard,
-  HelpCircle, 
-  ShoppingBag, 
-  Zap, 
-  User, 
-  Music,
-  Pill, 
-  Baby, 
-  BusFront, 
-  Shirt, 
-  ArrowUpDown,
-  Coins, 
-  Building2, 
-  LineChart, 
-  Wallet
-};
+// Color options (same as CategorySelector for consistency)
+const CATEGORY_COLORS = [
+  '#EF4444', // red
+  '#F97316', // orange  
+  '#F59E0B', // amber
+  '#22C55E', // green
+  '#3B82F6', // blue
+  '#8B5CF6', // purple
+  '#EC4899', // pink
+  '#6B7280'  // gray
+];
 
-// Define a category interface
-interface Category {
-  id: string;
-  category_key: string;
-  en_name: string;
-  id_name: string;
-  type: 'expense' | 'income' | 'system';
-  icon: string | null;
-  created_at: string | null;
+// Form data interface
+interface CategoryFormData {
+  name: string;
+  type: 'income' | 'expense';
+  icon: string;
+  color: string;
 }
-
-// Helper function to normalize icon names for compatibility
-const normalizeIconName = (iconName: string): string => {
-  // Convert PascalCase to kebab-case if needed
-  return iconNameMap[iconName] || iconName || 'circle';
-};
 
 const EditCategoryPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use Categories Hook
+  const {
+    getCustomCategories,
+    getDisplayName,
+    createCategory,
+    updateCategory,
+    deleteCategory: deleteCategoryHook,
+    isCreating,
+    isUpdating,
+    isDeleting
+  } = useCategories();
+
+  // Get only custom categories (user's own)
+  const customCategories = getCustomCategories();
+  
+  // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [isNewCategory, setIsNewCategory] = useState(false);
   
-  // Form state
-  const [formData, setFormData] = useState({
-    category_key: '',
-    en_name: '',
-    id_name: '',
-    type: 'expense' as 'expense' | 'income' | 'system',
-    icon: 'Circle'
+  // Form state - simplified!
+  const [formData, setFormData] = useState<CategoryFormData>({
+    name: '',
+    type: 'expense',
+    icon: 'circle',
+    color: '#6B7280'
   });
-  
-  // Available icons for categories
-  const availableIcons = Object.keys(iconMap);
   
   // Function to render an icon by its name
   const renderIcon = (iconName: string) => {
-    const IconComponent = getIconComponent(normalizeIconName(iconName));
+    const IconComponent = getIconComponent(iconName);
     return <IconComponent className="h-4 w-4" />;
-  };
-  
-  // Fetch categories on component mount
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-  
-  // Fetch all categories from Supabase
-  const fetchCategories = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('type')
-        .order('en_name');
-      
-      if (error) {
-        // Check if it's a "relation does not exist" error
-        if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-          console.warn('Categories table does not exist, showing empty list');
-          setCategories([]);
-          toast({
-            title: t('common.warning'),
-            description: 'Categories feature is not available. Please contact support.',
-            variant: 'destructive'
-          });
-          return;
-        }
-        throw error;
-      }
-      
-      if (data) {
-        setCategories(data.map(cat => ({
-          id: cat.category_id.toString(),
-          category_key: cat.category_key,
-          en_name: cat.en_name,
-          id_name: cat.id_name,
-          type: cat.type as 'expense' | 'income' | 'system',
-          icon: cat.icon,
-          created_at: cat.created_at
-        })));
-      } else {
-        setCategories([]);
-      }
-    } catch (error: any) {
-      console.error('Error fetching categories:', error);
-      // Check if it's a "relation does not exist" error
-      if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
-        console.warn('Categories table does not exist, showing empty list');
-        setCategories([]);
-        toast({
-          title: t('common.warning'),
-          description: 'Categories feature is not available. Please contact support.',
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: t('categories.error.load', 'Failed to load categories'),
-          variant: 'destructive'
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
   };
   
   // Handle adding a new category
@@ -226,11 +114,10 @@ const EditCategoryPage: React.FC = () => {
     setIsNewCategory(true);
     setCurrentCategory(null);
     setFormData({
-      category_key: '',
-      en_name: '',
-      id_name: '',
+      name: '',
       type: 'expense',
-      icon: 'Circle'
+      icon: 'circle',
+      color: '#6B7280'
     });
     setEditDialogOpen(true);
   };
@@ -240,11 +127,10 @@ const EditCategoryPage: React.FC = () => {
     setIsNewCategory(false);
     setCurrentCategory(category);
     setFormData({
-      category_key: category.category_key,
-      en_name: category.en_name,
-      id_name: category.id_name,
+      name: getDisplayName(category),
       type: category.type,
-      icon: normalizeIconName(category.icon || 'circle')
+      icon: category.icon || 'circle',
+      color: category.color || '#6B7280'
     });
     setEditDialogOpen(true);
   };
@@ -261,367 +147,281 @@ const EditCategoryPage: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
   
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    if (name === 'type' && value === 'system') {
-      // Auto-populate for system type
-      setFormData({
-        ...formData,
-        [name]: value as any,
-        category_key: 'system_custom',
-        en_name: 'System',
-        id_name: 'Sistem'
-      });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-  
   // Save category (add or update)
-  const saveCategory = async () => {
-    // Validate form data
-    if (!formData.category_key || !formData.en_name || !formData.id_name || !formData.type) {
-      toast({
-        title: t('common.error'),
-        description: t('categories.error.requiredFields', 'All fields are required'),
-        variant: 'destructive'
-      });
+  const handleSave = () => {
+    // Validate
+    if (!formData.name.trim()) {
       return;
     }
     
-    // Ensure category_key follows the pattern type_name (e.g., expense_groceries)
-    if (!formData.category_key.includes('_')) {
-      const prefix = formData.type === 'system' ? 'system_' : 
-                    formData.type === 'income' ? 'income_' : 'expense_';
-      setFormData({ ...formData, category_key: `${prefix}${formData.category_key}` });
+    if (isNewCategory) {
+      // Create new category
+      createCategory({
+        name: formData.name.trim(),
+        type: formData.type,
+        icon: formData.icon,
+        color: formData.color
+      });
+    } else if (currentCategory) {
+      // Update existing category
+      updateCategory({
+        id: currentCategory.category_id,
+        input: {
+          name: formData.name.trim(),
+          icon: formData.icon,
+          color: formData.color
+        }
+      });
     }
     
-    try {
-      if (isNewCategory) {
-        // Add new category
-        const { data, error } = await supabase
-          .from('categories')
-          .insert([
-            { 
-              category_key: formData.category_key,
-              en_name: formData.en_name,
-              id_name: formData.id_name,
-              type: formData.type,
-              icon: formData.icon
-            }
-          ])
-          .select();
-        
-        if (error) {
-          // Check if it's a "relation does not exist" error
-          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-            throw new Error('Categories feature is not available. Please contact support.');
-          }
-          throw error;
-        }
-        
-        toast({
-          title: t('common.success'),
-          description: t('categories.successAdd', 'Category added successfully')
-        });
-      } else if (currentCategory) {
-        // Update existing category
-        const { error } = await supabase
-          .from('categories')
-          .update({ 
-            category_key: formData.category_key,
-            en_name: formData.en_name,
-            id_name: formData.id_name,
-            type: formData.type,
-            icon: formData.icon
-          })
-          .eq('category_id', parseInt(currentCategory.id));
-        
-        if (error) {
-          // Check if it's a "relation does not exist" error
-          if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-            throw new Error('Categories feature is not available. Please contact support.');
-          }
-          throw error;
-        }
-        
-        toast({
-          title: t('common.success'),
-          description: t('categories.successUpdate', 'Category updated successfully')
-        });
-      }
-      
-      // Refresh category list
-      fetchCategories();
-      setEditDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error saving category:', error);
-      // Check if it's a "relation does not exist" error
-      if (error.message?.includes('Categories feature is not available')) {
-        toast({
-          title: t('common.error'),
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: error.message || t('categories.error.save', 'Failed to save category'),
-          variant: 'destructive'
-        });
-      }
-    }
+    setEditDialogOpen(false);
   };
   
   // Delete category
-  const deleteCategory = async () => {
+  const handleDelete = () => {
     if (!currentCategory) return;
     
-    try {
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('category_id', parseInt(currentCategory.id));
-      
-      if (error) {
-        // Check if it's a "relation does not exist" error
-        if (error.code === '42P01' || error.message.includes('relation') || error.message.includes('does not exist')) {
-          throw new Error('Categories feature is not available. Please contact support.');
-        }
-        throw error;
-      }
-      
-      toast({
-        title: t('common.success'),
-        description: t('categories.successDelete', 'Category deleted successfully')
-      });
-      
-      // Refresh category list
-      fetchCategories();
-      setDeleteDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error deleting category:', error);
-      // Check if it's a "relation does not exist" error
-      if (error.message?.includes('Categories feature is not available')) {
-        toast({
-          title: t('common.error'),
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: t('common.error'),
-          description: error.message || t('categories.error.delete', 'Failed to delete category'),
-          variant: 'destructive'
-        });
-      }
-    }
+    deleteCategoryHook(currentCategory.category_id);
+    setDeleteDialogOpen(false);
   };
   
   return (
     <div className="max-w-md mx-auto bg-[#1C2526] min-h-screen pb-24 text-white px-2">
       <div className="p-6 pt-12">
-      <div className="flex items-center mb-6">
-        <button onClick={() => navigate('/')} className="mr-4">
-          <ChevronLeft size={24} className="text-white" />
-        </button>
-        <h1 className="text-white text-xl font-bold">
-          {t('categories.management', 'Category Management')}
-        </h1>
-      </div>
-      
-      <div className="mb-4">
-        <Button 
-          onClick={handleAddCategory}
-          className="bg-[#C6FE1E] text-black hover:bg-[#B0E018]"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('categories.add', 'Add Category')}
-        </Button>
-      </div>
-      
-      {/* Categories Table */}
-      <div className="rounded-md border border-[#2A3435] overflow-hidden">
-        <Table>
-          <TableHeader className="bg-[#2A3435]">
-            <TableRow>
-              <TableHead className="text-white">Key</TableHead>
-              <TableHead className="text-white">English Name</TableHead>
-              <TableHead className="text-white">Indonesian Name</TableHead>
-              <TableHead className="text-white">Type</TableHead>
-              <TableHead className="text-white">Icon</TableHead>
-              <TableHead className="text-white">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <div className="flex items-center mb-6">
+          <button onClick={() => navigate('/')} className="mr-4">
+            <ChevronLeft size={24} className="text-white" />
+          </button>
+          <h1 className="text-white text-xl font-bold">
+            {t('categories.management', 'Category Management')}
+          </h1>
+        </div>
+        
+        <div className="mb-4">
+          <Button 
+            onClick={handleAddCategory}
+            className="bg-[#C6FE1E] text-black hover:bg-[#B0E018]"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('categories.addNew', 'Add New')}
+          </Button>
+        </div>
+        
+        {/* Custom Categories Table */}
+        <div className="rounded-md border border-[#2A3435] overflow-hidden">
+          <Table>
+            <TableHeader className="bg-[#2A3435]">
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-white py-4">
-                  Loading...
-                </TableCell>
+                <TableHead className="text-white">{t('categories.name', 'Name')}</TableHead>
+                <TableHead className="text-white">{t('categories.type', 'Type')}</TableHead>
+                <TableHead className="text-white">{t('categories.icon', 'Icon')}</TableHead>
+                <TableHead className="text-white">{t('common.edit', 'Actions')}</TableHead>
               </TableRow>
-            ) : categories.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-white py-4">
-                  No categories found
-                </TableCell>
-              </TableRow>
-            ) : (
-              categories.map((category) => (
-                <TableRow key={category.id} className="border-b border-[#2A3435]">
-                  <TableCell className="text-white">{category.category_key}</TableCell>
-                  <TableCell className="text-white">{category.en_name}</TableCell>
-                  <TableCell className="text-white">{category.id_name}</TableCell>
-                  <TableCell className="text-white capitalize">{category.type}</TableCell>
-                  <TableCell className="text-black">
-                    <div className="bg-[#C6FE1E] w-8 h-8 flex items-center justify-center rounded-full">
-                      {category.icon ? renderIcon(category.icon) : <Circle className="h-4 w-4" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleEditCategory(category)}
-                        className="text-white hover:bg-[#2A3435]"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleDeleteCategory(category)}
-                        className="text-red-500 hover:bg-[#2A3435] hover:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+            </TableHeader>
+            <TableBody>
+              {customCategories.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-gray-400 py-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <p>{t('categories.noCustomCategories', 'No Custom Categories Yet')}</p>
+                      <p className="text-sm text-gray-500">
+                        {t('categories.noCustomCategoriesDescription', 'Create your first category to better organize your transactions.')}
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Edit/Add Category Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="bg-[#1C2526] text-white border-[#2A3435]">
-          <DialogHeader>
-            <DialogTitle>
-              {isNewCategory 
-                ? t('categories.add', 'Add Category') 
-                : t('categories.edit', 'Edit Category')}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="category_key">Category Key</Label>
-              <Input
-                id="category_key"
-                name="category_key"
-                value={formData.category_key}
-                onChange={handleInputChange}
-                className="bg-[#2A3435] border-[#2A3435] text-white"
-                placeholder="expense_groceries"
-              />
+              ) : (
+                customCategories.map((category) => (
+                  <TableRow key={category.category_id} className="border-b border-[#2A3435]">
+                    <TableCell className="text-white">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-8 h-8 flex items-center justify-center rounded-full"
+                          style={{ backgroundColor: category.color || '#6B7280' }}
+                        >
+                          {renderIcon(category.icon || 'circle')}
+                        </div>
+                        <span>{getDisplayName(category)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-white">
+                      <span className="capitalize">
+                        {t(`categories.${category.type}`, category.type)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-white">
+                      <div className="flex items-center justify-center w-8 h-8 bg-white/10 rounded-full">
+                        {renderIcon(category.icon || 'circle')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleEditCategory(category)}
+                          className="text-white hover:bg-[#2A3435]"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteCategory(category)}
+                          className="text-red-500 hover:bg-[#2A3435] hover:text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        
+        {/* Edit/Add Category Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="bg-[#1C2526] text-white border-[#2A3435] max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {isNewCategory 
+                  ? t('categories.createNew', 'Create New Category') 
+                  : t('categories.editCategory', 'Edit Category')}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              {/* Category Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">{t('categories.name', 'Category Name')}</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="bg-[#2A3435] border-[#2A3435] text-white"
+                  placeholder={t('categories.namePlaceholder', 'e.g., Groceries, Salary, Investment')}
+                  maxLength={50}
+                  autoFocus
+                />
+              </div>
+              
+              {/* Category Type */}
+              <div className="space-y-2">
+                <Label htmlFor="type">{t('categories.type', 'Type')}</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value: 'income' | 'expense') => setFormData({ ...formData, type: value })}
+                  disabled={!isNewCategory} // Can't change type when editing
+                >
+                  <SelectTrigger className="bg-[#2A3435] border-[#2A3435] text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#2A3435] border-[#2A3435] text-white">
+                    <SelectItem value="expense" className="text-white">
+                      {t('categories.expense', 'Expense')}
+                    </SelectItem>
+                    <SelectItem value="income" className="text-white">
+                      {t('categories.income', 'Income')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Icon Selector */}
+              <div className="space-y-2">
+                <IconSelector
+                  selectedIcon={formData.icon}
+                  onIconChange={(iconName) => setFormData({ ...formData, icon: iconName })}
+                  variant="dropdown"
+                  label={t('categories.icon', 'Icon')}
+                />
+              </div>
+              
+              {/* Color Picker */}
+              <div className="space-y-2">
+                <Label>{t('categories.color', 'Color')}</Label>
+                <div className="grid grid-cols-4 gap-2">
+                  {CATEGORY_COLORS.map((color) => (
+                    <Button
+                      key={color}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, color })}
+                      className="h-10 w-full p-0 border-2 hover:scale-105 transition-transform"
+                      style={{ 
+                        backgroundColor: formData.color === color ? color : 'transparent',
+                        borderColor: formData.color === color ? color : '#2A3435'
+                      }}
+                    >
+                      <div 
+                        className="h-6 w-6 rounded-full" 
+                        style={{ backgroundColor: color }}
+                      />
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="en_name">English Name</Label>
-              <Input
-                id="en_name"
-                name="en_name"
-                value={formData.en_name}
-                onChange={handleInputChange}
-                className="bg-[#2A3435] border-[#2A3435] text-white"
-                placeholder="Groceries"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="id_name">Indonesian Name</Label>
-              <Input
-                id="id_name"
-                name="id_name"
-                value={formData.id_name}
-                onChange={handleInputChange}
-                className="bg-[#2A3435] border-[#2A3435] text-white"
-                placeholder="Kebutuhan Rumah"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleSelectChange('type', value)}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+                className="border-[#2A3435] text-white hover:bg-[#2A3435]"
+                disabled={isCreating || isUpdating}
               >
-                <SelectTrigger className="bg-[#2A3435] border-[#2A3435] text-white">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#2A3435] border-[#2A3435] text-white">
-                  <SelectItem value="expense" className="text-white">Expense</SelectItem>
-                  <SelectItem value="income" className="text-white">Income</SelectItem>
-                  <SelectItem value="system" className="text-white">System</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <IconSelector
-              selectedIcon={normalizeIconName(formData.icon)}
-              onIconChange={(iconName) => setFormData({ ...formData, icon: iconName })}
-              variant="dropdown"
-              label="Icon"
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditDialogOpen(false)}
-              className="border-[#2A3435] text-white hover:bg-[#2A3435]"
-            >
-              <X className="h-4 w-4 mr-2" />
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button
-              onClick={saveCategory}
-              className="bg-[#C6FE1E] text-black hover:bg-[#B0E018]"
-            >
-              <Check className="h-4 w-4 mr-2" />
-              {t('common.save', 'Save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#1C2526] text-white border-[#2A3435]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('categories.confirmDelete', 'Confirm Deletion')}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              {t('categories.deleteWarning', 'Are you sure you want to delete this category? This action cannot be undone.')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-[#2A3435] text-white border-[#2A3435] hover:bg-[#3A4445] hover:text-white">
-              {t('common.cancel', 'Cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={deleteCategory}
-            >
-              {t('common.delete', 'Delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                <X className="h-4 w-4 mr-2" />
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              <Button
+                onClick={handleSave}
+                className="bg-[#C6FE1E] text-black hover:bg-[#B0E018]"
+                disabled={!formData.name.trim() || isCreating || isUpdating}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                {isCreating || isUpdating 
+                  ? t('common.saving', 'Saving...') 
+                  : t('common.save', 'Save')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="bg-[#1C2526] text-white border-[#2A3435]">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t('categories.deleteConfirmTitle', 'Delete Category')}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400">
+                {currentCategory && t('categories.deleteConfirmDescription', {
+                  name: getDisplayName(currentCategory),
+                  defaultValue: `Are you sure you want to delete the category '${getDisplayName(currentCategory)}'? This action cannot be undone.`
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel 
+                className="bg-[#2A3435] text-white border-[#2A3435] hover:bg-[#3A4445] hover:text-white"
+                disabled={isDeleting}
+              >
+                {t('common.cancel', 'Cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? t('common.deleting', 'Deleting...') : t('common.delete', 'Delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
