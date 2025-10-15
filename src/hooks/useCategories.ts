@@ -15,7 +15,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import categoryService from '@/services/CategoryService';
+import categoryService from '@/services/categoryService';
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@/types/category';
 
 /**
