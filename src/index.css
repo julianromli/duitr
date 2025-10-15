@@ -304,3 +304,14 @@
   transform: translateX(-100%);
   transition: opacity 300ms, transform 300ms;
 }
+
+/* Fix pointer-events for Radix UI Portal wrappers to enable scrolling */
+[data-radix-popper-content-wrapper] {
+  pointer-events: auto !important;
+}
+
+/* Fix scrolling for Radix UI Select viewport on mobile devices */
+[data-radix-select-viewport] {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
+}

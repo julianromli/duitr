@@ -124,21 +124,13 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           // Handle category ID conversions
           let categoryId = t.category_id;
           
-          // Convert to a usable category ID for the frontend
-          if (categoryId) {
-            // If it's a UUID (old format)
-            if (typeof categoryId === 'string' && categoryId.length > 30) {
-              categoryId = getCategoryStringIdFromUuid(categoryId);
-            } 
-            // If it's a number (new format after migration)
-            else if (typeof categoryId === 'number' || !isNaN(Number(categoryId))) {
-              // We can use the numeric ID directly, or convert to string key if needed
-              // For now, we'll keep the numeric ID
-              categoryId = Number(categoryId);
-            }
-          } else {
+          // Use integer category ID directly (no conversion needed)
+          if (!categoryId) {
             // Default category ID if none exists
-            categoryId = t.type === 'transfer' ? 'system_transfer' : 'expense_other';
+            categoryId = t.type === 'transfer' ? 18 : (t.type === 'income' ? 17 : 12);
+          } else if (typeof categoryId === 'string') {
+            // Convert to number if it's a string representation
+            categoryId = Number(categoryId);
           }
           
           return {
@@ -330,26 +322,21 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 
     try {
-      // Determine the categoryId
-      let finalCategoryId = transaction.categoryId;
+      // Determine the categoryId (integer)
+      let finalCategoryId: number = transaction.categoryId || 0;
       
       // Handle specific cases
-      if (!finalCategoryId) {
+      if (!finalCategoryId || finalCategoryId === 0) {
         if (transaction.type === 'transfer') {
-          finalCategoryId = 'system_transfer';
-        } else if (transaction.category) {
-          // Legacy fallback
-          finalCategoryId = legacyCategoryNameToId(transaction.category);
+          finalCategoryId = 18; // System transfer category
         } else {
           // Default fallbacks
           finalCategoryId = transaction.type === 'income' ? 17 : 12; // Default to other
         }
       }
 
-      // Convert string ID to integer for the database
-      const dbCategoryId = getCategoryUuidFromStringId(
-        typeof finalCategoryId === 'string' ? finalCategoryId : String(finalCategoryId)
-      );
+      // Use integer category ID directly (no conversion needed)
+      const dbCategoryId = finalCategoryId;
 
       const newTransactionData = {
         amount: transaction.amount,
@@ -468,8 +455,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         amount: finalTransactionData.amount,
         category: '', // Leave empty as the column no longer exists
         categoryId: finalTransactionData.category_id ? 
-          (typeof finalTransactionData.category_id === 'string' && finalTransactionData.category_id.length > 30 ? 
-            getCategoryStringIdFromUuid(finalTransactionData.category_id) : 
+          (typeof finalTransactionData.category_id === 'string' ? 
+            Number(finalTransactionData.category_id) : 
             finalTransactionData.category_id) : 
           12, // Default to expense_other if no category_id
         description: finalTransactionData.description,
@@ -567,19 +554,22 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
      }
 
      try {
-        // Determine the categoryId
-        const categoryId = updatedTransaction.categoryId || 
-          (updatedTransaction.type === 'transfer' 
-            ? 'system_transfer' 
-            : legacyCategoryNameToId(updatedTransaction.category || ''));
+        // Determine the categoryId (integer)
+        let categoryId: number = updatedTransaction.categoryId || 0;
+        
+        if (!categoryId || categoryId === 0) {
+          categoryId = updatedTransaction.type === 'transfer' 
+            ? 18  // System transfer category
+            : (updatedTransaction.type === 'income' ? 17 : 12); // Default to other
+        }
 
-        // Convert string ID to integer for the database
-        const dbCategoryId = getCategoryUuidFromStringId(typeof categoryId === 'string' ? categoryId : String(categoryId));
+        // Use integer category ID directly (no conversion needed)
+        const dbCategoryId = categoryId;
 
         // Create update data with optional fields to handle schema issues
         const updateData: {
           amount: number;
-          category_id: string;
+          category_id: number;
           description: string;
           date: string;
           type: 'income' | 'expense' | 'transfer';
@@ -1567,21 +1557,10 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
           dbData.category_id = Number(dbData.category_id);
           console.log(`Using numeric category ID: ${dbData.category_id}`);
         }
-        // If it's a UUID, convert it to the appropriate integer ID based on type
-        else if (typeof dbData.category_id === 'string' && dbData.category_id.includes('-')) {
-          // Convert UUID to category_key first
-          const categoryKey = getCategoryStringIdFromUuid(dbData.category_id);
-          
-          // Then convert category_key to integer ID using the mapping
-          if (categoryKey.startsWith('expense_')) {
-            dbData.category_id = 12; // expense_other as fallback
-          } else if (categoryKey.startsWith('income_')) {
-            dbData.category_id = 17; // income_other as fallback
-          } else {
-            dbData.category_id = 18; // system_transfer as fallback
-          }
-          
-          console.log(`Converted UUID to ID: ${dbData.category_id}`);
+        // If it's a string, convert to number
+        else if (typeof dbData.category_id === 'string') {
+          dbData.category_id = Number(dbData.category_id) || (data.type === 'income' ? 17 : (data.type === 'transfer' ? 18 : 12));
+          console.log(`Converted string to numeric ID: ${dbData.category_id}`);
         }
       } else {
         // Default to "other" category if no category_id is provided
@@ -1636,29 +1615,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     formatCurrency,
   };
 
-  // Ensure transactions are sorted by date in descending order
-  useEffect(() => {
-    if (transactions.length > 0) {
-      const sortedTransactions = [...transactions].map(t => {
-        // Ensure categoryId is in string ID format for client-side use
-        let categoryId = t.categoryId;
-        if (categoryId && typeof categoryId === 'string' && categoryId.length > 30) {
-          categoryId = getCategoryStringIdFromUuid(categoryId);
-        } else if (!categoryId) {
-          categoryId = legacyCategoryNameToId(t.category || '');
-        }
-        
-        return {
-          ...t,
-          categoryId
-        };
-      }).sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-      
-      setTransactions(sortedTransactions);
-    }
-  }, []);
+  // Note: Transactions are already sorted by created_at DESC from the database query
+  // No need for additional sorting or category ID conversion (integer IDs used consistently)
 
   return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 };

@@ -33,10 +33,10 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
   open, 
   onOpenChange 
 }) => {
-  const { t } = useTranslation();
-  const { transactions, formatCurrency, wallets, updateTransaction, getDisplayCategoryName } = useFinance();
+  const { t, i18n } = useTranslation();
+  const { transactions, formatCurrency, wallets, updateTransaction } = useFinance();
   const { toast } = useToast();
-  const { getByType, getDisplayName } = useCategories();
+  const { getByType, getDisplayName, findById } = useCategories();
   const [isEditing, setIsEditing] = useState(false);
   
   // Find the transaction
@@ -336,7 +336,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
                       <div className="flex items-center">
                         <CategoryIcon category={String(category.id)} size="sm" />
                         <span className="ml-2">{category.name}</span>
-                      </motion.div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -347,8 +347,11 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
               <span className="text-[#868686]">{t('transactions.category')}</span>
               <div className="flex items-center">
                 <CategoryIcon category={transaction.categoryId} size="sm" />
-                <span className="ml-2">{getDisplayCategoryName(transaction)}</span>
-              </motion.div>
+                <span className="ml-2">{(() => {
+                  const category = findById(transaction.categoryId);
+                  return category ? getDisplayName(category, i18n.language) : t('transactions.other');
+                })()}</span>
+              </div>
             </motion.div>
           )}
           

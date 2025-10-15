@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTheme } from '@/context/ThemeContext';
 import html2canvas from 'html2canvas';
 import CategoryIcon from '@/components/shared/CategoryIcon';
+import CategorySelector from '@/components/CategorySelector';
 import {
   Sheet,
   SheetContent,
@@ -654,28 +655,13 @@ const TransactionDetailOverlay: React.FC<TransactionDetailOverlayProps> = ({
                       <Label htmlFor="category" className="text-muted-foreground">
                         {t('transactions.category')}
                       </Label>
-                      <Select 
-                        value={String(editedTransaction.categoryId)} 
+                      <CategorySelector
+                        type={transaction.type === 'income' ? 'income' : 'expense'}
+                        value={editedTransaction.categoryId}
                         onValueChange={(value) => handleChange('categoryId', value)}
-                      >
-                        <SelectTrigger className="bg-card border-muted-foreground/20 text-foreground">
-                          <SelectValue placeholder={t('transactions.categoryform')} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card border-muted-foreground/20 text-foreground max-h-[300px]">
-                          {categories.map((category) => (
-                            <SelectItem 
-                              key={category.id} 
-                              value={String(category.id)}
-                              className="hover:bg-muted/50 focus:bg-muted/50"
-                            >
-                              <div className="flex items-center">
-                                <CategoryIcon category={String(category.id)} size="sm" />
-                                <span className="ml-2">{category.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder={t('transactions.categoryform')}
+                        className="bg-card border-muted-foreground/20 text-foreground"
+                      />
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">

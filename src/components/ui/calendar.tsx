@@ -131,7 +131,7 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
         <SelectTrigger className="h-8 w-[110px] border-0 bg-[#242425] text-white text-xs px-2 py-0">
           <SelectValue>{months[month]}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-[#0D0D0D] border-[#333] text-white max-h-[200px]">
+        <SelectContent className="bg-[#0D0D0D] border-[#333] text-white max-h-[200px] z-[9999]">
           {months.map((monthName, index) => (
             <SelectItem key={monthName} value={index.toString()} className="text-sm hover:bg-[#242425] cursor-pointer">
               {monthName}
@@ -147,7 +147,7 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
         <SelectTrigger className="h-8 w-[80px] border-0 bg-[#242425] text-white text-xs px-2 py-0">
           <SelectValue>{year}</SelectValue>
         </SelectTrigger>
-        <SelectContent className="bg-[#0D0D0D] border-[#333] text-white max-h-[200px]">
+        <SelectContent className="bg-[#0D0D0D] border-[#333] text-white max-h-[200px] z-[9999]">
           {yearRange.map((yearValue) => (
             <SelectItem key={yearValue} value={yearValue.toString()} className="text-sm hover:bg-[#242425] cursor-pointer">
               {yearValue}
