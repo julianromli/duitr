@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -7,13 +7,11 @@ import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/currency/CurrencyInput';
 import { SupportedCurrency } from '@/utils/currency';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useTranslation } from 'react-i18next';
-import i18n from '@/i18n';
-import { useCategories } from '@/hooks/useCategories';
-import CategoryIcon from '@/components/shared/CategoryIcon';
+import CategorySelector from '@/components/CategorySelector';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
 import { PlusCircle } from 'lucide-react';
 import AnimatedText from '@/components/ui/animated-text';
@@ -32,31 +30,10 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [formData, setFormData] = useState({
     amount: 0,
-    categoryId: '',
+    categoryId: null as number | null,
     description: '',
     walletId: '',
   });
-  
-  const { categories: allCategories, isLoading: isLoadingCategories, refetch: refetchCategories } = useCategories();
-  
-  // Filter income categories (both default and custom)
-  const categories = useMemo(() => {
-    return allCategories
-      .filter(cat => cat.type === 'income')
-      .map(cat => ({
-        id: cat.id || cat.category_id?.toString() || '',
-        name: i18n.language === 'id' ? (cat.id_name || cat.en_name || 'Unknown') : (cat.en_name || cat.id_name || 'Unknown'),
-        icon: cat.icon || 'circle',
-        color: cat.color || '#6B7280'
-      }));
-  }, [allCategories, i18n.language]);
-  
-  // Force cache refresh when dialog opens to ensure latest categories are loaded
-  useEffect(() => {
-    if (open) {
-      refetchCategories();
-    }
-  }, [open, refetchCategories]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -92,10 +69,10 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     // Format date to ISO string
     const dateString = selectedDate.toISOString().split('T')[0];
     
-    // Add transaction (convert categoryId to number)
+    // Add transaction
     addTransaction({
       amount: formData.amount,
-      categoryId: Number(formData.categoryId),
+      categoryId: formData.categoryId!,
       description: formData.description,
       date: dateString,
       type: 'income',
@@ -105,7 +82,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
     // Reset form
     setFormData({
       amount: 0,
-      categoryId: '',
+      categoryId: null,
       description: '',
       walletId: '',
     });
@@ -156,49 +133,13 @@ const IncomeForm: React.FC<IncomeFormProps> = ({ open, onOpenChange }) => {
               <div className="w-1 h-4 bg-[#C6FE1E] rounded-full"></div>
               <AnimatedText text={t('transactions.category')} />
             </Label>
-            <Select
-              value={formData.categoryId ? String(formData.categoryId) : ""}
+            <CategorySelector
+              type="income"
+              value={formData.categoryId}
               onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
-              disabled={isLoadingCategories}
-            >
-              <SelectTrigger className="bg-[#242425]/80 border border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] transition-colors duration-200 focus:ring-2 focus:ring-[#C6FE1E]/50">
-                <SelectValue>
-                  <AnimatedText 
-                    text={isLoadingCategories ? t('common.loading') : 
-                      formData.categoryId ? 
-                        categories.find(c => c.id === formData.categoryId)?.name || t('transactions.categoryform') :
-                        t('transactions.categoryform')
-                    }
-                  />
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-[#242425] border border-white/10 text-white backdrop-blur-xl max-h-[300px]">
-                {isLoadingCategories ? (
-                  <SelectItem value="loading" disabled>
-                    <AnimatedText text={t('common.loading')} />
-                  </SelectItem>
-                ) : (
-                  categories.map((category) => (
-                    <SelectItem 
-                      key={category.id} 
-                      value={String(category.id)}
-                      className="hover:bg-[#333]/80 focus:bg-[#333]/80 hover:text-white focus:text-white transition-colors duration-200"
-                    >
-                      <div className="flex items-center">
-                        <CategoryIcon 
-                          category={category.id}
-                          size="sm"
-                          className="mr-2"
-                        />
-                        <span className="ml-2">
-                          <AnimatedText text={category.name} animationType="fade" />
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              placeholder={t('transactions.categoryform')}
+              className="bg-[#242425]/80 border-white/10 text-white h-12 rounded-xl hover:bg-[#242425] focus:ring-2 focus:ring-[#C6FE1E]/50"
+            />
           </div>
           
           <div className="space-y-3">

@@ -12,7 +12,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -154,13 +154,15 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                 {placeholder || t('categories.selectCategory')}
               </span>
             )}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput 
-              placeholder={t('categories.searchCategories')} 
-              className="h-9" 
+              placeholder={t('categories.searchCategoriesPlaceholder')} 
+              className="h-9"
+              autoFocus
             />
             <CommandList>
               <CommandEmpty>{t('categories.noResults')}</CommandEmpty>
@@ -188,7 +190,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                       onValueChange(category.category_id);
                       setOpen(false);
                     }}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between cursor-pointer transition-colors"
                   >
                     <div className="flex items-center space-x-2">
                       <CategoryIcon 

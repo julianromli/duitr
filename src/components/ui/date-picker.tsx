@@ -75,7 +75,7 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
             {date ? format(date, "dd/MM/yyyy") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-[#0D0D0D] border border-[#333]" align="start">
+        <PopoverContent className="w-auto p-0 bg-[#0D0D0D] border border-[#333] z-[9998] pointer-events-auto" align="start">
           <Calendar
             mode="single"
             selected={date}

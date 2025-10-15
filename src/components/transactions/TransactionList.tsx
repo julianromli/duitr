@@ -284,7 +284,7 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
       // Format transaction data
       const processedTransactions = data.map(t => {
         // Handle category conversion
-        let categoryId = t.category_id;
+        const categoryId = t.category_id;
         
         // For numeric category_id, keep it as is - we'll display by category_id directly
         // The getDisplayCategoryName function will handle the proper display

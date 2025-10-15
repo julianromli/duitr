@@ -18,10 +18,12 @@ import { SuggestedQuestions } from './SuggestedQuestions';
 import { ChatBox } from './ChatBox';
 import type { FinanceSummary, ChatMessage } from '@/types/finance';
 import { useTranslation } from 'react-i18next';
+import { useCategories } from '@/hooks/useCategories';
 
 const EvaluatePage: React.FC = () => {
-  const { transactions, wallets, getDisplayCategoryName } = useFinance();
-  const { t } = useTranslation();
+  const { transactions, wallets } = useFinance();
+  const { findById, getDisplayName } = useCategories();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -66,8 +68,9 @@ const EvaluatePage: React.FC = () => {
     const income = filteredTransactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => {
-        // Use getDisplayCategoryName to get the proper category name
-        const categoryName = getDisplayCategoryName(t) || t('income.categories.other', 'Other Income');
+        // Get category display name
+        const category = findById(t.categoryId);
+        const categoryName = category ? getDisplayName(category, i18n.language) : t('income.categories.other', 'Other Income');
         const existing = acc.find(item => item.category === categoryName);
         if (existing) {
           existing.amount += t.amount;
@@ -81,8 +84,9 @@ const EvaluatePage: React.FC = () => {
     const expenses = filteredTransactions
       .filter(t => t.type === 'expense')
       .reduce((acc, t) => {
-        // Use getDisplayCategoryName to get the proper category name
-        const categoryName = getDisplayCategoryName(t) || t('transactions.categories.other', 'Other Expenses');
+        // Get category display name
+        const category = findById(t.categoryId);
+        const categoryName = category ? getDisplayName(category, i18n.language) : t('transactions.categories.other', 'Other Expenses');
         const existing = acc.find(item => item.category === categoryName);
         if (existing) {
           existing.amount += t.amount;
