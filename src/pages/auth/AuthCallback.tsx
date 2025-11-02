@@ -55,7 +55,7 @@ const AuthCallback = () => {
   }, [isMounted]);
   
   // Define the function as a ref to avoid dependency issues
-  const handleAuthCallbackRef = useRef<() => Promise<void>>();
+  const handleAuthCallbackRef = useRef<() => Promise<void>>(undefined);
   
   handleAuthCallbackRef.current = async () => {
     // Don't process auth more than once

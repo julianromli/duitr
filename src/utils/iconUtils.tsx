@@ -1,7 +1,7 @@
 // Icon utilities for category icon rendering
 // Provides consistent icon mapping across all components
 
-import React from 'react';
+import React, { type JSX } from 'react';
 
 export const getIconComponent = (iconName: string) => {
   const iconMap: { [key: string]: () => JSX.Element } = {
