@@ -2,6 +2,7 @@ import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
+import { sanitizeCSS } from "@/utils/sanitize"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -77,7 +78,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
+        __html: sanitizeCSS(Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
@@ -92,7 +93,7 @@ ${colorConfig
 }
 `
           )
-          .join("\n"),
+          .join("\n")),
       }}
     />
   )
