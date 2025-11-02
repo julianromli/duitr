@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { sanitizeHTML } from '@/utils/sanitize';
 
 interface InsightDisplayProps {
   text: string;
@@ -50,7 +51,7 @@ export const InsightDisplay: React.FC<InsightDisplayProps> = ({ text, isLoading 
               <p 
                 key={index} 
                 className="mb-3 text-gray-300 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: formattedText }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(formattedText) }}
               />
             );
           })}
