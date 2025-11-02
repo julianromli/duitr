@@ -182,22 +182,25 @@ export class AITransactionService {
   private parseAmount(amount: string | number): number {
     if (typeof amount === 'number') return amount;
     if (typeof amount === 'string') {
-      // Handle Indonesian format like "10 ribu", "30rb", "50k"
-      const cleaned = amount.toLowerCase()
-        .replace(/[^\d]/g, '')
-        .replace(/^0+/, '');
-
-      if (amount.toLowerCase().includes('ribu') || amount.toLowerCase().includes('rb')) {
-        return parseInt(cleaned || '0') * 1000;
+      const lowerAmount = amount.toLowerCase();
+      
+      // Detect multiplier BEFORE cleaning digits
+      let multiplier = 1;
+      if (lowerAmount.includes('juta') || lowerAmount.includes('jt')) {
+        multiplier = 1000000;
+      } else if (lowerAmount.includes('ribu') || lowerAmount.includes('rb')) {
+        multiplier = 1000;
+      } else if (lowerAmount.includes('k')) {
+        multiplier = 1000;
       }
-      if (amount.toLowerCase().includes('juta') || amount.toLowerCase().includes('jt')) {
-        return parseInt(cleaned || '0') * 1000000;
-      }
-      if (amount.toLowerCase().includes('k')) {
-        return parseInt(cleaned || '0') * 1000;
-      }
-
-      return parseInt(cleaned || '0');
+      
+      // Extract numeric value (supports decimals like "2.5 juta")
+      const numericMatch = lowerAmount.match(/[\d.]+/);
+      if (!numericMatch) return 0;
+      
+      const numericValue = parseFloat(numericMatch[0]);
+      
+      return Math.round(numericValue * multiplier);
     }
     return 0;
   }
