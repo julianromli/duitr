@@ -2,7 +2,7 @@ import * as React from "react"
 import { AnimatePresence, motion } from "framer-motion"
 
 // Define our own types instead of importing to avoid dependencies
-type ToastActionElement = React.ReactElement
+type ToastActionElement = React.ReactElement<any>
 
 type ToastProps = {
   variant?: "default" | "destructive" | "success" | "warning" | "info"
