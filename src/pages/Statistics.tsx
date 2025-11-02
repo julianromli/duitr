@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFinance } from '@/context/FinanceContext';
 import { ChevronLeft, ChevronDown } from 'lucide-react';
@@ -8,8 +8,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
 } from 'recharts';
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { useTransactions } from '@/hooks/useTransactions';
 import { 
   Popover,
@@ -155,7 +155,23 @@ const Statistics: React.FC = () => {
   chartData.sort((a, b) => b.value - a.value);
   
   // Colors for pie chart - using a varied yet harmonious color palette
-  const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'];
+  const COLORS = useMemo(() => ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'], []);
+  
+  // Create chart config for shadcn/ui ChartContainer
+  const chartConfig = useMemo(() => {
+    const config: ChartConfig = {};
+    
+    chartData.forEach((item, index) => {
+      // Use categoryId or sanitized name as key
+      const key = item.categoryId || item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      config[key] = {
+        label: item.name,
+        color: COLORS[index % COLORS.length],
+      };
+    });
+    
+    return config;
+  }, [chartData, COLORS]);
   
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -197,15 +213,6 @@ const Statistics: React.FC = () => {
       y: 0,
       opacity: 1,
       transition: { type: "spring", stiffness: 300, damping: 24 }
-    }
-  };
-
-  const chartVariants = {
-    hidden: { scale: 0.8, opacity: 0 },
-    visible: {
-      scale: 1, 
-      opacity: 1,
-      transition: { type: "spring", stiffness: 200, damping: 20, delay: 0.2 }
     }
   };
 
@@ -362,98 +369,95 @@ const Statistics: React.FC = () => {
           <motion.div 
             className="-mx-6 -mb-6"
             variants={itemVariants}
-            key="analysis-content"
           >
             <EvaluateContent />
           </motion.div>
-        ) : (
-          /* Chart Section */
-          filteredTransactions.length > 0 ? (
-            <>
-              <motion.div 
-                className="flex justify-center items-center mb-8 border bg-card p-6 rounded-xl"
-                variants={chartVariants}
-                key={`chart-${activeTab}`}
-              >
-                <div className="h-[220px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={90}
-                        paddingAngle={0}
-                        dataKey="value"
-                        strokeWidth={0}
-                        animationBegin={300}
-                        animationDuration={800}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}-${activeTab}`} 
-                            fill={COLORS[index % COLORS.length]} 
-                          />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  
-                  {/* Center Text */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                    <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
-                    <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="mt-8" 
-                variants={itemVariants}
-                key={`breakdown-${activeTab}`}
-              >
-                <h3 className="text-lg font-bold mb-4">
-                  {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
-                </h3>
-                <div className="space-y-3">
-                  {chartData.map((category, index) => (
-                    <motion.div 
-                      key={`${category.name}-${index}-${activeTab}`}
-                      className="flex justify-between items-center p-4 border bg-card rounded-xl"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 + (index * 0.05) }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+        ) : filteredTransactions.length > 0 ? (
+          <>
+            {/* Chart Section - Using shadcn/ui ChartContainer */}
+            <div className="flex justify-center items-center mb-8 border bg-card p-6 rounded-xl">
+              <div className="h-[220px] w-full relative">
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-full w-full"
+                >
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={90}
+                      paddingAngle={0}
+                      dataKey="value"
+                      strokeWidth={0}
+                      animationBegin={0}
+                      animationDuration={800}
                     >
-                      <div>
-                        <span className="font-medium">{category.name}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium">{formatCurrency(category.value)}</span>
-                        <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
-                          backgroundColor: COLORS[index % COLORS.length]
-                        }}>
-                          {category.percentage}%
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      {chartData.map((entry, index) => {
+                        const key = entry.categoryId || entry.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={`var(--color-${key})`}
+                          />
+                        );
+                      })}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+                
+                {/* Center Text */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <p className="text-[#868686] text-sm">{t('statistics.total')}</p>
+                  <p className="text-xl font-bold">{formatCurrency(totalAmount)}</p>
                 </div>
-              </motion.div>
-            </>
-          ) : (
+              </div>
+            </div>
+            
             <motion.div 
-              className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              key="no-data"
+              className="mt-8" 
+              variants={itemVariants}
             >
-              <p className="text-[#868686]">{t('statistics.noData')}</p>
+              <h3 className="text-lg font-bold mb-4">
+                {activeTab === 'income' ? t('statistics.incomeBreakdown') : t('statistics.expenseBreakdown')}
+              </h3>
+              <div className="space-y-3">
+                {chartData.map((category, index) => (
+                  <motion.div 
+                    key={`${category.name}-${index}`}
+                    className="flex justify-between items-center p-4 border bg-card rounded-xl"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + (index * 0.05) }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div>
+                      <span className="font-medium">{category.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium">{formatCurrency(category.value)}</span>
+                      <div className="px-2 py-1 rounded-full text-xs font-medium text-white" style={{ 
+                        backgroundColor: COLORS[index % COLORS.length]
+                      }}>
+                        {category.percentage}%
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
-          )
+          </>
+        ) : (
+          <motion.div 
+            className="h-[250px] flex items-center justify-center bg-[#242425] rounded-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="text-[#868686]">{t('statistics.noData')}</p>
+          </motion.div>
         )}
       </div>
     </motion.div>
