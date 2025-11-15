@@ -1,7 +1,10 @@
 import React, { useMemo, useCallback } from 'react';
 import { PieChart, LineChart, BarChart3, Calendar } from 'lucide-react';
-import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useBudgets } from '@/hooks/useBudgets';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFinance } from '@/context/FinanceContext';
@@ -75,28 +78,48 @@ const BudgetProgress: React.FC = () => {
   
   // Colors for pie chart
   const COLORS = ['#4263EB', '#0CA678', '#F59F00', '#FA5252', '#7950F2', '#74C0FC'];
-  
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="p-3 bg-white dark:bg-black border shadow-lg rounded-lg">
-          <p className="text-sm font-medium">{payload[0].name}</p>
-          <div className="text-xs" style={{ color: payload[0].color }}>
-            <CurrencyDisplay 
-              amount={payload[0].value}
-              currency={currency}
-              
-              size="sm"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {t(`budgets.${payload[0].payload.period}`)}
-          </p>
-        </div>
-      );
+
+  // Prepare Chart.js data structure for pie chart
+  const pieChartData = useMemo(() => ({
+    labels: pieData.map(item => item.name),
+    datasets: [{
+      data: pieData.map(item => item.value),
+      backgroundColor: pieData.map((_, index) => COLORS[index % COLORS.length]),
+      borderWidth: 0,
+      borderRadius: 8,
+    }]
+  }), [pieData, COLORS]);
+
+  // Chart.js options
+  const chartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: '#000',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: '#333',
+        borderWidth: 1,
+        padding: 12,
+        titleFont: { size: 12, weight: 'bold' },
+        bodyFont: { size: 12 },
+        callbacks: {
+          label: (context: any) => {
+            const budgetData = pieData[context.dataIndex];
+            return `${budgetData.name}: ${currency === 'IDR' ? `Rp ${Math.round(context.parsed).toLocaleString('id-ID')}` : `$${context.parsed.toLocaleString('en-US', {minimumFractionDigits: 2})}`}`;
+          },
+          afterLabel: (context: any) => {
+            const budgetData = pieData[context.dataIndex];
+            return `${budgetData.period}`;
+          }
+        }
+      }
     }
-    return null;
-  };
+  }), [pieData, currency]);
 
   // Function to get period labels
   const getPeriodLabel = (period: string) => {
@@ -187,25 +210,10 @@ const BudgetProgress: React.FC = () => {
         
         <CardContent>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <RePieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  labelLine={false}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-              </RePieChart>
-            </ResponsiveContainer>
+            <Pie 
+              data={pieChartData} 
+              options={chartOptions}
+            />
           </div>
         </CardContent>
       </Card>

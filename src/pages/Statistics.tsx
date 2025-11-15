@@ -4,14 +4,11 @@ import { useFinance } from '@/context/FinanceContext';
 import { ChevronLeft, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCategories } from '@/hooks/useCategories';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useTransactions } from '@/hooks/useTransactions';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 import { 
   Popover,
   PopoverContent,
@@ -157,6 +154,41 @@ const Statistics: React.FC = () => {
   
   // Colors for pie chart - using a varied yet harmonious color palette
   const COLORS = useMemo(() => ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'], []);
+
+  // Prepare Chart.js data structure
+  const pieChartData = useMemo(() => ({
+    labels: chartData.map(item => item.name),
+    datasets: [{
+      data: chartData.map(item => item.value),
+      backgroundColor: chartData.map((_, index) => COLORS[index % COLORS.length]),
+      borderWidth: 0,
+      borderRadius: 8,
+    }]
+  }), [chartData, COLORS]);
+
+  // Chart.js options
+  const chartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: '#1A1A1A',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: '#333',
+        borderWidth: 1,
+        padding: 12,
+        titleFont: { size: 12, weight: 'bold' },
+        bodyFont: { size: 12 },
+        callbacks: {
+          label: (context: any) => formatCurrency(context.parsed),
+        }
+      }
+    }
+  }), [formatCurrency]);
   
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -359,41 +391,13 @@ const Statistics: React.FC = () => {
           </motion.div>
         ) : filteredTransactions.length > 0 ? (
           <>
-            {/* Chart Section - Using Recharts ResponsiveContainer */}
+            {/* Chart Section - Using Chart.js */}
             <div className="mb-8 border bg-card p-6 rounded-xl">
               <div className="h-[280px] w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={60}
-                      outerRadius={85}
-                      paddingAngle={2}
-                      dataKey="value"
-                      strokeWidth={0}
-                      animationBegin={0}
-                      animationDuration={800}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
-                      contentStyle={{
-                        backgroundColor: '#1A1A1A',
-                        border: '1px solid #333',
-                        borderRadius: '8px',
-                        color: '#fff'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <Pie 
+                  data={pieChartData} 
+                  options={chartOptions}
+                />
                 
                 {/* Center Text */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
