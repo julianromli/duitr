@@ -265,4 +265,145 @@ self.addEventListener('message', (event) => {
     console.log('[Service Worker] Skip waiting message received');
     self.skipWaiting();
   }
+});
+
+// ============================================================================
+// PUSH NOTIFICATION HANDLERS (Phase 1 - Foundation)
+// ============================================================================
+
+/**
+ * Handle push notification events
+ * Receives push messages from server and displays notification
+ */
+self.addEventListener('push', (event) => {
+  console.log('[Service Worker] Push notification received', event);
+  
+  // Default notification data
+  let notificationData = {
+    title: 'Duitr',
+    body: 'You have a new notification',
+    icon: '/pwa-icons/icon-192x192.png',
+    badge: '/pwa-icons/icon-96x96.png',
+    tag: 'duitr-notification',
+    requireInteraction: false,
+    data: {
+      url: '/',
+      timestamp: Date.now(),
+    },
+  };
+
+  // Parse push data if available
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+      
+      // Merge push data with defaults
+      notificationData = {
+        ...notificationData,
+        ...pushData,
+        data: {
+          ...notificationData.data,
+          ...(pushData.data || {}),
+        },
+      };
+      
+      console.log('[Service Worker] Parsed push data:', notificationData);
+    } catch (error) {
+      console.error('[Service Worker] Error parsing push data:', error);
+      // Use default notification data
+    }
+  }
+
+  // Show notification
+  const notificationPromise = self.registration.showNotification(
+    notificationData.title,
+    {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag,
+      requireInteraction: notificationData.requireInteraction,
+      vibrate: [200, 100, 200],
+      data: notificationData.data,
+      actions: notificationData.actions || [
+        { action: 'view', title: 'View' },
+        { action: 'dismiss', title: 'Dismiss' },
+      ],
+    }
+  );
+
+  event.waitUntil(notificationPromise);
+});
+
+/**
+ * Handle notification click events
+ * Opens app when user clicks notification
+ */
+self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notification clicked:', event.notification.tag);
+  
+  const notification = event.notification;
+  const action = event.action;
+  const data = notification.data || {};
+
+  // Close the notification
+  notification.close();
+
+  // Handle different actions
+  if (action === 'dismiss') {
+    console.log('[Service Worker] Notification dismissed');
+    return;
+  }
+
+  // Determine URL to open
+  let urlToOpen = data.url || '/';
+  
+  // Handle budget alert notifications
+  if (data.type === 'budget_alert') {
+    urlToOpen = '/budgets';
+  }
+
+  // Open or focus app window
+  event.waitUntil(
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    }).then((clientList) => {
+      // Check if app is already open
+      for (const client of clientList) {
+        const clientUrl = new URL(client.url);
+        
+        // If app is already open, focus it and navigate
+        if (clientUrl.origin === self.location.origin) {
+          console.log('[Service Worker] Focusing existing window');
+          return client.focus().then((focusedClient) => {
+            // Navigate to notification URL if different
+            if (focusedClient.url !== urlToOpen) {
+              return focusedClient.navigate(urlToOpen);
+            }
+            return focusedClient;
+          });
+        }
+      }
+      
+      // If no window is open, open a new one
+      console.log('[Service Worker] Opening new window:', urlToOpen);
+      return clients.openWindow(urlToOpen);
+    })
+  );
+});
+
+/**
+ * Handle notification close events
+ * Track when user dismisses notification
+ */
+self.addEventListener('notificationclose', (event) => {
+  console.log('[Service Worker] Notification closed:', event.notification.tag);
+  
+  // Optional: Send analytics or tracking data
+  const notification = event.notification;
+  const data = notification.data || {};
+  
+  // Future: Track notification dismissal metrics
+  console.log('[Service Worker] Notification dismissed without action:', data);
 }); 

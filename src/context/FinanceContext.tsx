@@ -92,7 +92,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         ]);
 
         // Store categories for mapping purposes using useCategories hook data
-        let categoryMap: Record<number, { en_name: string, id_name: string }> = {};
+        const categoryMap: Record<number, { en_name: string, id_name: string }> = {};
         
         // Create a map of categoryId -> category names from useCategories hook
         if (userCategories && userCategories.length > 0) {
@@ -502,7 +502,7 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         return;
      }
 
-     let balanceUpdates: { walletId: string; change: number }[] = [];
+     const balanceUpdates: { walletId: string; change: number }[] = [];
 
      if (oldTransaction.type === 'transfer') {
         const oldFee = oldTransaction.fee ?? 0;

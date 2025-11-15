@@ -435,7 +435,36 @@
     "saving": "Saving...",
     "saveProfile": "Save Profile",
     "logout": "Logout",
-    "viewProfileImage": "View profile image"
+    "viewProfileImage": "View profile image",
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage your notification preferences",
+      "enableNotifications": "Enable Notifications",
+      "enableNotificationsDesc": "Receive alerts for budget warnings and important updates",
+      "permissionStatus": "Permission Status",
+      "permissionGranted": "Granted",
+      "permissionDenied": "Denied",
+      "permissionDefault": "Not Set",
+      "enabled": "Notifications Enabled",
+      "enabledDesc": "You will receive budget alerts and updates.",
+      "disabled": "Notifications Disabled",
+      "disabledDesc": "You will no longer receive notifications.",
+      "testNotification": "Send Test Notification",
+      "testTitle": "Test Notification",
+      "testBody": "This is a test notification from Duitr. Your notification system is working! 🎉",
+      "testSent": "Test Sent",
+      "testSentDesc": "Check your notification area for the test notification.",
+      "sending": "Sending...",
+      "notSupported": "Not Supported",
+      "notSupportedDesc": "Your browser does not support notifications. Please use a modern browser like Chrome, Firefox, or Safari.",
+      "limitedSupport": "Limited Support",
+      "limitedSupportDesc": "Some notification features may not work properly in your browser.",
+      "noServiceWorker": "Service Worker not available",
+      "noPushManager": "Push Manager not available",
+      "permissionDeniedHelp": "To enable notifications, you need to allow them in your browser settings. Look for the notification icon in your address bar or browser settings.",
+      "phase1Title": "Early Preview",
+      "phase1Desc": "Notification system is in early preview. Automated budget alerts will be available in a future update."
+    }
   },
   "export": {
     "title": "Export Financial Data",
@@ -614,5 +643,33 @@
     }
   },
   "tryAgain": "Try Again",
-  "addError": "Failed to add item"
+  "addError": "Failed to add item",
+  "budget": {
+    "healthWidget": {
+      "title": "Budget Health"
+    },
+    "risk": {
+      "low": "Low Risk",
+      "medium": "Medium Risk",
+      "high": "High Risk"
+    },
+    "noRisk": "No Data",
+    "confidence": "confidence",
+    "collapse": "Collapse details",
+    "expand": "Expand details",
+    "currentSpend": "Current Spending",
+    "projectedSpend": "Projected",
+    "limit": "Budget Limit",
+    "overrun": "Over Budget",
+    "remaining": "Remaining",
+    "daysRemaining": "Days Left",
+    "days": "days",
+    "recommendedDaily": "Daily Limit",
+    "unknownCategory": "Unknown Category",
+    "predictionError": "Failed to load predictions",
+    "predictionUnavailable": "Budget predictions are temporarily unavailable",
+    "noPredictionsAvailable": "No predictions available",
+    "noPredictionsDescription": "Create budgets and add transactions to see AI-powered predictions.",
+    "refresh": "Refresh predictions"
+  }
 }

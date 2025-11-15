@@ -4,6 +4,51 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
+
+// =================================================================
+// Type definitions for budget predictions
+// =================================================================
+interface Budget {
+  categoryId: number;
+  categoryName?: string;
+  limit: number;
+  period: 'monthly';
+}
+
+interface Transaction {
+  categoryId: number;
+  amount: number;
+  date: string;
+  type: 'expense' | 'income';
+}
+
+interface CategorySpending {
+  categoryId: number;
+  totalSpent: number;
+  transactionCount: number;
+}
+
+interface BudgetPrediction {
+  categoryId: number;
+  categoryName: string;
+  currentSpend: number;
+  budgetLimit: number;
+  projectedSpend: number;
+  overrunAmount: number;
+  riskLevel: 'low' | 'medium' | 'high';
+  confidence: number;
+  daysRemaining: number;
+  recommendedDailyLimit: number;
+  insight: string;
+  seasonalNote?: string;
+}
+
+interface PredictBudgetResponse {
+  predictions: BudgetPrediction[];
+  overallRisk: 'low' | 'medium' | 'high';
+  summary: string;
+}
+
 // =================================================================
 // Final, improved buildPrompt function
 // =================================================================
@@ -170,6 +215,246 @@ ${p.userInput}
 
 Pastikan response adalah JSON yang valid.`;
 }
+
+// =================================================================
+// Budget prediction helper functions
+// =================================================================
+
+/**
+ * Calculate the number of days in a month
+ */
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+/**
+ * Get start and end dates for the current month period
+ */
+function getCurrentMonthPeriod(currentDate: Date): { start: Date; end: Date; daysElapsed: number; totalDays: number; daysRemaining: number } {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const day = currentDate.getDate();
+  
+  const start = new Date(year, month, 1);
+  const totalDays = getDaysInMonth(year, month);
+  const daysElapsed = day;
+  const daysRemaining = totalDays - day;
+  
+  return {
+    start,
+    end: new Date(year, month, totalDays, 23, 59, 59),
+    daysElapsed,
+    totalDays,
+    daysRemaining
+  };
+}
+
+/**
+ * Calculate spending for each category in current period
+ */
+function calculateCategorySpending(transactions: Transaction[], startDate: Date, endDate: Date): Map<number, CategorySpending> {
+  const spending = new Map<number, CategorySpending>();
+  
+  for (const txn of transactions) {
+    // Only count expenses
+    if (txn.type !== 'expense') continue;
+    
+    const txnDate = new Date(txn.date);
+    if (txnDate >= startDate && txnDate <= endDate) {
+      const current = spending.get(txn.categoryId) || { 
+        categoryId: txn.categoryId, 
+        totalSpent: 0, 
+        transactionCount: 0 
+      };
+      
+      current.totalSpent += txn.amount;
+      current.transactionCount += 1;
+      spending.set(txn.categoryId, current);
+    }
+  }
+  
+  return spending;
+}
+
+/**
+ * Calculate seasonal pattern by comparing with historical data
+ */
+function analyzeSeasonalPattern(
+  transactions: Transaction[], 
+  categoryId: number, 
+  currentDate: Date,
+  currentSpend: number
+): { hasPattern: boolean; note?: string; historicalAverage?: number } {
+  const currentDay = currentDate.getDate();
+  
+  // Get last 3 months same period spending
+  const historicalSpending: number[] = [];
+  
+  for (let monthsBack = 1; monthsBack <= 3; monthsBack++) {
+    const historicalDate = new Date(currentDate);
+    historicalDate.setMonth(historicalDate.getMonth() - monthsBack);
+    
+    const year = historicalDate.getFullYear();
+    const month = historicalDate.getMonth();
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month, currentDay, 23, 59, 59);
+    
+    let periodSpend = 0;
+    for (const txn of transactions) {
+      if (txn.categoryId !== categoryId || txn.type !== 'expense') continue;
+      
+      const txnDate = new Date(txn.date);
+      if (txnDate >= startDate && txnDate <= endDate) {
+        periodSpend += txn.amount;
+      }
+    }
+    
+    if (periodSpend > 0) {
+      historicalSpending.push(periodSpend);
+    }
+  }
+  
+  // Need at least 2 historical data points
+  if (historicalSpending.length < 2) {
+    return { hasPattern: false };
+  }
+  
+  const average = historicalSpending.reduce((a, b) => a + b, 0) / historicalSpending.length;
+  const percentageDiff = ((currentSpend - average) / average) * 100;
+  
+  // Flag if current spending is >20% different from historical average
+  if (Math.abs(percentageDiff) > 20) {
+    return {
+      hasPattern: true,
+      note: percentageDiff > 0 ? 'higher_than_usual' : 'lower_than_usual',
+      historicalAverage: average
+    };
+  }
+  
+  return { hasPattern: false, historicalAverage: average };
+}
+
+/**
+ * Calculate risk level based on projected spending vs budget
+ */
+function calculateRiskLevel(projectedSpend: number, budgetLimit: number): 'low' | 'medium' | 'high' {
+  const percentage = (projectedSpend / budgetLimit) * 100;
+  
+  if (percentage <= 85) return 'low';
+  if (percentage <= 100) return 'medium';
+  return 'high';
+}
+
+/**
+ * Calculate confidence score based on data quality
+ */
+function calculateConfidence(transactionCount: number, daysElapsed: number): number {
+  // Base confidence on transaction frequency and time elapsed
+  let confidence = 0.5; // Start at 50%
+  
+  // More transactions = higher confidence (max +0.3)
+  if (transactionCount >= 10) confidence += 0.3;
+  else if (transactionCount >= 5) confidence += 0.2;
+  else if (transactionCount >= 3) confidence += 0.1;
+  
+  // More days elapsed = higher confidence (max +0.2)
+  if (daysElapsed >= 15) confidence += 0.2;
+  else if (daysElapsed >= 7) confidence += 0.1;
+  
+  return Math.min(confidence, 1.0); // Cap at 100%
+}
+
+/**
+ * Build prompt for Gemini to generate budget prediction insights
+ */
+function buildBudgetPredictionPrompt(
+  prediction: Omit<BudgetPrediction, 'insight'>, 
+  seasonalData: { hasPattern: boolean; note?: string; historicalAverage?: number },
+  language: string = 'id'
+): string {
+  const prompts = {
+    en: {
+      instruction: `You are "Duitr AI", a supportive personal finance assistant. Generate a brief, actionable insight for this budget prediction:
+
+Category: ${prediction.categoryName}
+Current Spend: Rp${prediction.currentSpend.toLocaleString('id-ID')}
+Budget Limit: Rp${prediction.budgetLimit.toLocaleString('id-ID')}
+Projected Month-End: Rp${prediction.projectedSpend.toLocaleString('id-ID')}
+Risk Level: ${prediction.riskLevel.toUpperCase()}
+Days Remaining: ${prediction.daysRemaining}
+${seasonalData.hasPattern ? `Seasonal Pattern: Spending is ${seasonalData.note} (historical avg: Rp${seasonalData.historicalAverage?.toLocaleString('id-ID')})` : ''}
+
+Provide a 1-2 sentence insight that:
+1. Explains WHY the risk exists (e.g., "high spending on weekends", "frequent small purchases")
+2. Gives ONE specific, actionable recommendation (e.g., "reduce by Rp 15,000/day")
+
+Keep it encouraging and practical. Use simple English.`
+    },
+    id: {
+      instruction: `Anda adalah "Duitr AI", asisten keuangan pribadi yang suportif. Buatkan insight singkat dan aplikatif untuk prediksi budget ini:
+
+Kategori: ${prediction.categoryName}
+Pengeluaran Saat Ini: Rp${prediction.currentSpent.toLocaleString('id-ID')}
+Limit Budget: Rp${prediction.budgetLimit.toLocaleString('id-ID')}
+Proyeksi Akhir Bulan: Rp${prediction.projectedSpend.toLocaleString('id-ID')}
+Level Risiko: ${prediction.riskLevel === 'low' ? 'RENDAH' : prediction.riskLevel === 'medium' ? 'SEDANG' : 'TINGGI'}
+Hari Tersisa: ${prediction.daysRemaining}
+${seasonalData.hasPattern ? `Pola Musiman: Pengeluaran ${seasonalData.note === 'higher_than_usual' ? 'lebih tinggi dari biasanya' : 'lebih rendah dari biasanya'} (rata-rata historis: Rp${seasonalData.historicalAverage?.toLocaleString('id-ID')})` : ''}
+
+Berikan insight 1-2 kalimat yang:
+1. Jelaskan KENAPA risiko ini ada (misal: "pengeluaran tinggi di akhir pekan", "pembelian kecil yang sering")
+2. Berikan SATU rekomendasi spesifik yang bisa diterapkan (misal: "kurangi Rp 15.000/hari")
+
+Gunakan bahasa yang mendukung dan praktis. Bahasa Indonesia sederhana.`
+    }
+  };
+  
+  const p = prompts[language] || prompts['id'];
+  return p.instruction;
+}
+
+/**
+ * Build summary prompt for overall budget predictions
+ */
+function buildBudgetSummaryPrompt(predictions: BudgetPrediction[], overallRisk: string, language: string = 'id'): string {
+  const highRiskCount = predictions.filter(p => p.riskLevel === 'high').length;
+  const mediumRiskCount = predictions.filter(p => p.riskLevel === 'medium').length;
+  
+  const categoriesList = predictions.map(p => 
+    `- ${p.categoryName}: ${p.riskLevel.toUpperCase()} risk (Rp${p.currentSpend.toLocaleString('id-ID')} / Rp${p.budgetLimit.toLocaleString('id-ID')})`
+  ).join('\n');
+  
+  const prompts = {
+    en: {
+      instruction: `You are "Duitr AI". Provide a 2-3 sentence summary of these budget predictions:
+
+Overall Risk: ${overallRisk.toUpperCase()}
+Categories:
+${categoriesList}
+
+High Risk: ${highRiskCount} categories
+Medium Risk: ${mediumRiskCount} categories
+
+Summarize the overall financial situation and give ONE priority action for the user. Be encouraging and practical.`
+    },
+    id: {
+      instruction: `Anda adalah "Duitr AI". Buatkan ringkasan 2-3 kalimat untuk prediksi budget ini:
+
+Risiko Keseluruhan: ${overallRisk === 'low' ? 'RENDAH' : overallRisk === 'medium' ? 'SEDANG' : 'TINGGI'}
+Kategori:
+${categoriesList}
+
+Risiko Tinggi: ${highRiskCount} kategori
+Risiko Sedang: ${mediumRiskCount} kategori
+
+Rangkum situasi keuangan keseluruhan dan berikan SATU prioritas aksi untuk user. Gunakan bahasa yang mendukung dan praktis.`
+    }
+  };
+  
+  const p = prompts[language] || prompts['id'];
+  return p.instruction;
+}
+
 // =================================================================
 // Main server function
 // =================================================================
@@ -186,7 +471,8 @@ serve(async (req)=>{
       throw new Error('GEMINI_API_KEY is not configured');
     }
     // UPDATED: Now accepts 'language' and 'action' from the client
-    const { summary, question, language = 'id', action, input, availableCategories } = await req.json();
+    const requestBody = await req.json();
+    const { summary, question, language = 'id', action, input, availableCategories, budgets, transactions, currentDate } = requestBody;
 
     // Handle different actions
     if (action === 'parse_transactions') {
@@ -274,6 +560,171 @@ serve(async (req)=>{
       return new Response(JSON.stringify({
         result: parsed
       }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Handle budget prediction action
+    if (action === 'predict_budget') {
+      if (!budgets || !Array.isArray(budgets) || budgets.length === 0) {
+        throw new Error('Budgets array is required for budget prediction');
+      }
+      
+      if (!transactions || !Array.isArray(transactions)) {
+        throw new Error('Transactions array is required for budget prediction');
+      }
+      
+      const currentDateObj = currentDate ? new Date(currentDate) : new Date();
+      const period = getCurrentMonthPeriod(currentDateObj);
+      
+      // Calculate current spending for each category
+      const categorySpending = calculateCategorySpending(transactions, period.start, period.end);
+      
+      // Generate predictions for each budget
+      const predictions: BudgetPrediction[] = [];
+      
+      for (const budget of budgets) {
+        const spending = categorySpending.get(budget.categoryId) || { 
+          categoryId: budget.categoryId, 
+          totalSpent: 0, 
+          transactionCount: 0 
+        };
+        
+        // Calculate spending velocity and projection
+        const velocity = period.daysElapsed > 0 ? spending.totalSpent / period.daysElapsed : 0;
+        const projectedSpend = Math.round(velocity * period.totalDays);
+        const overrunAmount = Math.max(0, projectedSpend - budget.limit);
+        
+        // Calculate risk level
+        const riskLevel = calculateRiskLevel(projectedSpend, budget.limit);
+        
+        // Calculate confidence
+        const confidence = calculateConfidence(spending.transactionCount, period.daysElapsed);
+        
+        // Calculate recommended daily limit for remaining days
+        const remainingBudget = Math.max(0, budget.limit - spending.totalSpent);
+        const recommendedDailyLimit = period.daysRemaining > 0 
+          ? Math.round(remainingBudget / period.daysRemaining) 
+          : 0;
+        
+        // Analyze seasonal pattern
+        const seasonalData = analyzeSeasonalPattern(
+          transactions, 
+          budget.categoryId, 
+          currentDateObj,
+          spending.totalSpent
+        );
+        
+        // Create prediction object without insight first
+        const predictionWithoutInsight = {
+          categoryId: budget.categoryId,
+          categoryName: budget.categoryName || `Category ${budget.categoryId}`,
+          currentSpend: spending.totalSpent,
+          budgetLimit: budget.limit,
+          projectedSpend,
+          overrunAmount,
+          riskLevel,
+          confidence,
+          daysRemaining: period.daysRemaining,
+          recommendedDailyLimit,
+          seasonalNote: seasonalData.hasPattern ? seasonalData.note : undefined
+        };
+        
+        // Generate AI insight for this prediction
+        const insightPrompt = buildBudgetPredictionPrompt(predictionWithoutInsight, seasonalData, language);
+        
+        try {
+          const insightResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: insightPrompt }] }],
+                generationConfig: {
+                  temperature: 0.7,
+                  topK: 40,
+                  topP: 0.95,
+                  maxOutputTokens: 512,
+                }
+              })
+            }
+          );
+          
+          if (insightResponse.ok) {
+            const insightData = await insightResponse.json();
+            const insight = insightData.candidates?.[0]?.content?.parts?.[0]?.text || 
+              (language === 'en' ? 'Budget monitoring required.' : 'Perlu monitoring budget.');
+            
+            predictions.push({
+              ...predictionWithoutInsight,
+              insight: insight.trim()
+            });
+          } else {
+            // Fallback if AI fails
+            predictions.push({
+              ...predictionWithoutInsight,
+              insight: language === 'en' ? 'Budget monitoring required.' : 'Perlu monitoring budget.'
+            });
+          }
+        } catch (error) {
+          console.error('Error generating insight for category:', budget.categoryId, error);
+          // Use fallback insight
+          predictions.push({
+            ...predictionWithoutInsight,
+            insight: language === 'en' ? 'Budget monitoring required.' : 'Perlu monitoring budget.'
+          });
+        }
+      }
+      
+      // Calculate overall risk based on highest risk level
+      let overallRisk: 'low' | 'medium' | 'high' = 'low';
+      if (predictions.some(p => p.riskLevel === 'high')) {
+        overallRisk = 'high';
+      } else if (predictions.some(p => p.riskLevel === 'medium')) {
+        overallRisk = 'medium';
+      }
+      
+      // Generate overall summary using AI
+      let summary = language === 'en' ? 'Budget prediction complete.' : 'Prediksi budget selesai.';
+      
+      if (predictions.length > 0) {
+        const summaryPrompt = buildBudgetSummaryPrompt(predictions, overallRisk, language);
+        
+        try {
+          const summaryResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: summaryPrompt }] }],
+                generationConfig: {
+                  temperature: 0.7,
+                  topK: 40,
+                  topP: 0.95,
+                  maxOutputTokens: 1024,
+                }
+              })
+            }
+          );
+          
+          if (summaryResponse.ok) {
+            const summaryData = await summaryResponse.json();
+            summary = summaryData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || summary;
+          }
+        } catch (error) {
+          console.error('Error generating summary:', error);
+        }
+      }
+      
+      const response: PredictBudgetResponse = {
+        predictions,
+        overallRisk,
+        summary
+      };
+      
+      return new Response(JSON.stringify({ result: response }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
