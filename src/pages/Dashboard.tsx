@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, ArrowUp, ArrowDown, Plus, ArrowLeftRight, Eye, EyeOff, Home, Clock, PieChart, User, Wallet } from 'lucide-react';
+import { Bell, ArrowUp, ArrowDown, Plus, ArrowLeftRight, Eye, EyeOff, Home, Clock, PieChart, User, Wallet, AlertCircle } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { Link, useNavigate } from 'react-router-dom';
 import ExpenseForm from '@/components/transactions/ExpenseForm';
@@ -16,9 +16,51 @@ import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 import BalanceDisplay from '@/components/dashboard/BalanceDisplay';
 import { useCategories } from '@/hooks/useCategories';
+import { useBudgets } from '@/hooks/useBudgets';
+import { BudgetHealthWidget } from '@/components/dashboard/BudgetHealthWidget';
+
+// Error Boundary Fallback Component
+const PredictionErrorFallback: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <Card className="border-[#242425] border-dashed bg-[#1A1A1A]">
+      <CardContent className="py-6 text-center text-gray-400">
+        <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+        <p className="text-sm">{t('budget.predictionUnavailable')}</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Simple Error Boundary Component
+class BudgetWidgetErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('BudgetHealthWidget error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 // Dashboard component displaying summary info and recent transactions.
 // Updated recent transactions sorting to use 'created_at' for accuracy.
@@ -34,6 +76,7 @@ const Dashboard: React.FC = () => {
     monthlyIncome
   } = useFinance();
   const { findById, getDisplayName } = useCategories();
+  const { budgets } = useBudgets();
   const navigate = useNavigate();
   const {
     user,
@@ -53,6 +96,10 @@ const Dashboard: React.FC = () => {
 
   // Get the first 5 transactions (already sorted by date descendingly from context)
   const recentTransactions = transactions.slice(0, 5);
+  
+  // Determine if budget predictions should be shown
+  const showPredictions = budgets.length > 0 && transactions.length >= 5;
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getDate()} ${date.toLocaleString('default', {
@@ -327,6 +374,20 @@ const Dashboard: React.FC = () => {
             
               </div>}
           </motion.div>
+
+          {/* Budget Health Widget - Conditional Rendering */}
+          {showPredictions && (
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              <BudgetWidgetErrorBoundary fallback={<PredictionErrorFallback />}>
+                <BudgetHealthWidget />
+              </BudgetWidgetErrorBoundary>
+            </motion.div>
+          )}
 
           {/* Action Buttons - Horizontal layout */}
           <motion.div className="flex gap-3 mb-6" variants={actionButtonsVariants}>

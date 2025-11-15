@@ -95,3 +95,59 @@ export type ChatMessage = {
   content: string;
   timestamp: Date;
 };
+
+// Budget Prediction types
+export type RiskLevel = 'low' | 'medium' | 'high';
+
+export interface BudgetPrediction {
+  categoryId: number;
+  categoryName: string;
+  currentSpend: number;
+  budgetLimit: number;
+  projectedSpend: number;
+  overrunAmount: number;
+  riskLevel: RiskLevel;
+  confidence: number;
+  daysRemaining: number;
+  recommendedDailyLimit: number;
+  insight: string;
+  seasonalNote?: string;
+}
+
+export interface PredictBudgetRequest {
+  budgets: Array<{
+    categoryId: number;
+    categoryName?: string;
+    limit: number;
+    period: 'monthly';
+  }>;
+  transactions: Transaction[];
+  currentDate?: string;
+}
+
+export interface PredictBudgetResponse {
+  predictions: BudgetPrediction[];
+  overallRisk: RiskLevel;
+  summary: string;
+}
+
+export interface StoredPrediction {
+  id: string;
+  user_id: string;
+  category_id: number | null;
+  prediction_date: string;
+  period_start: string;
+  period_end: string;
+  current_spend: number;
+  budget_limit: number;
+  projected_spend: number;
+  overrun_amount: number;
+  risk_level: RiskLevel;
+  confidence: number | null;
+  days_remaining: number | null;
+  recommended_daily_limit: number | null;
+  insight: string | null;
+  seasonal_note: string | null;
+  created_at: string;
+  updated_at: string;
+}

@@ -435,7 +435,36 @@
     "saving": "Menyimpan...",
     "saveProfile": "Simpan Profil",
     "logout": "Keluar",
-    "viewProfileImage": "Lihat foto profil"
+    "viewProfileImage": "Lihat foto profil",
+    "notifications": {
+      "title": "Notifikasi",
+      "description": "Kelola preferensi notifikasi Anda",
+      "enableNotifications": "Aktifkan Notifikasi",
+      "enableNotificationsDesc": "Terima peringatan untuk anggaran dan pembaruan penting",
+      "permissionStatus": "Status Izin",
+      "permissionGranted": "Diizinkan",
+      "permissionDenied": "Ditolak",
+      "permissionDefault": "Belum Diatur",
+      "enabled": "Notifikasi Diaktifkan",
+      "enabledDesc": "Anda akan menerima peringatan anggaran dan pembaruan.",
+      "disabled": "Notifikasi Dinonaktifkan",
+      "disabledDesc": "Anda tidak akan menerima notifikasi lagi.",
+      "testNotification": "Kirim Notifikasi Uji",
+      "testTitle": "Notifikasi Uji",
+      "testBody": "Ini adalah notifikasi uji dari Duitr. Sistem notifikasi Anda berfungsi! 🎉",
+      "testSent": "Uji Terkirim",
+      "testSentDesc": "Periksa area notifikasi Anda untuk notifikasi uji.",
+      "sending": "Mengirim...",
+      "notSupported": "Tidak Didukung",
+      "notSupportedDesc": "Browser Anda tidak mendukung notifikasi. Silakan gunakan browser modern seperti Chrome, Firefox, atau Safari.",
+      "limitedSupport": "Dukungan Terbatas",
+      "limitedSupportDesc": "Beberapa fitur notifikasi mungkin tidak berfungsi dengan baik di browser Anda.",
+      "noServiceWorker": "Service Worker tidak tersedia",
+      "noPushManager": "Push Manager tidak tersedia",
+      "permissionDeniedHelp": "Untuk mengaktifkan notifikasi, Anda perlu mengizinkannya di pengaturan browser. Cari ikon notifikasi di bilah alamat atau pengaturan browser.",
+      "phase1Title": "Pratinjau Awal",
+      "phase1Desc": "Sistem notifikasi dalam tahap pratinjau awal. Peringatan anggaran otomatis akan tersedia dalam pembaruan mendatang."
+    }
   },
   "export": {
     "title": "Ekspor Data Keuangan",
@@ -638,5 +667,33 @@
       "failedToSave": "Gagal menyimpan preferensi mata uang"
     },
     "settingsNote": "Anda dapat mengubah ini nanti di pengaturan profil"
+  },
+  "budget": {
+    "healthWidget": {
+      "title": "Kesehatan Budget"
+    },
+    "risk": {
+      "low": "Risiko Rendah",
+      "medium": "Risiko Sedang",
+      "high": "Risiko Tinggi"
+    },
+    "noRisk": "Tidak Ada Data",
+    "confidence": "kepercayaan",
+    "collapse": "Tutup detail",
+    "expand": "Buka detail",
+    "currentSpend": "Pengeluaran Saat Ini",
+    "projectedSpend": "Proyeksi",
+    "limit": "Batas Budget",
+    "overrun": "Melebihi Budget",
+    "remaining": "Sisa",
+    "daysRemaining": "Hari Tersisa",
+    "days": "hari",
+    "recommendedDaily": "Batas Harian",
+    "unknownCategory": "Kategori Tidak Dikenal",
+    "predictionError": "Gagal memuat prediksi",
+    "predictionUnavailable": "Prediksi budget sementara tidak tersedia",
+    "noPredictionsAvailable": "Tidak ada prediksi tersedia",
+    "noPredictionsDescription": "Buat budget dan tambah transaksi untuk melihat prediksi AI.",
+    "refresh": "Perbarui prediksi"
   }
 }
