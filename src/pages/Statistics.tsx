@@ -8,8 +8,9 @@ import {
   PieChart,
   Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
 } from 'recharts';
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { useTransactions } from '@/hooks/useTransactions';
 import { 
   Popover,
@@ -156,22 +157,6 @@ const Statistics: React.FC = () => {
   
   // Colors for pie chart - using a varied yet harmonious color palette
   const COLORS = useMemo(() => ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#14B8A6', '#6366F1', '#F43F5E', '#84CC16', '#06B6D4'], []);
-  
-  // Create chart config for shadcn/ui ChartContainer
-  const chartConfig = useMemo(() => {
-    const config: ChartConfig = {};
-    
-    chartData.forEach((item, index) => {
-      // Use categoryId or sanitized name as key
-      const key = item.categoryId || item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      config[key] = {
-        label: item.name,
-        color: COLORS[index % COLORS.length],
-      };
-    });
-    
-    return config;
-  }, [chartData, COLORS]);
   
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -374,38 +359,41 @@ const Statistics: React.FC = () => {
           </motion.div>
         ) : filteredTransactions.length > 0 ? (
           <>
-            {/* Chart Section - Using shadcn/ui ChartContainer */}
-            <div className="flex justify-center items-center mb-8 border bg-card p-6 rounded-xl">
-              <div className="h-[220px] w-full relative">
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-full w-full"
-                >
+            {/* Chart Section - Using Recharts ResponsiveContainer */}
+            <div className="mb-8 border bg-card p-6 rounded-xl">
+              <div className="h-[280px] w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={chartData}
                       cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={90}
-                      paddingAngle={0}
+                      cy="45%"
+                      innerRadius={60}
+                      outerRadius={85}
+                      paddingAngle={2}
                       dataKey="value"
                       strokeWidth={0}
                       animationBegin={0}
                       animationDuration={800}
                     >
-                      {chartData.map((entry, index) => {
-                        const key = entry.categoryId || entry.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-                        return (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={`var(--color-${key})`}
-                          />
-                        );
-                      })}
+                      {chartData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
                     </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)}
+                      contentStyle={{
+                        backgroundColor: '#1A1A1A',
+                        border: '1px solid #333',
+                        borderRadius: '8px',
+                        color: '#fff'
+                      }}
+                    />
                   </PieChart>
-                </ChartContainer>
+                </ResponsiveContainer>
                 
                 {/* Center Text */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
