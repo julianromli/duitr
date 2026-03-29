@@ -1,8 +1,38 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
+
+type SupabaseAuthError = NonNullable<Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['error']>
+
+const makeMockUser = (overrides?: Partial<{ is_balance_hidden: boolean }>) => ({
+  id: 'test-user-id',
+  email: 'test@example.com',
+  app_metadata: {},
+  user_metadata: {
+    name: 'Test User',
+    ...overrides,
+  },
+  aud: 'authenticated',
+  created_at: '2024-01-01T00:00:00.000Z',
+})
+
+const makeMockSession = (user = makeMockUser()) => ({
+  user,
+  access_token: 'mock-token',
+  refresh_token: 'mock-refresh-token',
+  expires_in: 3600,
+  token_type: 'bearer',
+}) as unknown as Session
+
+const makeAuthError = (message: string) => ({
+  message,
+  code: 'mock-error',
+  status: 400,
+  name: 'AuthApiError',
+}) as unknown as SupabaseAuthError
 
 // Create wrapper for AuthProvider
 const createWrapper = () => {
@@ -25,6 +55,10 @@ const createWrapper = () => {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      data: { session: null },
+      error: null
+    })
   })
 
   describe('Authentication State', () => {
@@ -48,22 +82,11 @@ describe('AuthContext', () => {
     })
 
     it('should load user when session exists', async () => {
-      const mockUser = {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        user_metadata: {
-          name: 'Test User',
-          is_balance_hidden: true
-        }
-      }
+      const mockUser = makeMockUser({ is_balance_hidden: true })
 
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: { 
-          session: { 
-            user: mockUser,
-            access_token: 'mock-token',
-            refresh_token: 'mock-refresh-token'
-          } 
+          session: makeMockSession(mockUser)
         },
         error: null
       })
@@ -96,9 +119,13 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const signInResult = await result.current.signIn('test@example.com', 'password123')
+      let signInResult: Awaited<ReturnType<typeof result.current.signIn>>
 
-      expect(signInResult.success).toBe(true)
+      await act(async () => {
+        signInResult = await result.current.signIn('test@example.com', 'password123')
+      })
+
+      expect(signInResult!.success).toBe(true)
       expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123'
@@ -109,7 +136,7 @@ describe('AuthContext', () => {
       const errorMessage = 'Invalid login credentials'
       vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
         data: { user: null, session: null },
-        error: { message: errorMessage }
+        error: makeAuthError(errorMessage)
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -120,10 +147,14 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const signInResult = await result.current.signIn('test@example.com', 'wrongpassword')
+      let signInResult: Awaited<ReturnType<typeof result.current.signIn>>
 
-      expect(signInResult.success).toBe(false)
-      expect(signInResult.message).toBe(errorMessage)
+      await act(async () => {
+        signInResult = await result.current.signIn('test@example.com', 'wrongpassword')
+      })
+
+      expect(signInResult!.success).toBe(false)
+      expect(signInResult!.message).toBe(errorMessage)
     })
 
     it('should handle successful sign up', async () => {
@@ -140,9 +171,13 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const signUpResult = await result.current.signUp('test@example.com', 'password123')
+      let signUpResult: Awaited<ReturnType<typeof result.current.signUp>>
 
-      expect(signUpResult.success).toBe(true)
+      await act(async () => {
+        signUpResult = await result.current.signUp('test@example.com', 'password123')
+      })
+
+      expect(signUpResult!.success).toBe(true)
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
@@ -169,9 +204,13 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const googleSignInResult = await result.current.signInWithGoogle()
+      let googleSignInResult: Awaited<ReturnType<typeof result.current.signInWithGoogle>>
 
-      expect(googleSignInResult.success).toBe(true)
+      await act(async () => {
+        googleSignInResult = await result.current.signInWithGoogle()
+      })
+
+      expect(googleSignInResult!.success).toBe(true)
       expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
         provider: 'google',
         options: expect.objectContaining({
@@ -193,7 +232,9 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      await result.current.signOut()
+      await act(async () => {
+        await result.current.signOut()
+      })
 
       expect(supabase.auth.signOut).toHaveBeenCalled()
     })
@@ -201,22 +242,11 @@ describe('AuthContext', () => {
 
   describe('Balance Visibility', () => {
     it('should toggle balance visibility', async () => {
-      const mockUser = {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        user_metadata: {
-          name: 'Test User',
-          is_balance_hidden: false
-        }
-      }
+      const mockUser = makeMockUser({ is_balance_hidden: false })
 
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: { 
-          session: { 
-            user: mockUser,
-            access_token: 'mock-token',
-            refresh_token: 'mock-refresh-token'
-          } 
+          session: makeMockSession(mockUser)
         },
         error: null
       })
@@ -237,7 +267,9 @@ describe('AuthContext', () => {
       expect(result.current.isBalanceHidden).toBe(false)
 
       // Toggle balance visibility
-      await result.current.updateBalanceVisibility(true)
+      await act(async () => {
+        await result.current.updateBalanceVisibility(true)
+      })
 
       expect(supabase.auth.updateUser).toHaveBeenCalledWith({
         data: {
@@ -272,7 +304,7 @@ describe('AuthContext', () => {
     })
 
     it('should handle auth state change events', async () => {
-      let authChangeCallback: (event: string, session: any) => void
+      let authChangeCallback: ((event: AuthChangeEvent, session: Session | null) => void | Promise<void>) | undefined
 
       vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((callback) => {
         authChangeCallback = callback
@@ -294,16 +326,10 @@ describe('AuthContext', () => {
       })
 
       // Simulate sign in event
-      const mockUser = {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        user_metadata: { name: 'Test User' }
-      }
+      const mockUser = makeMockUser()
 
-      authChangeCallback!('SIGNED_IN', {
-        user: mockUser,
-        access_token: 'mock-token',
-        refresh_token: 'mock-refresh-token'
+      act(() => {
+        authChangeCallback?.('SIGNED_IN', makeMockSession(mockUser))
       })
 
       await waitFor(() => {
@@ -316,7 +342,7 @@ describe('AuthContext', () => {
     it('should handle session initialization errors', async () => {
       vi.mocked(supabase.auth.getSession).mockResolvedValue({
         data: { session: null },
-        error: { message: 'Session error' }
+        error: makeAuthError('Session error')
       })
 
       const { result } = renderHook(() => useAuth(), {
@@ -343,10 +369,14 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      const signInResult = await result.current.signIn('test@example.com', 'password123')
+      let signInResult: Awaited<ReturnType<typeof result.current.signIn>>
 
-      expect(signInResult.success).toBe(false)
-      expect(signInResult.message).toBe('Network error')
+      await act(async () => {
+        signInResult = await result.current.signIn('test@example.com', 'password123')
+      })
+
+      expect(signInResult!.success).toBe(false)
+      expect(signInResult!.message).toBe('Network error')
     })
   })
 })

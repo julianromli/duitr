@@ -25,9 +25,13 @@ vi.mock('@/lib/supabase', () => ({
 }))
 
 // Mock the FinanceContext
-vi.mock('@/context/FinanceContext', () => ({
-  useFinance: vi.fn(),
-}))
+vi.mock('@/context/FinanceContext', async () => {
+  const actual = await vi.importActual<typeof import('@/context/FinanceContext')>('@/context/FinanceContext')
+  return {
+    ...actual,
+    useFinance: vi.fn(),
+  }
+})
 
 const mockTransactions = [
   {

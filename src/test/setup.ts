@@ -16,16 +16,21 @@ beforeAll(() => {
 })
 
 // Mock Supabase client for tests
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
+vi.mock('@/lib/supabase', () => {
+  const auth = {
+    signUp: vi.fn(),
+    signInWithPassword: vi.fn(),
+    signInWithOAuth: vi.fn(),
+    signOut: vi.fn(),
+    updateUser: vi.fn(),
+    getUser: vi.fn(),
+    getSession: vi.fn(),
+    onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
+  }
+
+  const supabase = {
     auth: {
-      signUp: vi.fn(),
-      signInWithPassword: vi.fn(),
-      signInWithOAuth: vi.fn(),
-      signOut: vi.fn(),
-      getUser: vi.fn(),
-      getSession: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
+      ...auth
     },
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -44,9 +49,15 @@ vi.mock('@/lib/supabase', () => ({
         remove: vi.fn()
       }))
     }
-  },
-  isIOS: vi.fn(() => false)
-}))
+  }
+
+  return {
+    supabase,
+    getSession: auth.getSession,
+    getCurrentUser: auth.getUser,
+    isIOS: vi.fn(() => false)
+  }
+})
 
 // Mock React Router
 vi.mock('react-router-dom', async () => {

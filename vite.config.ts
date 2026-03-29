@@ -100,8 +100,10 @@ export default defineConfig(({ mode, command }) => {
     })
   ].filter(Boolean),
   resolve: {
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-i18next'],
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@icons/material/CheckIcon": path.resolve(__dirname, "./src/shims/react-color-check-icon.tsx"),
     },
   },
   envPrefix: "VITE_",

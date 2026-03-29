@@ -6,9 +6,13 @@ import TransactionDetail from '@/components/transactions/TransactionDetail'
 import { useFinance } from '@/context/FinanceContext'
 
 // Mock the FinanceContext
-vi.mock('@/context/FinanceContext', () => ({
-  useFinance: vi.fn(),
-}))
+vi.mock('@/context/FinanceContext', async () => {
+  const actual = await vi.importActual<typeof import('@/context/FinanceContext')>('@/context/FinanceContext')
+  return {
+    ...actual,
+    useFinance: vi.fn(),
+  }
+})
 
 const mockTransaction = {
   id: 'transaction-1',
@@ -460,7 +464,7 @@ describe('TransactionDetail', () => {
         category: null,
       }
 
-      vi.mocked(useFinanceContext.getDisplayCategoryName).mockReturnValue('Unknown Category')
+      mockFinanceContext.getDisplayCategoryName.mockReturnValue('Unknown Category')
 
       renderWithProviders(<TransactionDetail {...defaultProps} />)
 

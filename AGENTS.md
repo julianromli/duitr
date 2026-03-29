@@ -1,451 +1,232 @@
 # AGENTS.md
 
-Primary documentation for AI agents working on Duitr - Personal Finance Management App.
+Agent guide for working in `duitr`.
 
-## Quick Start
+## Scope
+
+- Frontend app: React 19 + TypeScript + Vite + Tailwind CSS.
+- Backend integration: Supabase.
+- Package manager: Bun.
+- Tests: Vitest + Testing Library + jsdom.
+
+## Rule Files
+
+- Existing root agent file was replaced with this shorter, repo-verified version.
+- No `.cursorrules` file was found.
+- No `.cursor/rules/` directory was found.
+- No `.github/copilot-instructions.md` file was found.
+
+## Core Commands
 
 ```bash
-bun install                    # Install dependencies
-bun dev                        # Start dev server (port 8080)
-bun test                       # Run tests
-bun run lint                   # Lint code
-bun run build                  # Production build
-bun run preview                # Preview build (port 4173)
+bun install
+bun dev
+bun run build
+bun run preview
+bun run lint
+bun test
+bun run test:run
+bun run test:coverage
 ```
 
-## Tech Stack
+## Command Notes
 
-- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
-- **UI Components**: shadcn/ui (primary source)
-- **Backend**: Supabase (PostgreSQL + RLS)
-- **State**: React Query + React Context
-- **Forms**: React Hook Form + Zod
-- **i18n**: i18next (English/Indonesian)
-- **Currency**: Simple display-only preference system (USD/IDR)
-- **Package Manager**: Bun
+- Dev server runs on `http://localhost:8080`.
+- Preview server runs on port `4173`.
+- `bun test` starts Vitest in watch mode.
+- `bun run test:run` is the non-watch CI-style test command.
+- `bun run build:pwa` performs a production build plus PWA asset generation and verification.
+
+## Single-Test Commands
+
+Run one test file:
+
+```bash
+bun run test:run -- src/tests/sanitize.test.ts
+```
+
+Run one test file in watch mode:
+
+```bash
+bun test -- src/test/transaction/TransactionForm.test.tsx
+```
+
+Run one named test inside a file:
+
+```bash
+bun run test:run -- src/test/transaction/TransactionForm.test.tsx -t "should render transaction form with all required fields"
+```
+
+Useful variations:
+
+```bash
+bun run test:run -- --coverage
+bun run test:run -- --changed
+bun run test:ui
+```
+
+## Lint Commands
+
+Lint the repo:
+
+```bash
+bun run lint
+```
+
+Lint one file or folder:
+
+```bash
+bun run lint -- src/pages/ProfilePage.tsx
+bun run lint -- src/components/transactions
+```
+
+## Security / Audit Commands
+
+```bash
+bun run security:audit
+bun run security:check
+bun run security:fix
+```
+
+## Verification Before Finishing Code Changes
+
+For real code changes, run:
+
+```bash
+bun run lint
+bun run test:run
+bun run build
+```
+
+Also review the final diff before handing off.
 
 ## Project Structure
 
-```
+```text
 src/
-├── components/          # Feature-based components
-│   ├── auth/           # Authentication
-│   ├── budget/         # Budgeting
-│   ├── currency/       # Currency handling
-│   ├── dashboard/      # Dashboard widgets
-│   ├── transactions/   # Transaction management
-│   └── ui/             # shadcn/ui base components
-├── hooks/              # Custom React hooks
-├── lib/                # Utils & configs
-├── locales/            # i18next translations
-├── pages/              # Route pages
-├── services/           # API services
-└── types/              # TypeScript types
+  components/   feature UI and shadcn/ui wrappers
+  config/       routes and config
+  context/      React context providers
+  features/     isolated feature areas
+  hooks/        reusable hooks
+  integrations/ Supabase types/client
+  lib/          shared utilities/config
+  locales/      i18n JSON files
+  pages/        route-level components
+  services/     data/service layer
+  test/         test utilities and many component tests
+  tests/        additional test files
+  types/        shared TS types
+  utils/        pure helpers
 ```
 
-## Critical Rules
-
-### 🎨 UI Component Selection (MANDATORY)
-1. **ALWAYS check existing components first** - Use `list_items_in_registries` MCP tool
-2. **Priority**: shadcn/ui > existing custom > third-party libraries
-3. **Installation**: Use `get_add_command_for_items` MCP tool for shadcn components
-4. **Exception**: Only use non-shadcn if user explicitly requests another source
-
-### 🎯 Development Patterns
-- **Imports**: Use `@/` path alias for all src imports
-- **Types**: Strict TypeScript - all components must have typed props
-- **i18n**: All user-facing text uses i18next keys (`t('key')`)
-- **Forms**: React Hook Form + Zod validation for ALL forms
-- **Styling**: Tailwind CSS with design tokens from `/app/globals.css`
-- **Animations**: Framer Motion for transitions
-
-### 🔒 Security
-- All Supabase tables use Row Level Security (RLS)
-- Environment variables in `.env` (see `.env.example`)
-- Input validation with Zod on all forms
-- Regular audits: `bun run security:check`
-
-### ✅ Pre-Merge Verification
-Before completing any task, ALWAYS verify:
-```bash
-bun run lint                   # Must pass
-bun test                       # Must pass
-bun run build                  # Must succeed
-git diff                       # Review all changes
-```
-
-## Currency System (IMPORTANT)
-
-### Overview
-Duitr uses a **simplified display-only currency system**:
-- User selects currency (USD/IDR) during onboarding
-- All transactions recorded in selected currency
-- **NO currency conversion** - it's just formatting preference
-- Currency affects display format only:
-  - USD: $1,234.56 (with decimals)
-  - IDR: Rp 1.234.567 (no decimals)
-
-### Key Points
-- User currency stored in `auth.users.user_metadata.currency`
-- Database uses single `amount` column (no conversion columns)
-- Changing currency **DELETES ALL USER DATA** (requires confirmation)
-- See `docs/archive/CURRENCY_REFACTOR_SUMMARY.md` for implementation details
-
-### Currency Change Flow
-1. User goes to Profile → Currency Settings
-2. Clicks "Change Currency" button
-3. Sees warning dialog about data deletion
-4. Selects new currency (USD/IDR)
-5. Types "DELETE" to confirm
-6. All data deleted via `delete_all_user_data()` function
-7. Currency updated in user metadata
-8. User starts fresh with new currency
-
-### Database Schema
-```sql
--- Simple schema (no conversion columns)
-transactions:
-  - amount NUMERIC(20,2)  ✅ Only this!
-  
--- NO MORE: original_amount, converted_amount, exchange_rate, etc.
-
--- User currency preference
-auth.users.user_metadata:
-  - currency: 'USD' | 'IDR'
-```
-
-## Translation System (i18next)
-
-### Key Principles
-- All user-facing text MUST use i18next keys via `t()` function
-- Support for English (en) and Indonesian (id)
-- Translation files: `src/locales/en.json` and `src/locales/id.json`
-
-### Language Change Handling
-```typescript
-// Watch for language changes
-useEffect(() => {
-  const handleLanguageChange = () => {
-    // Component will re-render with new translations
-  };
-  
-  i18n.on('languageChanged', handleLanguageChange);
-  
-  return () => {
-    i18n.off('languageChanged', handleLanguageChange);
-  };
-}, [i18n]);
-```
-
-## Category System (Database-First Architecture)
-
-### Overview
-Duitr uses a **database-first category system**:
-- Categories stored in `categories` table (single source of truth)
-- 21 default categories seeded with bilingual names (EN + ID)
-- Integer IDs used consistently throughout the app
-- Automatic translation without page reload
-- Users can create custom categories
-
-### Key Principles
-- **NO hardcoded categories** - all categories come from database
-- **Integer IDs only** - `categoryId: number` (not string)
-- **Bilingual by design** - each category has `en_name` and `id_name`
-- **Service layer** - CategoryService handles all operations
-- **React Query caching** - useCategories hook for optimal performance
-
-### Architecture Layers
-
-```
-┌─────────────────────────────────────────┐
-│   Database (categories table)           │  ← Single source of truth
-│   - 21 default categories                │
-│   - User custom categories               │
-└─────────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────────┐
-│   CategoryService.ts                     │  ← Service layer
-│   - getAll(), getByType(), getById()    │
-│   - create(), update(), delete()         │
-│   - getDisplayName()                     │
-└─────────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────────┐
-│   useCategories.ts (React Query)         │  ← Hook layer
-│   - Auto-caching                         │
-│   - Translation helpers                  │
-│   - Mutations with optimistic updates   │
-└─────────────────────────────────────────┘
-              ↓
-┌─────────────────────────────────────────┐
-│   Components (UI)                        │  ← Component layer
-│   - CategorySelector, TransactionForm   │
-│   - TransactionList, Dashboard, etc.    │
-└─────────────────────────────────────────┘
-```
-
-### Usage Pattern (CRITICAL)
-
-**✅ CORRECT - Use useCategories hook:**
-```typescript
-import { useCategories } from '@/hooks/useCategories';
-
-function MyComponent() {
-  const { t } = useTranslation();
-  const { findById, getDisplayName, categories } = useCategories();
-  
-  // Display category name (auto-translated)
-  const categoryName = transaction.type === 'transfer' 
-    ? t('transactions.transfer')
-    : (transaction.categoryId && findById(transaction.categoryId)
-      ? getDisplayName(findById(transaction.categoryId)!)
-      : t('transactions.uncategorized'));
-  
-  return <p>{categoryName}</p>;
-}
-```
-
-**❌ WRONG - Don't hardcode categories:**
-```typescript
-// DON'T DO THIS - categoryUtils.ts has been deleted!
-import { DEFAULT_CATEGORIES } from '@/utils/categoryUtils'; // ❌ Error!
-import { getLocalizedCategoryName } from '@/utils/categoryUtils'; // ❌ Error!
-
-// DON'T DO THIS - Categories are not hardcoded anymore
-const categories = [
-  { id: 1, name: 'Groceries' },
-  { id: 2, name: 'Dining' }
-]; // ❌ Use database instead!
-```
-
-### Category Display Pattern
-
-**For Transactions:**
-```typescript
-const { findById, getDisplayName } = useCategories();
-
-// Inline display
-<p>
-  {transaction.type === 'transfer' 
-    ? t('transactions.transfer') 
-    : (transaction.categoryId && findById(transaction.categoryId)
-      ? getDisplayName(findById(transaction.categoryId)!)
-      : t('transactions.uncategorized'))}
-</p>
-```
-
-**For Category Selection:**
-```typescript
-<CategorySelector 
-  value={categoryId}              // number | null
-  onValueChange={setCategoryId}   // (id: number | null) => void
-  type="expense"                  // 'income' | 'expense'
-/>
-```
-
-### Key Functions from useCategories
-
-```typescript
-const {
-  // Data
-  categories,              // Category[] - All categories from DB
-  isLoading,              // boolean
-  error,                  // Error | null
-  
-  // Helpers
-  getDisplayName,         // (category: Category) => string (auto EN/ID)
-  getByType,              // (type: 'income' | 'expense') => Category[]
-  findById,               // (id: number) => Category | undefined
-  getCustomCategories,    // () => Category[]
-  getDefaultCategories,   // () => Category[]
-  
-  // Actions
-  createCategory,         // (input: CreateCategoryInput) => void
-  updateCategory,         // ({ id, input }) => void
-  deleteCategory,         // (id: number) => void
-  refetch,                // () => void - Force refresh from DB
-  
-  // States
-  isCreating,             // boolean
-  isUpdating,             // boolean
-  isDeleting              // boolean
-} = useCategories();
-```
-
-### Database Schema
-
-```sql
--- Categories table
-CREATE TABLE categories (
-  category_id SERIAL PRIMARY KEY,
-  en_name TEXT NOT NULL,           -- English name
-  id_name TEXT NOT NULL,           -- Indonesian name
-  type TEXT NOT NULL,              -- 'income' | 'expense' | 'system'
-  icon TEXT,                       -- Icon name (optional)
-  color TEXT,                      -- Color code (optional)
-  user_id UUID REFERENCES auth.users, -- NULL for default categories
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Foreign key constraints
-ALTER TABLE transactions 
-  ADD CONSTRAINT fk_category 
-  FOREIGN KEY (category_id) 
-  REFERENCES categories(category_id) 
-  ON DELETE RESTRICT;
-
-ALTER TABLE budgets 
-  ADD CONSTRAINT fk_category 
-  FOREIGN KEY (category_id) 
-  REFERENCES categories(category_id) 
-  ON DELETE RESTRICT;
-```
-
-### Translation Flow
-
-1. **Data Storage**: Categories stored with both `en_name` and `id_name`
-2. **Hook Call**: Component calls `useCategories()` hook
-3. **Display Helper**: Use `getDisplayName(category)` for display
-4. **Auto-Switch**: Changes language → `getDisplayName()` returns correct name
-5. **No Reload**: Language switch is instant (no page reload)
-
-### Migration Notes
-
-- **Deleted Files**: `src/utils/categoryUtils.ts` (300+ lines removed)
-- **No More**: `DEFAULT_CATEGORIES`, `getLocalizedCategoryName()`, etc.
-- **Code Reduction**: 800 → 230 lines across category logic (-71%)
-- **Consistency**: All components use same pattern (CategoryService → useCategories)
-
-### Benefits
-
-- ✅ **Single Source of Truth**: Database is the only source
-- ✅ **Type Safety**: Integer IDs (no string/number confusion)
-- ✅ **Automatic Translation**: No manual translation key mapping
-- ✅ **Extensible**: Users can create custom categories
-- ✅ **Performance**: React Query caching prevents unnecessary fetches
-- ✅ **Maintainable**: Centralized logic in 2 files (Service + Hook)
-
-## Common Workflows
-
-### Adding shadcn Component
-```bash
-# 1. Check available components
-# Use MCP: list_items_in_registries registries: ['@shadcn']
-
-# 2. Get install command
-# Use MCP: get_add_command_for_items items: ['@shadcn/button']
-
-# 3. Install component
-bunx shadcn@latest add button
-```
-
-### Database Changes
-1. Create migration in `supabase/migrations/`
-2. Apply migration to local Supabase
-3. Test with Row Level Security policies
-4. Update TypeScript types in `src/types/`
-
-### Adding Translations
-1. Add keys to `src/locales/en/translation.json`
-2. Add keys to `src/locales/id/translation.json`
-3. Use in components: `const { t } = useTranslation();`
-
-### PWA Development
-```bash
-bun run build:pwa              # Build with PWA
-bun run pwa:icons              # Generate icons
-bun run pwa:verify             # Verify setup
-```
-
-## Component Best Practices
-
-### Component Structure
-```typescript
-import { ComponentProps } from '@/types';
-import { useTranslation } from 'react-i18next';
-
-interface MyComponentProps {
-  title: string;
-  onAction?: () => void;
-}
-
-export function MyComponent({ title, onAction }: MyComponentProps) {
-  const { t } = useTranslation();
-  
-  return (
-    <div className="space-y-4">
-      <h2>{t('my.title.key')}</h2>
-      {/* Component content */}
-    </div>
-  );
-}
-```
-
-### Styling Priorities
-1. Use existing shadcn/ui component variants
-2. Extend with `class-variance-authority` (cva)
-3. Apply Tailwind for spacing/positioning only
-4. Use CSS variables from theme (`--background`, `--foreground`, etc.)
-
-### Form Pattern
-```typescript
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-
-const schema = z.object({
-  field: z.string().min(1, 'Required'),
-});
-
-type FormData = z.infer<typeof schema>;
-
-export function MyForm() {
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
-  
-  // Form implementation
-}
-```
-
-## Testing Strategy
-
-After implementing UI features, ALWAYS offer Playwright testing for:
-- Component states (default, hover, active, disabled, error)
-- Responsive breakpoints (mobile, tablet, desktop)
-- Keyboard navigation and accessibility
-- Cross-browser compatibility
-
-## Documentation References
-
-- **Comprehensive Guide**: See `CLAUDE.md` for detailed architecture
-- **Technical Overview**: See `docs/technical_overview.md` for system architecture
-- **Developer Setup**: See `docs/DEVELOPER_GUIDE.md` for environment setup
-- **API Details**: See `docs/API_DOCUMENTATION.md` for backend integration
-- **Currency System**: See `docs/archive/CURRENCY_REFACTOR_SUMMARY.md` for currency implementation
-- **README**: See `README.md` for project overview
-
-## Key Files
-
-- `components.json` - shadcn/ui configuration
-- `tailwind.config.ts` - Tailwind configuration
-- `tsconfig.json` - TypeScript configuration
-- `vite.config.ts` - Vite build configuration
-- `supabase_schema.sql` - Database schema reference
-
-## Environment Variables
-
-```bash
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-```
-
-## Common Issues
-
-- **PWA Cache**: Clear service workers in DevTools if blank page after deploy
-- **Build Errors**: Delete `node_modules` and run `bun install`
-- **Type Errors**: Ensure React/ReactDOM versions match in `package.json`
-
----
-
-**Last Updated**: Keep this file updated with code changes during PRs.
+## Source Of Truth Rules
+
+- Use `@/` imports for everything under `src/`.
+- Do not hardcode categories. Categories come from the database via `categoryService` and `useCategories`.
+- Category IDs are numeric database IDs (`category_id`).
+- Currency is display-only (`USD` / `IDR`); do not add conversion logic unless explicitly requested.
+- All user-facing strings must go through i18next.
+
+## Imports
+
+- Prefer `@/` aliases over deep relative paths.
+- Keep imports grouped logically: React/framework, third-party, then local `@/` imports.
+- Use `import type` for type-only imports when practical.
+- Follow the surrounding file's import ordering if it already has a clear pattern.
+
+## Formatting
+
+- No dedicated Prettier/Biome config was found.
+- ESLint is present, but it is not a full formatting authority.
+- Preserve the style already used in the file you edit.
+- The codebase mixes semicolon/no-semicolon and quote styles; avoid drive-by reformatting.
+- Keep diffs tight and local.
+- Use `cn` from `@/lib/utils` for class merging.
+
+## TypeScript
+
+- Type all component props, hook params, and service inputs/outputs.
+- Prefer explicit domain types from `src/types`.
+- For forms, define a Zod schema and derive types with `z.infer<typeof schema>`.
+- Guard nullable/optional values explicitly.
+- Do not rely on the compiler alone: root TS config is strict-oriented, but `tsconfig.app.json` relaxes several checks.
+
+## Naming
+
+- Components/pages: `PascalCase`.
+- Hooks: `camelCase` and must start with `use`.
+- Utilities/functions/variables: `camelCase`.
+- Constants: `UPPER_SNAKE_CASE` for module-level constants.
+- Types/interfaces: `PascalCase`.
+- Match neighboring file naming before introducing a new pattern.
+
+## React Conventions
+
+- Prefer functional components.
+- Keep state local unless it is shared.
+- Use React Query for server-backed async state.
+- Use Context for app-wide client state already modeled that way.
+- Prefer composition over inheritance.
+- Reuse existing components before adding new dependencies.
+
+## UI Conventions
+
+- Prefer existing shadcn/ui components first.
+- Use Tailwind classes and theme tokens defined in `src/index.css` / `tailwind.config.ts`.
+- Reuse existing design tokens such as `background`, `foreground`, `primary`, and `muted`.
+- Keep accessibility intact: labels, roles, keyboard support, and focus states matter.
+- Use `lucide-react` icons unless there is a strong repo-local reason not to.
+
+## Forms And Validation
+
+- Standard stack is React Hook Form + Zod.
+- Validate user input before service calls.
+- Show user-visible failures with toast/alert UI.
+- Keep validation messages and labels translatable.
+
+## i18n Rules
+
+- Translation files are `src/locales/en.json` and `src/locales/id.json`.
+- Use `useTranslation()` in components.
+- Do not ship new hardcoded UI copy in JSX.
+- If you add a new key, add it to both language files.
+
+## Error Handling
+
+- Handle Supabase responses by checking `error` explicitly.
+- In services, throw clear `Error` objects with actionable messages.
+- In UI code, catch failures and surface them via toast/alert/state.
+- Logging with `console.error` is common in this repo; include enough context to debug.
+- Do not silently swallow errors unless there is a deliberate fallback.
+
+## Testing Conventions
+
+- Test runner setup lives in `src/test/setup.ts`.
+- Shared render helpers live in `src/test/test-utils.tsx`.
+- Prefer behavior-focused tests using Testing Library queries.
+- Prefer accessible selectors (`getByRole`, `getByLabelText`) before test IDs.
+- Mock external boundaries, not internal implementation details, when possible.
+- Coverage thresholds in `vitest.config.ts` are `70` for branches/functions/lines/statements.
+
+## Supabase And Security
+
+- Never commit `.env` or secrets.
+- Expected env vars are `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+- Assume RLS matters; do not bypass ownership/security assumptions in app logic.
+- Sanitize or validate untrusted input before rendering or submission.
+
+## When Adding Files
+
+- Put files in the existing feature folder when possible.
+- Prefer extending an existing service/hook/component over creating parallel abstractions.
+- Keep new helpers small and specific.
+- Add or update tests when behavior changes.
+
+## Good Default Workflow
+
+1. Read nearby files first.
+2. Make the smallest correct change.
+3. Keep user-facing text in i18n.
+4. Run targeted tests first, then full verification.
+5. Review the diff for accidental formatting churn.

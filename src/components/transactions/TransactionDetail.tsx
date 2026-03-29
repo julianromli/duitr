@@ -412,7 +412,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
           <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
             <span className="text-[#868686]">Waktu</span>
             <span>{formatDate(transaction.date)}</span>
-          </div>
+          </motion.div>
           
           {/* Type - non-editable */}
           <motion.div className="flex items-center justify-between mb-4" variants={itemVariants}>
@@ -421,7 +421,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
               {getTypeIcon()}
               <span className="ml-2">{getTypeLabel()}</span>
             </div>
-          </div>
+          </motion.div>
           
           {/* Save button at the bottom for editing mode */}
           {isEditing && (
