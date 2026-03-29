@@ -5,7 +5,10 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode, command }) => ({
+export default defineConfig(({ mode, command }) => {
+  const enablePwa = command === 'build' && process.env.npm_lifecycle_event === 'build:pwa';
+
+  return {
   server: {
     host: mode === 'development' ? 'localhost' : '0.0.0.0',
     port: mode === 'development' ? 8080 : 4173,
@@ -21,7 +24,7 @@ export default defineConfig(({ mode, command }) => ({
     react(),
     mode === 'development' &&
     componentTagger(),
-    VitePWA({
+    enablePwa && VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'robots.txt', 'pwa-icons/*.png'],
       manifest: false,
@@ -104,4 +107,5 @@ export default defineConfig(({ mode, command }) => ({
   envPrefix: "VITE_",
   // Environment variables are automatically handled by Vite
   // No need to manually define them here
-}));
+};
+});
