@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Duitr is a modern personal finance management application built with React 18, TypeScript, and Supabase. It features expense tracking, budget management, wallet transfers, AI-powered financial insights, and PWA capabilities with offline support.
+Duitr is a modern personal finance management application built with React 19, TypeScript, and Supabase. It features expense tracking, budget management, wallet transfers, AI-powered financial insights, and PWA capabilities with offline support.
 
 ## Development Commands
 
@@ -45,13 +45,13 @@ bun run vercel:deploy    # Deploy to Vercel
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui
 - **Backend**: Supabase (PostgreSQL), Row Level Security
 - **State Management**: React Query (TanStack Query), React Context
 - **Forms**: React Hook Form with Zod validation
 - **Internationalization**: i18next with English/Indonesian support
 - **PWA**: Vite PWA Plugin, Service Worker, offline support
-- **Charts**: Recharts for data visualization
+- **Charts**: Chart.js with react-chartjs-2 for data visualization
 - **Animations**: Framer Motion for smooth transitions
 - **Icons**: Lucide React for consistent iconography
 
@@ -84,13 +84,12 @@ src/
 
 ### Database Schema (Supabase)
 - **users** - User authentication and preferences
-- **wallets** - User wallets with currency support
+- **wallets** - User wallets
 - **categories** - Transaction categories
-- **transactions** - Financial transactions with multi-currency support
+- **transactions** - Financial transactions
 - **budgets** - User budgets and spending limits
 - **want_to_buy** - Wishlist items
 - **pinjaman** - Loan management
-- **exchange_rates** - Currency conversion rates
 
 ### Key Patterns
 - **Path Aliases**: Use `@/` for src imports (configured in tsconfig.json)
@@ -127,7 +126,7 @@ src/
 - Environment variables for sensitive configuration
 - Input validation on all forms
 - TypeScript strict mode enabled
-- Regular security audits with npm audit
+- Regular security audits with `bun audit`
 
 ### Testing
 - Write tests for new components and utilities

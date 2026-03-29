@@ -22,7 +22,7 @@ Panduan lengkap untuk developer yang ingin berkontribusi atau memahami arsitektu
 ┌─────────────────────────────────────────────────────────┐
 │                    Frontend (React)                     │
 ├─────────────────────────────────────────────────────────┤
-│ • React 18 + TypeScript                                │
+│ • React 19 + TypeScript                                │
 │ • Vite (Build Tool)                                    │
 │ • Tailwind CSS + shadcn/ui                            │
 │ • React Router (Routing)                               │
@@ -96,7 +96,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # Development Settings
 VITE_APP_ENV=development
-VITE_APP_VERSION=1.0.0
+VITE_APP_VERSION=2.2.0
 ```
 
 4. **Database Setup**

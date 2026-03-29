@@ -52,10 +52,14 @@ service-account.json
 .cache
 .temp
 .tmp
+dev-dist/
+lighthouse/
 
 # Testing
 coverage/
 .nyc_output/
+test-results/
+screenshots/
 
 # OS generated files
 Thumbs.db
@@ -74,3 +78,37 @@ ehthumbs_vista.db
 .yarn-integrity
 yarn-error.log
 package-lock.json
+
+# Local AI and editor workspaces
+.agents/
+.claude/
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+skills/
+skills-lock.json
+
+# Temporary and accidental artifacts
+%TEMP%/
+*.backup
+nul

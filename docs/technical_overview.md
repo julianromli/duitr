@@ -194,4 +194,4 @@ bun run build:pwa  # vite build + pwa:icons + pwa:verify + copy-pwa
 This architecture follows a modern React SPA pattern with server-side data persistence, offline-first PWA capabilities, and strict security boundaries via RLS policies. The codebase emphasizes type safety, accessibility (Radix primitives), and developer experience (hot reload, comprehensive tooling).
 
 **Recent Major Changes:**
-- **Currency System Refactor (Jan 2025)**: Simplified from complex multi-currency exchange system to display-only preference system. Removed 9 unnecessary database columns, deleted exchange_rates table, reduced code by 70%. See `CURRENCY_REFACTOR_SUMMARY.md` for details.
+- **Currency System Refactor (Jan 2025)**: Simplified from complex multi-currency exchange system to display-only preference system. Removed 9 unnecessary database columns, deleted exchange_rates table, reduced code by 70%. See `archive/CURRENCY_REFACTOR_SUMMARY.md` for details.

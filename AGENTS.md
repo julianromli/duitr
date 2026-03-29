@@ -15,7 +15,7 @@ bun run preview                # Preview build (port 4173)
 
 ## Tech Stack
 
-- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
 - **UI Components**: shadcn/ui (primary source)
 - **Backend**: Supabase (PostgreSQL + RLS)
 - **State**: React Query + React Context
@@ -89,7 +89,7 @@ Duitr uses a **simplified display-only currency system**:
 - User currency stored in `auth.users.user_metadata.currency`
 - Database uses single `amount` column (no conversion columns)
 - Changing currency **DELETES ALL USER DATA** (requires confirmation)
-- See `CURRENCY_REFACTOR_SUMMARY.md` for implementation details
+- See `docs/archive/CURRENCY_REFACTOR_SUMMARY.md` for implementation details
 
 ### Currency Change Flow
 1. User goes to Profile → Currency Settings
@@ -419,10 +419,10 @@ After implementing UI features, ALWAYS offer Playwright testing for:
 ## Documentation References
 
 - **Comprehensive Guide**: See `CLAUDE.md` for detailed architecture
-- **Technical Overview**: See `technical_overview.md` for system architecture
-- **Developer Setup**: See `DEVELOPER_GUIDE.md` for environment setup
-- **API Details**: See `API_DOCUMENTATION.md` for backend integration
-- **Currency System**: See `CURRENCY_REFACTOR_SUMMARY.md` for currency implementation
+- **Technical Overview**: See `docs/technical_overview.md` for system architecture
+- **Developer Setup**: See `docs/DEVELOPER_GUIDE.md` for environment setup
+- **API Details**: See `docs/API_DOCUMENTATION.md` for backend integration
+- **Currency System**: See `docs/archive/CURRENCY_REFACTOR_SUMMARY.md` for currency implementation
 - **README**: See `README.md` for project overview
 
 ## Key Files
