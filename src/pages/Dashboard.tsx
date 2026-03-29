@@ -375,20 +375,6 @@ const Dashboard: React.FC = () => {
               </div>}
           </motion.div>
 
-          {/* Budget Health Widget - Conditional Rendering */}
-          {showPredictions && (
-            <motion.div
-              className="mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-            >
-              <BudgetWidgetErrorBoundary fallback={<PredictionErrorFallback />}>
-                <BudgetHealthWidget />
-              </BudgetWidgetErrorBoundary>
-            </motion.div>
-          )}
-
           {/* Action Buttons - Horizontal layout */}
           <motion.div className="flex gap-3 mb-6" variants={actionButtonsVariants}>
             <motion.button variants={buttonHoverVariants} whileHover="hover" whileTap="tap" onClick={openTransferForm} className="flex-1 text-white py-4 px-4 rounded-full flex items-center justify-center gap-2 bg-[#1364ff]">
@@ -428,7 +414,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
 
           {/* Transactions Section */}
-          <motion.div variants={transactionSectionVariants} className="mb-6">
+          <motion.div variants={transactionSectionVariants} className="mb-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-white text-lg font-semibold">{t('transactions.title')}</h3>
               <button className="text-[#C6FE1E] text-sm" onClick={navigateToTransactions}>
@@ -479,6 +465,20 @@ const Dashboard: React.FC = () => {
                 </motion.div>}
             </motion.div>
           </motion.div>
+
+          {/* Budget Health Widget - Conditional Rendering */}
+          {showPredictions && (
+            <motion.div
+              className="mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              <BudgetWidgetErrorBoundary fallback={<PredictionErrorFallback />}>
+                <BudgetHealthWidget />
+              </BudgetWidgetErrorBoundary>
+            </motion.div>
+          )}
         </div>
         
         {/* Transaction Form Dialogs */}

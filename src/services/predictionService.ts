@@ -26,6 +26,121 @@ import {
  */
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
+function formatAmount(amount: number): string {
+  return amount.toLocaleString('id-ID');
+}
+
+function isStorageUnavailableError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes('budget_predictions') ||
+    (message.includes('relation') && message.includes('does not exist'))
+  );
+}
+
+function generateLocalPredictions(
+  request: PredictBudgetRequest,
+  language: 'en' | 'id'
+): PredictBudgetResponse {
+  const now = new Date(request.currentDate || new Date().toISOString());
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const elapsedDays = Math.max(now.getDate(), 1);
+  const daysRemaining = Math.max(daysInMonth - elapsedDays, 0);
+
+  const monthlyExpenseTransactions = request.transactions.filter((transaction) => {
+    if (transaction.type !== 'expense') {
+      return false;
+    }
+
+    const transactionDate = new Date(transaction.date);
+
+    return (
+      transactionDate.getMonth() === currentMonth &&
+      transactionDate.getFullYear() === currentYear
+    );
+  });
+
+  const predictions = request.budgets.map((budget) => {
+    const categoryTransactions = monthlyExpenseTransactions.filter(
+      (transaction) => transaction.categoryId === budget.categoryId
+    );
+
+    const currentSpend = categoryTransactions.reduce(
+      (sum, transaction) => sum + transaction.amount,
+      0
+    );
+    const averageDailySpend = currentSpend / elapsedDays;
+    const projectedSpend = Number((currentSpend + averageDailySpend * daysRemaining).toFixed(2));
+    const overrunAmount = Math.max(projectedSpend - budget.limit, 0);
+    const recommendedDailyLimit = daysRemaining > 0
+      ? Number((Math.max(budget.limit - currentSpend, 0) / daysRemaining).toFixed(2))
+      : 0;
+    const projectedUsage = budget.limit > 0 ? (projectedSpend / budget.limit) * 100 : 0;
+
+    let riskLevel: RiskLevel = 'low';
+    if (projectedUsage >= 100) {
+      riskLevel = 'high';
+    } else if (projectedUsage >= 85) {
+      riskLevel = 'medium';
+    }
+
+    const confidence = Math.min(0.9, Math.max(0.35, 0.35 + categoryTransactions.length * 0.08));
+    const categoryName = budget.categoryName || `Category ${budget.categoryId}`;
+
+    let insight: string;
+    if (overrunAmount > 0) {
+      insight = language === 'en'
+        ? `${categoryName} is trending over budget by Rp${formatAmount(overrunAmount)}. Keep daily spending near Rp${formatAmount(recommendedDailyLimit)} to reduce the overrun.`
+        : `${categoryName} berpotensi melebihi budget sebesar Rp${formatAmount(overrunAmount)}. Jaga pengeluaran harian di sekitar Rp${formatAmount(recommendedDailyLimit)} agar tetap terkendali.`;
+    } else if (riskLevel === 'medium') {
+      insight = language === 'en'
+        ? `${categoryName} is close to the limit. Try to keep daily spending under Rp${formatAmount(recommendedDailyLimit)} for the rest of the month.`
+        : `${categoryName} sudah mendekati limit. Usahakan pengeluaran harian di bawah Rp${formatAmount(recommendedDailyLimit)} sampai akhir bulan.`;
+    } else {
+      insight = language === 'en'
+        ? `${categoryName} is still on track. You can keep spending around Rp${formatAmount(recommendedDailyLimit)} per day and stay within budget.`
+        : `${categoryName} masih aman. Anda bisa menjaga pengeluaran sekitar Rp${formatAmount(recommendedDailyLimit)} per hari agar tetap sesuai budget.`;
+    }
+
+    return {
+      categoryId: budget.categoryId,
+      categoryName,
+      currentSpend,
+      budgetLimit: budget.limit,
+      projectedSpend,
+      overrunAmount,
+      riskLevel,
+      confidence,
+      daysRemaining,
+      recommendedDailyLimit,
+      insight,
+    };
+  });
+
+  const highRiskCount = predictions.filter((prediction) => prediction.riskLevel === 'high').length;
+  const mediumRiskCount = predictions.filter((prediction) => prediction.riskLevel === 'medium').length;
+
+  let overallRisk: RiskLevel = 'low';
+  if (highRiskCount > 0) {
+    overallRisk = 'high';
+  } else if (mediumRiskCount > 0) {
+    overallRisk = 'medium';
+  }
+
+  const summary = language === 'en'
+    ? `Budget outlook: ${highRiskCount} high risk and ${mediumRiskCount} medium risk categories based on this month's spending trend.`
+    : `Ringkasan budget: ${highRiskCount} kategori risiko tinggi dan ${mediumRiskCount} kategori risiko sedang berdasarkan tren pengeluaran bulan ini.`;
+
+  return {
+    predictions,
+    overallRisk,
+    summary,
+  };
+}
+
 /**
  * Error class for prediction-related errors
  */
@@ -106,8 +221,17 @@ export async function fetchCachedPredictions(
     return null;
   } catch (error) {
     if (error instanceof PredictionError) {
+      if (isStorageUnavailableError(error.originalError ?? error.message)) {
+        return null;
+      }
+
       throw error;
     }
+
+    if (isStorageUnavailableError(error)) {
+      return null;
+    }
+
     throw new PredictionError(
       'Unexpected error fetching cached predictions',
       'UNKNOWN_ERROR',
@@ -311,15 +435,37 @@ export async function getOrGeneratePredictions(
       };
     }
 
-    // No valid cache - generate new predictions
-    const response = await predictBudgetOverrun(request, language);
+    let response: PredictBudgetResponse;
+    let usedLocalFallback = false;
+
+    try {
+      response = await predictBudgetOverrun(request, language);
+    } catch (error) {
+      if (
+        error instanceof PredictionError &&
+        (error.code === 'EDGE_FUNCTION_ERROR' || error.code === 'UNKNOWN_ERROR')
+      ) {
+        response = generateLocalPredictions(request, language);
+        usedLocalFallback = true;
+      } else {
+        throw error;
+      }
+    }
 
     // Store predictions for future cache hits
     const currentDate = new Date(request.currentDate || Date.now());
     const periodStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const periodEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-    await storePredictions(userId, response.predictions, periodStart, periodEnd);
+    if (!usedLocalFallback) {
+      try {
+        await storePredictions(userId, response.predictions, periodStart, periodEnd);
+      } catch (error) {
+        if (!isStorageUnavailableError(error)) {
+          console.warn('Failed to cache predictions:', error);
+        }
+      }
+    }
 
     return response;
   } catch (error) {
