@@ -108,5 +108,3 @@ export function CurrencyInput({
 		</div>
 	)
 }
-
-export default CurrencyInput

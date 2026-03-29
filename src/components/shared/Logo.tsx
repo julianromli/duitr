@@ -15,7 +15,7 @@ interface AppLogoProps {
  * Komponen AppLogo yang dapat dikonfigurasi
  * Digunakan di header, splash screen, dan tempat lain yang membutuhkan logo
  */
-export const AppLogo: React.FC<AppLogoProps> = ({
+const AppLogo: React.FC<AppLogoProps> = ({
   withText = true,
   size = 32,
   className = '',

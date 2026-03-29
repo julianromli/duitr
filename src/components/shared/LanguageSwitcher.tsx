@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { setAppLanguage } from '@/i18n';
 import { Globe } from 'lucide-react';
 
-export const LanguageSwitcher: React.FC = () => {
+const LanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
   
   const toggleLanguage = () => {

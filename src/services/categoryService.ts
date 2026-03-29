@@ -135,7 +135,7 @@ class CategoryService {
    * @returns Updated category
    */
   async update(id: number, input: UpdateCategoryInput, userId: string): Promise<Category> {
-    const updateData: any = {};
+    const updateData: Partial<Pick<Category, 'en_name' | 'id_name' | 'icon' | 'color'>> = {};
     
     if (input.name) {
       const trimmedName = input.name.trim();
@@ -297,5 +297,5 @@ class CategoryService {
 }
 
 // Export singleton instance
-export const categoryService = new CategoryService();
+const categoryService = new CategoryService();
 export default categoryService;

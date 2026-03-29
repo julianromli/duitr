@@ -17,8 +17,7 @@ interface LogoProps {
  * 1. /public/duitr-logo.svg - Logo utama dalam format SVG
  * 2. Kemudian gunakan /public/logo-generator.html untuk menghasilkan semua aset logo
  */
-// eslint-disable-next-line react/display-name
-export const Logo = React.memo(({ 
+const Logo = React.memo(({ 
   size = 40, 
   className = '', 
 }: LogoProps) => {
@@ -39,5 +38,7 @@ export const Logo = React.memo(({
     />
   );
 });
+
+Logo.displayName = 'Logo';
 
 export default Logo; 

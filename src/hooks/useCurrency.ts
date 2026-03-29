@@ -60,5 +60,3 @@ export function useCurrency(): UseCurrencyReturn {
 		error
 	}
 }
-
-export default useCurrency

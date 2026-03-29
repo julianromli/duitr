@@ -1,4 +1,4 @@
-import { SupportedCurrency, formatCurrency } from '../../utils/currency'
+import { formatCurrency } from '../../utils/currency'
 import { useCurrencyOnboarding } from '../../hooks/useCurrencyOnboarding'
 import { cn } from '../../lib/utils'
 
@@ -8,7 +8,7 @@ interface CurrencyDisplayProps {
 	size?: 'sm' | 'md' | 'lg'
 }
 
-export function CurrencyDisplay({
+function CurrencyDisplay({
 	amount,
 	className,
 	size = 'md'

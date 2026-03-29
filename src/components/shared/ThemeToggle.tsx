@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export const ThemeToggle: React.FC = () => {
+const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { t } = useTranslation();
   

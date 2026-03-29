@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 
 // Available icons for categories
-export const availableIcons = [
+const availableIcons = [
   { name: 'circle', icon: Circle },
   { name: 'square', icon: Square },
   { name: 'triangle', icon: Triangle },
@@ -110,11 +110,6 @@ export const iconNameMap: Record<string, string> = {
   'ShoppingBag': 'shopping-bag',
   'HelpCircle': 'help-circle',
 };
-
-// Reverse mapping for getting component names from kebab-case
-export const reverseIconNameMap: Record<string, string> = Object.fromEntries(
-  Object.entries(iconNameMap).map(([key, value]) => [value, key])
-);
 
 interface IconSelectorProps {
   selectedIcon: string;

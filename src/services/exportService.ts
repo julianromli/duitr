@@ -95,9 +95,11 @@ const generateTransactionsWorksheet = async (transactions: Transaction[], worksh
     } else if (categories) {
       categories.forEach(cat => categoryMap.set(cat.category_id, cat));
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const exportError = error as { code?: string; message?: string };
+
     // Check if it's a "relation does not exist" error
-    if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+    if (exportError.code === '42P01' || exportError.message?.includes('relation') || exportError.message?.includes('does not exist')) {
       console.warn('Categories table does not exist, using fallback categories for export');
     } else {
       console.warn('Error fetching categories for export:', error);
@@ -107,6 +109,8 @@ const generateTransactionsWorksheet = async (transactions: Transaction[], worksh
   
   // Map transactions to table rows
   const tableData = sortedTransactions.map(transaction => {
+    const legacyCategoryName = (transaction as Transaction & { category?: string }).category;
+
     // Determine category name
     let categoryName = 'Other';
     
@@ -117,9 +121,9 @@ const generateTransactionsWorksheet = async (transactions: Transaction[], worksh
       const category = categoryMap.get(transaction.categoryId);
       if (category) {
         categoryName = category.en_name;
-      } else if (transaction.category) {
+      } else if (legacyCategoryName) {
         // Use transaction.category if it exists and is not empty
-        categoryName = transaction.category || (transaction.type === 'income' ? 'Other' : 'Other');
+        categoryName = legacyCategoryName;
       } else {
         // Default to "Other" based on transaction type
         categoryName = transaction.type === 'income' ? 'Other' : 'Other';
@@ -222,8 +226,4 @@ export const exportToExcel = async (
   link.click();
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
-};
-
-export default {
-  exportToExcel,
 };
