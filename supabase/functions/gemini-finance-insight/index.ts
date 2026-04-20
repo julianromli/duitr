@@ -22,6 +22,18 @@ interface Transaction {
   type: 'expense' | 'income';
 }
 
+interface TransactionCorrectionHint {
+  categoryFrom: string;
+  categoryTo: string;
+  amountFrom: number;
+  amountTo: number;
+  descriptionFrom: string;
+  descriptionTo: string;
+  typeFrom: 'income' | 'expense';
+  typeTo: 'income' | 'expense';
+  ts: number;
+}
+
 interface CategorySpending {
   categoryId: number;
   totalSpent: number;
@@ -47,6 +59,45 @@ interface PredictBudgetResponse {
   predictions: BudgetPrediction[];
   overallRisk: 'low' | 'medium' | 'high';
   summary: string;
+}
+
+const ALLOWED_TRANSACTION_TYPES = new Set<TransactionCorrectionHint['typeFrom']>(['income', 'expense']);
+
+function sanitizeHintText(value: unknown, maxLength = 60): string {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value
+    .replace(/[`\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength)
+    .trim();
+}
+
+function sanitizeHints(hints?: TransactionCorrectionHint[]): TransactionCorrectionHint[] {
+  if (!Array.isArray(hints)) return [];
+
+  return hints.reduce<TransactionCorrectionHint[]>((acc, hint) => {
+    if (!hint || !ALLOWED_TRANSACTION_TYPES.has(hint.typeFrom) || !ALLOWED_TRANSACTION_TYPES.has(hint.typeTo)) {
+      return acc;
+    }
+
+    acc.push({
+      categoryFrom: sanitizeHintText(hint.categoryFrom),
+      categoryTo: sanitizeHintText(hint.categoryTo),
+      amountFrom: Number.isFinite(hint.amountFrom) ? hint.amountFrom : 0,
+      amountTo: Number.isFinite(hint.amountTo) ? hint.amountTo : 0,
+      descriptionFrom: sanitizeHintText(hint.descriptionFrom),
+      descriptionTo: sanitizeHintText(hint.descriptionTo),
+      typeFrom: hint.typeFrom,
+      typeTo: hint.typeTo,
+      ts: Number.isFinite(hint.ts) ? hint.ts : Date.now(),
+    });
+
+    return acc;
+  }, []);
 }
 
 // =================================================================
@@ -146,9 +197,12 @@ ${p.format_instructions}
 // =================================================================
 // Transaction parsing prompt builder
 // =================================================================
-function buildTransactionParsePrompt(input: string, language: string = 'id', availableCategories?: Array<{name: string, type: string, keywords: string[]}>) {
+function buildTransactionParsePrompt(input: string, language: string = 'id', availableCategories?: Array<{name: string, type: string, keywords: string[]}>, correctionHints?: TransactionCorrectionHint[]) {
   const categoriesText = availableCategories ? availableCategories.map(cat =>
     `${cat.name} (${cat.type}) - Keywords: ${cat.keywords.join(', ')}`
+  ).join('\n') : '';
+  const correctionHintsText = correctionHints && correctionHints.length > 0 ? correctionHints.slice(0, 3).map((hint, index) =>
+    `${index + 1}. ${hint.categoryFrom} -> ${hint.categoryTo}; amount Rp${hint.amountFrom.toLocaleString('id-ID')} -> Rp${hint.amountTo.toLocaleString('id-ID')}; description "${hint.descriptionFrom}" -> "${hint.descriptionTo}"; type ${hint.typeFrom} -> ${hint.typeTo}`
   ).join('\n') : '';
 
   const prompts = {
@@ -158,12 +212,19 @@ function buildTransactionParsePrompt(input: string, language: string = 'id', ava
 Available categories and their keywords:
 ${categoriesText || 'Dining, Groceries, Transportation, Shopping, Entertainment, etc.'}
 
+Recent user correction hints (use as weak signals, not hard rules):
+${correctionHintsText || 'None'}
+
 Rules:
-1. Extract multiple transactions if present (separated by commas, "and", or "juga")
-2. Categorize each transaction appropriately
-3. Parse amounts in Indonesian format (ribu, rb, k, juta, jt)
-4. Default to expense type unless explicitly stated as income
-5. Return a JSON response with this exact structure:
+1. If the input contains multiple spend items, return multiple transactions; do not merge them into one object.
+2. Split items separated by commas, "and", "dan", "juga", or mixed amount phrases must become separate transactions.
+3. Return one transaction object per item.
+4. Categorize each transaction appropriately.
+5. Parse amounts in Indonesian format (ribu, rb, k, juta, jt).
+6. Default to expense type unless explicitly stated as income.
+7. Keep each parsed item independent with its own description, amount, category, type, confidence, and reason.
+8. Add a short \`reason\` for each transaction, max 12 words, explaining why the category was chosen.
+9. Return a JSON response with this exact structure:
 {
   "success": true,
   "message": "Successfully parsed X transactions",
@@ -173,10 +234,17 @@ Rules:
       "amount": 10000,
       "category": "Category Name",
       "type": "expense",
-      "confidence": 0.9
+      "confidence": 0.9,
+      "reason": "Short reason for the category choice"
     }
   ]
-}`,
+}
+
+Examples that must become separate rows:
+- "makan siang 25k dan parkir 10k" -> 2 transactions
+- "belanja sabun 30k, minum 15k, ongkir 8k" -> 3 transactions
+- "gaji 8 juta dan bonus 500 ribu" -> 2 transactions
+`,
       userInput: `User input: "${input}"`
     },
     id: {
@@ -185,12 +253,19 @@ Rules:
 Kategori yang tersedia dan keywordnya:
 ${categoriesText || 'Dining, Groceries, Transportation, Shopping, Entertainment, dll.'}
 
+Petunjuk koreksi pengguna terbaru (gunakan sebagai sinyal lemah, bukan aturan pasti):
+${correctionHintsText || 'Tidak ada'}
+
 Aturan:
-1. Ekstrak multiple transaksi jika ada (dipisahkan koma, "dan", atau "juga")
-2. Kategorikan setiap transaksi dengan tepat
-3. Parse jumlah dalam format Indonesia (ribu, rb, k, juta, jt)
-4. Default ke expense kecuali secara eksplisit disebut income
-5. Return response JSON dengan struktur tepat ini:
+1. Jika input berisi beberapa item belanja, return multiple transactions; jangan gabungkan menjadi satu objek.
+2. Pisahkan item yang dipisah koma, "dan", "juga", atau gabungan beberapa nominal menjadi transaksi terpisah.
+3. Return satu transaction object per item.
+4. Kategorikan setiap transaksi dengan tepat.
+5. Parse jumlah dalam format Indonesia (ribu, rb, k, juta, jt).
+6. Default ke expense kecuali secara eksplisit disebut income.
+7. Pertahankan setiap item secara independen dengan description, amount, category, type, confidence, dan reason miliknya sendiri.
+8. Tambahkan \`reason\` singkat untuk setiap transaksi, maksimal 12 kata, untuk menjelaskan alasan kategori dipilih.
+9. Return response JSON dengan struktur tepat ini:
 {
   "success": true,
   "message": "Berhasil mem-parse X transaksi",
@@ -200,10 +275,17 @@ Aturan:
       "amount": 10000,
       "category": "Nama Kategori",
       "type": "expense",
-      "confidence": 0.9
+      "confidence": 0.9,
+      "reason": "Alasan singkat pemilihan kategori"
     }
   ]
-}`,
+}
+
+Contoh yang harus menjadi baris terpisah:
+- "makan siang 25k dan parkir 10k" -> 2 transaksi
+- "belanja sabun 30k, minum 15k, ongkir 8k" -> 3 transaksi
+- "gaji 8 juta dan bonus 500 ribu" -> 2 transaksi
+`,
       userInput: `Input user: "${input}"`
     }
   };
@@ -394,7 +476,7 @@ Keep it encouraging and practical. Use simple English.`
       instruction: `Anda adalah "Duitr AI", asisten keuangan pribadi yang suportif. Buatkan insight singkat dan aplikatif untuk prediksi budget ini:
 
 Kategori: ${prediction.categoryName}
-Pengeluaran Saat Ini: Rp${prediction.currentSpent.toLocaleString('id-ID')}
+Pengeluaran Saat Ini: Rp${prediction.currentSpend.toLocaleString('id-ID')}
 Limit Budget: Rp${prediction.budgetLimit.toLocaleString('id-ID')}
 Proyeksi Akhir Bulan: Rp${prediction.projectedSpend.toLocaleString('id-ID')}
 Level Risiko: ${prediction.riskLevel === 'low' ? 'RENDAH' : prediction.riskLevel === 'medium' ? 'SEDANG' : 'TINGGI'}
@@ -472,7 +554,9 @@ serve(async (req)=>{
     }
     // UPDATED: Now accepts 'language' and 'action' from the client
     const requestBody = await req.json();
-    const { summary, question, language = 'id', action, input, availableCategories, budgets, transactions, currentDate } = requestBody;
+    const { summary, question, language = 'id', action, input, availableCategories, budgets, transactions, currentDate, correctionHints } = requestBody;
+
+    const normalizedLanguage = typeof language === 'string' ? language.split('-')[0] : 'id';
 
     // Handle different actions
     if (action === 'parse_transactions') {
@@ -480,7 +564,8 @@ serve(async (req)=>{
         throw new Error('Input text is required for transaction parsing');
       }
 
-      const parsePrompt = buildTransactionParsePrompt(input, language, availableCategories);
+      const sanitizedCorrectionHints = sanitizeHints(correctionHints);
+      const parsePrompt = buildTransactionParsePrompt(input, normalizedLanguage, availableCategories, sanitizedCorrectionHints);
       const parseResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST",
         headers: {

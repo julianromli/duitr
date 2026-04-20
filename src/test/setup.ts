@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll, vi } from 'vitest'
+import { supabase } from '@/lib/supabase'
 
 // Cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
@@ -32,6 +33,9 @@ vi.mock('@/lib/supabase', () => {
     auth: {
       ...auth
     },
+    functions: {
+      invoke: vi.fn()
+    },
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -58,6 +62,8 @@ vi.mock('@/lib/supabase', () => {
     isIOS: vi.fn(() => false)
   }
 })
+
+export const getMockSupabaseFunctionInvoke = () => vi.mocked(supabase.functions.invoke)
 
 // Mock React Router
 vi.mock('react-router-dom', async () => {
@@ -157,6 +163,26 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }))
+
+Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
+  configurable: true,
+  value: vi.fn(() => false),
+})
+
+Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+  configurable: true,
+  value: vi.fn(),
+})
+
+Object.defineProperty(HTMLElement.prototype, 'releasePointerCapture', {
+  configurable: true,
+  value: vi.fn(),
+})
+
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  configurable: true,
+  value: vi.fn(),
+})
 
 // Global test utilities
 export const mockUser = {

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, getSession, getCurrentUser } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { AITransactionService } from '@/services/aiTransactionService';
 import { logAuthEvent } from '@/utils/auth-logger';
 import i18n from '@/i18n';
 
@@ -17,6 +18,10 @@ interface AuthContextType {
   resendVerificationEmail: (email: string) => Promise<{ success: boolean; message: string }>;
 }
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -24,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const { toast } = useToast();
+  const aiTransactionService = useMemo(() => AITransactionService.getInstance(), []);
 
   // 🔧 Memoized loadUserSettings to prevent re-creation on every render
   const loadUserSettings = useCallback((currentUser: User | null) => {
@@ -90,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 🔧 Removed language logic from here to prevent i18n loops
       // Language initialization moved to separate useEffect
       if (event === 'SIGNED_OUT') {
+        aiTransactionService.clearCorrectionHints();
         setIsBalanceHidden(false);
       } else if (event === 'USER_UPDATED') {
          if (currentUser) {
@@ -101,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [toast, loadUserSettings]);
+  }, [toast, loadUserSettings, aiTransactionService]);
 
   const updateBalanceVisibility = async (isHidden: boolean) => {
     if (!user) {
@@ -156,9 +163,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       return { success: true, message: i18n.t('auth.verification_sent') };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('AuthContext: Exception during signup:', error);
-      return { success: false, message: error.message || 'An error occurred during sign up' };
+      return { success: false, message: getErrorMessage(error, 'An error occurred during sign up') };
     } finally {
       setIsLoading(false);
     }
@@ -199,9 +206,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       logAuthEvent('sign_in_success', { userId: data.user?.id });
       return { success: true, message: '' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logAuthEvent('sign_in_exception', {}, error);
-      return { success: false, message: error.message || 'An error occurred during sign in' };
+      return { success: false, message: getErrorMessage(error, 'An error occurred during sign in') };
     } finally {
       setIsLoading(false);
     }
@@ -232,10 +239,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       return { success: true, message: '' };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logAuthEvent('auth_context_google_signin_exception', {}, error);
-      return { success: false, message: error.message || 'An error occurred during Google sign in' };
+      return { success: false, message: getErrorMessage(error, 'An error occurred during Google sign in') };
     } finally {
+      setIsLoading(false);
     }
   };
 
@@ -243,16 +251,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
+      aiTransactionService.clearCorrectionHints();
       setUser(null);
       toast({
         title: i18n.t('auth.signed_out_title'),
         description: i18n.t('auth.signed_out_description'),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Sign out failed',
-        description: error.message || 'An error occurred during sign out',
+        description: getErrorMessage(error, 'An error occurred during sign out'),
       });
     } finally {
       setIsLoading(false);
@@ -283,11 +292,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: true, 
         message: 'Verification email sent! Please check your inbox.' 
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logAuthEvent('resend_verification_email_exception', { email }, error);
       return { 
         success: false, 
-        message: error.message || 'An error occurred while resending verification email' 
+        message: getErrorMessage(error, 'An error occurred while resending verification email') 
       };
     }
   };

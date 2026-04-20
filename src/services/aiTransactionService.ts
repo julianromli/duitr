@@ -2,17 +2,33 @@ import { supabase } from '@/lib/supabase';
 import type { Transaction } from '@/types/finance';
 import i18next from 'i18next';
 
+export interface TransactionCorrectionHint {
+  categoryFrom: string;
+  categoryTo: string;
+  amountFrom: number;
+  amountTo: number;
+  descriptionFrom: string;
+  descriptionTo: string;
+  typeFrom: 'income' | 'expense';
+  typeTo: 'income' | 'expense';
+  ts: number;
+}
+
+const CORRECTION_HINTS_STORAGE_KEY = 'duitr.ai.transaction-correction-hints';
+const CORRECTION_HINTS_LIMIT = 20;
+const RECENT_CORRECTION_HINTS_LIMIT = 3;
+
 // Minimal category hints for AI (not source of truth - real categories in database)
 const AI_CATEGORY_HINTS = {
   expense: [
-    { id: '1', name: 'Groceries' }, { id: '2', name: 'Dining' }, { id: '3', name: 'Transportation' },
-    { id: '4', name: 'Subscription' }, { id: '5', name: 'Housing' }, { id: '6', name: 'Entertainment' },
-    { id: '7', name: 'Shopping' }, { id: '8', name: 'Health' }, { id: '9', name: 'Education' },
-    { id: '10', name: 'Vehicle' }, { id: '11', name: 'Personal' }, { id: '12', name: 'Other' }
+    { id: 1, name: 'Groceries' }, { id: 2, name: 'Dining' }, { id: 3, name: 'Transportation' },
+    { id: 4, name: 'Subscription' }, { id: 5, name: 'Housing' }, { id: 6, name: 'Entertainment' },
+    { id: 7, name: 'Shopping' }, { id: 8, name: 'Health' }, { id: 9, name: 'Education' },
+    { id: 10, name: 'Vehicle' }, { id: 11, name: 'Personal' }, { id: 12, name: 'Other' }
   ],
   income: [
-    { id: '13', name: 'Salary' }, { id: '14', name: 'Business' }, { id: '15', name: 'Investment' },
-    { id: '16', name: 'Gift' }, { id: '17', name: 'Other' }
+    { id: 13, name: 'Salary' }, { id: 14, name: 'Business' }, { id: 15, name: 'Investment' },
+    { id: 16, name: 'Gift' }, { id: 17, name: 'Other' }
   ]
 };
 
@@ -20,9 +36,10 @@ export interface ParsedTransaction {
   description: string;
   amount: number;
   category: string;
-  categoryId: string;
+  categoryId: number;
   type: 'income' | 'expense';
   confidence: number;
+  reason?: string;
 }
 
 export interface AIAddTransactionResponse {
@@ -42,14 +59,17 @@ export class AITransactionService {
     return AITransactionService.instance;
   }
 
-  async parseTransactionInput(input: string, defaultWalletId?: string): Promise<AIAddTransactionResponse> {
+  async parseTransactionInput(input: string): Promise<AIAddTransactionResponse> {
     try {
+      const correctionHints = this.getRecentCorrectionHints();
+      const language = (i18next.language || 'id').split('-')[0];
       const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
         body: {
           action: 'parse_transactions',
           input: input.trim(),
-          language: i18next.language || 'id',
-          availableCategories: this.getAvailableCategories()
+          language,
+          availableCategories: this.getAvailableCategories(),
+          correctionHints
         }
       });
 
@@ -118,13 +138,16 @@ export class AITransactionService {
         category?: string;
         type?: 'income' | 'expense';
         confidence?: number;
+        reason?: string;
+        explanation?: string;
       }) => ({
         description: tx.description || '',
         amount: this.parseAmount(tx.amount),
         category: tx.category || '',
-        categoryId: this.mapToCategoryId(tx.category, tx.type),
+        categoryId: this.resolveCategoryId(tx.category || '', tx.type || 'expense'),
         type: tx.type || 'expense',
-        confidence: tx.confidence || 0.5
+        confidence: tx.confidence ?? 0.5,
+        reason: this.normalizeReason(tx.reason ?? tx.explanation)
       }));
 
       return {
@@ -179,6 +202,92 @@ export class AITransactionService {
     return keywordMap[categoryName] || [categoryName];
   }
 
+  recordCorrectionHint(original: ParsedTransaction, edited: ParsedTransaction): void {
+    if (!this.hasMeaningfulCorrection(original, edited)) return;
+
+    const hint: TransactionCorrectionHint = {
+      categoryFrom: original.category,
+      categoryTo: edited.category,
+      amountFrom: original.amount,
+      amountTo: edited.amount,
+      descriptionFrom: this.compactText(original.description),
+      descriptionTo: this.compactText(edited.description),
+      typeFrom: original.type,
+      typeTo: edited.type,
+      ts: Date.now()
+    };
+
+    const existing = this.readCorrectionHints();
+    const next = [hint, ...existing].slice(0, CORRECTION_HINTS_LIMIT);
+    this.writeCorrectionHints(next);
+  }
+
+  getRecentCorrectionHints(limit = RECENT_CORRECTION_HINTS_LIMIT): TransactionCorrectionHint[] {
+    return this.readCorrectionHints().slice(0, Math.max(0, limit));
+  }
+
+  clearCorrectionHints(): void {
+    this.writeCorrectionHints([]);
+  }
+
+  private hasMeaningfulCorrection(original: ParsedTransaction, edited: ParsedTransaction): boolean {
+    return original.categoryId !== edited.categoryId
+      || original.amount !== edited.amount
+      || original.description.trim() !== edited.description.trim()
+      || original.type !== edited.type;
+  }
+
+  private compactText(value: string, limit = 48): string {
+    const compact = value.replace(/\s+/g, ' ').trim();
+    return compact.length > limit ? compact.slice(0, limit).trim() : compact;
+  }
+
+  private readCorrectionHints(): TransactionCorrectionHint[] {
+    if (typeof window === 'undefined') return [];
+
+    try {
+      const raw = window.localStorage.getItem(CORRECTION_HINTS_STORAGE_KEY);
+      if (!raw) return [];
+
+      const parsed = JSON.parse(raw) as TransactionCorrectionHint[];
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed.filter((hint): hint is TransactionCorrectionHint => {
+        return hint
+          && typeof hint.categoryFrom === 'string'
+          && typeof hint.categoryTo === 'string'
+          && typeof hint.amountFrom === 'number'
+          && typeof hint.amountTo === 'number'
+          && typeof hint.descriptionFrom === 'string'
+          && typeof hint.descriptionTo === 'string'
+          && (hint.typeFrom === 'income' || hint.typeFrom === 'expense')
+          && (hint.typeTo === 'income' || hint.typeTo === 'expense')
+          && typeof hint.ts === 'number';
+      }).sort((a, b) => b.ts - a.ts);
+    } catch {
+      return [];
+    }
+  }
+
+  private writeCorrectionHints(hints: TransactionCorrectionHint[]): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      window.localStorage.setItem(CORRECTION_HINTS_STORAGE_KEY, JSON.stringify(hints));
+    } catch {
+      // Ignore storage failures to keep the app local-first and resilient.
+    }
+  }
+
+  private normalizeReason(reason?: string): string | undefined {
+    if (!reason) return undefined;
+
+    const compact = reason.replace(/\s+/g, ' ').trim();
+    if (!compact) return undefined;
+
+    return compact.length > 80 ? compact.slice(0, 80).trim() : compact;
+  }
+
   private parseAmount(amount: string | number): number {
     if (typeof amount === 'number') return amount;
     if (typeof amount === 'string') {
@@ -205,7 +314,7 @@ export class AITransactionService {
     return 0;
   }
 
-  private mapToCategoryId(categoryName: string, type: 'income' | 'expense'): string {
+  resolveCategoryId(categoryName: string, type: 'income' | 'expense'): number {
     const allCategories = [
       ...AI_CATEGORY_HINTS.expense,
       ...AI_CATEGORY_HINTS.income
@@ -224,10 +333,10 @@ export class AITransactionService {
       category = this.findBestCategoryMatch(normalizedInput, type);
     }
 
-    return category?.id || (type === 'expense' ? '12' : '18'); // Default to Other
+    return category?.id ?? (type === 'expense' ? 12 : 17); // Default to Other
   }
 
-  private findBestCategoryMatch(input: string, type: 'income' | 'expense'): {id: string, name: string} | undefined {
+  private findBestCategoryMatch(input: string, type: 'income' | 'expense'): {id: number, name: string} | undefined {
     const categories = type === 'expense' ? AI_CATEGORY_HINTS.expense : AI_CATEGORY_HINTS.income;
 
     // Simple keyword matching
@@ -247,7 +356,7 @@ export class AITransactionService {
     const invalid: ParsedTransaction[] = [];
 
     for (const tx of transactions) {
-      if (tx.amount > 0 && tx.description.trim().length > 0) {
+      if (tx.amount > 0 && tx.description.trim().length > 0 && tx.category.trim().length > 0) {
         valid.push(tx);
       } else {
         invalid.push(tx);
@@ -256,7 +365,6 @@ export class AITransactionService {
 
     return { valid, invalid };
   }
-
   convertToTransactionFormat(parsedTx: ParsedTransaction, walletId: string): Omit<Transaction, 'id' | 'userId'> {
     return {
       amount: parsedTx.amount,
