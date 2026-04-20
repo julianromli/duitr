@@ -57,7 +57,7 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "isomorphic-dompurify": "^2.30.1",
     "lucide-react": "^0.552.0",
-    "next-themes": "^0.3.0",
+    "next-themes": "^0.4.6",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.1",
     "react-color": "^2.19.3",
@@ -81,7 +81,7 @@
     "@types/node": "^22.5.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
+    "@vitejs/plugin-react-swc": "^4.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.20",
@@ -99,7 +99,7 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vercel": "^46.0.2",
-    "vite": "^5.4.1",
+    "vite": "^8.0.9",
     "vite-plugin-pwa": "^0.19.5",
     "vitest": "^3.2.4"
   }
