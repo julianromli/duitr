@@ -92,14 +92,20 @@ describe('AIAddTransactionDialog', () => {
     const descriptionInput = await screen.findByLabelText(/Description 1/i);
     const amountInput = screen.getByLabelText(/Amount 1/i);
     const categoryInput = screen.getByLabelText(/Category 1/i);
-    const typeSelect = screen.getByLabelText(/Type 1/i);
+    const typeSelectTrigger = screen.getByRole('combobox', { name: /Type 1/i });
+
+    await user.click(typeSelectTrigger);
+    const expenseOption = await screen.findByRole('option', { name: 'Expense' });
 
     expect(screen.getByText(/Why: Lunch keyword matches dining/i)).toBeInTheDocument();
     expect(screen.getByText(/You can edit the AI output before saving/i)).toBeInTheDocument();
     expect(descriptionInput).toHaveValue('Lunch');
     expect(amountInput).toHaveValue(25000);
     expect(categoryInput).toHaveValue('Dining');
-    expect(typeSelect).toHaveValue('expense');
+    expect(expenseOption).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(typeSelectTrigger).toHaveTextContent('Expense'));
 
     await user.clear(descriptionInput);
     await user.type(descriptionInput, 'Dinner with friends');
@@ -131,7 +137,8 @@ describe('AIAddTransactionDialog', () => {
 
     expect(await screen.findByText(/No transactions were parsed/i)).toBeInTheDocument();
     expect(screen.getByText(/Try a different example/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/You can edit the AI output before saving/i)).toHaveLength(2);
+    expect(screen.getByText('You can edit the AI output before saving.')).toBeInTheDocument();
+    expect(screen.getByText('If the AI parses something, you can still edit it before saving.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Review & confirm/i })).not.toBeInTheDocument();
   });
 

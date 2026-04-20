@@ -636,15 +636,15 @@
     "parseError": "Saya tidak bisa memproses itu. Coba contoh lain, dan saya akan cek lagi.",
     "reviewAndConfirm": "Tinjau & konfirmasi",
     "reviewHint": {
-      "label": "Review hint",
-      "high": "Looks good — quick check only.",
-      "medium": "Review the category before saving.",
-      "low": "Double-check the category and amount."
+      "label": "Petunjuk peninjauan",
+      "high": "Sudah terlihat baik — cukup cek cepat saja.",
+      "medium": "Tinjau kategorinya sebelum disimpan.",
+      "low": "Periksa lagi kategori dan nominalnya."
     },
     "confidence": {
-      "high": "High confidence",
-      "medium": "Medium confidence",
-      "low": "Low confidence"
+      "high": "Keyakinan tinggi",
+      "medium": "Keyakinan sedang",
+      "low": "Keyakinan rendah"
     },
     "send": "Kirim",
     "netFlow": "Arus Kas Bersih",

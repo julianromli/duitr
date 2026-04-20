@@ -5,6 +5,18 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 
+const mockClearCorrectionHints = vi.fn()
+
+type AuthStateChangeSubscription = ReturnType<typeof supabase.auth.onAuthStateChange>
+
+vi.mock('@/services/aiTransactionService', () => ({
+  AITransactionService: {
+    getInstance: () => ({
+      clearCorrectionHints: mockClearCorrectionHints,
+    }),
+  },
+}))
+
 type SupabaseAuthError = NonNullable<Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>['error']>
 
 const makeMockUser = (overrides?: Partial<{ is_balance_hidden: boolean }>) => ({
@@ -55,6 +67,7 @@ const createWrapper = () => {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockClearCorrectionHints.mockReset()
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { session: null },
       error: null
@@ -237,6 +250,7 @@ describe('AuthContext', () => {
       })
 
       expect(supabase.auth.signOut).toHaveBeenCalled()
+      expect(mockClearCorrectionHints).toHaveBeenCalled()
     })
   })
 
@@ -290,7 +304,7 @@ describe('AuthContext', () => {
         }
       }
 
-      vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(mockSubscription as any)
+      vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue(mockSubscription as AuthStateChangeSubscription)
 
       const { unmount } = renderHook(() => useAuth(), {
         wrapper: createWrapper()
@@ -314,7 +328,7 @@ describe('AuthContext', () => {
               unsubscribe: vi.fn()
             }
           }
-        } as any
+        } as AuthStateChangeSubscription
       })
 
       const { result } = renderHook(() => useAuth(), {

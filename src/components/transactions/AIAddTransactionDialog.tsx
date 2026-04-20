@@ -48,18 +48,13 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
 
   // Initialize selected wallet when dialog opens or wallets change
   useEffect(() => {
-    if (!open) return;
+    setSelectedWallet(prev => {
+      if (!open || wallets.length === 0) return null;
 
-    if (wallets.length === 0) {
-      setSelectedWallet(null);
-      return;
-    }
-
-    const walletStillExists = selectedWallet && wallets.some(wallet => wallet.id === selectedWallet.id);
-    if (!selectedWallet || !walletStillExists) {
-      setSelectedWallet(wallets[0]);
-    }
-  }, [open, wallets, selectedWallet]);
+      const prevStillExists = prev && wallets.some(wallet => wallet.id === prev.id);
+      return (!prev || !prevStillExists) ? wallets[0] : prev;
+    });
+  }, [open, wallets]);
 
   // Initialize with welcome message
   useEffect(() => {
@@ -430,7 +425,7 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
                       {t('ai.noTransactionsParsedDescription', 'Try a different example, or edit the AI output after parsing.')}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {t('ai.noTransactionsParsedHint', 'You can edit the AI output before saving.')}
+                      {t('ai.noTransactionsParsedHint', 'If the AI parses something, you can still edit it before saving.')}
                     </p>
                   </CardContent>
                 </Card>
@@ -524,18 +519,28 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
                                 </div>
 
                                 <div className="space-y-1">
-                                  <label htmlFor={`tx-type-${tx.id}`} className="text-xs font-medium text-gray-300">
+                                  <label id={`tx-type-${tx.id}`} className="text-xs font-medium text-gray-300">
                                     {t('ai.type', 'Type')} {index + 1}
                                   </label>
-                                  <select
-                                    id={`tx-type-${tx.id}`}
+                                  <Select
                                     value={tx.type}
-                                    onChange={(e) => updateParsedTransaction(tx.id, 'type', e.target.value as 'income' | 'expense')}
-                                    className="flex h-10 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-[#C6FE1E]/40 focus:ring-offset-0"
+                                    onValueChange={(value) => updateParsedTransaction(tx.id, 'type', value as 'income' | 'expense')}
                                   >
-                                    <option value="expense">{t('transactions.expense', 'Expense')}</option>
-                                    <option value="income">{t('transactions.income', 'Income')}</option>
-                                  </select>
+                                    <SelectTrigger
+                                      aria-labelledby={`tx-type-${tx.id}`}
+                                      className="bg-gray-900 border-gray-700 text-white"
+                                    >
+                                      <SelectValue placeholder={t('ai.type', 'Type')} />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-gray-800 border-gray-700">
+                                      <SelectItem value="expense" className="text-white hover:bg-gray-700 focus:bg-gray-700">
+                                        {t('transactions.expense', 'Expense')}
+                                      </SelectItem>
+                                      <SelectItem value="income" className="text-white hover:bg-gray-700 focus:bg-gray-700">
+                                        {t('transactions.income', 'Income')}
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
 

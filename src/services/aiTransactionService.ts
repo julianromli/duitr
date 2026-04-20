@@ -226,6 +226,10 @@ export class AITransactionService {
     return this.readCorrectionHints().slice(0, Math.max(0, limit));
   }
 
+  clearCorrectionHints(): void {
+    this.writeCorrectionHints([]);
+  }
+
   private hasMeaningfulCorrection(original: ParsedTransaction, edited: ParsedTransaction): boolean {
     return original.categoryId !== edited.categoryId
       || original.amount !== edited.amount
@@ -310,7 +314,7 @@ export class AITransactionService {
     return 0;
   }
 
-  private mapToCategoryId(categoryName: string, type: 'income' | 'expense'): number {
+  resolveCategoryId(categoryName: string, type: 'income' | 'expense'): number {
     const allCategories = [
       ...AI_CATEGORY_HINTS.expense,
       ...AI_CATEGORY_HINTS.income
@@ -361,11 +365,6 @@ export class AITransactionService {
 
     return { valid, invalid };
   }
-
-  resolveCategoryId(categoryName: string, type: 'income' | 'expense'): number {
-    return this.mapToCategoryId(categoryName, type);
-  }
-
   convertToTransactionFormat(parsedTx: ParsedTransaction, walletId: string): Omit<Transaction, 'id' | 'userId'> {
     return {
       amount: parsedTx.amount,

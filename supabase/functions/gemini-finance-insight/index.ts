@@ -61,6 +61,41 @@ interface PredictBudgetResponse {
   summary: string;
 }
 
+const ALLOWED_TRANSACTION_TYPES = new Set<TransactionCorrectionHint['typeFrom']>(['income', 'expense']);
+
+function sanitizeHintText(value: string, maxLength = 60): string {
+  return value
+    .replace(/[`\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength)
+    .trim();
+}
+
+function sanitizeHints(hints?: TransactionCorrectionHint[]): TransactionCorrectionHint[] {
+  if (!Array.isArray(hints)) return [];
+
+  return hints.reduce<TransactionCorrectionHint[]>((acc, hint) => {
+    if (!hint || !ALLOWED_TRANSACTION_TYPES.has(hint.typeFrom) || !ALLOWED_TRANSACTION_TYPES.has(hint.typeTo)) {
+      return acc;
+    }
+
+    acc.push({
+      categoryFrom: sanitizeHintText(hint.categoryFrom),
+      categoryTo: sanitizeHintText(hint.categoryTo),
+      amountFrom: Number.isFinite(hint.amountFrom) ? hint.amountFrom : 0,
+      amountTo: Number.isFinite(hint.amountTo) ? hint.amountTo : 0,
+      descriptionFrom: sanitizeHintText(hint.descriptionFrom),
+      descriptionTo: sanitizeHintText(hint.descriptionTo),
+      typeFrom: hint.typeFrom,
+      typeTo: hint.typeTo,
+      ts: Number.isFinite(hint.ts) ? hint.ts : Date.now(),
+    });
+
+    return acc;
+  }, []);
+}
+
 // =================================================================
 // Final, improved buildPrompt function
 // =================================================================
@@ -525,7 +560,8 @@ serve(async (req)=>{
         throw new Error('Input text is required for transaction parsing');
       }
 
-      const parsePrompt = buildTransactionParsePrompt(input, normalizedLanguage, availableCategories, correctionHints);
+      const sanitizedCorrectionHints = sanitizeHints(correctionHints);
+      const parsePrompt = buildTransactionParsePrompt(input, normalizedLanguage, availableCategories, sanitizedCorrectionHints);
       const parseResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST",
         headers: {

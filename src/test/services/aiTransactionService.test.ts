@@ -1,12 +1,11 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { supabase } from '@/lib/supabase';
 import { AITransactionService } from '@/services/aiTransactionService';
+import { getMockSupabaseFunctionInvoke } from '@/test/setup';
 
 describe('AITransactionService - parseAmount', () => {
   const service = AITransactionService.getInstance();
-  // Access private method via any type for testing
-  const parseAmount = (amount: string | number) => (service as any).parseAmount(amount);
+  const parseAmount = (amount: string | number) => (service as unknown as { parseAmount: (value: string | number) => number }).parseAmount(amount);
 
   describe('Number input', () => {
     it('should return number as-is', () => {
@@ -119,6 +118,7 @@ describe('AITransactionService - parseAmount', () => {
 
 describe('AITransactionService - parseTransactionInput', () => {
   const service = AITransactionService.getInstance();
+  const mockInvoke = getMockSupabaseFunctionInvoke();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -126,7 +126,7 @@ describe('AITransactionService - parseTransactionInput', () => {
   });
 
   it('passes short category reasons through from the parser', async () => {
-    vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+    mockInvoke.mockResolvedValue({
       data: {
         result: {
           success: true,
@@ -235,7 +235,7 @@ describe('AITransactionService - parseTransactionInput', () => {
       ])
     );
 
-    vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+    mockInvoke.mockResolvedValue({
       data: {
         result: {
           success: true,
@@ -248,7 +248,7 @@ describe('AITransactionService - parseTransactionInput', () => {
 
     await service.parseTransactionInput('grab to office');
 
-    expect(vi.mocked((supabase as any).functions.invoke)).toHaveBeenCalledWith(
+    expect(mockInvoke).toHaveBeenCalledWith(
       'gemini-finance-insight',
       expect.objectContaining({
         body: expect.objectContaining({
@@ -267,13 +267,37 @@ describe('AITransactionService - parseTransactionInput', () => {
     );
   });
 
+  it('clears stored correction hints', () => {
+    window.localStorage.setItem(
+      'duitr.ai.transaction-correction-hints',
+      JSON.stringify([
+        {
+          categoryFrom: 'Shopping',
+          categoryTo: 'Transportation',
+          amountFrom: 25000,
+          amountTo: 26000,
+          descriptionFrom: 'Grab ride',
+          descriptionTo: 'Grab ride to office',
+          typeFrom: 'expense',
+          typeTo: 'expense',
+          ts: Date.now()
+        }
+      ])
+    );
+
+    service.clearCorrectionHints();
+
+    expect(window.localStorage.getItem('duitr.ai.transaction-correction-hints')).toBe('[]');
+    expect(service.getRecentCorrectionHints()).toEqual([]);
+  });
+
   it('documents that split-item inputs must return separate transaction rows', () => {
     const prompt = readFileSync('supabase/functions/gemini-finance-insight/index.ts', 'utf8');
 
-    expect(prompt).toContain('Return one transaction object per item');
-    expect(prompt).toContain('makan siang 25k dan parkir 10k');
-    expect(prompt).toContain('belanja sabun 30k, minum 15k, ongkir 8k');
-    expect(prompt).toContain('gaji 8 juta dan bonus 500 ribu');
-    expect(prompt).toContain('description, amount, category, type, confidence, and reason');
+    expect(prompt).toMatch(/Return one transaction object per item/i);
+    expect(prompt).toMatch(/makan siang 25k dan parkir 10k/i);
+    expect(prompt).toMatch(/belanja sabun 30k, minum 15k, ongkir 8k/i);
+    expect(prompt).toMatch(/gaji 8 juta dan bonus 500 ribu/i);
+    expect(prompt).toMatch(/description, amount, category, type, confidence, and reason/i);
   });
 });

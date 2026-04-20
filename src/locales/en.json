@@ -646,6 +646,7 @@
       "low": "Low confidence"
     },
     "send": "Send",
+    "netFlow": "Net Flow",
 
     "savingRate": "Saving Rate",
     "askQuestionPlaceholder": "Ask something about your financial evaluation...",
