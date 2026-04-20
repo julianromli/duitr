@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { supabase } from '@/lib/supabase';
 import { AITransactionService } from '@/services/aiTransactionService';
 
 describe('AITransactionService - parseAmount', () => {
@@ -112,5 +114,166 @@ describe('AITransactionService - parseAmount', () => {
       expect(result).toBe(32000);
       expect(result).not.toBe(32);
     });
+  });
+});
+
+describe('AITransactionService - parseTransactionInput', () => {
+  const service = AITransactionService.getInstance();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.localStorage.clear();
+  });
+
+  it('passes short category reasons through from the parser', async () => {
+    vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+      data: {
+        result: {
+          success: true,
+          message: 'Parsed successfully',
+          transactions: [
+            {
+              description: 'Lunch',
+              amount: '25rb',
+              category: 'Dining',
+              type: 'expense',
+              confidence: 0.92,
+              reason: 'Contains lunch keyword'
+            },
+            {
+              description: 'Salary',
+              amount: 5000000,
+              category: 'Salary',
+              type: 'income',
+              confidence: 0.98,
+              explanation: 'Matches salary income'
+            }
+          ]
+        }
+      },
+      error: null
+    });
+
+    const result = await service.parseTransactionInput('lunch 25rb and salary');
+
+    expect(result.success).toBe(true);
+    expect(result.transactions).toHaveLength(2);
+    expect(result.transactions[0]).toMatchObject({
+      description: 'Lunch',
+      amount: 25000,
+      category: 'Dining',
+      categoryId: 2,
+      type: 'expense',
+      confidence: 0.92,
+      reason: 'Contains lunch keyword'
+    });
+    expect(result.transactions[1]).toMatchObject({
+      description: 'Salary',
+      amount: 5000000,
+      category: 'Salary',
+      categoryId: 13,
+      type: 'income',
+      confidence: 0.98,
+      reason: 'Matches salary income'
+    });
+  });
+
+  it('records a correction hint when the user edits AI output', () => {
+    service.recordCorrectionHint(
+      {
+        description: 'Grab ride',
+        amount: 25000,
+        category: 'Shopping',
+        categoryId: 7,
+        type: 'expense',
+        confidence: 0.82,
+        reason: 'Matched a generic shopping pattern'
+      },
+      {
+        description: 'Grab ride to office',
+        amount: 26000,
+        category: 'Transportation',
+        categoryId: 3,
+        type: 'expense',
+        confidence: 0.82,
+        reason: 'Matched transportation keywords'
+      }
+    );
+
+    const raw = window.localStorage.getItem('duitr.ai.transaction-correction-hints');
+    expect(raw).not.toBeNull();
+
+    const stored = JSON.parse(raw || '[]');
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({
+      categoryFrom: 'Shopping',
+      categoryTo: 'Transportation',
+      amountFrom: 25000,
+      amountTo: 26000,
+      descriptionFrom: 'Grab ride',
+      descriptionTo: 'Grab ride to office',
+      typeFrom: 'expense',
+      typeTo: 'expense'
+    });
+  });
+
+  it('includes recent correction hints in parse requests', async () => {
+    window.localStorage.setItem(
+      'duitr.ai.transaction-correction-hints',
+      JSON.stringify([
+        {
+          categoryFrom: 'Shopping',
+          categoryTo: 'Transportation',
+          amountFrom: 25000,
+          amountTo: 26000,
+          descriptionFrom: 'Grab ride',
+          descriptionTo: 'Grab ride to office',
+          typeFrom: 'expense',
+          typeTo: 'expense',
+          ts: Date.now()
+        }
+      ])
+    );
+
+    vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+      data: {
+        result: {
+          success: true,
+          message: 'Parsed successfully',
+          transactions: []
+        }
+      },
+      error: null
+    });
+
+    await service.parseTransactionInput('grab to office');
+
+    expect(vi.mocked((supabase as any).functions.invoke)).toHaveBeenCalledWith(
+      'gemini-finance-insight',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          correctionHints: [
+            expect.objectContaining({
+              categoryFrom: 'Shopping',
+              categoryTo: 'Transportation',
+              amountFrom: 25000,
+              amountTo: 26000,
+              descriptionFrom: 'Grab ride',
+              descriptionTo: 'Grab ride to office'
+            })
+          ]
+        })
+      })
+    );
+  });
+
+  it('documents that split-item inputs must return separate transaction rows', () => {
+    const prompt = readFileSync('supabase/functions/gemini-finance-insight/index.ts', 'utf8');
+
+    expect(prompt).toContain('Return one transaction object per item');
+    expect(prompt).toContain('makan siang 25k dan parkir 10k');
+    expect(prompt).toContain('belanja sabun 30k, minum 15k, ongkir 8k');
+    expect(prompt).toContain('gaji 8 juta dan bonus 500 ribu');
+    expect(prompt).toContain('description, amount, category, type, confidence, and reason');
   });
 });

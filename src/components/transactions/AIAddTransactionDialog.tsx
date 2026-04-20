@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, Clock, Send, Sparkles, Wallet, XCircle, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AITransactionService, type ParsedTransaction, type AIAddTransactionResponse } from '@/services/aiTransactionService';
+import type { Transaction } from '@/types/finance';
 import { useToast } from '@/hooks/use-toast';
 
 interface AIAddTransactionDialogProps {
   open: boolean;
   onClose: () => void;
-  addTransaction: (transaction: any) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'userId'>) => Promise<void>;
   wallets: Array<{ id: string; name: string; currency?: string; balance: number }>;
   currencySymbol: string;
 }
@@ -25,13 +28,19 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface EditableParsedTransaction extends ParsedTransaction {
+  id: string;
+  original: ParsedTransaction;
+}
+
 export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets, currencySymbol }: AIAddTransactionDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [parsedTransactions, setParsedTransactions] = useState<ParsedTransaction[]>([]);
+  const [parsedTransactions, setParsedTransactions] = useState<EditableParsedTransaction[]>([]);
+  const [parseStatus, setParseStatus] = useState<'idle' | 'empty' | 'success'>('idle');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<{ id: string; name: string; currency?: string; balance: number } | null>(null);
 
@@ -39,7 +48,15 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
 
   // Initialize selected wallet when dialog opens or wallets change
   useEffect(() => {
-    if (open && wallets.length > 0 && !selectedWallet) {
+    if (!open) return;
+
+    if (wallets.length === 0) {
+      setSelectedWallet(null);
+      return;
+    }
+
+    const walletStillExists = selectedWallet && wallets.some(wallet => wallet.id === selectedWallet.id);
+    if (!selectedWallet || !walletStillExists) {
       setSelectedWallet(wallets[0]);
     }
   }, [open, wallets, selectedWallet]);
@@ -55,6 +72,54 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
       }]);
     }
   }, [open, messages.length, t]);
+
+  const buildEditableTransaction = (transaction: ParsedTransaction, index: number): EditableParsedTransaction => ({
+    ...transaction,
+    id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+    original: { ...transaction }
+  });
+
+  const getTransactionValidation = (transaction: EditableParsedTransaction) => {
+    const errors: string[] = [];
+
+    if (!Number.isFinite(transaction.amount) || transaction.amount <= 0) {
+      errors.push(t('ai.validation.amountPositive', 'Amount must be greater than 0'));
+    }
+
+    if (!transaction.description.trim()) {
+      errors.push(t('ai.validation.descriptionRequired', 'Description is required'));
+    }
+
+    if (!transaction.category.trim()) {
+      errors.push(t('ai.validation.categoryRequired', 'Category is required'));
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  const updateParsedTransaction = (
+    transactionId: string,
+    field: 'description' | 'amount' | 'category' | 'type',
+    value: string | number
+  ) => {
+    setParsedTransactions(prev => prev.map(transaction => {
+      if (transaction.id !== transactionId) return transaction;
+
+      const nextTransaction: EditableParsedTransaction = {
+        ...transaction,
+        [field]: value,
+        categoryId: aiService.resolveCategoryId(
+          field === 'category' ? String(value) : transaction.category,
+          field === 'type' ? value as 'income' | 'expense' : transaction.type
+        )
+      };
+
+      return nextTransaction;
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,11 +151,16 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
       setMessages(prev => [...prev, aiMessage]);
 
       if (response.success && response.transactions.length > 0) {
-        setParsedTransactions(response.transactions);
-      } else if (response.error) {
+        setParseStatus('success');
+        setParsedTransactions(response.transactions.map((transaction, index) => buildEditableTransaction(transaction, index)));
+      } else if (response.success) {
+        setParseStatus('empty');
+        setParsedTransactions([]);
+      } else {
+        setParseStatus('idle');
         toast({
           title: t('common.error', 'Error'),
-          description: response.error,
+          description: t('ai.parseErrorToast', 'We could not parse your input. Try a different example or make it clearer, then try again.'),
           variant: 'destructive'
         });
       }
@@ -98,14 +168,14 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: t('ai.parseError', 'Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.'),
+        content: t('ai.parseError', 'I couldn\'t parse that. Try another example and I\'ll take another look.'),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
 
       toast({
         title: t('common.error', 'Error'),
-        description: t('ai.parseError', 'Failed to parse transactions'),
+        description: t('ai.parseErrorToast', 'We could not parse your input. Try a different example or make it clearer, then try again.'),
         variant: 'destructive'
       });
     } finally {
@@ -114,9 +184,16 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
   };
 
   const handleConfirmTransactions = async () => {
-    if (parsedTransactions.length === 0) return;
+    const validationResults = parsedTransactions.map(transaction => ({
+      transaction,
+      validation: getTransactionValidation(transaction)
+    }));
 
-    // Use selected wallet
+    const validTransactions = validationResults.filter(({ validation }) => validation.isValid).map(({ transaction }) => transaction);
+    const invalidTransactions = validationResults.filter(({ validation }) => !validation.isValid).map(({ transaction }) => transaction);
+
+    if (validTransactions.length === 0) return;
+
     if (!selectedWallet) {
       toast({
         title: t('common.error', 'Error'),
@@ -131,19 +208,23 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
     try {
       let successCount = 0;
       let errorCount = 0;
+      const failedTransactions: EditableParsedTransaction[] = [];
 
-      for (const parsedTx of parsedTransactions) {
+      for (const parsedTx of validTransactions) {
         try {
+          aiService.recordCorrectionHint(parsedTx.original, parsedTx);
           const transaction = aiService.convertToTransactionFormat(parsedTx, selectedWallet.id);
           await addTransaction(transaction);
           successCount++;
         } catch (error) {
           console.error('Error adding transaction:', error);
           errorCount++;
+          failedTransactions.push(parsedTx);
         }
       }
 
-      // Show result message
+      const remainingTransactions = [...invalidTransactions, ...failedTransactions];
+
       const resultMessage: ChatMessage = {
         id: Date.now().toString(),
         role: 'assistant',
@@ -154,7 +235,6 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
       };
       setMessages(prev => [...prev, resultMessage]);
 
-      // Show toast
       if (successCount > 0) {
         toast({
           title: t('common.success', 'Success'),
@@ -172,14 +252,11 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
         });
       }
 
-      // Reset state
-      setParsedTransactions([]);
+      setParsedTransactions(remainingTransactions);
 
-      // Close dialog if successful
-      if (successCount > 0 && errorCount === 0) {
+      if (remainingTransactions.length === 0 && successCount > 0 && errorCount === 0) {
         setTimeout(() => onClose(), 2000);
       }
-
     } catch (error) {
       console.error('Error processing transactions:', error);
       toast({
@@ -194,16 +271,18 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
 
   const handleReset = () => {
     setParsedTransactions([]);
+    setParseStatus('idle');
     setInput('');
   };
 
-  const handleDeleteTransaction = (indexToDelete: number) => {
-    setParsedTransactions(prev => prev.filter((_, index) => index !== indexToDelete));
+  const handleDeleteTransaction = (transactionId: string) => {
+    setParsedTransactions(prev => prev.filter(transaction => transaction.id !== transactionId));
   };
 
   const handleDialogClose = () => {
     // Reset all states when dialog closes
     setParsedTransactions([]);
+    setParseStatus('idle');
     setInput('');
     setMessages([]);
     setSelectedWallet(null);
@@ -213,6 +292,34 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
   const formatAmount = (amount: number) => {
     return `${currencySymbol}${amount.toLocaleString('id-ID')}`;
   };
+
+  const getConfidenceMeta = (confidence: number) => {
+    const score = Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0;
+
+    if (score >= 0.9) {
+      return {
+        label: t('ai.confidence.high', 'High confidence'),
+        hint: t('ai.reviewHint.high', 'Looks good — quick check only.'),
+        variant: 'default' as const,
+      };
+    }
+
+    if (score >= 0.75) {
+      return {
+        label: t('ai.confidence.medium', 'Medium confidence'),
+        hint: t('ai.reviewHint.medium', 'Review the category before saving.'),
+        variant: 'secondary' as const,
+      };
+    }
+
+    return {
+      label: t('ai.confidence.low', 'Low confidence'),
+      hint: t('ai.reviewHint.low', 'Double-check the category and amount.'),
+      variant: 'destructive' as const,
+    };
+  };
+
+  const validTransactionCount = parsedTransactions.filter(transaction => getTransactionValidation(transaction).isValid).length;
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
@@ -284,7 +391,7 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
           </div>
 
           {/* Parsed Transactions Preview */}
-          {parsedTransactions.length > 0 && (
+          {(parsedTransactions.length > 0 || parseStatus === 'empty') && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -295,108 +402,225 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
                 <h3 className="text-sm font-medium text-white">
                   {t('ai.parsedTransactions', 'Parsed Transactions')}
                 </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleReset}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <XCircle className="w-4 h-4 mr-1" />
-                  {t('common.reset', 'Reset')}
-                </Button>
+                {parsedTransactions.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleReset}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <XCircle className="w-4 h-4 mr-1" />
+                    {t('common.reset', 'Reset')}
+                  </Button>
+                )}
               </div>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {parsedTransactions.map((tx, index) => (
-                  <Card key={index} className="bg-gray-800 border-gray-700">
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-sm font-medium text-white">
-                              {tx.description}
-                            </span>
+              <p className="text-xs text-gray-400">
+                {t('ai.editBeforeSaving', 'You can edit the AI output before saving.')}
+              </p>
+
+              {parseStatus === 'empty' && parsedTransactions.length === 0 ? (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
+                      <Sparkles className="w-4 h-4 text-[#C6FE1E]" />
+                      <span>{t('ai.noTransactionsParsedTitle', 'No transactions were parsed')}</span>
+                    </div>
+                    <p className="text-sm text-gray-300">
+                      {t('ai.noTransactionsParsedDescription', 'Try a different example, or edit the AI output after parsing.')}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {t('ai.noTransactionsParsedHint', 'You can edit the AI output before saving.')}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {parsedTransactions.map((tx, index) => {
+                    const validation = getTransactionValidation(tx);
+                    const amountValue = tx.amount > 0 ? tx.amount : '';
+                    const confidenceMeta = getConfidenceMeta(tx.confidence || 0);
+
+                    return (
+                      <Card
+                        key={tx.id}
+                        className={`bg-gray-800 border ${validation.isValid ? 'border-gray-700' : 'border-red-500/40'}`}
+                      >
+                        <CardContent className="p-3 space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 space-y-3">
+                              <div className="flex items-center gap-2 text-xs text-gray-400">
+                                {validation.isValid ? (
+                                  <CheckCircle className="w-4 h-4 text-green-500" />
+                                ) : (
+                                  <XCircle className="w-4 h-4 text-red-400" />
+                                )}
+                                <span>{t('ai.transactionRow', 'Row')} {index + 1}</span>
+                                <span>•</span>
+                                <Badge variant={confidenceMeta.variant} className="rounded-full px-2 py-0 text-[10px] uppercase tracking-wide">
+                                  {confidenceMeta.label}
+                                </Badge>
+                                <span className="text-[10px] text-gray-500">{Math.round((tx.confidence || 0) * 100)}%</span>
+                              </div>
+
+                              {tx.reason?.trim() && (
+                                <p className="text-xs text-gray-400 leading-snug">
+                                  {t('ai.categoryReason', 'Why')}: {tx.reason}
+                                </p>
+                              )}
+
+                              <p className="text-xs text-gray-500 leading-snug">
+                                {t('ai.reviewHint.label', 'Review hint')}: {confidenceMeta.hint}
+                              </p>
+
+                              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                <div className="space-y-1">
+                                  <label htmlFor={`tx-description-${tx.id}`} className="text-xs font-medium text-gray-300">
+                                    {t('ai.description', 'Description')} {index + 1}
+                                  </label>
+                                  <Input
+                                    id={`tx-description-${tx.id}`}
+                                    value={tx.description}
+                                    onChange={(e) => updateParsedTransaction(tx.id, 'description', e.target.value)}
+                                    className={`bg-gray-900 border-gray-700 text-white placeholder-gray-400 ${!tx.description.trim() ? 'border-red-500/50 focus-visible:ring-red-500/30' : ''}`}
+                                    placeholder={t('ai.descriptionPlaceholder', 'Description')}
+                                    aria-invalid={!tx.description.trim()}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <label htmlFor={`tx-amount-${tx.id}`} className="text-xs font-medium text-gray-300">
+                                    {t('ai.amount', 'Amount')} {index + 1}
+                                  </label>
+                                  <Input
+                                    id={`tx-amount-${tx.id}`}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    value={amountValue}
+                                    onChange={(e) => {
+                                      const parsedAmount = e.target.value === '' ? 0 : Number(e.target.value);
+                                      updateParsedTransaction(tx.id, 'amount', Number.isFinite(parsedAmount) ? parsedAmount : 0);
+                                    }}
+                                    className={`bg-gray-900 border-gray-700 text-white placeholder-gray-400 ${tx.amount <= 0 ? 'border-red-500/50 focus-visible:ring-red-500/30' : ''}`}
+                                    placeholder="0"
+                                    aria-invalid={tx.amount <= 0}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <label htmlFor={`tx-category-${tx.id}`} className="text-xs font-medium text-gray-300">
+                                    {t('ai.category', 'Category')} {index + 1}
+                                  </label>
+                                  <Input
+                                    id={`tx-category-${tx.id}`}
+                                    value={tx.category}
+                                    onChange={(e) => updateParsedTransaction(tx.id, 'category', e.target.value)}
+                                    className={`bg-gray-900 border-gray-700 text-white placeholder-gray-400 ${!tx.category.trim() ? 'border-red-500/50 focus-visible:ring-red-500/30' : ''}`}
+                                    placeholder={t('ai.categoryPlaceholder', 'Category')}
+                                    aria-invalid={!tx.category.trim()}
+                                  />
+                                </div>
+
+                                <div className="space-y-1">
+                                  <label htmlFor={`tx-type-${tx.id}`} className="text-xs font-medium text-gray-300">
+                                    {t('ai.type', 'Type')} {index + 1}
+                                  </label>
+                                  <select
+                                    id={`tx-type-${tx.id}`}
+                                    value={tx.type}
+                                    onChange={(e) => updateParsedTransaction(tx.id, 'type', e.target.value as 'income' | 'expense')}
+                                    className="flex h-10 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white ring-offset-background focus:outline-none focus:ring-2 focus:ring-[#C6FE1E]/40 focus:ring-offset-0"
+                                  >
+                                    <option value="expense">{t('transactions.expense', 'Expense')}</option>
+                                    <option value="income">{t('transactions.income', 'Income')}</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              {!validation.isValid && (
+                                <p className="text-xs text-red-400">
+                                  {validation.errors.join(' • ')}
+                                </p>
+                              )}
+                            </div>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteTransaction(tx.id)}
+                              className="text-gray-400 hover:text-red-400 hover:bg-red-950/20 p-2 h-8 w-8 flex-shrink-0"
+                              aria-label={`${t('common.delete', 'Delete')} ${index + 1}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                            <span className="bg-gray-700 px-2 py-1 rounded">
-                              {tx.category}
-                            </span>
-                            <span className="font-medium text-white">
-                              {formatAmount(tx.amount)}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteTransaction(index)}
-                          className="text-gray-400 hover:text-red-400 hover:bg-red-950/20 p-2 h-8 w-8"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Wallet Selector */}
-              <div className="pt-2 border-t border-gray-700 space-y-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-[#C6FE1E]" />
-                    {t('wallet.selectWallet', 'Select Wallet')}
-                  </label>
-                  <Select
-                    value={selectedWallet?.id || ''}
-                    onValueChange={(value) => {
-                      const wallet = wallets.find(w => w.id === value);
-                      if (wallet) setSelectedWallet(wallet);
-                    }}
-                  >
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder={t('wallet.selectWallet', 'Select a wallet')} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      {wallets.map((wallet) => (
-                        <SelectItem 
-                          key={wallet.id} 
-                          value={wallet.id}
-                          className="text-white hover:bg-gray-700 focus:bg-gray-700"
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span className="font-medium">{wallet.name}</span>
-                            <span className="text-sm text-gray-400 ml-2">
-                              {formatAmount(wallet.balance)}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {parsedTransactions.length > 0 && (
+                <div className="pt-2 border-t border-gray-700 space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white flex items-center gap-2">
+                      <Wallet className="w-4 h-4 text-[#C6FE1E]" />
+                      {t('wallet.selectWallet', 'Select Wallet')}
+                    </label>
+                    <Select
+                      value={selectedWallet?.id || ''}
+                      onValueChange={(value) => {
+                        const wallet = wallets.find(w => w.id === value);
+                        if (wallet) setSelectedWallet(wallet);
+                      }}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                        <SelectValue placeholder={t('wallet.selectWallet', 'Select a wallet')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700">
+                        {wallets.map((wallet) => (
+                          <SelectItem
+                            key={wallet.id}
+                            value={wallet.id}
+                            className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-medium">{wallet.name}</span>
+                              <span className="text-sm text-gray-400 ml-2">
+                                {formatAmount(wallet.balance)}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleConfirmTransactions}
+                      disabled={isProcessing || !selectedWallet || validTransactionCount === 0}
+                      className="bg-[#C6FE1E] text-black hover:bg-[#B5E619] disabled:opacity-50"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Clock className="w-4 h-4 mr-2 animate-spin" />
+                          {t('common.processing', 'Processing...')}
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          {t('ai.reviewAndConfirm', 'Review & confirm')} ({validTransactionCount})
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleConfirmTransactions}
-                    disabled={isProcessing || !selectedWallet}
-                    className="bg-[#C6FE1E] text-black hover:bg-[#B5E619] disabled:opacity-50"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Clock className="w-4 h-4 mr-2 animate-spin" />
-                        {t('common.processing', 'Processing...')}
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        {t('common.confirm', 'Confirm')} ({parsedTransactions.length})
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
+              )}
             </motion.div>
           )}
 

@@ -626,8 +626,27 @@
     "chatErrorMessage": "Sorry, an error occurred while processing your question. Please try again.",
     "askAIMore": "Ask AI More",
     "aiThinking": "AI is thinking...",
+    "categoryReason": "Reason",
+    "editBeforeSaving": "You can edit the AI output before saving.",
+    "noTransactionsParsedTitle": "No transactions were parsed",
+    "noTransactionsParsedDescription": "Try a different example, or edit the AI output after parsing.",
+    "noTransactionsParsedHint": "If the AI parses something, you can still edit it before saving.",
+    "parseErrorToast": "We couldn't parse your input. Try a different example or make it clearer, then try again.",
+    "parseError": "I couldn't parse that. Try another example and I'll take another look.",
+    "reviewAndConfirm": "Review & confirm",
+    "reviewHint": {
+      "label": "Review hint",
+      "high": "Looks good — quick check only.",
+      "medium": "Review the category before saving.",
+      "low": "Double-check the category and amount."
+    },
+    "confidence": {
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence"
+    },
     "send": "Send",
-    "netFlow": "Net Flow",
+
     "savingRate": "Saving Rate",
     "askQuestionPlaceholder": "Ask something about your financial evaluation...",
     "evaluation": "AI Evaluation",

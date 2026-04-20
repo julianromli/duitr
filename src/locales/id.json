@@ -627,6 +627,25 @@
     "chatErrorMessage": "Maaf, terjadi error saat memproses pertanyaan Anda. Silakan coba lagi.",
     "askAIMore": "Tanya AI Lebih Lanjut",
     "aiThinking": "AI sedang berpikir...",
+    "categoryReason": "Alasan",
+    "editBeforeSaving": "Anda dapat mengedit hasil AI sebelum disimpan.",
+    "noTransactionsParsedTitle": "Tidak ada transaksi yang berhasil diproses",
+    "noTransactionsParsedDescription": "Coba contoh lain, atau edit hasil AI setelah parsing.",
+    "noTransactionsParsedHint": "Kalau AI berhasil memproses sesuatu, Anda tetap bisa mengeditnya sebelum disimpan.",
+    "parseErrorToast": "Kami tidak bisa memproses input Anda. Coba contoh lain atau buat lebih jelas, lalu coba lagi.",
+    "parseError": "Saya tidak bisa memproses itu. Coba contoh lain, dan saya akan cek lagi.",
+    "reviewAndConfirm": "Tinjau & konfirmasi",
+    "reviewHint": {
+      "label": "Review hint",
+      "high": "Looks good — quick check only.",
+      "medium": "Review the category before saving.",
+      "low": "Double-check the category and amount."
+    },
+    "confidence": {
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence"
+    },
     "send": "Kirim",
     "netFlow": "Arus Kas Bersih",
     "savingRate": "Tingkat Tabungan",

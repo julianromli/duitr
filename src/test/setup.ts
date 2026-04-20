@@ -32,6 +32,9 @@ vi.mock('@/lib/supabase', () => {
     auth: {
       ...auth
     },
+    functions: {
+      invoke: vi.fn()
+    },
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
