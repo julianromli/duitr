@@ -63,7 +63,11 @@ interface PredictBudgetResponse {
 
 const ALLOWED_TRANSACTION_TYPES = new Set<TransactionCorrectionHint['typeFrom']>(['income', 'expense']);
 
-function sanitizeHintText(value: string, maxLength = 60): string {
+function sanitizeHintText(value: unknown, maxLength = 60): string {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
   return value
     .replace(/[`\r\n]+/g, ' ')
     .replace(/\s+/g, ' ')
@@ -219,7 +223,7 @@ Rules:
 5. Parse amounts in Indonesian format (ribu, rb, k, juta, jt).
 6. Default to expense type unless explicitly stated as income.
 7. Keep each parsed item independent with its own description, amount, category, type, confidence, and reason.
-8. Add a short `reason` for each transaction, max 12 words, explaining why the category was chosen.
+8. Add a short \`reason\` for each transaction, max 12 words, explaining why the category was chosen.
 9. Return a JSON response with this exact structure:
 {
   "success": true,
@@ -260,7 +264,7 @@ Aturan:
 5. Parse jumlah dalam format Indonesia (ribu, rb, k, juta, jt).
 6. Default ke expense kecuali secara eksplisit disebut income.
 7. Pertahankan setiap item secara independen dengan description, amount, category, type, confidence, dan reason miliknya sendiri.
-8. Tambahkan `reason` singkat untuk setiap transaksi, maksimal 12 kata, untuk menjelaskan alasan kategori dipilih.
+8. Tambahkan \`reason\` singkat untuk setiap transaksi, maksimal 12 kata, untuk menjelaskan alasan kategori dipilih.
 9. Return response JSON dengan struktur tepat ini:
 {
   "success": true,

@@ -146,7 +146,7 @@ export class AITransactionService {
         category: tx.category || '',
         categoryId: this.resolveCategoryId(tx.category || '', tx.type || 'expense'),
         type: tx.type || 'expense',
-        confidence: tx.confidence || 0.5,
+        confidence: tx.confidence ?? 0.5,
         reason: this.normalizeReason(tx.reason ?? tx.explanation)
       }));
 

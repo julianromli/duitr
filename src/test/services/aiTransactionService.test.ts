@@ -178,6 +178,35 @@ describe('AITransactionService - parseTransactionInput', () => {
     });
   });
 
+  it('preserves zero confidence from the parser', async () => {
+    mockInvoke.mockResolvedValue({
+      data: {
+        result: {
+          success: true,
+          message: 'Parsed successfully',
+          transactions: [
+            {
+              description: 'Unknown charge',
+              amount: 10000,
+              category: 'Other',
+              type: 'expense',
+              confidence: 0,
+            }
+          ]
+        }
+      },
+      error: null
+    });
+
+    const result = await service.parseTransactionInput('mystery charge 10k');
+
+    expect(result.success).toBe(true);
+    expect(result.transactions[0]).toMatchObject({
+      description: 'Unknown charge',
+      confidence: 0,
+    });
+  });
+
   it('records a correction hint when the user edits AI output', () => {
     service.recordCorrectionHint(
       {
@@ -294,6 +323,7 @@ describe('AITransactionService - parseTransactionInput', () => {
   it('documents that split-item inputs must return separate transaction rows', () => {
     const prompt = readFileSync('supabase/functions/gemini-finance-insight/index.ts', 'utf8');
 
+    expect(prompt).toMatch(/typeof value !== 'string'/i);
     expect(prompt).toMatch(/Return one transaction object per item/i);
     expect(prompt).toMatch(/makan siang 25k dan parkir 10k/i);
     expect(prompt).toMatch(/belanja sabun 30k, minum 15k, ongkir 8k/i);

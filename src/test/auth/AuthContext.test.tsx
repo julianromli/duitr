@@ -5,7 +5,9 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 
-const mockClearCorrectionHints = vi.fn()
+const { mockClearCorrectionHints } = vi.hoisted(() => ({
+  mockClearCorrectionHints: vi.fn(),
+}))
 
 type AuthStateChangeSubscription = ReturnType<typeof supabase.auth.onAuthStateChange>
 
@@ -230,6 +232,31 @@ describe('AuthContext', () => {
           redirectTo: expect.any(String)
         })
       })
+      expect(result.current.isLoading).toBe(false)
+    })
+
+    it('should reset loading when Google sign in fails', async () => {
+      vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
+        data: { url: null, provider: 'google' },
+        error: makeAuthError('OAuth failed')
+      })
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper()
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      let googleSignInResult: Awaited<ReturnType<typeof result.current.signInWithGoogle>>
+
+      await act(async () => {
+        googleSignInResult = await result.current.signInWithGoogle()
+      })
+
+      expect(googleSignInResult!.success).toBe(false)
+      expect(result.current.isLoading).toBe(false)
     })
 
     it('should handle sign out', async () => {
@@ -349,6 +376,36 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(result.current.user).toEqual(mockUser)
       })
+    })
+
+    it('should clear correction hints on SIGNED_OUT auth events', async () => {
+      let authChangeCallback: ((event: AuthChangeEvent, session: Session | null) => void | Promise<void>) | undefined
+
+      vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((callback) => {
+        authChangeCallback = callback
+        return {
+          data: {
+            subscription: {
+              unsubscribe: vi.fn()
+            }
+          }
+        } as AuthStateChangeSubscription
+      })
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper()
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      act(() => {
+        authChangeCallback?.('SIGNED_OUT', null)
+      })
+
+      expect(mockClearCorrectionHints).toHaveBeenCalled()
+      expect(result.current.isBalanceHidden).toBe(false)
     })
   })
 

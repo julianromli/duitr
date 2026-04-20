@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase, getSession, getCurrentUser } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const { toast } = useToast();
-  const aiTransactionService = AITransactionService.getInstance();
+  const aiTransactionService = useMemo(() => AITransactionService.getInstance(), []);
 
   // 🔧 Memoized loadUserSettings to prevent re-creation on every render
   const loadUserSettings = useCallback((currentUser: User | null) => {
@@ -96,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 🔧 Removed language logic from here to prevent i18n loops
       // Language initialization moved to separate useEffect
       if (event === 'SIGNED_OUT') {
+        aiTransactionService.clearCorrectionHints();
         setIsBalanceHidden(false);
       } else if (event === 'USER_UPDATED') {
          if (currentUser) {
@@ -107,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [toast, loadUserSettings]);
+  }, [toast, loadUserSettings, aiTransactionService]);
 
   const updateBalanceVisibility = async (isHidden: boolean) => {
     if (!user) {
@@ -241,6 +242,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: unknown) {
       logAuthEvent('auth_context_google_signin_exception', {}, error);
       return { success: false, message: getErrorMessage(error, 'An error occurred during Google sign in') };
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -332,6 +332,85 @@ describe('AIAddTransactionDialog', () => {
     expect(mockConvertToTransactionFormat).toHaveBeenCalledWith(expect.objectContaining({ description: 'Lunch' }), 'wallet-1');
   });
 
+  it('records correction hints only after a transaction is saved successfully', async () => {
+    const user = userEvent.setup();
+
+    mockParseTransactionInput.mockResolvedValueOnce({
+      success: true,
+      message: 'Parsed successfully',
+      transactions: [
+        {
+          description: 'Lunch',
+          amount: 25000,
+          category: 'Dining',
+          categoryId: 2,
+          type: 'expense',
+          confidence: 0.92,
+        },
+      ],
+    });
+
+    renderWithProviders(
+      <AIAddTransactionDialog
+        open
+        onClose={onClose}
+        addTransaction={addTransaction}
+        wallets={wallets}
+        currencySymbol="Rp"
+      />
+    );
+
+    await user.type(screen.getByPlaceholderText(/Contoh:/i), 'makan 25rb');
+    await user.click(screen.getByRole('button', { name: /parse/i }));
+    await screen.findByLabelText(/Description 1/i);
+
+    await user.click(screen.getByRole('button', { name: /Review & confirm/i }));
+
+    expect(addTransaction).toHaveBeenCalledTimes(1);
+    expect(mockService.recordCorrectionHint).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not record correction hints when saving a transaction fails', async () => {
+    const user = userEvent.setup();
+    addTransaction.mockRejectedValueOnce(new Error('save failed'));
+
+    mockParseTransactionInput.mockResolvedValueOnce({
+      success: true,
+      message: 'Parsed successfully',
+      transactions: [
+        {
+          description: 'Lunch',
+          amount: 25000,
+          category: 'Dining',
+          categoryId: 2,
+          type: 'expense',
+          confidence: 0.92,
+        },
+      ],
+    });
+
+    renderWithProviders(
+      <AIAddTransactionDialog
+        open
+        onClose={onClose}
+        addTransaction={addTransaction}
+        wallets={wallets}
+        currencySymbol="Rp"
+      />
+    );
+
+    await user.type(screen.getByPlaceholderText(/Contoh:/i), 'makan 25rb');
+    await user.click(screen.getByRole('button', { name: /parse/i }));
+    await screen.findByLabelText(/Description 1/i);
+
+    await user.click(screen.getByRole('button', { name: /Review & confirm/i }));
+
+    await waitFor(() => {
+      expect(addTransaction).toHaveBeenCalledTimes(1);
+    });
+    expect(mockService.recordCorrectionHint).not.toHaveBeenCalled();
+  });
+
   it('deletes a row and updates the remaining preview', async () => {
     const user = userEvent.setup();
 

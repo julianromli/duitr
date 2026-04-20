@@ -207,9 +207,9 @@ export function AIAddTransactionDialog({ open, onClose, addTransaction, wallets,
 
       for (const parsedTx of validTransactions) {
         try {
-          aiService.recordCorrectionHint(parsedTx.original, parsedTx);
           const transaction = aiService.convertToTransactionFormat(parsedTx, selectedWallet.id);
           await addTransaction(transaction);
+          aiService.recordCorrectionHint(parsedTx.original, parsedTx);
           successCount++;
         } catch (error) {
           console.error('Error adding transaction:', error);
