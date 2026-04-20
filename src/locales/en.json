@@ -644,33 +644,5 @@
     }
   },
   "tryAgain": "Try Again",
-  "addError": "Failed to add item",
-  "budget": {
-    "healthWidget": {
-      "title": "Budget Health"
-    },
-    "risk": {
-      "low": "Low Risk",
-      "medium": "Medium Risk",
-      "high": "High Risk"
-    },
-    "noRisk": "No Data",
-    "confidence": "confidence",
-    "collapse": "Collapse details",
-    "expand": "Expand details",
-    "currentSpend": "Current Spending",
-    "projectedSpend": "Projected",
-    "limit": "Budget Limit",
-    "overrun": "Over Budget",
-    "remaining": "Remaining",
-    "daysRemaining": "Days Left",
-    "days": "days",
-    "recommendedDaily": "Daily Limit",
-    "unknownCategory": "Unknown Category",
-    "predictionError": "Failed to load predictions",
-    "predictionUnavailable": "Budget predictions are temporarily unavailable",
-    "noPredictionsAvailable": "No predictions available",
-    "noPredictionsDescription": "Create budgets and add transactions to see AI-powered predictions.",
-    "refresh": "Refresh predictions"
-  }
+  "addError": "Failed to add item"
 }

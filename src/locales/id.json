@@ -668,33 +668,5 @@
       "failedToSave": "Gagal menyimpan preferensi mata uang"
     },
     "settingsNote": "Anda dapat mengubah ini nanti di pengaturan profil"
-  },
-  "budget": {
-    "healthWidget": {
-      "title": "Kesehatan Budget"
-    },
-    "risk": {
-      "low": "Risiko Rendah",
-      "medium": "Risiko Sedang",
-      "high": "Risiko Tinggi"
-    },
-    "noRisk": "Tidak Ada Data",
-    "confidence": "kepercayaan",
-    "collapse": "Tutup detail",
-    "expand": "Buka detail",
-    "currentSpend": "Pengeluaran Saat Ini",
-    "projectedSpend": "Proyeksi",
-    "limit": "Batas Budget",
-    "overrun": "Melebihi Budget",
-    "remaining": "Sisa",
-    "daysRemaining": "Hari Tersisa",
-    "days": "hari",
-    "recommendedDaily": "Batas Harian",
-    "unknownCategory": "Kategori Tidak Dikenal",
-    "predictionError": "Gagal memuat prediksi",
-    "predictionUnavailable": "Prediksi budget sementara tidak tersedia",
-    "noPredictionsAvailable": "Tidak ada prediksi tersedia",
-    "noPredictionsDescription": "Buat budget dan tambah transaksi untuk melihat prediksi AI.",
-    "refresh": "Perbarui prediksi"
   }
 }
