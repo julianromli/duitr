@@ -192,7 +192,8 @@
     "logout": "Log Out",
     "home": "Home",
     "statistics": "Statistics",
-    "budget": "Budget"
+    "budget": "Budget",
+    "profile": "Profile"
   },
   "dashboard": {
     "title": "Financial Overview",
@@ -516,7 +517,15 @@
     "total": "TOTAL",
     "incomeBreakdown": "Income Breakdown",
     "expenseBreakdown": "Expense Breakdown",
-    "noData": "No data available for the selected period"
+    "noData": "No data available for the selected period",
+    "sixMonthTrend": "Last 6 months",
+    "trendIncome": "Income",
+    "trendExpense": "Expenses",
+    "chartSummary": "Category breakdown for {{range}}. Total {{total}}.",
+    "breakdownTableCaption": "Category breakdown for the chart",
+    "categoryColumn": "Category",
+    "amountColumn": "Amount",
+    "percentColumn": "Share"
   },
   "buttons": {
     "save": "Save",
