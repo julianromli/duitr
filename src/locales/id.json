@@ -190,7 +190,8 @@
     "logout": "Keluar",
     "home": "Beranda",
     "statistics": "Statistik",
-    "budget": "Anggaran"
+    "budget": "Anggaran",
+    "profile": "Profil"
   },
   "dashboard": {
     "title": "Ikhtisar Keuangan",
@@ -516,7 +517,15 @@
     "total": "TOTAL",
     "incomeBreakdown": "Rincian Pemasukan",
     "expenseBreakdown": "Rincian Pengeluaran",
-    "noData": "Tidak ada data untuk periode yang dipilih"
+    "noData": "Tidak ada data untuk periode yang dipilih",
+    "sixMonthTrend": "6 bulan terakhir",
+    "trendIncome": "Pemasukan",
+    "trendExpense": "Pengeluaran",
+    "chartSummary": "Rincian kategori untuk {{range}}. Total {{total}}.",
+    "breakdownTableCaption": "Rincian kategori untuk grafik",
+    "categoryColumn": "Kategori",
+    "amountColumn": "Jumlah",
+    "percentColumn": "Porsi"
   },
   "buttons": {
     "save": "Simpan",
