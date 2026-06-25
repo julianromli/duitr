@@ -3,7 +3,7 @@ import { render, RenderOptions, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthContext } from '@/context/AuthContext'
 import { FinanceContext } from '@/context/FinanceContext'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider } from '@/context/ThemeContext'
 import { mockUser, mockTransaction, mockWallet, mockBudget } from './setup'
 
 // Mock values for contexts
@@ -16,6 +16,7 @@ const mockAuthContextValue = {
   signInWithGoogle: vi.fn(),
   signOut: vi.fn(),
   updateBalanceVisibility: vi.fn(),
+  resendVerificationEmail: vi.fn(),
 }
 
 const mockFinanceContextValue = {
@@ -75,7 +76,7 @@ export function renderWithProviders(
     defaultOptions: {
       queries: {
         retry: false,
-        cacheTime: 0,
+        gcTime: 0,
       },
       mutations: {
         retry: false,
@@ -97,7 +98,7 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="dark">
+        <ThemeProvider>
           <AuthContext.Provider value={authValue}>
             <FinanceContext.Provider value={financeValue}>
               {children}

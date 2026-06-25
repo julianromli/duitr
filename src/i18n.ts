@@ -19,13 +19,18 @@ export function setAppLanguage(lang: string): void {
     throw new Error('Only English (en) and Indonesian (id) are supported.');
   }
   i18n.changeLanguage(lang);
-  
-  // Save language preference to localStorage
-  localStorage.setItem('preferredLanguage', lang);
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('preferredLanguage', lang);
+  }
 }
 
-// Get stored language or detect from browser
+// Get stored language or detect from browser (SSR-safe default: Indonesian)
 const getInitialLanguage = (): string => {
+  if (typeof window === 'undefined') {
+    return 'id';
+  }
+
   try {
     // Check localStorage first
     const stored = localStorage.getItem('preferredLanguage');

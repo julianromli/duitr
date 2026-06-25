@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTransition } from '@/context/TransitionContext';
 
 interface PageTransitionProps {
   children: React.ReactNode;

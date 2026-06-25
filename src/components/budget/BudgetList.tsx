@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/integrations/supabase/client';
 import AnimatedText from '@/components/ui/animated-text';
 import { useCategories } from '@/hooks/useCategories';
 

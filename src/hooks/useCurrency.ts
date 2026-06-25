@@ -38,7 +38,7 @@ export function useCurrency(): UseCurrencyReturn {
 				throw userError
 			}
 
-			const preferredCurrency = userData.user?.user_metadata?.preferred_currency as SupportedCurrency
+			const preferredCurrency = userData.user?.user_metadata?.currency as SupportedCurrency
 			setCurrencyState(preferredCurrency || 'IDR')
 		} catch (err) {
 			console.error('Failed to load currency preference:', err)

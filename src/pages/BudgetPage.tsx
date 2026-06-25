@@ -27,7 +27,6 @@ import { WantToBuyItem, PinjamanItem } from '@/types/finance';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { FormattedInput } from '@/components/ui/formatted-input';
-import { supabase } from '@/integrations/supabase/client';
 import i18next from 'i18next';
 import AnimatedText from '@/components/ui/animated-text';
 import { useCategories } from '@/hooks/useCategories';

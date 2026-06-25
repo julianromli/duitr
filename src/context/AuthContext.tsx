@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, getSession, getCurrentUser } from '@/lib/supabase';
+import { supabase, getSession, signInWithGoogle as signInWithGoogleOAuth } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { AITransactionService } from '@/services/aiTransactionService';
 import { logAuthEvent } from '@/utils/auth-logger';
@@ -12,7 +12,7 @@ interface AuthContextType {
   isBalanceHidden: boolean;
   signUp: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; message: string; needsVerification?: boolean }>;
-  signInWithGoogle: () => Promise<{ success: boolean; message: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; message: string; isWebViewBlocked?: boolean }>;
   signOut: () => Promise<void>;
   updateBalanceVisibility: (isHidden: boolean) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -218,26 +218,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       logAuthEvent('auth_context_google_signin_start');
       setIsLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
-            : `${window.location.origin}/auth/callback`,
-        },
-      });
-      
+
+      const { error, isWebViewBlocked } = await signInWithGoogleOAuth();
+
+      if (isWebViewBlocked) {
+        return {
+          success: false,
+          message: error?.message ?? 'Google sign-in is not supported in this browser.',
+          isWebViewBlocked: true,
+        };
+      }
+
       if (error) {
         logAuthEvent('auth_context_google_signin_error', {}, error);
         return { success: false, message: error.message };
       }
-      
-      logAuthEvent('auth_context_google_signin_redirect', { 
-        url: data?.url,
-        provider: data?.provider 
-      });
-      
+
+      logAuthEvent('auth_context_google_signin_redirect');
       return { success: true, message: '' };
     } catch (error: unknown) {
       logAuthEvent('auth_context_google_signin_exception', {}, error);

@@ -40,7 +40,7 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "description": "View your financial overview",
-      "url": "/dashboard",
+      "url": "/",
       "icons": [{ "src": "/pwa-icons/new/96.png", "sizes": "96x96" }]
     },
     {

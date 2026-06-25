@@ -16,6 +16,8 @@ import ErrorBoundary from '@/components/shared/ErrorBoundary';
 import { CurrencyOnboardingDialog } from '@/components/currency/CurrencyOnboardingDialog';
 import { useCurrencyOnboarding } from '@/hooks/useCurrencyOnboarding';
 import { AppShell } from '@/components/app/AppShell';
+import { CANONICAL_SITE_URL } from '@/config/auth-routes';
+import { DEFAULT_SITE_DESCRIPTION, DEFAULT_SITE_TITLE } from '@/lib/seo';
 import i18n from '@/i18n';
 import appCss from '@/index.css?url';
 
@@ -144,10 +146,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' },
-      { title: 'Duitr - Smart Money, Smarter Future' },
+      { title: DEFAULT_SITE_TITLE },
       {
         name: 'description',
-        content: 'Duitr - AI-powered personal finance manager. Track expenses, create budgets, set financial goals.',
+        content: DEFAULT_SITE_DESCRIPTION,
       },
       { name: 'theme-color', content: '#C6FE1E' },
       { name: 'application-name', content: 'Duitr' },
@@ -158,7 +160,7 @@ export const Route = createRootRoute({
       { rel: 'manifest', href: '/manifest.json', crossOrigin: 'use-credentials' },
       { rel: 'icon', type: 'image/png', href: '/pwa-icons/new/32.png' },
       { rel: 'apple-touch-icon', href: '/pwa-icons/new/apple-touch-icon.png' },
-      { rel: 'canonical', href: 'https://www.duitr.my.id/' },
+      { rel: 'canonical', href: `${CANONICAL_SITE_URL}/` },
     ],
   }),
   component: RootComponent,

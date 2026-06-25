@@ -17,7 +17,6 @@ import CategorySelector from '@/components/CategorySelector';
 import i18next from 'i18next';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormattedInput } from '@/components/ui/formatted-input';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TransactionFormProps {
   // Props if needed

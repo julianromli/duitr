@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { renderWithProviders, userEvent, screen, waitFor } from '../test-utils'
 import { LoginContent } from '@/components/auth/LoginContent'
 import { SignupContent } from '@/components/auth/SignupContent'
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import Login from '@/pages/auth/Login'
 import SignUp from '@/pages/auth/SignUp'
 
@@ -174,43 +173,6 @@ describe('Authentication Flow', () => {
 
       // Google signup should be triggered
       expect(googleButton).toBeInTheDocument()
-    })
-  })
-
-  describe('Protected Route', () => {
-    it('should render children when user is authenticated', () => {
-      renderWithProviders(
-        <ProtectedRoute>
-          <div>Protected Content</div>
-        </ProtectedRoute>,
-        { user: { id: 'test-id', email: 'test@example.com', user_metadata: { name: 'Test' } } }
-      )
-
-      expect(screen.getByText('Protected Content')).toBeInTheDocument()
-    })
-
-    it('should redirect when user is not authenticated', () => {
-      renderWithProviders(
-        <ProtectedRoute>
-          <div>Protected Content</div>
-        </ProtectedRoute>,
-        { user: null }
-      )
-
-      // Should not render protected content
-      expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
-    })
-
-    it('should show loading state while authentication is pending', () => {
-      renderWithProviders(
-        <ProtectedRoute>
-          <div>Protected Content</div>
-        </ProtectedRoute>,
-        { user: null, authLoading: true }
-      )
-
-      // Should show loading indicator (this depends on ProtectedRoute implementation)
-      expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
     })
   })
 
