@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { supabase, isIOS } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { logAuthEvent } from '@/utils/auth-logger';
@@ -25,7 +25,7 @@ const AuthCallback = () => {
       if (loading && !error) {
         console.error('Auth callback timeout - forcing navigation to login');
         logAuthEvent('auth_callback_timeout');
-        navigate('/auth/login');
+        navigate({ to: '/login' });
       }
     }, 10000); // 10 second timeout
     
@@ -220,7 +220,7 @@ const AuthCallback = () => {
     
     // Redirect to the dashboard
     setTimeout(() => {
-      navigate('/');
+      navigate({ to: '/' });
     }, 500);
   };
 
@@ -255,7 +255,7 @@ const AuthCallback = () => {
       // Ignore errors
     }
     
-    navigate('/auth/login');
+    navigate({ to: '/login' });
   };
 
   // If not mounted or waiting for client-side JS, show a simplified loading screen

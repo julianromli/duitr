@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from '@tanstack/react-router';
 import { useAuth } from '@/context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -25,7 +25,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     // Redirect to landing page instead of login when not authenticated
-    return <Navigate to="/landing" state={{ from: location }} replace />;
+    return <Navigate to="/landing" replace state={{ from: location }} />;
   }
 
   // Render children if authenticated

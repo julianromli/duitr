@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { ArrowDown, ArrowUp, ArrowLeftRight } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +19,7 @@ import {
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 
 const TransactionDetailPage: React.FC = () => {
-  const { state } = useLocation();
+  const state = useRouterState({ select: (s) => s.location.state }) as { transaction?: Record<string, unknown> } | undefined;
   const { formatCurrency, wallets } = useFinance();
   const { findById, getDisplayName } = useCategories();
   const transaction = state?.transaction;
@@ -33,7 +33,7 @@ const TransactionDetailPage: React.FC = () => {
 
   const handleClose = () => {
     setIsOpen(false);
-    setTimeout(() => navigate(-1), 300); // Wait for animation to complete
+    setTimeout(() => window.history.back(), 300);
   };
 
   if (!transaction) {

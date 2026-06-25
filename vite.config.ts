@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
@@ -21,6 +22,7 @@ export default defineConfig(({ mode, command }) => {
     port: 4173
   },
   plugins: [
+    tanstackStart(),
     react(),
     mode === 'development' &&
     componentTagger(),
@@ -31,16 +33,16 @@ export default defineConfig(({ mode, command }) => {
       strategies: 'generateSW',
       injectRegister: 'script',
       devOptions: {
-        enabled: false, // 🔧 Disabled PWA in development to prevent auto-reload issues
+        enabled: false,
         type: 'module',
-        navigateFallback: '/index.html',
+        navigateFallback: '/',
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp}'],
-        navigateFallback: '/index.html',
+        navigateFallback: '/',
         navigateFallbackDenylist: [/^\/api\//],
-        skipWaiting: true, // 🔧 Changed to true to prevent reload prompts
-        clientsClaim: false, // 🔧 Changed to false to prevent immediate takeover
+        skipWaiting: true,
+        clientsClaim: false,
         cleanupOutdatedCaches: true,
         sourcemap: true,
         swDest: mode === 'production' ? 'dist/sw.js' : undefined,
@@ -52,7 +54,7 @@ export default defineConfig(({ mode, command }) => {
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -66,7 +68,7 @@ export default defineConfig(({ mode, command }) => {
               cacheName: 'gstatic-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                maxAgeSeconds: 60 * 60 * 24 * 365
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -80,7 +82,7 @@ export default defineConfig(({ mode, command }) => {
               cacheName: 'static-assets',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 30
               }
             }
           },
@@ -91,7 +93,7 @@ export default defineConfig(({ mode, command }) => {
               cacheName: 'app-cache',
               expiration: {
                 maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // <== 7 days
+                maxAgeSeconds: 60 * 60 * 24 * 7
               }
             }
           }
@@ -107,7 +109,5 @@ export default defineConfig(({ mode, command }) => {
     },
   },
   envPrefix: "VITE_",
-  // Environment variables are automatically handled by Vite
-  // No need to manually define them here
 };
 });

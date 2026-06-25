@@ -1,4 +1,7 @@
 {
+  "buildCommand": "bun run build",
+  "installCommand": "bun install",
+  "framework": null,
   "headers": [
     {
       "source": "/(.*)",
@@ -23,9 +26,9 @@
     }
   ],
   "rewrites": [
-    { "source": "/callback/(.*)", "destination": "/index.html" },
-    { "source": "/r5sms-(.*)", "destination": "/index.html" },
-    { "source": "/sin1-(.*)", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/callback/(.*)", "destination": "/" },
+    { "source": "/r5sms-(.*)", "destination": "/" },
+    { "source": "/sin1-(.*)", "destination": "/" },
+    { "source": "/(.*)", "destination": "/" }
   ]
 }

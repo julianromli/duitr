@@ -1,6 +1,5 @@
 import React, { ReactElement } from 'react'
 import { render, RenderOptions, screen } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthContext } from '@/context/AuthContext'
 import { FinanceContext } from '@/context/FinanceContext'
@@ -97,17 +96,15 @@ export function renderWithProviders(
 
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider attribute="class" defaultTheme="dark">
-            <AuthContext.Provider value={authValue}>
-              <FinanceContext.Provider value={financeValue}>
-                {children}
-              </FinanceContext.Provider>
-            </AuthContext.Provider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="dark">
+          <AuthContext.Provider value={authValue}>
+            <FinanceContext.Provider value={financeValue}>
+              {children}
+            </FinanceContext.Provider>
+          </AuthContext.Provider>
+        </ThemeProvider>
+      </QueryClientProvider>
     )
   }
 

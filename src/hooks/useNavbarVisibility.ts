@@ -1,7 +1,7 @@
 
 // Hook to determine if navbar should be shown based on current route
-import { useLocation } from 'react-router-dom';
-import { mainPages } from '@/config/routes';
+import { useLocation } from '@tanstack/react-router';
+import { mainPages } from '@/config/route-paths';
 
 export const useNavbarVisibility = (): boolean => {
   const location = useLocation();

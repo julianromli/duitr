@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useRouterState } from '@tanstack/react-router';
 
 interface TransitionContextType {
   isTransitioning: boolean;
@@ -13,16 +13,16 @@ export const useTransition = () => useContext(TransitionContext);
 
 export const TransitionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const location = useLocation();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   
   useEffect(() => {
     setIsTransitioning(true);
     const timer = setTimeout(() => {
       setIsTransitioning(false);
-    }, 300); // Duration of the transition
+    }, 300);
     
     return () => clearTimeout(timer);
-  }, [location.pathname]);
+  }, [pathname]);
   
   return (
     <TransitionContext.Provider value={{ isTransitioning }}>

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { ArrowLeft, Shield, Eye, Lock, Database, Globe, Smartphone } from 'lucide-react';
 
 const PrivacyPolicy: React.FC = () => {

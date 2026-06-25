@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { ArrowLeft, FileText, Scale, Users, CreditCard, Shield, AlertTriangle } from 'lucide-react';
 
 const TermsOfService: React.FC = () => {

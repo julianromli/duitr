@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
@@ -83,7 +83,7 @@ const SignUp = () => {
           title: 'Account created',
           description: 'Your account has been created successfully. Please check your email to verify.',
         });
-        navigate('/login');
+        navigate({ to: '/login' });
       } else {
         toast({
           variant: 'destructive',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,7 +112,7 @@ const ResetPassword = () => {
         animate="visible"
       >
         <button 
-          onClick={() => navigate('/auth/login')} 
+          onClick={() => navigate({ to: '/login' })} 
           className="p-1 text-foreground rounded-full hover:bg-accent"
           aria-label="Go back to login"
         >
@@ -156,7 +156,7 @@ const ResetPassword = () => {
               Your password has been successfully updated. You can now log in with your new password.
             </p>
             <Button 
-              onClick={() => navigate('/auth/login')} 
+              onClick={() => navigate({ to: '/login' })} 
               className="mt-4 w-full"
             >
               Go to Login

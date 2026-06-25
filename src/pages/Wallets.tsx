@@ -22,7 +22,7 @@ import {
 import { useFinance } from '@/context/FinanceContext';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { FormattedInput } from '@/components/ui/formatted-input';
 import ColorPicker from '@/components/ui/color-picker';
 
@@ -263,7 +263,7 @@ const Wallets: React.FC = () => {
       <div className="max-w-md mx-auto bg-[#0D0D0D] min-h-screen pb-24 text-white px-2">
         <div className="p-6">
         <div className="flex items-center mb-6">
-          <button onClick={() => navigate('/')} className="mr-4">
+          <button onClick={() => navigate({ to: '/' })} className="mr-4">
             <ChevronLeft size={24} className="text-white" />
           </button>
           <h1 className="text-xl font-bold">{t('wallets.title')}</h1>
@@ -294,7 +294,7 @@ const Wallets: React.FC = () => {
         >
           <div className="flex items-center">
             <motion.button 
-              onClick={() => navigate('/')} 
+              onClick={() => navigate({ to: '/' })} 
               className="mr-4"
               variants={backButtonVariants}
               whileHover="hover"

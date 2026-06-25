@@ -23,8 +23,8 @@ export default defineConfig({
         'src/**/*.spec.*',
         'src/types/**',
         'src/vite-env.d.ts',
-        'src/main.tsx',
-        'src/App.tsx'
+        'src/router.tsx',
+        'src/routes/**',
       ],
       thresholds: {
         global: {

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertTriangle, DollarSign, Banknote, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import AnimatedText from '@/components/ui/animated-text';
 
@@ -77,7 +77,7 @@ export function CurrencySettings() {
       
       // Redirect to home after a short delay
       setTimeout(() => {
-        navigate('/');
+        navigate({ to: '/' });
         window.location.reload(); // Force full reload to clear any cached data
       }, 1000);
       

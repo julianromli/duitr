@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useCategories } from '@/hooks/useCategories';
 import TransactionDetailOverlay from '@/components/transactions/TransactionDetailOverlay';
 import i18next from 'i18next';

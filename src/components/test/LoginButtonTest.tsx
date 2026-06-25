@@ -3,7 +3,7 @@
 // Created to test the fix for inconsistent Login button navigation
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
@@ -18,7 +18,7 @@ const LoginButtonTest: React.FC = () => {
       // Simulate the exact same behavior as the fixed Login button
       const event = new Event('click', { bubbles: true, cancelable: true });
       event.preventDefault();
-      navigate('/login');
+      navigate({ to: '/login' });
       
       return true;
     } catch (error) {

@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, PlusCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import BudgetProgress from '@/components/budget/BudgetProgress';
 import BudgetList from '@/components/budget/BudgetList';
 import WantToBuyList from '@/components/budget/WantToBuyList';
@@ -279,7 +279,7 @@ const BudgetPage: React.FC = () => {
         >
           <div className="flex items-center">
             <motion.button 
-              onClick={() => navigate('/')} 
+              onClick={() => navigate({ to: '/' })} 
               className="mr-4 p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

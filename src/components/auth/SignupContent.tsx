@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useId } from "react";
 import { FaGoogle } from 'react-icons/fa'; // Keep consistency with original SignUp page
-import { Link } from 'react-router-dom'; // For Terms and Privacy links
+import { Link } from '@tanstack/react-router';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { validatePassword, validateEmail, sanitizeEmail } from '@/utils/password-validation';
 import { Alert, AlertDescription } from '@/components/ui/alert';

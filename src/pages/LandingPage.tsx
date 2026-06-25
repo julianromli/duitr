@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { Hero195 } from '@/components/ui/hero-195';
 import { LanguageToggle } from '@/components/ui/language-toggle';
 import { motion } from 'framer-motion';
@@ -52,13 +52,13 @@ const LandingPage: React.FC = () => {
           >
             <LanguageToggle className="hidden md:block" />
             <button 
-              onClick={() => navigate('/login')} 
+              onClick={() => navigate({ to: '/login' })} 
               className="hidden md:block text-sm font-medium px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-white transition-colors"
             >
               Sign in
             </button>
             <button 
-              onClick={() => navigate('/signup')} 
+              onClick={() => navigate({ to: '/signup' })} 
               className="text-sm font-medium px-4 py-2 rounded-lg bg-lime-400 text-black hover:bg-lime-500 transition-colors"
             >
               Sign up

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
@@ -69,7 +69,7 @@ const Login = () => {
           title: 'Welcome back!',
           description: 'You have been logged in successfully.',
         });
-        navigate('/');
+        navigate({ to: '/' });
       } else {
         logAuthEvent('login_email_sign_in_failure', { message: result.message });
         

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
@@ -121,7 +121,7 @@ const ForgotPassword = () => {
         animate="visible"
       >
         <button
-          onClick={() => navigate('/login')}
+          onClick={() => navigate({ to: '/login' })}
           className="p-1 rounded-full text-foreground hover:bg-accent"
           aria-label="Go back to login"
         >

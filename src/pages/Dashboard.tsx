@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, ArrowUp, ArrowDown, Plus, ArrowLeftRight, Eye, EyeOff, Home, Clock, PieChart, User, Wallet } from 'lucide-react';
 import { useFinance } from '@/context/FinanceContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 import ExpenseForm from '@/components/transactions/ExpenseForm';
 import IncomeForm from '@/components/transactions/IncomeForm';
 import TransferForm from '@/components/transactions/TransferForm';
@@ -67,10 +67,10 @@ const Dashboard: React.FC = () => {
     setIsDetailOpen(true);
   };
   const navigateToStatistics = () => {
-    navigate('/statistics');
+    navigate({ to: '/statistics' });
   };
   const navigateToTransactions = () => {
-    navigate('/transactions');
+    navigate({ to: '/transactions' });
   };
   const toggleBalanceVisibility = () => {
     updateBalanceVisibility(!isBalanceHidden);

@@ -3,20 +3,16 @@ import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
 
-// Cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
   cleanup()
 })
 
-// Mock environment variables for tests
 beforeAll(() => {
-  // Set up test environment variables
   vi.stubEnv('VITE_SUPABASE_URL', 'http://localhost:54321')
   vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-anon-key-for-testing')
   vi.stubEnv('VITE_PRODUCTION_DOMAIN', 'http://localhost:3000')
 })
 
-// Mock Supabase client for tests
 vi.mock('@/lib/supabase', () => {
   const auth = {
     signUp: vi.fn(),
@@ -65,33 +61,34 @@ vi.mock('@/lib/supabase', () => {
 
 export const getMockSupabaseFunctionInvoke = () => vi.mocked(supabase.functions.invoke)
 
-// Mock React Router
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom')
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router')
   return {
     ...actual,
     useNavigate: () => vi.fn(),
+    useRouter: () => ({
+      history: { back: vi.fn() },
+    }),
     useLocation: () => ({
       pathname: '/',
       search: '',
       hash: '',
-      state: null
-    })
+      state: null,
+    }),
+    useRouterState: ({ select }: { select?: (state: { location: { pathname: string; state: unknown } }) => unknown }) => {
+      const state = { location: { pathname: '/', state: null } }
+      return select ? select(state) : state
+    },
   }
 })
 
-// Mock Framer Motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
-  motion: {
-    div: 'div',
-    button: 'button',
-    form: 'form',
-    section: 'section'
-  },
+  motion: new Proxy({}, {
+    get: (_target, prop) => prop,
+  }),
   AnimatePresence: ({ children }: { children: React.ReactNode }) => children
 }))
 
-// Mock i18next
 vi.mock('i18next', () => ({
   default: {
     use: vi.fn().mockReturnThis(),
@@ -135,29 +132,26 @@ vi.mock('react-i18next', async () => {
   }
 })
 
-// Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
 })
 
-// Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }))
 
-// Mock ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
@@ -184,7 +178,6 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
   value: vi.fn(),
 })
 
-// Global test utilities
 export const mockUser = {
   id: 'test-user-id',
   email: 'test@example.com',

@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useFinance } from '@/context/FinanceContext';
 import { motion } from 'framer-motion';
 import TransactionList from '@/components/transactions/TransactionList';
@@ -87,7 +87,7 @@ const Transactions: React.FC = () => {
           variants={headerVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate('/')} className="mr-4">
+            <button onClick={() => navigate({ to: '/' })} className="mr-4">
               <ChevronLeft size={24} className="text-white" />
             </button>
             <h1 className="text-xl font-bold">{t('transactions.history')}</h1>
