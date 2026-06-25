@@ -24,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from '@/lib/supabase';
+import transactionService from '@/services/transactionService';
+import walletService from '@/services/walletService';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import { useCategories } from '@/hooks/useCategories';
@@ -44,7 +45,7 @@ interface WalletOption {
 
 const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick }) => {
   const { t, i18n } = useTranslation();
-  const { formatCurrency, deleteTransaction } = useFinance();
+  const { formatCurrency, deleteTransaction, wallets: financeWallets } = useFinance();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getDisplayName, findById, categories } = useCategories();
@@ -88,30 +89,10 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
   // Add a loading flag to prevent multiple loading states
   const isLoadingRef = useRef(false);
   
-  // Fetch wallets on component mount
+  // Use wallets from finance context for filter dropdown
   useEffect(() => {
-    const fetchWallets = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('wallets')
-          .select('id, name')
-          .order('name');
-        
-        if (error) {
-          console.error('Error fetching wallets:', error);
-          return;
-        }
-        
-        if (data) {
-          setWallets(data);
-        }
-      } catch (err) {
-        console.error('Error fetching wallets:', err);
-      }
-    };
-    
-    fetchWallets();
-  }, []);
+    setWallets(financeWallets.map((wallet) => ({ id: wallet.id, name: wallet.name })));
+  }, [financeWallets]);
   
   // Fetch transactions with pagination
   const fetchTransactions = async (pageNum: number, isInitialLoad = false) => {
@@ -131,47 +112,13 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         setIsLoadingMore(true);
       }
       
-      // Calculate pagination
-      const start = pageNum * pageSize;
-      const end = start + pageSize - 1;
-      
       console.log(`Fetching transactions: page ${pageNum}, sort: ${filterParams.sortOption}, type: ${filterParams.typeFilter}, category: ${filterParams.selectedCategory}, wallet: ${filterParams.selectedWallet}`);
       
-      // Build the query with filters
-      let query = supabase
-        .from('transactions')
-        .select('id, date, type, amount, description, wallet_id, category_id');
-      
-      // Apply sorting based on option
-      if (filterParams.sortOption === 'amount-highest') {
-        query = query.order('amount', { ascending: false });
-      } else if (filterParams.sortOption === 'amount-lowest') {
-        query = query.order('amount', { ascending: true });
-      } else {
-        // Default to timestamp sorting (newest or latest)
-        // Use 'created_at' instead of 'date' for accurate sorting including time
-        query = query.order('created_at', { ascending: filterParams.sortOption === 'date-latest' });
-      }
-      
-      // Apply type filter if not 'all'
-      if (filterParams.typeFilter !== 'all') {
-        query = query.eq('type', filterParams.typeFilter);
-      }
-      
-      // Apply wallet filter if not 'all'
-      if (filterParams.selectedWallet !== 'all') {
-        query = query.eq('wallet_id', filterParams.selectedWallet);
-      }
-      
-      // Apply category filter if not 'all'
+      let categoryId: number | null = null;
       if (filterParams.selectedCategory !== 'all') {
         logCategoryDebug('Filtering transactions by category', filterParams.selectedCategory);
         
         try {
-          // Use categories from useCategories hook instead of direct queries
-          let categoryId: number | null = null;
-          
-          // If the selected category value contains underscore (like expense_food), use that directly as category_key
           if (filterParams.selectedCategory.includes('_')) {
             const categoryByKey = categories.find(cat => cat.category_key === filterParams.selectedCategory);
               
@@ -183,7 +130,6 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
                 matchedName: categoryByKey.en_name
               });
             } else {
-              // Try to look up by category label as fallback
               const categoryLabel = categoryOptions.find(cat => cat.value === filterParams.selectedCategory)?.label;
               if (categoryLabel) {
                 const categoryByName = categories.find(cat => 
@@ -200,57 +146,40 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
                     key: categoryByName.category_key
                   });
                 } else {
-                  // To show no results (empty state), use an impossible category_id
                   categoryId = -999;
                 }
               } else {
-                // No label found for the selected category
                 categoryId = -999;
               }
             }
           } else {
-            // Last resort: try with the numeric ID if it's a number
             const numericId = Number(filterParams.selectedCategory);
             if (!isNaN(numericId)) {
               logCategoryDebug('Using direct numeric ID', numericId);
               categoryId = numericId;
             } else {
-              // Log that we couldn't find the category
               logCategoryDebug('Could not find matching category', {
                 selectedCategory: filterParams.selectedCategory
               });
-              
-              // To show no results (empty state), use an impossible category_id
               categoryId = -999;
             }
-          }
-          
-          // Apply the category filter if we found a valid category ID
-          if (categoryId !== null) {
-            query = query.eq('category_id', categoryId);
           }
         } catch (error) {
           console.error('Error processing category filter:', error);
           logCategoryDebug('Exception during category filtering', error);
-          query = query.eq('category_id', -999);
+          categoryId = -999;
         }
       }
-      
-      // Apply search term if present
-      if (filterParams.searchTerm) {
-        query = query.ilike('description', `%${filterParams.searchTerm}%`);
-      }
-      
-      // Apply pagination
-      query = query.range(start, end);
-      
-      // Execute the query
-      const { data, error: queryError } = await query;
-      
-      // Handle query errors
-      if (queryError) {
-        throw new Error(`Transaction query error: ${queryError.message}`);
-      }
+
+      const data = await transactionService.search({
+        page: pageNum,
+        pageSize,
+        sortOption: filterParams.sortOption,
+        typeFilter: filterParams.typeFilter,
+        selectedWallet: filterParams.selectedWallet,
+        categoryId,
+        searchTerm: filterParams.searchTerm,
+      });
       
       // Handle no data
       if (!data || data.length === 0) {
@@ -261,25 +190,8 @@ const TransactionList: React.FC<TransactionListProps> = ({ onTransactionClick })
         return;
       }
       
-      // Get wallet names
-      let walletNames: Record<string, string> = {};
       const walletIds = [...new Set(data.map(t => t.wallet_id).filter(Boolean))];
-      
-      if (walletIds.length > 0) {
-        const { data: walletData, error: walletError } = await supabase
-          .from('wallets')
-          .select('id, name')
-          .in('id', walletIds);
-        
-        if (walletError) {
-          console.warn('Error fetching wallet data:', walletError);
-        } else if (walletData) {
-          walletNames = walletData.reduce((acc, wallet) => {
-            acc[wallet.id] = wallet.name;
-            return acc;
-          }, {} as Record<string, string>);
-        }
-      }
+      const walletNames = walletIds.length > 0 ? await walletService.getNamesByIds(walletIds) : {};
       
       // Format transaction data
       const processedTransactions = data.map(t => {

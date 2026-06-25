@@ -1,6 +1,14 @@
-import { supabase } from '@/lib/supabase';
+import { getFinanceDatabase } from '@/integrations/database';
+import type { TransactionSearchParams } from '@/integrations/database';
 import { mapTransactionRow } from '@/services/finance/mappers';
-import type { Transaction } from '@/types/finance';
+import {
+  computeWalletUpdatesForCreate,
+  computeWalletUpdatesForDelete,
+  computeWalletUpdatesForUpdate,
+  resolveCategoryId,
+  TransactionValidationError,
+} from '@/services/finance/transactionBalance';
+import type { Transaction, Wallet } from '@/types/finance';
 
 const CATEGORY_KEY_TO_ID: Record<string, number> = {
   expense_groceries: 1,
@@ -55,7 +63,9 @@ export async function formatTransactionForDB(
     } else if (typeof dbData.category_id === 'number' || !Number.isNaN(Number(dbData.category_id))) {
       dbData.category_id = Number(dbData.category_id);
     } else if (typeof dbData.category_id === 'string') {
-      dbData.category_id = Number(dbData.category_id) || (data.type === 'income' ? 17 : data.type === 'transfer' ? 18 : 12);
+      dbData.category_id =
+        Number(dbData.category_id) ||
+        (data.type === 'income' ? 17 : data.type === 'transfer' ? 18 : 12);
     }
   } else if (data.type === 'income') {
     dbData.category_id = 17;
@@ -68,37 +78,174 @@ export async function formatTransactionForDB(
   return dbData;
 }
 
-class TransactionService {
-  async getAll(userId: string): Promise<Transaction[]> {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+function isSchemaError(message: string): boolean {
+  return (
+    message.includes('destination_wallet_id') ||
+    message.includes('column') ||
+    message.includes('schema')
+  );
+}
 
-    if (error) throw new Error(`Failed to fetch transactions: ${error.message}`);
-    return (data ?? []).map(mapTransactionRow);
+class TransactionService {
+  private db = getFinanceDatabase();
+
+  async getAll(userId: string): Promise<Transaction[]> {
+    const rows = await this.db.transactions.getAll(userId);
+    return rows.map((row) => mapTransactionRow(row as Parameters<typeof mapTransactionRow>[0]));
+  }
+
+  async search(params: TransactionSearchParams) {
+    return this.db.transactions.search(params);
+  }
+
+  async create(
+    userId: string,
+    transaction: Omit<Transaction, 'id' | 'userId'>,
+    wallets: Wallet[],
+    userCurrency: string,
+  ): Promise<Transaction> {
+    const walletUpdates = computeWalletUpdatesForCreate(transaction, wallets);
+    const dbCategoryId = resolveCategoryId(transaction);
+
+    const newTransactionData: Record<string, unknown> = {
+      amount: transaction.amount,
+      category_id: dbCategoryId,
+      description: transaction.description,
+      date: transaction.date,
+      type: transaction.type,
+      wallet_id: transaction.walletId,
+      user_id: userId,
+      ...(transaction.type === 'transfer' && transaction.destinationWalletId
+        ? { destination_wallet_id: transaction.destinationWalletId }
+        : {}),
+      ...(transaction.type === 'transfer' && transaction.fee != null ? { fee: transaction.fee } : {}),
+    };
+
+    let finalRow: Record<string, unknown>;
+    try {
+      finalRow = (await this.db.transactions.insert(
+        await formatTransactionForDB(newTransactionData, userCurrency),
+      )) as Record<string, unknown>;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!isSchemaError(message)) throw error;
+
+      const fallbackData = {
+        amount: transaction.amount,
+        category_id: dbCategoryId,
+        description: transaction.description,
+        date: transaction.date,
+        type: transaction.type,
+        wallet_id: transaction.walletId,
+        user_id: userId,
+      };
+
+      if (transaction.type === 'transfer' && transaction.destinationWalletId) {
+        const basicRow = (await this.db.transactions.insert(
+          await formatTransactionForDB(fallbackData, userCurrency),
+        )) as Record<string, unknown>;
+        try {
+          await this.db.transactions.patch(String(basicRow.id), {
+            destination_wallet_id: transaction.destinationWalletId,
+            fee: transaction.fee ?? 0,
+          });
+          finalRow = {
+            ...basicRow,
+            destination_wallet_id: transaction.destinationWalletId,
+            fee: transaction.fee ?? 0,
+          };
+        } catch {
+          finalRow = basicRow;
+        }
+      } else {
+        finalRow = (await this.db.transactions.insert(fallbackData)) as Record<string, unknown>;
+      }
+    }
+
+    await Promise.all(
+      walletUpdates.map((update) => this.db.wallets.updateBalance(update.id, update.balance)),
+    );
+
+    return mapTransactionRow(finalRow as Parameters<typeof mapTransactionRow>[0]);
+  }
+
+  async update(
+    updatedTransaction: Transaction,
+    oldTransaction: Transaction,
+    wallets: Wallet[],
+    userCurrency: string,
+  ): Promise<void> {
+    const walletUpdates = computeWalletUpdatesForUpdate(oldTransaction, updatedTransaction, wallets);
+    const dbCategoryId = resolveCategoryId(updatedTransaction);
+
+    const updateData: Record<string, unknown> = {
+      amount: updatedTransaction.amount,
+      category_id: dbCategoryId,
+      description: updatedTransaction.description,
+      date: updatedTransaction.date,
+      type: updatedTransaction.type,
+      wallet_id: updatedTransaction.walletId,
+    };
+
+    if (updatedTransaction.type === 'transfer' && updatedTransaction.destinationWalletId) {
+      try {
+        await this.db.transactions.patch(updatedTransaction.id, {
+          destination_wallet_id: updatedTransaction.destinationWalletId,
+        });
+        updateData.destination_wallet_id = updatedTransaction.destinationWalletId;
+      } catch {
+        // Schema may not support destination_wallet_id
+      }
+      try {
+        await this.db.transactions.patch(updatedTransaction.id, {
+          fee: updatedTransaction.fee ?? 0,
+        });
+        updateData.fee = updatedTransaction.fee ?? 0;
+      } catch {
+        // Schema may not support fee
+      }
+    }
+
+    try {
+      await this.db.transactions.update(
+        updatedTransaction.id,
+        await formatTransactionForDB(updateData, userCurrency),
+      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!isSchemaError(message)) throw error;
+      await this.db.transactions.update(updatedTransaction.id, {
+        amount: updatedTransaction.amount,
+        category_id: dbCategoryId,
+        description: updatedTransaction.description,
+        date: updatedTransaction.date,
+        type: updatedTransaction.type,
+        wallet_id: updatedTransaction.walletId,
+      });
+    }
+
+    await Promise.all(
+      walletUpdates.map((update) => this.db.wallets.updateBalance(update.id, update.balance)),
+    );
+  }
+
+  async deleteWithBalanceRevert(transaction: Transaction, wallets: Wallet[]): Promise<void> {
+    const walletUpdates = computeWalletUpdatesForDelete(transaction, wallets);
+    await this.db.transactions.delete(transaction.id);
+    await Promise.all(
+      walletUpdates.map((update) => this.db.wallets.updateBalance(update.id, update.balance)),
+    );
   }
 
   async delete(transactionId: string): Promise<void> {
-    const { error } = await supabase.from('transactions').delete().eq('id', transactionId);
-    if (error?.message.includes('column') || error?.message.includes('schema') || error?.message.includes('destination_wallet_id')) {
-      await supabase
-        .from('transactions')
-        .update({ destination_wallet_id: null, fee: null })
-        .eq('id', transactionId);
-      const retry = await supabase.from('transactions').delete().eq('id', transactionId);
-      if (retry.error) throw new Error(retry.error.message);
-      return;
-    }
-    if (error) throw new Error(error.message);
+    await this.db.transactions.delete(transactionId);
   }
 
   async deleteByWallet(walletId: string): Promise<void> {
-    const { error } = await supabase.from('transactions').delete().eq('wallet_id', walletId);
-    if (error) throw new Error(error.message);
+    await this.db.transactions.deleteByWallet(walletId);
   }
 }
 
 const transactionService = new TransactionService();
+export { TransactionValidationError };
 export default transactionService;

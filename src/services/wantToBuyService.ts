@@ -1,60 +1,47 @@
-import { supabase } from '@/lib/supabase';
+import { getFinanceDatabase } from '@/integrations/database';
 import { mapWantToBuyRow } from '@/services/finance/mappers';
 import type { WantToBuyItem } from '@/types/finance';
 
 class WantToBuyService {
+  private db = getFinanceDatabase();
+
   async getAll(userId: string): Promise<WantToBuyItem[]> {
-    const { data, error } = await supabase.from('want_to_buy_items').select('*').eq('user_id', userId);
-    if (error) throw new Error(`Failed to fetch want-to-buy items: ${error.message}`);
-    return (data ?? []).map(mapWantToBuyRow);
+    const rows = await this.db.wantToBuy.getAll(userId);
+    return rows.map((row) => mapWantToBuyRow(row as Parameters<typeof mapWantToBuyRow>[0]));
   }
 
   async create(
     userId: string,
     item: Omit<WantToBuyItem, 'id' | 'userId' | 'created_at' | 'is_purchased'>,
   ): Promise<WantToBuyItem> {
-    const { data, error } = await supabase
-      .from('want_to_buy_items')
-      .insert({
-        name: item.name,
-        price: item.price,
-        category: item.category,
-        priority: item.priority,
-        estimated_date: item.estimated_date,
-        icon: item.icon,
-        user_id: userId,
-        is_purchased: false,
-      })
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return mapWantToBuyRow(data);
+    const row = await this.db.wantToBuy.insert({
+      name: item.name,
+      price: item.price,
+      category: item.category,
+      priority: item.priority,
+      estimated_date: item.estimated_date,
+      icon: item.icon,
+      user_id: userId,
+      is_purchased: false,
+    });
+    return mapWantToBuyRow(row as Parameters<typeof mapWantToBuyRow>[0]);
   }
 
   async update(item: WantToBuyItem): Promise<WantToBuyItem> {
-    const { data, error } = await supabase
-      .from('want_to_buy_items')
-      .update({
-        name: item.name,
-        price: item.price,
-        category: item.category,
-        priority: item.priority,
-        estimated_date: item.estimated_date,
-        icon: item.icon,
-        is_purchased: item.is_purchased,
-      })
-      .eq('id', item.id)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return mapWantToBuyRow(data);
+    const row = await this.db.wantToBuy.update(item.id, {
+      name: item.name,
+      price: item.price,
+      category: item.category,
+      priority: item.priority,
+      estimated_date: item.estimated_date,
+      icon: item.icon,
+      is_purchased: item.is_purchased,
+    });
+    return mapWantToBuyRow(row as Parameters<typeof mapWantToBuyRow>[0]);
   }
 
   async delete(itemId: string): Promise<void> {
-    const { error } = await supabase.from('want_to_buy_items').delete().eq('id', itemId);
-    if (error) throw new Error(error.message);
+    await this.db.wantToBuy.delete(itemId);
   }
 }
 

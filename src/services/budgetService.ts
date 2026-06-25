@@ -1,9 +1,11 @@
-import { supabase } from '@/lib/supabase';
+import { getFinanceDatabase } from '@/integrations/database';
 import { mapBudgetRow } from '@/services/finance/mappers';
 import type { Category } from '@/types/category';
 import type { Budget } from '@/types/finance';
 
 class BudgetService {
+  private db = getFinanceDatabase();
+
   async getAll(
     userId: string,
     options: {
@@ -13,17 +15,15 @@ class BudgetService {
       defaultWalletId?: string;
     },
   ): Promise<Budget[]> {
-    const { data, error } = await supabase.from('budgets').select('*').eq('user_id', userId);
-    if (error) throw new Error(`Failed to fetch budgets: ${error.message}`);
-
+    const rows = await this.db.budgets.getAll(userId);
     const categoryMap = Object.fromEntries(
       options.categories
         .filter((c) => c.category_id)
         .map((c) => [c.category_id, { en_name: c.en_name, id_name: c.id_name }]),
     );
 
-    return (data ?? []).map((row) =>
-      mapBudgetRow(row, {
+    return rows.map((row) =>
+      mapBudgetRow(row as Parameters<typeof mapBudgetRow>[0], {
         categoryMap,
         language: options.language,
         translate: options.translate,
@@ -41,24 +41,22 @@ class BudgetService {
       spent: budget.spent || 0,
     };
 
-    const { data, error } = await supabase.from('budgets').insert(budgetData).select();
-    if (error) {
-      const upsert = await supabase.from('budgets').upsert(budgetData).select();
-      if (upsert.error) throw new Error(upsert.error.message);
-      if (!upsert.data?.[0]) throw new Error('No data returned from budget upsert');
-      const row = upsert.data[0];
-      return {
-        id: row.id,
-        categoryId: row.category_id,
-        amount: row.amount,
-        period: row.period || 'monthly',
-        spent: row.spent || 0,
-        category: budget.category,
-      };
+    let rows: unknown[];
+    try {
+      rows = await this.db.budgets.insert(budgetData);
+    } catch {
+      rows = await this.db.budgets.upsert(budgetData);
     }
 
-    if (!data?.[0]) throw new Error('No data returned from budget insert');
-    const row = data[0];
+    if (!rows[0]) throw new Error('No data returned from budget insert');
+    const row = rows[0] as {
+      id: string;
+      category_id: number;
+      amount: number;
+      period?: string;
+      spent?: number;
+    };
+
     return {
       id: row.id,
       categoryId: row.category_id,
@@ -70,31 +68,17 @@ class BudgetService {
   }
 
   async update(budget: Budget): Promise<Budget> {
-    const { data, error } = await supabase
-      .from('budgets')
-      .update({
-        category_id: budget.categoryId,
-        amount: budget.amount,
-        period: budget.period || 'monthly',
-        spent: budget.spent ?? 0,
-      })
-      .eq('id', budget.id)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return {
-      ...budget,
-      categoryId: data.category_id,
-      amount: data.amount,
-      period: data.period,
-      spent: data.spent,
-    };
+    await this.db.budgets.update(budget.id, {
+      category_id: budget.categoryId,
+      amount: budget.amount,
+      period: budget.period || 'monthly',
+      spent: budget.spent ?? 0,
+    });
+    return budget;
   }
 
   async delete(budgetId: string): Promise<void> {
-    const { error } = await supabase.from('budgets').delete().eq('id', budgetId);
-    if (error) throw new Error(error.message);
+    await this.db.budgets.delete(budgetId);
   }
 }
 

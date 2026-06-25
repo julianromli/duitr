@@ -1,19 +1,25 @@
-import { supabase } from '@/lib/supabase';
+import { getFinanceDatabase } from '@/integrations/database';
 import { mapWalletRow } from '@/services/finance/mappers';
 import type { Wallet } from '@/types/finance';
 
 class WalletService {
+  private db = getFinanceDatabase();
+
   async getAll(userId: string): Promise<Wallet[]> {
-    const { data, error } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('user_id', userId);
+    const rows = await this.db.wallets.getAll(userId);
+    return rows.map((row) => mapWalletRow(row as Parameters<typeof mapWalletRow>[0]));
+  }
 
-    if (error) {
-      throw new Error(`Failed to fetch wallets: ${error.message}`);
-    }
+  async getIdNameList(): Promise<{ id: string; name: string }[]> {
+    return this.db.wallets.getIdNameList();
+  }
 
-    return (data ?? []).map(mapWalletRow);
+  async getNamesByIds(ids: string[]): Promise<Record<string, string>> {
+    const rows = await this.db.wallets.getNamesByIds(ids);
+    return rows.reduce<Record<string, string>>((acc, wallet) => {
+      acc[wallet.id] = wallet.name;
+      return acc;
+    }, {});
   }
 
   async create(userId: string, wallet: Omit<Wallet, 'id' | 'userId'>): Promise<Wallet> {
@@ -30,19 +36,18 @@ class WalletService {
       insertData.icon = wallet.icon;
     }
 
-    const { data, error } = await supabase.from('wallets').insert(insertData).select();
-
-    if (error?.message.includes('column') && insertData.icon) {
-      delete insertData.icon;
-      const retry = await supabase.from('wallets').insert(insertData).select();
-      if (retry.error) throw new Error(retry.error.message);
-      if (!retry.data?.[0]) throw new Error('No data returned from wallet insert');
-      return mapWalletRow(retry.data[0]);
+    try {
+      const row = await this.db.wallets.insert(insertData);
+      return mapWalletRow(row as Parameters<typeof mapWalletRow>[0]);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('column') && insertData.icon) {
+        delete insertData.icon;
+        const row = await this.db.wallets.insert(insertData);
+        return mapWalletRow(row as Parameters<typeof mapWalletRow>[0]);
+      }
+      throw error;
     }
-
-    if (error) throw new Error(error.message);
-    if (!data?.[0]) throw new Error('No data returned from wallet insert');
-    return mapWalletRow(data[0]);
   }
 
   async update(wallet: Wallet): Promise<void> {
@@ -58,26 +63,25 @@ class WalletService {
       updateData.icon = wallet.icon;
     }
 
-    const { error } = await supabase.from('wallets').update(updateData).eq('id', wallet.id);
-
-    if (error?.message.includes('column') && updateData.icon) {
-      delete updateData.icon;
-      const retry = await supabase.from('wallets').update(updateData).eq('id', wallet.id);
-      if (retry.error) throw new Error(retry.error.message);
-      return;
+    try {
+      await this.db.wallets.update(wallet.id, updateData);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('column') && updateData.icon) {
+        delete updateData.icon;
+        await this.db.wallets.update(wallet.id, updateData);
+        return;
+      }
+      throw error;
     }
-
-    if (error) throw new Error(error.message);
   }
 
   async updateBalance(walletId: string, balance: number): Promise<void> {
-    const { error } = await supabase.from('wallets').update({ balance }).eq('id', walletId);
-    if (error) throw new Error(error.message);
+    await this.db.wallets.updateBalance(walletId, balance);
   }
 
   async delete(walletId: string): Promise<void> {
-    const { error } = await supabase.from('wallets').delete().eq('id', walletId);
-    if (error) throw new Error(error.message);
+    await this.db.wallets.delete(walletId);
   }
 }
 
