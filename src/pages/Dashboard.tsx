@@ -67,10 +67,10 @@ const Dashboard: React.FC = () => {
     setIsDetailOpen(true);
   };
   const navigateToStatistics = () => {
-    navigate({ to: '/statistics' });
+    navigate({ to: '/app/statistics' });
   };
   const navigateToTransactions = () => {
-    navigate({ to: '/transactions' });
+    navigate({ to: '/app/transactions' });
   };
   const toggleBalanceVisibility = () => {
     updateBalanceVisibility(!isBalanceHidden);
@@ -294,7 +294,7 @@ const Dashboard: React.FC = () => {
           <motion.div className="bg-[#C6FE1E] rounded-3xl p-5 mb-6 mt-8 dark:bg-[#C6FE1E] light:bg-[#C6FE1E]" variants={balanceCardVariants}>
             {/* Card Header with Profile */}
             <div className="flex justify-between items-center mb-3">
-              <Link to="/profile" className="flex items-center gap-3 flex-grow group">
+              <Link to="/app/profile" className="flex items-center gap-3 flex-grow group">
                 <Avatar className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#0D0D0D] group-hover:opacity-80 transition-opacity">
                   {profileImage ? <AvatarImage src={profileImage} alt={username} className="aspect-square object-cover" /> : <AvatarFallback className="bg-[#242425] text-[#C6FE1E] flex items-center justify-center">
                       {username ? username.substring(0, 2).toUpperCase() : 'U'}

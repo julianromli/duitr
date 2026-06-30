@@ -1,9 +1,12 @@
 import { getFinanceDatabase } from '@/integrations/database';
+import type { FinanceDatabase } from '@/integrations/database';
 import { mapWantToBuyRow } from '@/services/finance/mappers';
 import type { WantToBuyItem } from '@/types/finance';
 
 class WantToBuyService {
-  private db = getFinanceDatabase();
+  private get db(): FinanceDatabase {
+    return getFinanceDatabase();
+  }
 
   async getAll(userId: string): Promise<WantToBuyItem[]> {
     const rows = await this.db.wantToBuy.getAll(userId);

@@ -9,34 +9,81 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletsRouteImport } from './routes/wallets'
+import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as TransactionDetailRouteImport } from './routes/transaction-detail'
+import { Route as TestSupabaseRouteImport } from './routes/test-supabase'
+import { Route as TestLoginButtonRouteImport } from './routes/test-login-button'
+import { Route as TestDatepickerRouteImport } from './routes/test-datepicker'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as ForgotpasswordRouteImport } from './routes/forgotpassword'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as EditcategoryRouteImport } from './routes/editcategory'
+import { Route as BudgetRouteImport } from './routes/budget'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as SplatRouteImport } from './routes/$'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as Sin1SplatRouteImport } from './routes/sin1.$'
 import { Route as R5smsSplatRouteImport } from './routes/r5sms.$'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
-import { Route as AuthenticatedWalletsRouteImport } from './routes/_authenticated/wallets'
-import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
-import { Route as AuthenticatedTransactionDetailRouteImport } from './routes/_authenticated/transaction-detail'
-import { Route as AuthenticatedTestSupabaseRouteImport } from './routes/_authenticated/test-supabase'
-import { Route as AuthenticatedTestLoginButtonRouteImport } from './routes/_authenticated/test-login-button'
-import { Route as AuthenticatedTestDatepickerRouteImport } from './routes/_authenticated/test-datepicker'
-import { Route as AuthenticatedStatisticsRouteImport } from './routes/_authenticated/statistics'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedEditcategoryRouteImport } from './routes/_authenticated/editcategory'
-import { Route as AuthenticatedBudgetRouteImport } from './routes/_authenticated/budget'
+import { Route as AppWalletsRouteImport } from './routes/app/wallets'
+import { Route as AppTransactionsRouteImport } from './routes/app/transactions'
+import { Route as AppTransactionDetailRouteImport } from './routes/app/transaction-detail'
+import { Route as AppTestSupabaseRouteImport } from './routes/app/test-supabase'
+import { Route as AppTestLoginButtonRouteImport } from './routes/app/test-login-button'
+import { Route as AppTestDatepickerRouteImport } from './routes/app/test-datepicker'
+import { Route as AppStatisticsRouteImport } from './routes/app/statistics'
+import { Route as AppProfileRouteImport } from './routes/app/profile'
+import { Route as AppEditcategoryRouteImport } from './routes/app/editcategory'
+import { Route as AppBudgetRouteImport } from './routes/app/budget'
+import { Route as ApiAiGeminiFinanceInsightRouteImport } from './routes/api/ai/gemini-finance-insight'
 
+const WalletsRoute = WalletsRouteImport.update({
+  id: '/wallets',
+  path: '/wallets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransactionsRoute = TransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransactionDetailRoute = TransactionDetailRouteImport.update({
+  id: '/transaction-detail',
+  path: '/transaction-detail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestSupabaseRoute = TestSupabaseRouteImport.update({
+  id: '/test-supabase',
+  path: '/test-supabase',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestLoginButtonRoute = TestLoginButtonRouteImport.update({
+  id: '/test-login-button',
+  path: '/test-login-button',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestDatepickerRoute = TestDatepickerRouteImport.update({
+  id: '/test-datepicker',
+  path: '/test-datepicker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatisticsRoute = StatisticsRouteImport.update({
+  id: '/statistics',
+  path: '/statistics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -47,6 +94,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -74,8 +126,19 @@ const ForgotpasswordRoute = ForgotpasswordRouteImport.update({
   path: '/forgotpassword',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const EditcategoryRoute = EditcategoryRouteImport.update({
+  id: '/editcategory',
+  path: '/editcategory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BudgetRoute = BudgetRouteImport.update({
+  id: '/budget',
+  path: '/budget',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SplatRoute = SplatRouteImport.update({
@@ -83,10 +146,15 @@ const SplatRoute = SplatRouteImport.update({
   path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
 } as any)
 const Sin1SplatRoute = Sin1SplatRouteImport.update({
   id: '/sin1/$',
@@ -103,242 +171,377 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWalletsRoute = AuthenticatedWalletsRouteImport.update({
+const AppWalletsRoute = AppWalletsRouteImport.update({
   id: '/wallets',
   path: '/wallets',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const AuthenticatedTransactionsRoute =
-  AuthenticatedTransactionsRouteImport.update({
-    id: '/transactions',
-    path: '/transactions',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTransactionDetailRoute =
-  AuthenticatedTransactionDetailRouteImport.update({
-    id: '/transaction-detail',
-    path: '/transaction-detail',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTestSupabaseRoute =
-  AuthenticatedTestSupabaseRouteImport.update({
-    id: '/test-supabase',
-    path: '/test-supabase',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTestLoginButtonRoute =
-  AuthenticatedTestLoginButtonRouteImport.update({
-    id: '/test-login-button',
-    path: '/test-login-button',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedTestDatepickerRoute =
-  AuthenticatedTestDatepickerRouteImport.update({
-    id: '/test-datepicker',
-    path: '/test-datepicker',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedStatisticsRoute = AuthenticatedStatisticsRouteImport.update({
+const AppTransactionsRoute = AppTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTransactionDetailRoute = AppTransactionDetailRouteImport.update({
+  id: '/transaction-detail',
+  path: '/transaction-detail',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTestSupabaseRoute = AppTestSupabaseRouteImport.update({
+  id: '/test-supabase',
+  path: '/test-supabase',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTestLoginButtonRoute = AppTestLoginButtonRouteImport.update({
+  id: '/test-login-button',
+  path: '/test-login-button',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTestDatepickerRoute = AppTestDatepickerRouteImport.update({
+  id: '/test-datepicker',
+  path: '/test-datepicker',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStatisticsRoute = AppStatisticsRouteImport.update({
   id: '/statistics',
   path: '/statistics',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const AuthenticatedEditcategoryRoute =
-  AuthenticatedEditcategoryRouteImport.update({
-    id: '/editcategory',
-    path: '/editcategory',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedBudgetRoute = AuthenticatedBudgetRouteImport.update({
+const AppEditcategoryRoute = AppEditcategoryRouteImport.update({
+  id: '/editcategory',
+  path: '/editcategory',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBudgetRoute = AppBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AppRoute,
 } as any)
+const ApiAiGeminiFinanceInsightRoute =
+  ApiAiGeminiFinanceInsightRouteImport.update({
+    id: '/api/ai/gemini-finance-insight',
+    path: '/api/ai/gemini-finance-insight',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/budget': typeof BudgetRoute
+  '/editcategory': typeof EditcategoryRoute
   '/forgotpassword': typeof ForgotpasswordRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/offline': typeof OfflineRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/statistics': typeof StatisticsRoute
   '/terms': typeof TermsRoute
-  '/budget': typeof AuthenticatedBudgetRoute
-  '/editcategory': typeof AuthenticatedEditcategoryRoute
-  '/profile': typeof AuthenticatedProfileRoute
-  '/statistics': typeof AuthenticatedStatisticsRoute
-  '/test-datepicker': typeof AuthenticatedTestDatepickerRoute
-  '/test-login-button': typeof AuthenticatedTestLoginButtonRoute
-  '/test-supabase': typeof AuthenticatedTestSupabaseRoute
-  '/transaction-detail': typeof AuthenticatedTransactionDetailRoute
-  '/transactions': typeof AuthenticatedTransactionsRoute
-  '/wallets': typeof AuthenticatedWalletsRoute
+  '/test-datepicker': typeof TestDatepickerRoute
+  '/test-login-button': typeof TestLoginButtonRoute
+  '/test-supabase': typeof TestSupabaseRoute
+  '/transaction-detail': typeof TransactionDetailRoute
+  '/transactions': typeof TransactionsRoute
+  '/wallets': typeof WalletsRoute
+  '/app/budget': typeof AppBudgetRoute
+  '/app/editcategory': typeof AppEditcategoryRoute
+  '/app/profile': typeof AppProfileRoute
+  '/app/statistics': typeof AppStatisticsRoute
+  '/app/test-datepicker': typeof AppTestDatepickerRoute
+  '/app/test-login-button': typeof AppTestLoginButtonRoute
+  '/app/test-supabase': typeof AppTestSupabaseRoute
+  '/app/transaction-detail': typeof AppTransactionDetailRoute
+  '/app/transactions': typeof AppTransactionsRoute
+  '/app/wallets': typeof AppWalletsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/r5sms/$': typeof R5smsSplatRoute
   '/sin1/$': typeof Sin1SplatRoute
+  '/app/': typeof AppIndexRoute
+  '/api/ai/gemini-finance-insight': typeof ApiAiGeminiFinanceInsightRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/budget': typeof BudgetRoute
+  '/editcategory': typeof EditcategoryRoute
   '/forgotpassword': typeof ForgotpasswordRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/offline': typeof OfflineRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/statistics': typeof StatisticsRoute
   '/terms': typeof TermsRoute
-  '/budget': typeof AuthenticatedBudgetRoute
-  '/editcategory': typeof AuthenticatedEditcategoryRoute
-  '/profile': typeof AuthenticatedProfileRoute
-  '/statistics': typeof AuthenticatedStatisticsRoute
-  '/test-datepicker': typeof AuthenticatedTestDatepickerRoute
-  '/test-login-button': typeof AuthenticatedTestLoginButtonRoute
-  '/test-supabase': typeof AuthenticatedTestSupabaseRoute
-  '/transaction-detail': typeof AuthenticatedTransactionDetailRoute
-  '/transactions': typeof AuthenticatedTransactionsRoute
-  '/wallets': typeof AuthenticatedWalletsRoute
+  '/test-datepicker': typeof TestDatepickerRoute
+  '/test-login-button': typeof TestLoginButtonRoute
+  '/test-supabase': typeof TestSupabaseRoute
+  '/transaction-detail': typeof TransactionDetailRoute
+  '/transactions': typeof TransactionsRoute
+  '/wallets': typeof WalletsRoute
+  '/app/budget': typeof AppBudgetRoute
+  '/app/editcategory': typeof AppEditcategoryRoute
+  '/app/profile': typeof AppProfileRoute
+  '/app/statistics': typeof AppStatisticsRoute
+  '/app/test-datepicker': typeof AppTestDatepickerRoute
+  '/app/test-login-button': typeof AppTestLoginButtonRoute
+  '/app/test-supabase': typeof AppTestSupabaseRoute
+  '/app/transaction-detail': typeof AppTransactionDetailRoute
+  '/app/transactions': typeof AppTransactionsRoute
+  '/app/wallets': typeof AppWalletsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/r5sms/$': typeof R5smsSplatRoute
   '/sin1/$': typeof Sin1SplatRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/app': typeof AppIndexRoute
+  '/api/ai/gemini-finance-insight': typeof ApiAiGeminiFinanceInsightRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/app': typeof AppRouteWithChildren
+  '/budget': typeof BudgetRoute
+  '/editcategory': typeof EditcategoryRoute
   '/forgotpassword': typeof ForgotpasswordRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
   '/offline': typeof OfflineRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/statistics': typeof StatisticsRoute
   '/terms': typeof TermsRoute
-  '/_authenticated/budget': typeof AuthenticatedBudgetRoute
-  '/_authenticated/editcategory': typeof AuthenticatedEditcategoryRoute
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/statistics': typeof AuthenticatedStatisticsRoute
-  '/_authenticated/test-datepicker': typeof AuthenticatedTestDatepickerRoute
-  '/_authenticated/test-login-button': typeof AuthenticatedTestLoginButtonRoute
-  '/_authenticated/test-supabase': typeof AuthenticatedTestSupabaseRoute
-  '/_authenticated/transaction-detail': typeof AuthenticatedTransactionDetailRoute
-  '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
-  '/_authenticated/wallets': typeof AuthenticatedWalletsRoute
+  '/test-datepicker': typeof TestDatepickerRoute
+  '/test-login-button': typeof TestLoginButtonRoute
+  '/test-supabase': typeof TestSupabaseRoute
+  '/transaction-detail': typeof TransactionDetailRoute
+  '/transactions': typeof TransactionsRoute
+  '/wallets': typeof WalletsRoute
+  '/app/budget': typeof AppBudgetRoute
+  '/app/editcategory': typeof AppEditcategoryRoute
+  '/app/profile': typeof AppProfileRoute
+  '/app/statistics': typeof AppStatisticsRoute
+  '/app/test-datepicker': typeof AppTestDatepickerRoute
+  '/app/test-login-button': typeof AppTestLoginButtonRoute
+  '/app/test-supabase': typeof AppTestSupabaseRoute
+  '/app/transaction-detail': typeof AppTransactionDetailRoute
+  '/app/transactions': typeof AppTransactionsRoute
+  '/app/wallets': typeof AppWalletsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/r5sms/$': typeof R5smsSplatRoute
   '/sin1/$': typeof Sin1SplatRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/api/ai/gemini-finance-insight': typeof ApiAiGeminiFinanceInsightRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/$'
     | '/'
+    | '/$'
+    | '/app'
+    | '/budget'
+    | '/editcategory'
     | '/forgotpassword'
     | '/landing'
     | '/login'
     | '/offline'
     | '/privacy'
+    | '/profile'
     | '/reset-password'
     | '/signup'
-    | '/terms'
-    | '/budget'
-    | '/editcategory'
-    | '/profile'
     | '/statistics'
+    | '/terms'
     | '/test-datepicker'
     | '/test-login-button'
     | '/test-supabase'
     | '/transaction-detail'
     | '/transactions'
     | '/wallets'
+    | '/app/budget'
+    | '/app/editcategory'
+    | '/app/profile'
+    | '/app/statistics'
+    | '/app/test-datepicker'
+    | '/app/test-login-button'
+    | '/app/test-supabase'
+    | '/app/transaction-detail'
+    | '/app/transactions'
+    | '/app/wallets'
     | '/auth/callback'
     | '/r5sms/$'
     | '/sin1/$'
+    | '/app/'
+    | '/api/ai/gemini-finance-insight'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/$'
+    | '/budget'
+    | '/editcategory'
     | '/forgotpassword'
     | '/landing'
     | '/login'
     | '/offline'
     | '/privacy'
+    | '/profile'
     | '/reset-password'
     | '/signup'
-    | '/terms'
-    | '/budget'
-    | '/editcategory'
-    | '/profile'
     | '/statistics'
+    | '/terms'
     | '/test-datepicker'
     | '/test-login-button'
     | '/test-supabase'
     | '/transaction-detail'
     | '/transactions'
     | '/wallets'
+    | '/app/budget'
+    | '/app/editcategory'
+    | '/app/profile'
+    | '/app/statistics'
+    | '/app/test-datepicker'
+    | '/app/test-login-button'
+    | '/app/test-supabase'
+    | '/app/transaction-detail'
+    | '/app/transactions'
+    | '/app/wallets'
     | '/auth/callback'
     | '/r5sms/$'
     | '/sin1/$'
-    | '/'
+    | '/app'
+    | '/api/ai/gemini-finance-insight'
   id:
     | '__root__'
+    | '/'
     | '/$'
-    | '/_authenticated'
+    | '/app'
+    | '/budget'
+    | '/editcategory'
     | '/forgotpassword'
     | '/landing'
     | '/login'
     | '/offline'
     | '/privacy'
+    | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/statistics'
     | '/terms'
-    | '/_authenticated/budget'
-    | '/_authenticated/editcategory'
-    | '/_authenticated/profile'
-    | '/_authenticated/statistics'
-    | '/_authenticated/test-datepicker'
-    | '/_authenticated/test-login-button'
-    | '/_authenticated/test-supabase'
-    | '/_authenticated/transaction-detail'
-    | '/_authenticated/transactions'
-    | '/_authenticated/wallets'
+    | '/test-datepicker'
+    | '/test-login-button'
+    | '/test-supabase'
+    | '/transaction-detail'
+    | '/transactions'
+    | '/wallets'
+    | '/app/budget'
+    | '/app/editcategory'
+    | '/app/profile'
+    | '/app/statistics'
+    | '/app/test-datepicker'
+    | '/app/test-login-button'
+    | '/app/test-supabase'
+    | '/app/transaction-detail'
+    | '/app/transactions'
+    | '/app/wallets'
     | '/auth/callback'
     | '/r5sms/$'
     | '/sin1/$'
-    | '/_authenticated/'
+    | '/app/'
+    | '/api/ai/gemini-finance-insight'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
+  BudgetRoute: typeof BudgetRoute
+  EditcategoryRoute: typeof EditcategoryRoute
   ForgotpasswordRoute: typeof ForgotpasswordRoute
   LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   OfflineRoute: typeof OfflineRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  StatisticsRoute: typeof StatisticsRoute
   TermsRoute: typeof TermsRoute
+  TestDatepickerRoute: typeof TestDatepickerRoute
+  TestLoginButtonRoute: typeof TestLoginButtonRoute
+  TestSupabaseRoute: typeof TestSupabaseRoute
+  TransactionDetailRoute: typeof TransactionDetailRoute
+  TransactionsRoute: typeof TransactionsRoute
+  WalletsRoute: typeof WalletsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   R5smsSplatRoute: typeof R5smsSplatRoute
   Sin1SplatRoute: typeof Sin1SplatRoute
+  ApiAiGeminiFinanceInsightRoute: typeof ApiAiGeminiFinanceInsightRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallets': {
+      id: '/wallets'
+      path: '/wallets'
+      fullPath: '/wallets'
+      preLoaderRoute: typeof WalletsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transactions': {
+      id: '/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transaction-detail': {
+      id: '/transaction-detail'
+      path: '/transaction-detail'
+      fullPath: '/transaction-detail'
+      preLoaderRoute: typeof TransactionDetailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-supabase': {
+      id: '/test-supabase'
+      path: '/test-supabase'
+      fullPath: '/test-supabase'
+      preLoaderRoute: typeof TestSupabaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-login-button': {
+      id: '/test-login-button'
+      path: '/test-login-button'
+      fullPath: '/test-login-button'
+      preLoaderRoute: typeof TestLoginButtonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-datepicker': {
+      id: '/test-datepicker'
+      path: '/test-datepicker'
+      fullPath: '/test-datepicker'
+      preLoaderRoute: typeof TestDatepickerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/statistics': {
+      id: '/statistics'
+      path: '/statistics'
+      fullPath: '/statistics'
+      preLoaderRoute: typeof StatisticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -353,6 +556,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -390,11 +600,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotpasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/editcategory': {
+      id: '/editcategory'
+      path: '/editcategory'
+      fullPath: '/editcategory'
+      preLoaderRoute: typeof EditcategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/budget': {
+      id: '/budget'
+      path: '/budget'
+      fullPath: '/budget'
+      preLoaderRoute: typeof BudgetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$': {
@@ -404,12 +628,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/sin1/$': {
       id: '/sin1/$'
@@ -432,125 +663,142 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wallets': {
-      id: '/_authenticated/wallets'
+    '/app/wallets': {
+      id: '/app/wallets'
       path: '/wallets'
-      fullPath: '/wallets'
-      preLoaderRoute: typeof AuthenticatedWalletsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/wallets'
+      preLoaderRoute: typeof AppWalletsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/transactions': {
-      id: '/_authenticated/transactions'
+    '/app/transactions': {
+      id: '/app/transactions'
       path: '/transactions'
-      fullPath: '/transactions'
-      preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/transactions'
+      preLoaderRoute: typeof AppTransactionsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/transaction-detail': {
-      id: '/_authenticated/transaction-detail'
+    '/app/transaction-detail': {
+      id: '/app/transaction-detail'
       path: '/transaction-detail'
-      fullPath: '/transaction-detail'
-      preLoaderRoute: typeof AuthenticatedTransactionDetailRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/transaction-detail'
+      preLoaderRoute: typeof AppTransactionDetailRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/test-supabase': {
-      id: '/_authenticated/test-supabase'
+    '/app/test-supabase': {
+      id: '/app/test-supabase'
       path: '/test-supabase'
-      fullPath: '/test-supabase'
-      preLoaderRoute: typeof AuthenticatedTestSupabaseRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/test-supabase'
+      preLoaderRoute: typeof AppTestSupabaseRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/test-login-button': {
-      id: '/_authenticated/test-login-button'
+    '/app/test-login-button': {
+      id: '/app/test-login-button'
       path: '/test-login-button'
-      fullPath: '/test-login-button'
-      preLoaderRoute: typeof AuthenticatedTestLoginButtonRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/test-login-button'
+      preLoaderRoute: typeof AppTestLoginButtonRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/test-datepicker': {
-      id: '/_authenticated/test-datepicker'
+    '/app/test-datepicker': {
+      id: '/app/test-datepicker'
       path: '/test-datepicker'
-      fullPath: '/test-datepicker'
-      preLoaderRoute: typeof AuthenticatedTestDatepickerRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/test-datepicker'
+      preLoaderRoute: typeof AppTestDatepickerRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/statistics': {
-      id: '/_authenticated/statistics'
+    '/app/statistics': {
+      id: '/app/statistics'
       path: '/statistics'
-      fullPath: '/statistics'
-      preLoaderRoute: typeof AuthenticatedStatisticsRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/statistics'
+      preLoaderRoute: typeof AppStatisticsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
+    '/app/profile': {
+      id: '/app/profile'
       path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/editcategory': {
-      id: '/_authenticated/editcategory'
+    '/app/editcategory': {
+      id: '/app/editcategory'
       path: '/editcategory'
-      fullPath: '/editcategory'
-      preLoaderRoute: typeof AuthenticatedEditcategoryRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/editcategory'
+      preLoaderRoute: typeof AppEditcategoryRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_authenticated/budget': {
-      id: '/_authenticated/budget'
+    '/app/budget': {
+      id: '/app/budget'
       path: '/budget'
-      fullPath: '/budget'
-      preLoaderRoute: typeof AuthenticatedBudgetRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      fullPath: '/app/budget'
+      preLoaderRoute: typeof AppBudgetRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/api/ai/gemini-finance-insight': {
+      id: '/api/ai/gemini-finance-insight'
+      path: '/api/ai/gemini-finance-insight'
+      fullPath: '/api/ai/gemini-finance-insight'
+      preLoaderRoute: typeof ApiAiGeminiFinanceInsightRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AuthenticatedRouteChildren {
-  AuthenticatedBudgetRoute: typeof AuthenticatedBudgetRoute
-  AuthenticatedEditcategoryRoute: typeof AuthenticatedEditcategoryRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedStatisticsRoute: typeof AuthenticatedStatisticsRoute
-  AuthenticatedTestDatepickerRoute: typeof AuthenticatedTestDatepickerRoute
-  AuthenticatedTestLoginButtonRoute: typeof AuthenticatedTestLoginButtonRoute
-  AuthenticatedTestSupabaseRoute: typeof AuthenticatedTestSupabaseRoute
-  AuthenticatedTransactionDetailRoute: typeof AuthenticatedTransactionDetailRoute
-  AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
-  AuthenticatedWalletsRoute: typeof AuthenticatedWalletsRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+interface AppRouteChildren {
+  AppBudgetRoute: typeof AppBudgetRoute
+  AppEditcategoryRoute: typeof AppEditcategoryRoute
+  AppProfileRoute: typeof AppProfileRoute
+  AppStatisticsRoute: typeof AppStatisticsRoute
+  AppTestDatepickerRoute: typeof AppTestDatepickerRoute
+  AppTestLoginButtonRoute: typeof AppTestLoginButtonRoute
+  AppTestSupabaseRoute: typeof AppTestSupabaseRoute
+  AppTransactionDetailRoute: typeof AppTransactionDetailRoute
+  AppTransactionsRoute: typeof AppTransactionsRoute
+  AppWalletsRoute: typeof AppWalletsRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedBudgetRoute: AuthenticatedBudgetRoute,
-  AuthenticatedEditcategoryRoute: AuthenticatedEditcategoryRoute,
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedStatisticsRoute: AuthenticatedStatisticsRoute,
-  AuthenticatedTestDatepickerRoute: AuthenticatedTestDatepickerRoute,
-  AuthenticatedTestLoginButtonRoute: AuthenticatedTestLoginButtonRoute,
-  AuthenticatedTestSupabaseRoute: AuthenticatedTestSupabaseRoute,
-  AuthenticatedTransactionDetailRoute: AuthenticatedTransactionDetailRoute,
-  AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
-  AuthenticatedWalletsRoute: AuthenticatedWalletsRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+const AppRouteChildren: AppRouteChildren = {
+  AppBudgetRoute: AppBudgetRoute,
+  AppEditcategoryRoute: AppEditcategoryRoute,
+  AppProfileRoute: AppProfileRoute,
+  AppStatisticsRoute: AppStatisticsRoute,
+  AppTestDatepickerRoute: AppTestDatepickerRoute,
+  AppTestLoginButtonRoute: AppTestLoginButtonRoute,
+  AppTestSupabaseRoute: AppTestSupabaseRoute,
+  AppTransactionDetailRoute: AppTransactionDetailRoute,
+  AppTransactionsRoute: AppTransactionsRoute,
+  AppWalletsRoute: AppWalletsRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
+  BudgetRoute: BudgetRoute,
+  EditcategoryRoute: EditcategoryRoute,
   ForgotpasswordRoute: ForgotpasswordRoute,
   LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   OfflineRoute: OfflineRoute,
   PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  StatisticsRoute: StatisticsRoute,
   TermsRoute: TermsRoute,
+  TestDatepickerRoute: TestDatepickerRoute,
+  TestLoginButtonRoute: TestLoginButtonRoute,
+  TestSupabaseRoute: TestSupabaseRoute,
+  TransactionDetailRoute: TransactionDetailRoute,
+  TransactionsRoute: TransactionsRoute,
+  WalletsRoute: WalletsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   R5smsSplatRoute: R5smsSplatRoute,
   Sin1SplatRoute: Sin1SplatRoute,
+  ApiAiGeminiFinanceInsightRoute: ApiAiGeminiFinanceInsightRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

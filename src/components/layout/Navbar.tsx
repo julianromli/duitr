@@ -7,6 +7,7 @@ import React from 'react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { Home, CreditCard, Wallet, BarChart3, PieChart, User } from 'lucide-react';
 import { LimelightNav, NavItem } from '@/components/ui/limelight-nav';
+import { APP_HOME } from '@/config/route-paths';
 import { motion } from 'framer-motion';
 
 // Animation variants for smooth navbar reveal
@@ -50,22 +51,22 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   const navItems: NavItem[] = [
-    { id: 'home', icon: <Home />, label: 'Home', onClick: () => navigate({ to: '/' }) },
-    { id: 'transactions', icon: <CreditCard />, label: 'Transactions', onClick: () => navigate({ to: '/transactions' }) },
-    { id: 'wallets', icon: <Wallet />, label: 'Wallets', onClick: () => navigate({ to: '/wallets' }) },
-    { id: 'statistics', icon: <BarChart3 />, label: 'Statistics', onClick: () => navigate({ to: '/statistics' }) },
-    { id: 'budget', icon: <PieChart />, label: 'Budget', onClick: () => navigate({ to: '/budget' }) },
-    { id: 'profile', icon: <User />, label: 'Profile', onClick: () => navigate({ to: '/profile' }) },
+    { id: 'home', icon: <Home />, label: 'Home', onClick: () => navigate({ to: APP_HOME }) },
+    { id: 'transactions', icon: <CreditCard />, label: 'Transactions', onClick: () => navigate({ to: '/app/transactions' }) },
+    { id: 'wallets', icon: <Wallet />, label: 'Wallets', onClick: () => navigate({ to: '/app/wallets' }) },
+    { id: 'statistics', icon: <BarChart3 />, label: 'Statistics', onClick: () => navigate({ to: '/app/statistics' }) },
+    { id: 'budget', icon: <PieChart />, label: 'Budget', onClick: () => navigate({ to: '/app/budget' }) },
+    { id: 'profile', icon: <User />, label: 'Profile', onClick: () => navigate({ to: '/app/profile' }) },
   ];
 
   const pathToIndex = {
-    '/': 0,
-    '/transactions': 1,
-    '/wallets': 2,
-    '/statistics': 3,
-    '/budget': 4,
-    '/profile': 5,
-  };
+    [APP_HOME]: 0,
+    '/app/transactions': 1,
+    '/app/wallets': 2,
+    '/app/statistics': 3,
+    '/app/budget': 4,
+    '/app/profile': 5,
+  } as const;
 
   const activeIndex = pathToIndex[location.pathname as keyof typeof pathToIndex] ?? 0;
 

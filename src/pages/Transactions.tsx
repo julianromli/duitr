@@ -87,7 +87,7 @@ const Transactions: React.FC = () => {
           variants={headerVariants}
         >
           <div className="flex items-center">
-            <button onClick={() => navigate({ to: '/' })} className="mr-4">
+            <button onClick={() => navigate({ to: '/app' })} className="mr-4">
               <ChevronLeft size={24} className="text-white" />
             </button>
             <h1 className="text-xl font-bold">{t('transactions.history')}</h1>

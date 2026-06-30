@@ -1,9 +1,12 @@
 import { getFinanceDatabase } from '@/integrations/database';
+import type { FinanceDatabase } from '@/integrations/database';
 import { mapPinjamanRow } from '@/services/finance/mappers';
 import type { PinjamanItem } from '@/types/finance';
 
 class PinjamanService {
-  private db = getFinanceDatabase();
+  private get db(): FinanceDatabase {
+    return getFinanceDatabase();
+  }
 
   async getAll(userId: string): Promise<PinjamanItem[]> {
     const rows = await this.db.pinjaman.getAll(userId);

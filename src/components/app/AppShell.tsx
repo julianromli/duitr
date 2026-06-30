@@ -18,7 +18,7 @@ const LoadingSpinner = () => (
 
 /**
  * Global app shell: bootstrapping, offline handling, and shared UI chrome.
- * Auth guards live on `_authenticated`; finance state lives in that layout too.
+ * Auth guards live on `/app`; finance state lives in that layout too.
  */
 export const AppShell: React.FC = () => {
   const { isLoading: isAuthLoading } = useAuth();

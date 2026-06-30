@@ -247,7 +247,7 @@ const Statistics: React.FC = () => {
           variants={itemVariants}
         >
           <div className="flex items-center">
-            <Link to="/" className="mr-4 text-white">
+            <Link to="/app" className="mr-4 text-white">
               <ChevronLeft size={24} />
             </Link>
             <h1 className="text-xl font-bold">{t('statistics.title')}</h1>

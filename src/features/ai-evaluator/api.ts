@@ -1,16 +1,14 @@
 // Remove hardcoded API credentials - now handled by edge function
 
-import { supabase } from '@/lib/supabase';
+import { invokeGeminiFinanceInsight } from '@/lib/ai/invokeGeminiFinanceInsight';
 import type { FinanceSummary } from '@/types/finance';
 import i18next from 'i18next';
 
 export async function getFinanceInsight(summary: FinanceSummary): Promise<string> {
   try {
-    const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
-      body: { 
-        summary,
-        language: i18next.language || 'id'
-      }
+    const { data, error } = await invokeGeminiFinanceInsight({
+      summary,
+      language: i18next.language || 'id',
     });
 
     if (error) {
@@ -27,12 +25,10 @@ export async function getFinanceInsight(summary: FinanceSummary): Promise<string
 
 export async function askAI(question: string, context: FinanceSummary): Promise<string> {
   try {
-    const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
-      body: { 
-        summary: context,
-        question: question,
-        language: i18next.language || 'id'
-      }
+    const { data, error } = await invokeGeminiFinanceInsight({
+      summary: context,
+      question: question,
+      language: i18next.language || 'id',
     });
 
     if (error) {

@@ -1,7 +1,7 @@
 
 // Hook to determine if navbar should be shown based on current route
 import { useLocation } from '@tanstack/react-router';
-import { mainPages } from '@/config/route-paths';
+import { APP_HOME, mainPages } from '@/config/route-paths';
 
 export const useNavbarVisibility = (): boolean => {
   const location = useLocation();
@@ -9,28 +9,32 @@ export const useNavbarVisibility = (): boolean => {
   const shouldShowNavbar = (): boolean => {
     const currentPath = location.pathname;
     
-    // Exact matches for main pages
-    if (mainPages.includes(currentPath)) {
+    // Exact matches for main app pages
+    if (mainPages.includes(currentPath as (typeof mainPages)[number])) {
       return true;
     }
     
-    // Check for subpaths of main pages (except root)
+    // Check for subpaths of main app pages
     for (const path of mainPages) {
-      if (path !== '/' && currentPath.startsWith(path + '/')) {
+      if (path !== APP_HOME && currentPath.startsWith(`${path}/`)) {
         return true;
       }
     }
     
-    // Explicitly exclude landing, auth, and legal pages
-    const excludedPaths = ['/landing', '/login', '/signup', '/forgotpassword', '/reset-password', '/auth', '/privacy', '/terms'];
+    // Explicitly exclude public marketing, auth, and legal pages
+    const excludedPaths = ['/login', '/signup', '/forgotpassword', '/reset-password', '/auth', '/privacy', '/terms', '/landing'];
     for (const path of excludedPaths) {
-      if (currentPath === path || currentPath.startsWith(path + '/')) {
+      if (currentPath === path || currentPath.startsWith(`${path}/`)) {
         return false;
       }
     }
     
-    // Default for root path with subpaths (like '/settings')
-    return currentPath === '/' || mainPages.some(p => currentPath.startsWith(p));
+    // Public home and other non-app routes
+    if (currentPath === '/') {
+      return false;
+    }
+
+    return currentPath.startsWith(`${APP_HOME}/`) || mainPages.some((p) => currentPath.startsWith(p));
   };
 
   return shouldShowNavbar();

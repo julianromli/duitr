@@ -15,6 +15,7 @@ dist-ssr
 # Environment variables (SECURITY CRITICAL)
 .env
 .env.local
+.dev.vars
 .env.development
 .env.test
 .env.production
@@ -22,6 +23,10 @@ dist-ssr
 
 # Supabase secrets
 .supabase/
+
+# Neon migration exports (contains user/finance data)
+scripts/neon/export/
+scripts/export/
 
 # Security and credentials
 *.pem
@@ -52,6 +57,7 @@ service-account.json
 .cache
 .temp
 .tmp
+.wrangler/
 dev-dist/
 lighthouse/
 

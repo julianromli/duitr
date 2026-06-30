@@ -189,7 +189,7 @@ const EditCategoryPage: React.FC = () => {
     <div className="max-w-md mx-auto bg-[#1C2526] min-h-screen pb-24 text-white px-2">
       <div className="p-6 pt-12">
         <div className="flex items-center mb-6">
-          <button onClick={() => navigate({ to: '/' })} className="mr-4">
+          <button onClick={() => navigate({ to: '/app' })} className="mr-4">
             <ChevronLeft size={24} className="text-white" />
           </button>
           <h1 className="text-white text-xl font-bold">

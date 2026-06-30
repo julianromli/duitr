@@ -13,6 +13,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import { invokeGeminiFinanceInsight } from '@/lib/ai/invokeGeminiFinanceInsight';
 import {
   BudgetPrediction,
   PredictBudgetRequest,
@@ -272,14 +273,12 @@ export async function predictBudgetOverrun(
     }
 
     // Call edge function
-    const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
-      body: {
-        action: 'predict_budget',
-        budgets: request.budgets,
-        transactions: request.transactions,
-        currentDate: request.currentDate || new Date().toISOString(),
-        language,
-      },
+    const { data, error } = await invokeGeminiFinanceInsight({
+      action: 'predict_budget',
+      budgets: request.budgets,
+      transactions: request.transactions,
+      currentDate: request.currentDate || new Date().toISOString(),
+      language,
     });
 
     if (error) {

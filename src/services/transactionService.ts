@@ -1,5 +1,5 @@
 import { getFinanceDatabase } from '@/integrations/database';
-import type { TransactionSearchParams } from '@/integrations/database';
+import type { FinanceDatabase, TransactionSearchParams } from '@/integrations/database';
 import { mapTransactionRow } from '@/services/finance/mappers';
 import {
   computeWalletUpdatesForCreate,
@@ -87,7 +87,9 @@ function isSchemaError(message: string): boolean {
 }
 
 class TransactionService {
-  private db = getFinanceDatabase();
+  private get db(): FinanceDatabase {
+    return getFinanceDatabase();
+  }
 
   async getAll(userId: string): Promise<Transaction[]> {
     const rows = await this.db.transactions.getAll(userId);

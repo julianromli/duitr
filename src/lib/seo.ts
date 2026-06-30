@@ -8,7 +8,7 @@ export const DEFAULT_SITE_DESCRIPTION =
 export const landingSeo = {
   title: DEFAULT_SITE_TITLE,
   description: DEFAULT_SITE_DESCRIPTION,
-  canonical: `${CANONICAL_SITE_URL}/landing`,
+  canonical: `${CANONICAL_SITE_URL}/`,
   ogImage: `${CANONICAL_SITE_URL}/screenshots/duitr_thumbnail.jpg`,
 } as const;
 

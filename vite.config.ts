@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
@@ -22,6 +23,7 @@ export default defineConfig(({ mode, command }) => {
     port: 4173
   },
   plugins: [
+    cloudflare({ viteEnvironment: { name: "ssr" } }),
     tanstackStart(),
     react(),
     mode === 'development' &&

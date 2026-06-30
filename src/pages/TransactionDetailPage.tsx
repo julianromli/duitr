@@ -11,7 +11,7 @@ const TransactionDetailPage: React.FC = () => {
   const transaction = state?.transaction;
 
   if (!transaction) {
-    return <Navigate to="/transactions" replace />;
+    return <Navigate to="/app/transactions" replace />;
   }
 
   const handleOpenChange = (open: boolean) => {

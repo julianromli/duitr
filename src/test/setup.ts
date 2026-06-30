@@ -2,6 +2,7 @@ import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
+import { invokeGeminiFinanceInsight } from '@/lib/ai/invokeGeminiFinanceInsight'
 
 afterEach(() => {
   cleanup()
@@ -10,8 +11,17 @@ afterEach(() => {
 beforeAll(() => {
   vi.stubEnv('VITE_SUPABASE_URL', 'http://localhost:54321')
   vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'mock-anon-key-for-testing')
+  vi.stubEnv('VITE_NEON_AUTH_URL', 'http://localhost:54322/auth')
+  vi.stubEnv('VITE_NEON_DATA_API_URL', 'http://localhost:54322/rest/v1')
+  vi.stubEnv('VITE_DATABASE_PROVIDER', 'supabase')
   vi.stubEnv('VITE_PRODUCTION_DOMAIN', 'http://localhost:3000')
 })
+
+vi.mock('@/lib/ai/invokeGeminiFinanceInsight', () => ({
+  invokeGeminiFinanceInsight: vi.fn(),
+}))
+
+export const getMockGeminiFinanceInsightInvoke = () => vi.mocked(invokeGeminiFinanceInsight)
 
 vi.mock('@/lib/supabase', () => {
   const auth = {
@@ -22,15 +32,24 @@ vi.mock('@/lib/supabase', () => {
     updateUser: vi.fn(),
     getUser: vi.fn(),
     getSession: vi.fn(),
+    resend: vi.fn(),
+    exchangeCodeForSession: vi.fn(),
+    setSession: vi.fn(),
+    resetPasswordForEmail: vi.fn(),
     onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
   }
+
+  const signInWithGoogle = vi.fn(async () => {
+    const { data, error } = await auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'http://localhost:3000/auth/callback' },
+    });
+    return { data, error, isWebViewBlocked: false };
+  });
 
   const supabase = {
     auth: {
       ...auth
-    },
-    functions: {
-      invoke: vi.fn()
     },
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -38,10 +57,15 @@ vi.mock('@/lib/supabase', () => {
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      ilike: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
+      range: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockReturnThis(),
       single: vi.fn(),
       then: vi.fn()
     })),
+    rpc: vi.fn(),
     storage: {
       from: vi.fn(() => ({
         createSignedUrl: vi.fn(),
@@ -55,11 +79,13 @@ vi.mock('@/lib/supabase', () => {
     supabase,
     getSession: auth.getSession,
     getCurrentUser: auth.getUser,
-    isIOS: vi.fn(() => false)
+    signInWithGoogle,
+    isIOS: vi.fn(() => false),
   }
 })
 
-export const getMockSupabaseFunctionInvoke = () => vi.mocked(supabase.functions.invoke)
+/** @deprecated Use getMockGeminiFinanceInsightInvoke for AI calls */
+export const getMockSupabaseFunctionInvoke = () => getMockGeminiFinanceInsightInvoke()
 
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual('@tanstack/react-router')

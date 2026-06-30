@@ -278,7 +278,7 @@ const BudgetPage: React.FC = () => {
         >
           <div className="flex items-center">
             <motion.button 
-              onClick={() => navigate({ to: '/' })} 
+              onClick={() => navigate({ to: '/app' })} 
               className="mr-4 p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

@@ -4,7 +4,7 @@ import { FinanceProvider } from '@/context/FinanceContext';
 import { getSession } from '@/lib/supabase';
 import { AuthenticatedChrome } from '@/components/app/AuthenticatedChrome';
 
-export const Route = createFileRoute('/_authenticated')({
+export const Route = createFileRoute('/app')({
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await getSession();

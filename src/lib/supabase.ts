@@ -1,27 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { bootstrapNeonClientOnClient, ensureNeonClient, getNeonClient } from '@/lib/neon';
+import { isNeonProvider } from '@/lib/database-provider';
+import { getAuthCallbackUrl } from '@/config/auth-routes';
 import { logAuthEvent } from '@/utils/auth-logger';
 import { shouldWarnAboutGoogleOAuth, logWebViewDetection } from '@/utils/webview-detection';
 
-// Use environment variables - fail fast if not provided
+// Use environment variables - fail fast if not provided (legacy Supabase only)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate required environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing required environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
-  );
-}
-
-// Log for debugging (only show first 10 chars for security)
-if (import.meta.env.DEV) {
-  console.log('Supabase URL:', supabaseUrl);
-  console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10));
-}
-
 // Detect iOS devices
 export const isIOS = () => {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
 
@@ -44,10 +34,9 @@ const customStorage = {
       return Promise.resolve();
     } catch (error: any) {
       logAuthEvent('storage_set_error', { key }, error);
-      // Try using session storage as fallback for iOS
       try {
         sessionStorage.setItem(key, value);
-      } catch (sessionError) {
+      } catch {
         // Ignore if session storage also fails
       }
       return Promise.resolve();
@@ -62,25 +51,97 @@ const customStorage = {
       logAuthEvent('storage_remove_error', { key }, error);
       return Promise.resolve();
     }
-  }
+  },
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    storage: customStorage,
-    storageKey: 'supabase_auth_token',
-    debug: isIOS(), // Enable debug mode on iOS devices
-  },
-  global: {
-    headers: {
-      'x-client-info': `duitr/${isIOS() ? 'ios' : 'web'}`
-    }
+function createLegacySupabaseClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Missing required environment variables. Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.',
+    );
   }
+
+  // Log for debugging (only show first 10 chars for security)
+  if (import.meta.env.DEV) {
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Supabase Key (first 10 chars):', supabaseAnonKey.substring(0, 10));
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      storage: customStorage,
+      storageKey: isNeonProvider() ? 'neon_auth_token' : 'supabase_auth_token',
+      debug: isIOS(),
+    },
+    global: {
+      headers: {
+        'x-client-info': `duitr/${isIOS() ? 'ios' : 'web'}`,
+      },
+    },
+  });
+}
+
+type AppDatabaseClient = SupabaseClient | ReturnType<typeof createLegacySupabaseClient> | ReturnType<typeof getNeonClient>;
+
+let clientInstance: AppDatabaseClient | null = null;
+let clientPromise: Promise<AppDatabaseClient> | null = null;
+
+const ssrAuthStub = {
+  auth: {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => undefined } } }),
+  },
+};
+
+async function resolveSupabaseClient(): Promise<AppDatabaseClient> {
+  if (clientInstance) return clientInstance;
+  if (!clientPromise) {
+    clientPromise = (async () => {
+      if (isNeonProvider()) {
+        clientInstance = await ensureNeonClient();
+      } else {
+        clientInstance = createLegacySupabaseClient();
+      }
+      return clientInstance;
+    })();
+  }
+  return clientPromise;
+}
+
+function getSupabaseClient(): AppDatabaseClient {
+  if (import.meta.env.SSR) {
+    return ssrAuthStub as AppDatabaseClient;
+  }
+  if (!clientInstance) {
+    if (isNeonProvider()) {
+      return getNeonClient();
+    }
+    clientInstance = createLegacySupabaseClient();
+  }
+  return clientInstance;
+}
+
+bootstrapNeonClientOnClient();
+
+/** Lazy singleton — avoids Workers global-scope init during module import */
+export const supabase = new Proxy({} as AppDatabaseClient, {
+  get(_target, prop) {
+    if (!import.meta.env.SSR && !clientInstance) {
+      void resolveSupabaseClient();
+    }
+    const client = getSupabaseClient();
+    const value = Reflect.get(client, prop, client);
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
 });
+
+// Re-export Neon client alias for code that imports client directly during migration
+export { getNeonClient as client } from '@/lib/neon';
 
 // Helper functions for authentication
 export const signUpWithEmail = async (email: string, password: string) => {
@@ -89,9 +150,7 @@ export const signUpWithEmail = async (email: string, password: string) => {
     email,
     password,
     options: {
-      emailRedirectTo: import.meta.env.MODE === 'production'
-        ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
-        : `${window.location.origin}/auth/callback`,
+      emailRedirectTo: getAuthCallbackUrl(),
       data: {
         name: email.split('@')[0], // Use part of email as name
       }
@@ -137,9 +196,7 @@ export const signInWithGoogle = async () => {
   }
   
   // Set a clean redirect URL without any parameters that might cause issues
-  const redirectTo = import.meta.env.MODE === 'production' 
-    ? `${import.meta.env.VITE_PRODUCTION_DOMAIN || 'https://duitr.my.id'}/auth/callback`
-    : `${window.location.origin}/auth/callback`;
+  const redirectTo = getAuthCallbackUrl();
   
   // Log device info
   const deviceInfo = {
@@ -228,6 +285,7 @@ export const getCurrentUser = async () => {
 };
 
 export const getSession = async () => {
-  const { data, error } = await supabase.auth.getSession();
+  const client = await resolveSupabaseClient();
+  const { data, error } = await client.auth.getSession();
   return { data, error };
 }; 

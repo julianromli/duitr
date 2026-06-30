@@ -7,7 +7,7 @@ import { ChevronLeft } from 'lucide-react';
 import { LoginContent } from '@/components/auth/LoginContent';
 import { WebViewWarningModal } from '@/components/auth/WebViewWarningModal';
 import { logAuthEvent } from '@/utils/auth-logger';
-import { shouldWarnAboutGoogleOAuth } from '@/utils/webview-detection';
+import { APP_HOME } from '@/config/route-paths';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -69,7 +69,7 @@ const Login = () => {
           title: 'Welcome back!',
           description: 'You have been logged in successfully.',
         });
-        navigate({ to: '/' });
+        navigate({ to: APP_HOME });
       } else {
         logAuthEvent('login_email_sign_in_failure', { message: result.message });
         

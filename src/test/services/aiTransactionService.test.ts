@@ -278,21 +278,19 @@ describe('AITransactionService - parseTransactionInput', () => {
     await service.parseTransactionInput('grab to office');
 
     expect(mockInvoke).toHaveBeenCalledWith(
-      'gemini-finance-insight',
       expect.objectContaining({
-        body: expect.objectContaining({
-          correctionHints: [
-            expect.objectContaining({
-              categoryFrom: 'Shopping',
-              categoryTo: 'Transportation',
-              amountFrom: 25000,
-              amountTo: 26000,
-              descriptionFrom: 'Grab ride',
-              descriptionTo: 'Grab ride to office'
-            })
-          ]
-        })
-      })
+        action: 'parse_transactions',
+        correctionHints: [
+          expect.objectContaining({
+            categoryFrom: 'Shopping',
+            categoryTo: 'Transportation',
+            amountFrom: 25000,
+            amountTo: 26000,
+            descriptionFrom: 'Grab ride',
+            descriptionTo: 'Grab ride to office',
+          }),
+        ],
+      }),
     );
   });
 

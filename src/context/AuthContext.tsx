@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { User } from '@supabase/supabase-js';
+import type { User } from '@/types/auth';
 import { supabase, getSession, signInWithGoogle as signInWithGoogleOAuth } from '@/lib/supabase';
+import { ensureNeonClient } from '@/lib/neon';
+import { isNeonProvider } from '@/lib/database-provider';
 import { useToast } from '@/hooks/use-toast';
 import { AITransactionService } from '@/services/aiTransactionService';
 import { logAuthEvent } from '@/utils/auth-logger';
+import { getAuthCallbackUrl } from '@/config/auth-routes';
 import i18n from '@/i18n';
 
 interface AuthContextType {
@@ -46,6 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
+        if (isNeonProvider()) {
+          await ensureNeonClient();
+        }
         const { data, error } = await getSession();
         
         if (error) {
@@ -146,9 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email, 
         password,
         options: {
-          emailRedirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
-            : `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthCallbackUrl(),
           data: {
             name: email.split('@')[0],
           }
@@ -273,9 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: import.meta.env.MODE === 'production'
-            ? 'https://duitr.my.id/auth/callback'
-            : `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthCallbackUrl(),
         }
       });
       

@@ -89,9 +89,7 @@ function recoverFrom404() {
   }
   
   // Redirect to the correct callback URL
-  const callbackUrl = window.location.hostname.includes('duitr.my.id')
-    ? 'https://duitr.my.id/auth/callback'
-    : `${window.location.origin}/auth/callback`;
+  const callbackUrl = `${window.location.origin}/auth/callback`;
     
   // Add the code from the current URL if available
   const params = new URLSearchParams(window.location.search);

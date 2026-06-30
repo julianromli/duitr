@@ -1,4 +1,5 @@
 import { createSupabaseFinanceDatabase } from '@/integrations/database/supabaseFinanceDatabase';
+import { createNeonFinanceDatabase } from '@/integrations/database/neonFinanceDatabase';
 import type { DatabaseProvider, FinanceDatabase } from '@/integrations/database/types';
 
 let financeDatabase: FinanceDatabase | null = null;
@@ -12,11 +13,8 @@ export function getFinanceDatabase(): FinanceDatabase {
   if (financeDatabase) return financeDatabase;
 
   const provider = resolveProvider();
-  if (provider === 'neon') {
-    throw new Error('Neon database provider is not configured yet. Set VITE_DATABASE_PROVIDER=supabase.');
-  }
-
-  financeDatabase = createSupabaseFinanceDatabase();
+  financeDatabase =
+    provider === 'neon' ? createNeonFinanceDatabase() : createSupabaseFinanceDatabase();
   return financeDatabase;
 }
 

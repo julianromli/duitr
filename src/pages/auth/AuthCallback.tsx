@@ -3,6 +3,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { supabase, isIOS } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { logAuthEvent } from '@/utils/auth-logger';
+import { getAuthCallbackUrl } from '@/config/auth-routes';
+import { APP_HOME } from '@/config/route-paths';
 
 const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
@@ -47,9 +49,7 @@ const AuthCallback = () => {
       logAuthEvent('detected_404_page', { url: window.location.href });
       // If we detect we're on a 404 page, try to recover by redirecting to the main callback URL
       if (window.location.pathname !== '/auth/callback') {
-        window.location.href = import.meta.env.MODE === 'production'
-          ? 'https://duitr.my.id/auth/callback'
-          : `${window.location.origin}/auth/callback`;
+        window.location.href = getAuthCallbackUrl();
       }
     }
   }, [isMounted]);
@@ -220,7 +220,7 @@ const AuthCallback = () => {
     
     // Redirect to the dashboard
     setTimeout(() => {
-      navigate({ to: '/' });
+      navigate({ to: APP_HOME });
     }, 500);
   };
 

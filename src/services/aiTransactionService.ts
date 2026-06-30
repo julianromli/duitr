@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { invokeGeminiFinanceInsight } from '@/lib/ai/invokeGeminiFinanceInsight';
 import type { Transaction } from '@/types/finance';
 import i18next from 'i18next';
 
@@ -63,14 +63,12 @@ export class AITransactionService {
     try {
       const correctionHints = this.getRecentCorrectionHints();
       const language = (i18next.language || 'id').split('-')[0];
-      const { data, error } = await supabase.functions.invoke('gemini-finance-insight', {
-        body: {
-          action: 'parse_transactions',
-          input: input.trim(),
-          language,
-          availableCategories: this.getAvailableCategories(),
-          correctionHints
-        }
+      const { data, error } = await invokeGeminiFinanceInsight({
+        action: 'parse_transactions',
+        input: input.trim(),
+        language,
+        availableCategories: this.getAvailableCategories(),
+        correctionHints,
       });
 
       if (error) {

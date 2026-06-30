@@ -1,10 +1,13 @@
 import { getFinanceDatabase } from '@/integrations/database';
+import type { FinanceDatabase } from '@/integrations/database';
 import { mapBudgetRow } from '@/services/finance/mappers';
 import type { Category } from '@/types/category';
 import type { Budget } from '@/types/finance';
 
 class BudgetService {
-  private db = getFinanceDatabase();
+  private get db(): FinanceDatabase {
+    return getFinanceDatabase();
+  }
 
   async getAll(
     userId: string,

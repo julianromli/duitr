@@ -18,6 +18,8 @@ import { useCurrencyOnboarding } from '@/hooks/useCurrencyOnboarding';
 import { AppShell } from '@/components/app/AppShell';
 import { CANONICAL_SITE_URL } from '@/config/auth-routes';
 import { DEFAULT_SITE_DESCRIPTION, DEFAULT_SITE_TITLE } from '@/lib/seo';
+import { isNeonProvider } from '@/lib/database-provider';
+import { ensureNeonClient } from '@/lib/neon';
 import i18n from '@/i18n';
 import appCss from '@/index.css?url';
 
@@ -75,6 +77,29 @@ const CurrencyOnboardingWrapper: React.FC<{ children: React.ReactNode }> = ({ ch
 const AppWrapper: React.FC = () => {
   const { ready, i18n: i18nInstance } = useTranslation();
   const [isI18nReady, setIsI18nReady] = React.useState(false);
+  const [isNeonReady, setIsNeonReady] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isNeonProvider()) {
+      setIsNeonReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    ensureNeonClient()
+      .then(() => {
+        if (!cancelled) {
+          setIsNeonReady(true);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to initialize Neon client:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     const checkReady = () => {
@@ -118,7 +143,7 @@ const AppWrapper: React.FC = () => {
     };
   }, [ready, i18nInstance]);
 
-  if (!isI18nReady) {
+  if (!isNeonReady || !isI18nReady) {
     return <AppLoadingScreen />;
   }
 

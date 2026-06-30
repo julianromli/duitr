@@ -1,11 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { Hero195 } from '@/components/ui/hero-195';
 import { LanguageToggle } from '@/components/ui/language-toggle';
 import { motion } from 'framer-motion';
+import { APP_HOME } from '@/config/route-paths';
+import { useAuth } from '@/context/AuthContext';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !isLoading && user) {
+      navigate({ to: APP_HOME, replace: true });
+    }
+  }, [user, isLoading, navigate, isMounted]);
+
+  if (!isMounted || isLoading || user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full relative">

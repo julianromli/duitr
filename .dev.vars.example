@@ -1,0 +1,2 @@
+# Local Wrangler secrets (copy to .dev.vars — never commit)
+# GEMINI_API_KEY=your_gemini_api_key

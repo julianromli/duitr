@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
+import { APP_HOME } from '@/config/route-paths';
 
 const NotFound = () => {
   return (
@@ -30,7 +31,7 @@ const NotFound = () => {
           The page you are looking for doesn't exist or has been moved.
         </p>
         <Button asChild>
-          <Link to="/">Return to Home</Link>
+          <Link to={APP_HOME}>Return to Home</Link>
         </Button>
       </div>
     </div>

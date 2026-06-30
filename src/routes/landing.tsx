@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import LandingPage from '@/pages/LandingPage';
-import { buildPageHead, landingSeo } from '@/lib/seo';
+import { createFileRoute, redirect } from '@tanstack/react-router';
+import { PUBLIC_HOME } from '@/config/route-paths';
 
 export const Route = createFileRoute('/landing')({
-  head: () => buildPageHead(landingSeo),
-  component: LandingPage,
+  beforeLoad: () => {
+    throw redirect({ to: PUBLIC_HOME });
+  },
 });

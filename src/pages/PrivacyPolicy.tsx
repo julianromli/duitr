@@ -26,7 +26,7 @@ const PrivacyPolicy: React.FC = () => {
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link 
-            to="/landing" 
+            to="/" 
             className="flex items-center space-x-2 text-gray-300 hover:text-lime-400 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
